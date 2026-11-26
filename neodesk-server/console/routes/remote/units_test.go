@@ -287,8 +287,14 @@ func TestDevMockScenarios(t *testing.T) {
 	for query, want := range map[string]string{
 		"mock=1&scenario=one-at-a-time": "one-at-a-time",
 		"mock=1&scenario=One-At-A-Time": "one-at-a-time",
-		"mock=1&scenario=dropped":       "dropped",
-		"mock=1&scenario=two-at-once":   "ok",
+		// The desktop client 1.5 behaviours of L550, L551 and L556
+		"mock=1&scenario=quick-support":         "quick-support",
+		"mock=1&scenario=quick-support-decline": "quick-support-decline",
+		"mock=1&scenario=quick-support-timeout": "quick-support-timeout",
+		"mock=1&scenario=click":                 "click",
+		"mock=1&scenario=revoked":               "revoked",
+		"mock=1&scenario=dropped":               "dropped",
+		"mock=1&scenario=two-at-once":           "ok",
 	} {
 		r := httptest.NewRequest("GET", "/api/remote/viewer/900100012?"+query, nil)
 		got, bad := h.mockFor(r, "900100012")
