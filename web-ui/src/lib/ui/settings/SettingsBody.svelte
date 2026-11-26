@@ -14,6 +14,7 @@
   `top` holds what comes before the filter and the groups (a read-only
   note, a warning about the current values). The summary is a side column
   from 1200 px, sticky while the groups scroll; `summaryLabel` names it.
+  Below 1200 px it comes first, or after the groups with `summaryLast`.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -31,6 +32,8 @@
 		summary?: Snippet;
 		/** The side column's name for screen readers; "Summary" by default */
 		summaryLabel?: string;
+		/** Below 1200 px the summary follows the groups (a preview of what they change) instead of coming first */
+		summaryLast?: boolean;
 		top?: Snippet;
 		bar?: Snippet;
 		class?: string;
@@ -45,6 +48,7 @@
 		scope,
 		summary,
 		summaryLabel,
+		summaryLast = false,
 		top,
 		bar,
 		class: cls = '',
@@ -67,36 +71,44 @@
 	);
 </script>
 
-{#if modeLine}<p class="save-model">{modeLine}</p>{/if}
-<div class={['settings-body', summary && 'has-summary', scope && 'has-scope', cls]}>
-	{#if scope}<div class="settings-scope">{@render scope()}</div>{/if}
-	{#if summary}<aside
-			class="settings-summary"
-			aria-label={summaryLabel ?? tf('settings_ui.summary', 'Summary')}
-			data-search-skip
-		>
-			{@render summary()}
-		</aside>{/if}
-	<div class="settings-main">
-		{@render top?.()}
-		{#if filter || sections.length}
-			{#if filter}
-				<SettingsFilter {filter} label={filterLabel} {sections} />
-			{:else}
-				<!-- Section links only -->
-				<nav class="section-links" aria-label={tf('settings_ui.sections', 'Sections on this page')}>
-					<!-- eslint-disable svelte/no-navigation-without-resolve -->
-					{#each sections as s (s.id)}<a href={`#${s.id}`}>{s.label}</a>{/each}
-					<!-- eslint-enable svelte/no-navigation-without-resolve -->
-				</nav>
+<!-- One element: a page that spaces its children apart must not space the save-model line from the rest -->
+<div class={['settings-tab-body', cls]}>
+	{#if modeLine}<p class="save-model">{modeLine}</p>{/if}
+	<div
+		class={['settings-body', summary && 'has-summary', scope && 'has-scope', summaryLast && 'summary-last']}
+	>
+		{#if scope}<div class="settings-scope">{@render scope()}</div>{/if}
+		{#if summary}<aside
+				class="settings-summary"
+				aria-label={summaryLabel ?? tf('settings_ui.summary', 'Summary')}
+				data-search-skip
+			>
+				{@render summary()}
+			</aside>{/if}
+		<div class="settings-main">
+			{@render top?.()}
+			{#if filter || sections.length}
+				{#if filter}
+					<SettingsFilter {filter} label={filterLabel} {sections} />
+				{:else}
+					<!-- Section links only -->
+					<nav class="section-links" aria-label={tf('settings_ui.sections', 'Sections on this page')}>
+						<!-- eslint-disable svelte/no-navigation-without-resolve -->
+						{#each sections as s (s.id)}<a href={`#${s.id}`}>{s.label}</a>{/each}
+						<!-- eslint-enable svelte/no-navigation-without-resolve -->
+					</nav>
+				{/if}
 			{/if}
-		{/if}
-		{@render children()}
-		{@render bar?.()}
+			{@render children()}
+			{@render bar?.()}
+		</div>
 	</div>
 </div>
 
 <style>
+	.settings-tab-body {
+		min-width: 0;
+	}
 	.save-model {
 		margin: calc(-1 * var(--space-3)) 0 var(--space-5);
 		max-width: var(--measure);
@@ -134,6 +146,9 @@
 		.section-links a {
 			min-height: 44px;
 		}
+	}
+	.summary-last .settings-summary {
+		order: 1;
 	}
 	/* From 1200 px the summary is a side column next to the groups, beside the scope */
 	@media (min-width: 1200px) {
