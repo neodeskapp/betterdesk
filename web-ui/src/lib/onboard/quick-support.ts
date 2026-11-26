@@ -6,7 +6,9 @@
  * person. allowed: Connect. declined, ended, expired: over.
  */
 
+import { goto } from '$app/navigation';
 import type { SessionState, SupportSession } from '#lib/api/onboard.ts';
+import { link } from '#lib/nav.ts';
 import { appSessionLink, type DesktopApp } from '#lib/util/app-links.ts';
 
 /** How often the dialog asks for the session's state */
@@ -66,8 +68,16 @@ export function viewerPath(deviceId: string): string {
 	return '/remote/' + encodeURIComponent(deviceId) + '?standalone=1';
 }
 
-/** Where Connect goes: a new tab for the viewer, this tab for the desktop app's link */
+/**
+ * Where Connect goes: a new tab for the viewer, this tab for the desktop
+ * app's link, and a console page (Connect by ID opens its session inside
+ * the console, as Remote sessions does)
+ */
 export const go = {
+	page(path: string): void {
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- link() adds the base
+		void goto(link(path));
+	},
 	tab(path: string): void {
 		window.open(path, '_blank');
 	},
