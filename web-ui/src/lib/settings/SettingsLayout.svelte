@@ -67,6 +67,13 @@
 		gap: var(--space-6);
 		container: settings-main / inline-size;
 	}
+	/* One column of fields (SettingsGrid's single column): a form's save bar
+	   ends where its fields do */
+	@container settings-main (max-width: 879px) {
+		.page-main :global(form > .save-bar) {
+			max-width: var(--measure);
+		}
+	}
 	/* The side column is narrow: labels take what they need, values the rest */
 	@media (min-width: 641px) {
 		.settings-side :global(.facts) {
