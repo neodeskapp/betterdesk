@@ -44,7 +44,8 @@
     "copy_value": "Copier {value}",
     "copy_failed": "Impossible de copier. Sélectionnez le texte et copiez-le vous-même.",
     "read_only_page": "Vous pouvez consulter cette page, mais pas la modifier.",
-    "opens_in_new_tab": "s'ouvre dans un nouvel onglet"
+    "opens_in_new_tab": "s'ouvre dans un nouvel onglet",
+    "required_mark": "(obligatoire)"
   },
   "nav": {
     "main": "Principal",

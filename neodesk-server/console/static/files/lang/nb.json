@@ -46,7 +46,8 @@
     "copy_value": "Kopier {value}",
     "copy_failed": "Kunne ikke kopiere. Merk teksten og kopier den selv.",
     "read_only_page": "Du kan se denne siden, men ikke endre den.",
-    "opens_in_new_tab": "åpnes i en ny fane"
+    "opens_in_new_tab": "åpnes i en ny fane",
+    "required_mark": "(påkrevd)"
   },
   "nav": {
     "main": "Hoved",

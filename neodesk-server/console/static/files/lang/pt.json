@@ -40,7 +40,8 @@
     "copy_value": "Copiar {value}",
     "copy_failed": "Não foi possível copiar. Selecione o texto e copie-o manualmente.",
     "read_only_page": "Pode ver esta página, mas não a pode alterar.",
-    "opens_in_new_tab": "abre num novo separador"
+    "opens_in_new_tab": "abre num novo separador",
+    "required_mark": "(obrigatório)"
   },
   "nav": {
     "main": "Principal",

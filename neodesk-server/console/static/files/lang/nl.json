@@ -40,7 +40,8 @@
     "copy_value": "{value} kopiëren",
     "copy_failed": "Kopiëren is mislukt. Selecteer de tekst en kopieer hem zelf.",
     "read_only_page": "U kunt deze pagina bekijken, maar niet wijzigen.",
-    "opens_in_new_tab": "opent in een nieuw tabblad"
+    "opens_in_new_tab": "opent in een nieuw tabblad",
+    "required_mark": "(verplicht)"
   },
   "nav": {
     "main": "Hoofdmenu",

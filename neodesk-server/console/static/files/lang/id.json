@@ -46,7 +46,8 @@
     "copy_value": "Salin {value}",
     "copy_failed": "Tidak dapat menyalin. Pilih teksnya dan salin sendiri.",
     "read_only_page": "Anda dapat melihat halaman ini, tetapi tidak dapat mengubahnya.",
-    "opens_in_new_tab": "terbuka di tab baru"
+    "opens_in_new_tab": "terbuka di tab baru",
+    "required_mark": "(wajib)"
   },
   "nav": {
     "main": "Utama",

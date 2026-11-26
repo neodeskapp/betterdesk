@@ -40,7 +40,8 @@
     "copy_value": "复制 {value}",
     "copy_failed": "无法复制。请选中文本后手动复制。",
     "read_only_page": "您可以查看此页面，但无法更改。",
-    "opens_in_new_tab": "在新标签页中打开"
+    "opens_in_new_tab": "在新标签页中打开",
+    "required_mark": "（必填）"
   },
   "nav": {
     "main": "主要",

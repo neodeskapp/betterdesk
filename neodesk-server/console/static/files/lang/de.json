@@ -40,7 +40,8 @@
     "copy_value": "{value} kopieren",
     "copy_failed": "Kopieren nicht möglich. Bitte markiere den Text und kopiere ihn selbst.",
     "read_only_page": "Du kannst diese Seite ansehen, aber nicht ändern.",
-    "opens_in_new_tab": "öffnet sich in einem neuen Tab"
+    "opens_in_new_tab": "öffnet sich in einem neuen Tab",
+    "required_mark": "(Pflichtfeld)"
   },
   "nav": {
     "main": "Hauptmenü",

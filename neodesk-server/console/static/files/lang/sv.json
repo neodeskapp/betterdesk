@@ -46,7 +46,8 @@
     "copy_value": "Kopiera {value}",
     "copy_failed": "Det gick inte att kopiera. Markera texten och kopiera den själv.",
     "read_only_page": "Du kan visa den här sidan men inte ändra den.",
-    "opens_in_new_tab": "öppnas i en ny flik"
+    "opens_in_new_tab": "öppnas i en ny flik",
+    "required_mark": "(obligatoriskt)"
   },
   "nav": {
     "main": "Huvud",

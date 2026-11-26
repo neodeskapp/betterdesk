@@ -46,7 +46,8 @@
     "copy_value": "Sao chép {value}",
     "copy_failed": "Không sao chép được. Hãy chọn văn bản và tự sao chép.",
     "read_only_page": "Bạn có thể xem trang này nhưng không thể thay đổi.",
-    "opens_in_new_tab": "mở trong thẻ mới"
+    "opens_in_new_tab": "mở trong thẻ mới",
+    "required_mark": "(bắt buộc)"
   },
   "nav": {
     "main": "Chính",

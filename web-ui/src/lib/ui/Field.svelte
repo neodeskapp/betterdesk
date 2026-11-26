@@ -10,9 +10,14 @@
         {#snippet children(f)}<Input {...f} type="number" bind:value={form.values.port} />{/snippet}
     </Field>
   f.id is what the label's `for` points at; f.describedby lists the error,
-  hint and effect; f.invalid sets aria-invalid; f.width is the width class
-  (short: ports and numbers, medium: names and short choices, host: host
-  names, addresses and longer choices).
+  hint and effect; f.invalid sets aria-invalid; f.required sets required;
+  f.width is the width class (short: ports and numbers, medium: names and
+  short choices, host: host names, addresses and longer choices).
+
+  A required field says "(required)" after its label, for everyone (WCAG
+  3.3.2): with `required` on the Field, or when the control is required
+  by the page itself. Screen readers hear "required" from the control, so
+  the word next to the label is hidden from them.
 -->
 <script module lang="ts">
 	export type FieldWidth = 'short' | 'medium' | 'host';
@@ -21,12 +26,14 @@
 		id: string;
 		describedby: string | undefined;
 		invalid: boolean;
+		required: boolean | undefined;
 		width: FieldWidth | undefined;
 	}
 </script>
 
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { tf } from '#lib/i18n/i18n.svelte.ts';
 
 	interface Props {
 		label: string;
@@ -36,6 +43,8 @@
 		effect?: string;
 		effectTone?: 'default' | 'restart' | 'logout';
 		width?: FieldWidth;
+		/** The value can't be left empty: the control gets `required` and the label says so */
+		required?: boolean;
 		/** The control's id; one is made up when missing */
 		id?: string;
 		class?: string;
@@ -46,9 +55,11 @@
 		label,
 		hint,
 		error,
-		effect,
+		// Named apart, so that $effect stays the rune
+		effect: effectText,
 		effectTone = 'default',
 		width,
+		required = false,
 		id: givenId,
 		class: cls = '',
 		children
@@ -60,18 +71,43 @@
 	const errorId = $derived(`${id}-error`);
 	const effectId = $derived(`${id}-effect`);
 	const describedby = $derived(
-		[error && errorId, hint && hintId, effect && effectId].filter(Boolean).join(' ') || undefined
+		[error && errorId, hint && hintId, effectText && effectId].filter(Boolean).join(' ') || undefined
 	);
-	const control = $derived<FieldControl>({ id, describedby, invalid: !!error, width });
+	const control = $derived<FieldControl>({
+		id,
+		describedby,
+		invalid: !!error,
+		required: required || undefined,
+		width
+	});
+
+	/* A control the page makes required itself (required or aria-required
+	   on it) shows the mark too; it is watched, as pages switch it */
+	let controlRequired = $state(false);
+	$effect(() => {
+		const el = document.getElementById(id);
+		if (!el) return;
+		const read = () =>
+			(controlRequired = el.hasAttribute('required') || el.getAttribute('aria-required') === 'true');
+		read();
+		const watch = new MutationObserver(read);
+		watch.observe(el, { attributes: true, attributeFilter: ['required', 'aria-required'] });
+		return () => watch.disconnect();
+	});
+	const showRequired = $derived(required || controlRequired);
 </script>
 
 <div class={['form-group', cls]}>
-	<label class="form-label" for={id}>{label}</label>
+	<label class="form-label" for={id}
+		>{label}{#if showRequired}
+			<span class="form-required" aria-hidden="true">{tf('common.required_mark', '(required)')}</span
+			>{/if}</label
+	>
 	{@render children(control)}
 	{#if hint}<p class="form-hint" id={hintId}>{hint}</p>{/if}
 	{#if error}<p class="form-hint form-error" id={errorId}>{error}</p>{/if}
-	{#if effect}
-		<p class={['field-effect', effectTone !== 'default' && `is-${effectTone}`]} id={effectId}>{effect}</p>
+	{#if effectText}
+		<p class={['field-effect', effectTone !== 'default' && `is-${effectTone}`]} id={effectId}>{effectText}</p>
 	{/if}
 </div>
 
@@ -89,6 +125,10 @@
 	.form-label {
 		font-weight: 600;
 		color: var(--text);
+	}
+	.form-required {
+		color: var(--text-muted);
+		font-weight: 400;
 	}
 	.form-hint {
 		margin: 0;

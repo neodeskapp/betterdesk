@@ -40,7 +40,8 @@
         "copy_value": "Copy {value}",
         "copy_failed": "Could not copy. Select the text and copy it yourself.",
         "read_only_page": "You can view this page but not change it.",
-        "opens_in_new_tab": "opens in a new tab"
+        "opens_in_new_tab": "opens in a new tab",
+        "required_mark": "(required)"
     },
     "nav": {
         "main": "Main",

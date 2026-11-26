@@ -46,7 +46,8 @@
     "copy_value": "Kopioi {value}",
     "copy_failed": "Kopiointi epäonnistui. Valitse teksti ja kopioi se itse.",
     "read_only_page": "Voit katsoa tätä sivua, mutta et muuttaa sitä.",
-    "opens_in_new_tab": "avautuu uuteen välilehteen"
+    "opens_in_new_tab": "avautuu uuteen välilehteen",
+    "required_mark": "(pakollinen)"
   },
   "nav": {
     "main": "Pää",

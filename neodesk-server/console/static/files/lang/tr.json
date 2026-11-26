@@ -46,7 +46,8 @@
     "copy_value": "{value} kopyala",
     "copy_failed": "Kopyalanamadı. Metni seçip kendiniz kopyalayın.",
     "read_only_page": "Bu sayfayı görüntüleyebilirsiniz ama değiştiremezsiniz.",
-    "opens_in_new_tab": "yeni sekmede açılır"
+    "opens_in_new_tab": "yeni sekmede açılır",
+    "required_mark": "(zorunlu)"
   },
   "nav": {
     "main": "Ana menü",

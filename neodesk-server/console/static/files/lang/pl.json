@@ -40,7 +40,8 @@
     "copy_value": "Kopiuj {value}",
     "copy_failed": "Nie udało się skopiować. Zaznacz tekst i skopiuj go samodzielnie.",
     "read_only_page": "Możesz wyświetlić tę stronę, ale nie możesz jej zmienić.",
-    "opens_in_new_tab": "otwiera się w nowej karcie"
+    "opens_in_new_tab": "otwiera się w nowej karcie",
+    "required_mark": "(wymagane)"
   },
   "nav": {
     "main": "Główne",

@@ -40,7 +40,8 @@
     "copy_value": "Kopírovat {value}",
     "copy_failed": "Kopírování se nezdařilo. Označte text a zkopírujte ho ručně.",
     "read_only_page": "Tuto stránku můžete zobrazit, ale ne měnit.",
-    "opens_in_new_tab": "otevře se na nové kartě"
+    "opens_in_new_tab": "otevře se na nové kartě",
+    "required_mark": "(povinné)"
   },
   "nav": {
     "main": "Hlavní",

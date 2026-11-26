@@ -40,7 +40,8 @@
     "copy_value": "Copiar {value}",
     "copy_failed": "No se pudo copiar. Seleccione el texto y cópielo usted mismo.",
     "read_only_page": "Puede ver esta página, pero no cambiarla.",
-    "opens_in_new_tab": "se abre en una pestaña nueva"
+    "opens_in_new_tab": "se abre en una pestaña nueva",
+    "required_mark": "(obligatorio)"
   },
   "nav": {
     "main": "Principal",

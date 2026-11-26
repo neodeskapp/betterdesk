@@ -44,7 +44,8 @@
     "copy_value": "複製 {value}",
     "copy_failed": "無法複製。請選取文字後自行複製。",
     "read_only_page": "您可以檢視此頁面，但無法變更。",
-    "opens_in_new_tab": "在新分頁中開啟"
+    "opens_in_new_tab": "在新分頁中開啟",
+    "required_mark": "（必填）"
   },
   "nav": {
     "main": "主要",

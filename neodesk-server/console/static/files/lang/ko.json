@@ -40,7 +40,8 @@
     "copy_value": "{value} 복사",
     "copy_failed": "복사하지 못했습니다. 텍스트를 선택해 직접 복사하세요.",
     "read_only_page": "이 페이지를 볼 수는 있지만 변경할 수는 없습니다.",
-    "opens_in_new_tab": "새 탭에서 열립니다"
+    "opens_in_new_tab": "새 탭에서 열립니다",
+    "required_mark": "(필수)"
   },
   "nav": {
     "main": "메인",

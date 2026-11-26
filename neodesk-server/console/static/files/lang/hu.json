@@ -46,7 +46,8 @@
     "copy_value": "{value} másolása",
     "copy_failed": "A másolás nem sikerült. Jelölje ki a szöveget, és másolja ki kézzel.",
     "read_only_page": "Ezt az oldalt megtekintheti, de nem módosíthatja.",
-    "opens_in_new_tab": "új lapon nyílik meg"
+    "opens_in_new_tab": "új lapon nyílik meg",
+    "required_mark": "(kötelező)"
   },
   "nav": {
     "main": "Fő",

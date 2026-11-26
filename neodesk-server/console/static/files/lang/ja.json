@@ -40,7 +40,8 @@
     "copy_value": "{value} をコピー",
     "copy_failed": "コピーできませんでした。テキストを選択して手動でコピーしてください。",
     "read_only_page": "このページは表示できますが、変更はできません。",
-    "opens_in_new_tab": "新しいタブで開きます"
+    "opens_in_new_tab": "新しいタブで開きます",
+    "required_mark": "(必須)"
   },
   "nav": {
     "main": "メイン",
