@@ -163,7 +163,7 @@
 		color: var(--text-muted);
 	}
 	.quick {
-		max-width: 36rem;
+		max-width: 44rem;
 	}
 	/* The state mark of the viewer's tabs */
 	.tab-dot {

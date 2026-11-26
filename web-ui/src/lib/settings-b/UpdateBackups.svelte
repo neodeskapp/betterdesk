@@ -226,9 +226,6 @@
 		flex-direction: column;
 		gap: var(--space-3);
 	}
-	.backups > h2 + .section-note {
-		margin-top: 0;
-	}
 	.settings-inline-controls {
 		display: flex;
 		flex-wrap: wrap;

@@ -356,8 +356,10 @@
 		display: block;
 		overflow-wrap: anywhere;
 	}
+	/* A host name keeps its line; it doesn't break at its hyphens */
 	.device-name {
 		font-weight: 600;
+		white-space: nowrap;
 	}
 	.cell-sub {
 		display: block;

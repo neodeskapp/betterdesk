@@ -73,6 +73,8 @@
 		transform: rotate(-90deg);
 		transition: transform var(--motion);
 		font-feature-settings: 'liga';
+		/* The glyph sits inside its box; pull it to the column's start edge */
+		margin-inline-start: -5px;
 	}
 	.disclosure:dir(rtl) > summary::before {
 		transform: rotate(90deg);
