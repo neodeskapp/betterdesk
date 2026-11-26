@@ -19,19 +19,22 @@ import (
 type handlers struct {
 	api    *goapi.Client
 	access *access.Service
+	deps   *kit.Deps
+	log    *kit.Logger
 }
 
 // Register adds the group's routes. Changing an override takes the super
 // admin role, not server.config: with that permission alone a server admin
 // could grant its own role anything.
 func Register(d *kit.Deps) {
-	h := &handlers{api: d.GoAPI, access: d.Access}
+	h := &handlers{api: d.GoAPI, access: d.Access, deps: d, log: d.Log}
 	r := d.Router
 	superAdminOnly := d.RequireRole("super_admin")
 	r.Get("/api/panel/roles", h.roles, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Get("/api/panel/roles/{role}/permissions", h.rolePermissions, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Get("/api/panel/role-permissions", h.overrides, d.RequireAuth, d.RequirePermission("server.config"))
 	r.Post("/api/panel/role-permissions", h.setOverride, d.RequireAuth, superAdminOnly)
+	r.Post("/api/panel/role-permissions/batch", h.batch, d.RequireAuth, superAdminOnly)
 	r.Delete("/api/panel/role-permissions/{role}/{permission}", h.deleteOverride, d.RequireAuth, superAdminOnly)
 }
 
