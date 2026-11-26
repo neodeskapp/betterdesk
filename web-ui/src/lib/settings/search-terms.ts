@@ -24,10 +24,14 @@ export const TAB_TERMS: Readonly<Record<string, string>> = {
 	email: 'email e-mail mail smtp',
 	time: 'time zeit uhr clock',
 	meshcentral: 'mesh meshcentral meshagent',
-	'server-config-files': 'server advanced erweitert expert config konfiguration dateien'
+	'server-config-files': 'server advanced erweitert expert config konfiguration dateien',
+	policies: 'policy policies organization richtlinie richtlinien organisation'
 };
 
 export const TERMS: Readonly<Record<string, string>> = {
+	'pol-features-allow-audio': 'audio sound ton',
+	'pol-connection-mode': 'consent approval accept zustimmung freigabe annehmen',
+	'pol-features-allow-clipboard': 'clipboard zwischenablage',
 	// General
 	'public-endpoints': 'address domain hostname adresse domäne host',
 	'public-server-id': 'hbbs id server rendezvous address adresse',

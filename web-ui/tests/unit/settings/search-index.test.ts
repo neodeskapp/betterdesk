@@ -47,9 +47,9 @@ describe('the settings list', () => {
 });
 
 describe('settingEntries', () => {
-	test('an account with every permission gets every setting of the list, once', () => {
+	test('an admin account with every permission gets every setting of the list, once', () => {
 		const t = tOf(en);
-		const entries = settingEntries({ t, can: everyone });
+		const entries = settingEntries({ t, can: everyone, admin: true });
 		const expected = new Set(
 			SEARCH_INDEX.filter((r) => isPlace(r[0])).map(
 				(r) => `${r[0]}#${r[1]}#${t(r[2]).replace(/:$/, '').trim()}`
@@ -126,6 +126,21 @@ describe('settingEntries', () => {
 		const tabs = new Set<string>(entries.map((e) => e.place));
 		for (const tab of TABS.filter((x) => tabAllowed(x, false)))
 			if (SEARCH_INDEX.some((r) => r[0] === tab && r[5] === '')) expect(tabs.has(tab)).toBe(true);
+	});
+
+	test('policy settings are found by the admin roles only, on the Policies page (task 5: "sound")', () => {
+		const t = tOf(en);
+		const admin = settingEntries({ t, can: viewer, admin: true });
+		const sound = find('sound', admin);
+		expect(sound.map((r) => r.href)).toContain('/policies#pol-features-allow-audio');
+		const audio = admin.find((e) => e.id === 'pol-features-allow-audio');
+		expect(audio).toMatchObject({ label: 'Allow sound from the device', where: 'Rules, Policies, Features' });
+		expect(find('audio', admin).length).toBeGreaterThan(0);
+		expect(find('ton', settingEntries({ t: tOf(de), can: viewer, admin: true })).length).toBeGreaterThan(0);
+		// Not for an operator, even with every permission
+		expect(settingEntries({ t, can: everyone }).some((e) => e.place === 'policies')).toBe(false);
+		expect(placeAllowed('policies', true)).toBe(false);
+		expect(placeAllowed('policies', false, true)).toBe(true);
 	});
 
 	test('a search for a setting it may not see finds nothing', () => {

@@ -82,10 +82,12 @@ export const PAGES = {
 		title: 'nav.server_config_files',
 		section: 'nav.section_server',
 		need: 'server.config'
-	}
+	},
+	/* An organization's policies: the four admin roles (requireAdmin), whatever their permissions */
+	policies: { href: '/policies', title: 'nav.policies', section: 'nav.section_rules', need: 'admin' }
 } as const satisfies Record<
 	string,
-	{ href: string; title: string; section: string; need: '' | 'server.config' }
+	{ href: string; title: string; section: string; need: '' | 'server.config' | 'admin' }
 >;
 export type PageId = keyof typeof PAGES;
 
@@ -121,9 +123,14 @@ export function tabAllowed(tab: TabId, canServerConfig: boolean): boolean {
 	return canServerConfig || !ADMIN_TABS.includes(tab);
 }
 
-/** Whether a person may open a place: the pages of the Server section need server.config, Your account nothing */
-export function placeAllowed(place: PlaceId, canServerConfig: boolean): boolean {
-	return isPage(place) ? PAGES[place].need === '' || canServerConfig : tabAllowed(place, canServerConfig);
+/**
+ * Whether a person may open a place: the pages of the Server section need
+ * server.config, Policies an admin role, Your account nothing
+ */
+export function placeAllowed(place: PlaceId, canServerConfig: boolean, admin = false): boolean {
+	if (!isPage(place)) return tabAllowed(place, canServerConfig);
+	const need: string = PAGES[place].need;
+	return need === '' || (need === 'admin' ? admin : canServerConfig);
 }
 
 /** The place's name: the tab title or the page title */

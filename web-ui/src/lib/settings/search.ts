@@ -34,6 +34,8 @@ export interface SearchContext {
 	/** Translate a key */
 	t: (key: string) => string;
 	can: (permission: string) => boolean;
+	/** The account has one of the four admin roles (Policies) */
+	admin?: boolean;
 	current: TabId;
 	/** The language the console shows, for lower-casing */
 	locale?: string;
@@ -71,7 +73,7 @@ export interface SettingEntry {
  * one that needs a permission it lacks, is not in the list.
  */
 export function settingEntries(
-	ctx: Pick<SearchContext, 't' | 'can'>,
+	ctx: Pick<SearchContext, 't' | 'can' | 'admin'>,
 	rows: readonly IndexRow[] = SEARCH_INDEX
 ): SettingEntry[] {
 	const canConfig = ctx.can('server.config');
@@ -79,7 +81,7 @@ export function settingEntries(
 	const seen = new Set<string>();
 	const out: SettingEntry[] = [];
 	for (const [tabName, id, labelKey, sectionKey, hintKeys] of visibleRows(ctx.can, rows)) {
-		if (!isPlace(tabName) || !placeAllowed(tabName, canConfig)) continue;
+		if (!isPlace(tabName) || !placeAllowed(tabName, canConfig, ctx.admin)) continue;
 		const label = clean(ctx.t(labelKey));
 		if (!label) continue;
 		const once = `${tabName}#${id}#${label}`;
@@ -119,7 +121,7 @@ export function searchSettings(
 	const hits: { hit: SearchHit; score: number }[] = [];
 	for (const row of visibleRows(ctx.can, rows)) {
 		const [tabName, id, labelKey, sectionKey, hintKeys] = row;
-		if (!isPlace(tabName) || !placeAllowed(tabName, ctx.can('server.config'))) continue;
+		if (!isPlace(tabName) || !placeAllowed(tabName, ctx.can('server.config'), ctx.admin)) continue;
 		const label = clean(ctx.t(labelKey));
 		if (!label) continue;
 		const once = `${tabName}#${id}#${label}`;
