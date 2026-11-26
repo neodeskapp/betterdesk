@@ -55,6 +55,7 @@ const CONSOLE: Record<string, string> = {
 	'/(console)/tickets': '/tickets',
 	'/(console)/toolkit': '/toolkit',
 	'/(console)/users': '/users',
+	'/(console)/users/[id]': '/users/1',
 	'/(studio)/cdap-studio': '/cdap-studio',
 	'/(remote)/remote': '/remote'
 };
@@ -63,6 +64,7 @@ const SETTINGS_TABS = ['auth', 'ldap', 'sso', 'joining', 'branding', 'brand', 'e
 const PUBLIC: Record<string, string> = {
 	'/(public)/login': '/login?autoLaunch=0',
 	'/(public)/portal': '/portal',
+	'/(public)/confirm-email': '/confirm-email',
 	'/(public)/invite': '/invite',
 	'/(public)/set-password': '/set-password',
 	'/(public)/join/[code]': '/join/AAAA-BBBB',
