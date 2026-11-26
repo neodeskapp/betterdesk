@@ -8245,7 +8245,8 @@
       "close": "Bezárás",
       "link_docs": "Dokumentáció",
       "console": "In the console",
-      "shortcuts": "Keyboard shortcuts"
+      "shortcuts": "Keyboard shortcuts",
+      "link_accessibility": "Akadálymentességi nyilatkozat"
     },
     "shortcuts": {
       "search": "Open the search",

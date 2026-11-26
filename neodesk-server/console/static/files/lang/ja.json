@@ -8239,7 +8239,8 @@
       "close": "閉じる",
       "link_docs": "ドキュメント",
       "console": "In the console",
-      "shortcuts": "キーボードショートカット"
+      "shortcuts": "キーボードショートカット",
+      "link_accessibility": "アクセシビリティに関する声明"
     },
     "shortcuts": {
       "search": "Open the search",

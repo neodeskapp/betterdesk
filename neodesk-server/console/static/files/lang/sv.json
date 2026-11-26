@@ -8245,7 +8245,8 @@
       "close": "Stäng",
       "link_docs": "Dokumentation",
       "console": "In the console",
-      "shortcuts": "Kortkommandon"
+      "shortcuts": "Kortkommandon",
+      "link_accessibility": "Tillgänglighetsredogörelse"
     },
     "shortcuts": {
       "search": "Open the search",

@@ -8239,7 +8239,8 @@
       "close": "关闭",
       "link_docs": "文档",
       "console": "In the console",
-      "shortcuts": "键盘快捷键"
+      "shortcuts": "键盘快捷键",
+      "link_accessibility": "无障碍声明"
     },
     "shortcuts": {
       "search": "Open the search",

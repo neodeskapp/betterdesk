@@ -8245,7 +8245,8 @@
       "close": "Luk",
       "link_docs": "Dokumentation",
       "console": "In the console",
-      "shortcuts": "Tastaturgenveje"
+      "shortcuts": "Tastaturgenveje",
+      "link_accessibility": "Tilgængelighedserklæring"
     },
     "shortcuts": {
       "search": "Open the search",

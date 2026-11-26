@@ -8245,7 +8245,8 @@
       "close": "Închide",
       "link_docs": "Documentație",
       "console": "In the console",
-      "shortcuts": "Comenzi rapide"
+      "shortcuts": "Comenzi rapide",
+      "link_accessibility": "Declarație de accesibilitate"
     },
     "shortcuts": {
       "search": "Open the search",

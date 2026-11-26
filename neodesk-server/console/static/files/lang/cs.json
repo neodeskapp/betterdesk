@@ -8239,7 +8239,8 @@
       "close": "Zavřít",
       "link_docs": "Dokumentace",
       "console": "In the console",
-      "shortcuts": "Klávesové zkratky"
+      "shortcuts": "Klávesové zkratky",
+      "link_accessibility": "Prohlášení o přístupnosti"
     },
     "shortcuts": {
       "search": "Open the search",

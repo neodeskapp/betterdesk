@@ -8246,7 +8246,8 @@
       "close": "إغلاق",
       "link_docs": "الوثائق",
       "console": "In the console",
-      "shortcuts": "Keyboard shortcuts"
+      "shortcuts": "Keyboard shortcuts",
+      "link_accessibility": "بيان إمكانية الوصول"
     },
     "shortcuts": {
       "search": "Open the search",

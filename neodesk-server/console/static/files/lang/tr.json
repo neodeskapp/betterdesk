@@ -8245,7 +8245,8 @@
       "close": "Kapat",
       "link_docs": "Belgeler",
       "console": "In the console",
-      "shortcuts": "Klavye kısayolları"
+      "shortcuts": "Klavye kısayolları",
+      "link_accessibility": "Erişilebilirlik beyanı"
     },
     "shortcuts": {
       "search": "Open the search",

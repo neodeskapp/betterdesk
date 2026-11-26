@@ -8243,7 +8243,8 @@
       "close": "Fermer",
       "link_docs": "Documentation",
       "console": "Dans la console",
-      "shortcuts": "Raccourcis clavier"
+      "shortcuts": "Raccourcis clavier",
+      "link_accessibility": "Déclaration d'accessibilité"
     },
     "shortcuts": {
       "search": "Ouvrir la recherche",

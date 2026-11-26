@@ -8245,7 +8245,8 @@
       "close": "Lukk",
       "link_docs": "Dokumentasjon",
       "console": "In the console",
-      "shortcuts": "Hurtigtaster"
+      "shortcuts": "Hurtigtaster",
+      "link_accessibility": "Tilgjengelighetserklæring"
     },
     "shortcuts": {
       "search": "Open the search",

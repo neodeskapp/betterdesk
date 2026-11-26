@@ -8243,7 +8243,8 @@
       "close": "關閉",
       "link_docs": "說明文件",
       "console": "In the console",
-      "shortcuts": "鍵盤快速鍵"
+      "shortcuts": "鍵盤快速鍵",
+      "link_accessibility": "無障礙聲明"
     },
     "shortcuts": {
       "search": "Open the search",

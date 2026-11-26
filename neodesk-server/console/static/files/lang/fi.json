@@ -8245,7 +8245,8 @@
       "close": "Sulje",
       "link_docs": "Dokumentaatio",
       "console": "In the console",
-      "shortcuts": "Pikanäppäimet"
+      "shortcuts": "Pikanäppäimet",
+      "link_accessibility": "Saavutettavuusseloste"
     },
     "shortcuts": {
       "search": "Open the search",

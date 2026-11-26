@@ -8239,7 +8239,8 @@
       "close": "Sluiten",
       "link_docs": "Documentatie",
       "console": "In de console",
-      "shortcuts": "Sneltoetsen"
+      "shortcuts": "Sneltoetsen",
+      "link_accessibility": "Toegankelijkheidsverklaring"
     },
     "shortcuts": {
       "search": "Zoeken openen",

@@ -8239,7 +8239,8 @@
       "close": "Cerrar",
       "link_docs": "Documentación",
       "console": "En la consola",
-      "shortcuts": "Atajos de teclado"
+      "shortcuts": "Atajos de teclado",
+      "link_accessibility": "Declaración de accesibilidad"
     },
     "shortcuts": {
       "search": "Abrir la búsqueda",

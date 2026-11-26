@@ -8245,7 +8245,8 @@
       "close": "Đóng",
       "link_docs": "Tài liệu",
       "console": "In the console",
-      "shortcuts": "Keyboard shortcuts"
+      "shortcuts": "Keyboard shortcuts",
+      "link_accessibility": "Tuyên bố về khả năng tiếp cận"
     },
     "shortcuts": {
       "search": "Open the search",

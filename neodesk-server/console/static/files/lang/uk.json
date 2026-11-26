@@ -8245,7 +8245,8 @@
       "close": "Закрити",
       "link_docs": "Документація",
       "console": "In the console",
-      "shortcuts": "Сполучення клавіш"
+      "shortcuts": "Сполучення клавіш",
+      "link_accessibility": "Заява про доступність"
     },
     "shortcuts": {
       "search": "Open the search",

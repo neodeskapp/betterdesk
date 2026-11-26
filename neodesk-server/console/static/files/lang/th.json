@@ -8245,7 +8245,8 @@
       "close": "ปิด",
       "link_docs": "เอกสาร",
       "console": "In the console",
-      "shortcuts": "Keyboard shortcuts"
+      "shortcuts": "Keyboard shortcuts",
+      "link_accessibility": "แถลงการณ์การเข้าถึง"
     },
     "shortcuts": {
       "search": "Open the search",

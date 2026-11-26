@@ -8239,7 +8239,8 @@
             "close": "Close",
             "link_docs": "Documentation",
             "console": "In the console",
-            "shortcuts": "Keyboard shortcuts"
+            "shortcuts": "Keyboard shortcuts",
+            "link_accessibility": "Accessibility statement"
         },
         "shortcuts": {
             "search": "Open the search",

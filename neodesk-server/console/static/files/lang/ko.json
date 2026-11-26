@@ -8239,7 +8239,8 @@
       "close": "닫기",
       "link_docs": "문서",
       "console": "In the console",
-      "shortcuts": "키보드 단축키"
+      "shortcuts": "키보드 단축키",
+      "link_accessibility": "접근성 선언문"
     },
     "shortcuts": {
       "search": "Open the search",
