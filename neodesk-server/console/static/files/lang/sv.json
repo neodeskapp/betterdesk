@@ -2588,7 +2588,11 @@
     "reset_link_no_email": "{username} har ingen e-postadress. Lägg till en under Redigera för att skicka en återställningslänk.",
     "send_reset_link": "Skicka länk",
     "reset_link_sent_named": "En återställningslänk har skickats till {username}.",
-    "reset_email_required": "Det här kontot har ingen e-postadress."
+    "reset_email_required": "Det här kontot har ingen e-postadress.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Mappar",

@@ -2588,7 +2588,11 @@
     "reset_link_no_email": "{username} felhasználónak nincs e-mail-címe. Adjon meg egyet a Szerkesztés alatt, hogy visszaállító linket küldhessen.",
     "send_reset_link": "Link küldése",
     "reset_link_sent_named": "Visszaállító link elküldve neki: {username}.",
-    "reset_email_required": "Ennek a fióknak nincs e-mail-címe."
+    "reset_email_required": "Ennek a fióknak nincs e-mail-címe.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Mappák",

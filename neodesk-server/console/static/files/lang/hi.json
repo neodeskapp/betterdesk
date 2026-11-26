@@ -2588,7 +2588,11 @@
     "reset_link_no_email": "{username} का कोई ईमेल पता नहीं है। रीसेट लिंक भेजने के लिए “संपादन करना” में एक पता जोड़ें।",
     "send_reset_link": "लिंक भेजें",
     "reset_link_sent_named": "{username} को रीसेट लिंक भेजा गया।",
-    "reset_email_required": "इस खाते का कोई ईमेल पता नहीं है।"
+    "reset_email_required": "इस खाते का कोई ईमेल पता नहीं है।",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "फ़ोल्डर",

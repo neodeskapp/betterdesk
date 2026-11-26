@@ -2588,7 +2588,11 @@
     "reset_link_no_email": "{username} ไม่มีที่อยู่อีเมล เพิ่มได้ใน แก้ไข เพื่อส่งลิงก์รีเซ็ต",
     "send_reset_link": "ส่งลิงก์",
     "reset_link_sent_named": "ส่งลิงก์รีเซ็ตให้ {username} แล้ว",
-    "reset_email_required": "บัญชีนี้ไม่มีที่อยู่อีเมล"
+    "reset_email_required": "บัญชีนี้ไม่มีที่อยู่อีเมล",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "โฟลเดอร์",

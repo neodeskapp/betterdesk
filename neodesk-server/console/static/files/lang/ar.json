@@ -2589,7 +2589,11 @@
     "reset_link_no_email": "ليس لدى {username} عنوان بريد إلكتروني. أضف عنوانًا من «يحرر» لإرسال رابط إعادة التعيين.",
     "send_reset_link": "إرسال الرابط",
     "reset_link_sent_named": "أُرسل رابط إعادة التعيين إلى {username}.",
-    "reset_email_required": "ليس لهذا الحساب عنوان بريد إلكتروني."
+    "reset_email_required": "ليس لهذا الحساب عنوان بريد إلكتروني.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "المجلدات",

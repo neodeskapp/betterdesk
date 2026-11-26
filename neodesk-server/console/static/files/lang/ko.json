@@ -2582,7 +2582,11 @@
     "reset_link_no_email": "{username}에게 이메일 주소가 없습니다. 재설정 링크를 보내려면 편집에서 주소를 추가하세요.",
     "send_reset_link": "링크 보내기",
     "reset_link_sent_named": "{username}에게 재설정 링크를 보냈습니다.",
-    "reset_email_required": "이 계정에는 이메일 주소가 없습니다."
+    "reset_email_required": "이 계정에는 이메일 주소가 없습니다.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "폴더",

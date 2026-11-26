@@ -2604,7 +2604,11 @@
     "reset_link_no_email": "{username} 沒有電子郵件地址。請在「編輯」中新增一個，以便寄送重設連結。",
     "send_reset_link": "寄送連結",
     "reset_link_sent_named": "已向 {username} 寄送重設連結。",
-    "reset_email_required": "此帳戶沒有電子郵件地址。"
+    "reset_email_required": "此帳戶沒有電子郵件地址。",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "資料夾",

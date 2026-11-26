@@ -2582,7 +2582,11 @@
     "reset_link_no_email": "{username} hat keine E-Mail-Adresse. Füge unter Bearbeiten eine hinzu, um einen Link zum Zurücksetzen zu senden.",
     "send_reset_link": "Link senden",
     "reset_link_sent_named": "Link zum Zurücksetzen an {username} gesendet.",
-    "reset_email_required": "Dieses Konto hat keine E-Mail-Adresse."
+    "reset_email_required": "Dieses Konto hat keine E-Mail-Adresse.",
+    "menu_group_account": "Konto",
+    "menu_group_access": "Zugriff",
+    "menu_group_security": "Anmeldesicherheit",
+    "menu_group_danger": "Deaktivieren oder löschen"
   },
   "folders": {
     "title": "Ordner",

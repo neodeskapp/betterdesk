@@ -2582,7 +2582,11 @@
     "reset_link_no_email": "{username} non ha un indirizzo email. Aggiungine uno in Modifica per inviare un link di reimpostazione.",
     "send_reset_link": "Invia link",
     "reset_link_sent_named": "Link di reimpostazione inviato a {username}.",
-    "reset_email_required": "Questo account non ha un indirizzo email."
+    "reset_email_required": "Questo account non ha un indirizzo email.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Cartelle",

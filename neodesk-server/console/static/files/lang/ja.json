@@ -2582,7 +2582,11 @@
     "reset_link_no_email": "{username} にはメールアドレスがありません。リセット用リンクを送るには「編集」でアドレスを追加してください。",
     "send_reset_link": "リンクを送る",
     "reset_link_sent_named": "{username} にリセット用リンクを送りました。",
-    "reset_email_required": "このアカウントにはメールアドレスがありません。"
+    "reset_email_required": "このアカウントにはメールアドレスがありません。",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "フォルダー",

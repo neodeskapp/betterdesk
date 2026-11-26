@@ -2608,7 +2608,11 @@
         "reset_link_no_email": "{username} has no email address. Add one under Edit to send a reset link.",
         "send_reset_link": "Send link",
         "reset_link_sent_named": "Sent a reset link to {username}.",
-        "reset_email_required": "This account has no email address."
+        "reset_email_required": "This account has no email address.",
+        "menu_group_account": "Account",
+        "menu_group_access": "Access",
+        "menu_group_security": "Sign-in security",
+        "menu_group_danger": "Disable or delete"
     },
     "folders": {
         "title": "Folders",

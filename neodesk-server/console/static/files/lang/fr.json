@@ -2604,7 +2604,11 @@
     "reset_link_no_email": "{username} n'a pas d'adresse e-mail. Ajoutez-en une dans Modifier pour envoyer un lien de réinitialisation.",
     "send_reset_link": "Envoyer le lien",
     "reset_link_sent_named": "Lien de réinitialisation envoyé à {username}.",
-    "reset_email_required": "Ce compte n'a pas d'adresse e-mail."
+    "reset_email_required": "Ce compte n'a pas d'adresse e-mail.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Dossiers",

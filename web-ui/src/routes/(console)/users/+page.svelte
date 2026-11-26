@@ -72,6 +72,7 @@
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
+	import MenuGroup from '#lib/ui/MenuGroup.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
@@ -488,52 +489,73 @@
 	{@const self = String(u.id) === meId}
 	{@const local = providerOf(u) === 'local'}
 	{@const changeable = mayChange(u)}
+	{@const disableable = canEdit && mayDisable(u)}
+	{@const deletable = canDelete && changeable && !self}
+	{@const resend = canEdit && changeable && local && mailReady && !!u.email && !u.last_login}
+	<!-- Grouped: the account, what it may reach, its sign-in security, and what ends it -->
 	<MenuButton kebab label={t('users.actions_for', { username: u.username })}>
-		{#if canEdit && changeable}
-			<MenuItem class="act-edit" icon={ICONS.edit} onselect={() => (editing = { user: u })}
-				>{t('users.edit')}</MenuItem
-			>
-			{#if local}
-				<MenuItem class="act-reset" icon={ICONS.password} onselect={() => (resetFor = u)}
-					>{t('users.reset_password_menu')}</MenuItem
-				>
-				{#if mailReady && u.email && !u.last_login}
+		{#if (canEdit && changeable) || (disableable && u.disabled)}
+			<MenuGroup class="group-account" label={t('users.menu_group_account')}>
+				{#if canEdit && changeable}
+					<MenuItem class="act-edit" icon={ICONS.edit} onselect={() => (editing = { user: u })}
+						>{t('users.edit')}</MenuItem
+					>
+				{/if}
+				{#if resend}
 					<MenuItem class="act-resend-invite" icon={ICONS.send} onselect={() => void sendInviteAgain(u)}
 						>{t('users.resend_invite')}</MenuItem
 					>
 				{/if}
-			{/if}
-			<MenuItem class="act-sessions" icon="devices" onselect={() => (sessionsFor = u)}
-				>{t('sessions.user_menu')}</MenuItem
-			>
+				{#if disableable && u.disabled}
+					<MenuItem class="act-disable" icon={ICONS.enable} onselect={() => void setDisabled(u, false)}
+						>{t('users.enable_menu')}</MenuItem
+					>
+				{/if}
+			</MenuGroup>
 		{/if}
-		<MenuItem class="act-orgs" icon={ICONS.organization} onselect={() => (orgsFor = u)}
-			>{t('users.organizations_menu')}</MenuItem
-		>
-		<MenuItem
-			class="act-access"
-			icon={ICONS.access_policy}
-			onselect={() => (accessFor = { subject: { kind: 'user', id: u.id }, name: u.username, role: u.role })}
-			>{tf('users.access_menu', 'Panel access…')}</MenuItem
-		>
-		{#if canEdit && mayDisable(u)}
+		<MenuGroup class="group-access" label={t('users.menu_group_access')}>
+			<MenuItem class="act-orgs" icon={ICONS.organization} onselect={() => (orgsFor = u)}
+				>{t('users.organizations_menu')}</MenuItem
+			>
 			<MenuItem
-				class="act-disable"
-				icon={u.disabled ? ICONS.enable : ICONS.disable}
-				onselect={() => void setDisabled(u, !u.disabled)}
-				>{u.disabled ? t('users.enable_menu') : t('users.disable_menu')}</MenuItem
+				class="act-access"
+				icon={ICONS.access_policy}
+				onselect={() => (accessFor = { subject: { kind: 'user', id: u.id }, name: u.username, role: u.role })}
+				>{tf('users.access_menu', 'Panel access…')}</MenuItem
 			>
-			{#if u.totp_enabled}
-				<MenuItem class="act-totp-off" icon={ICONS.password} onselect={() => void turnOffTotp(u)}
-					>{t('users.totp_off_menu')}</MenuItem
-				>
-			{/if}
+		</MenuGroup>
+		{#if (canEdit && changeable) || (disableable && u.totp_enabled)}
+			<MenuGroup class="group-security" label={t('users.menu_group_security')}>
+				{#if canEdit && changeable && local}
+					<MenuItem class="act-reset" icon={ICONS.password} onselect={() => (resetFor = u)}
+						>{t('users.reset_password_menu')}</MenuItem
+					>
+				{/if}
+				{#if canEdit && changeable}
+					<MenuItem class="act-sessions" icon="devices" onselect={() => (sessionsFor = u)}
+						>{t('sessions.user_menu')}</MenuItem
+					>
+				{/if}
+				{#if disableable && u.totp_enabled}
+					<MenuItem class="act-totp-off" icon={ICONS.password} onselect={() => void turnOffTotp(u)}
+						>{t('users.totp_off_menu')}</MenuItem
+					>
+				{/if}
+			</MenuGroup>
 		{/if}
-		{#if canDelete && changeable && !self}
-			<MenuDivider />
-			<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void removeUser(u)}
-				>{t('users.delete_menu')}</MenuItem
-			>
+		{#if (disableable && !u.disabled) || deletable}
+			<MenuGroup class="group-danger" label={t('users.menu_group_danger')}>
+				{#if disableable && !u.disabled}
+					<MenuItem class="act-disable" icon={ICONS.disable} onselect={() => void setDisabled(u, true)}
+						>{t('users.disable_menu')}</MenuItem
+					>
+				{/if}
+				{#if deletable}
+					<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void removeUser(u)}
+						>{t('users.delete_menu')}</MenuItem
+					>
+				{/if}
+			</MenuGroup>
 		{/if}
 	</MenuButton>
 {/snippet}

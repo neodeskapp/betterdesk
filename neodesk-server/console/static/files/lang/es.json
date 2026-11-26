@@ -2582,7 +2582,11 @@
     "reset_link_no_email": "{username} no tiene dirección de correo. Añada una en Editar para enviar un enlace de restablecimiento.",
     "send_reset_link": "Enviar enlace",
     "reset_link_sent_named": "Se envió un enlace de restablecimiento a {username}.",
-    "reset_email_required": "Esta cuenta no tiene dirección de correo electrónico."
+    "reset_email_required": "Esta cuenta no tiene dirección de correo electrónico.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Carpetas",

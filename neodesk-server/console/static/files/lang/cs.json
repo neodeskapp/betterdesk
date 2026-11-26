@@ -2582,7 +2582,11 @@
     "reset_link_no_email": "{username} nemá e-mailovou adresu. Přidejte ji v Upravit, abyste mohli poslat odkaz pro obnovení.",
     "send_reset_link": "Poslat odkaz",
     "reset_link_sent_named": "Uživateli {username} byl poslán odkaz pro obnovení.",
-    "reset_email_required": "Tento účet nemá e-mailovou adresu."
+    "reset_email_required": "Tento účet nemá e-mailovou adresu.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Složky",

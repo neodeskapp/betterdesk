@@ -2600,7 +2600,11 @@
     "reset_link_no_email": "{username} nie ma adresu e-mail. Dodaj go w oknie Edytuj, aby wysłać link do resetu hasła.",
     "send_reset_link": "Wyślij link",
     "reset_link_sent_named": "Wysłano link do resetu hasła do {username}.",
-    "reset_email_required": "To konto nie ma adresu e-mail."
+    "reset_email_required": "To konto nie ma adresu e-mail.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Foldery",

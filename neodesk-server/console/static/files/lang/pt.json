@@ -2582,7 +2582,11 @@
     "reset_link_no_email": "{username} não tem endereço de e-mail. Adicione um em Editar para enviar um link de redefinição.",
     "send_reset_link": "Enviar link",
     "reset_link_sent_named": "Link de redefinição enviado para {username}.",
-    "reset_email_required": "Esta conta não tem endereço de e-mail."
+    "reset_email_required": "Esta conta não tem endereço de e-mail.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Pastas",

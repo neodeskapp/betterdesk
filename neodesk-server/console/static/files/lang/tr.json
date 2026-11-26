@@ -2588,7 +2588,11 @@
     "reset_link_no_email": "{username} için e-posta adresi yok. Sıfırlama bağlantısı göndermek için Düzenle bölümünden bir adres ekleyin.",
     "send_reset_link": "Bağlantı gönder",
     "reset_link_sent_named": "{username} için sıfırlama bağlantısı gönderildi.",
-    "reset_email_required": "Bu hesabın e-posta adresi yok."
+    "reset_email_required": "Bu hesabın e-posta adresi yok.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Klasörler",

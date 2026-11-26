@@ -2588,7 +2588,11 @@
     "reset_link_no_email": "Käyttäjällä {username} ei ole sähköpostiosoitetta. Lisää se kohdassa Muokkaa, niin voit lähettää palautuslinkin.",
     "send_reset_link": "Lähetä linkki",
     "reset_link_sent_named": "Palautuslinkki lähetetty käyttäjälle {username}.",
-    "reset_email_required": "Tällä tilillä ei ole sähköpostiosoitetta."
+    "reset_email_required": "Tällä tilillä ei ole sähköpostiosoitetta.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Kansiot",

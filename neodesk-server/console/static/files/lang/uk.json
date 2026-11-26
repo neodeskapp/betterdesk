@@ -2588,7 +2588,11 @@
     "reset_link_no_email": "У {username} немає адреси електронної пошти. Додайте її в «Редагувати», щоб надіслати посилання для скидання.",
     "send_reset_link": "Надіслати посилання",
     "reset_link_sent_named": "Посилання для скидання надіслано для {username}.",
-    "reset_email_required": "У цього облікового запису немає адреси електронної пошти."
+    "reset_email_required": "У цього облікового запису немає адреси електронної пошти.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Папки",

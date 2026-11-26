@@ -2588,7 +2588,11 @@
     "reset_link_no_email": "{username} har ingen e-postadresse. Legg til en under Rediger for å sende en tilbakestillingslenke.",
     "send_reset_link": "Send lenke",
     "reset_link_sent_named": "En tilbakestillingslenke er sendt til {username}.",
-    "reset_email_required": "Denne kontoen har ingen e-postadresse."
+    "reset_email_required": "Denne kontoen har ingen e-postadresse.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Mapper",

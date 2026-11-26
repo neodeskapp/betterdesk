@@ -2582,7 +2582,11 @@
     "reset_link_no_email": "{username} 没有电子邮件地址。请在“编辑”中添加一个，以便发送重置链接。",
     "send_reset_link": "发送链接",
     "reset_link_sent_named": "已向 {username} 发送重置链接。",
-    "reset_email_required": "此账户没有电子邮件地址。"
+    "reset_email_required": "此账户没有电子邮件地址。",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "文件夹",

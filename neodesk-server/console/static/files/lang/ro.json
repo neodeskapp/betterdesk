@@ -2588,7 +2588,11 @@
     "reset_link_no_email": "{username} nu are adresă de e-mail. Adăugați una în Editați pentru a trimite un link de resetare.",
     "send_reset_link": "Trimiteți linkul",
     "reset_link_sent_named": "Un link de resetare a fost trimis către {username}.",
-    "reset_email_required": "Acest cont nu are adresă de e-mail."
+    "reset_email_required": "Acest cont nu are adresă de e-mail.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Foldere",

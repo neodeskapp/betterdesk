@@ -2588,7 +2588,11 @@
     "reset_link_no_email": "{username} har ingen e-mailadresse. Tilføj en under Rediger for at sende et nulstillingslink.",
     "send_reset_link": "Send link",
     "reset_link_sent_named": "Der er sendt et nulstillingslink til {username}.",
-    "reset_email_required": "Denne konto har ingen e-mailadresse."
+    "reset_email_required": "Denne konto har ingen e-mailadresse.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Mapper",

@@ -2582,7 +2582,11 @@
     "reset_link_no_email": "{username} heeft geen e-mailadres. Voeg er een toe onder Bewerken om een herstellink te sturen.",
     "send_reset_link": "Link sturen",
     "reset_link_sent_named": "Herstellink gestuurd naar {username}.",
-    "reset_email_required": "Dit account heeft geen e-mailadres."
+    "reset_email_required": "Dit account heeft geen e-mailadres.",
+    "menu_group_account": "Account",
+    "menu_group_access": "Access",
+    "menu_group_security": "Sign-in security",
+    "menu_group_danger": "Disable or delete"
   },
   "folders": {
     "title": "Mappen",
