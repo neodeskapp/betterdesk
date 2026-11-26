@@ -12,6 +12,8 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // tokenFor makes an API token of the account with the permissions.
@@ -48,7 +50,10 @@ func text(t *testing.T, w *routetest.World, query string, args ...any) string {
 // the saved reports and the open tickets to the other account; the
 // audit log says so.
 func TestDeleteWithHandOver(t *testing.T) {
-	w := routetest.New(t, routetest.Options{})
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) { deleteWithHandOver(t, routetest.New(t, routetest.Options{DB: db})) })
+}
+
+func deleteWithHandOver(t *testing.T, w *routetest.World) {
 	admin := w.As("admin")
 	op := routetest.RoleIDs["operator"]
 	token := tokenFor(t, w, op, "e2e_operator", auth.PermDeviceView, auth.PermDeviceConnect)

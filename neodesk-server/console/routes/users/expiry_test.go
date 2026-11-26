@@ -11,6 +11,8 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/users"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 func disabled(t *testing.T, w *routetest.World, id int64) bool {
@@ -173,7 +175,10 @@ func TestEndDateNotice(t *testing.T) {
 // demoted or given an end date, and the job never disables it: a disabled
 // Super admin does not count.
 func TestLastSuperAdmin(t *testing.T) {
-	w := routetest.New(t, routetest.Options{})
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) { lastSuperAdmin(t, routetest.New(t, routetest.Options{DB: db})) })
+}
+
+func lastSuperAdmin(t *testing.T, w *routetest.World) {
 	admin := w.As("admin")
 	// e2e_admin (the old admin role) is disabled; e2e_super_admin is the last one
 	setColumn(t, w, routetest.RoleIDs["admin"], "disabled", w.DB.Pick("1", "true"))
