@@ -49,6 +49,9 @@ type handlers struct {
 	d        *kit.Deps
 	codes    *onboard.Codes
 	sessions *onboard.Sessions
+	// callers is what the server answered the quick support apps about
+	// their callers, for the helpers' viewers (A273)
+	callers  *onboard.CallerBook
 	releases *clientrelease.Service
 	limit    kit.Middleware
 	log      *kit.Logger
@@ -91,6 +94,7 @@ func RegisterWith(d *kit.Deps, opts Options) {
 		d:        d,
 		codes:    onboard.NewCodes(d.GoAPI),
 		sessions: onboard.NewSessions(d.GoAPI, opts.Now),
+		callers:  onboard.NewCallerBook(opts.Now),
 		releases: opts.Releases,
 		limit: limits.New(limits.Config{
 			Name: "onboardCodeLimiter", WindowMs: 60_000, Max: CodeLimit,
@@ -131,6 +135,7 @@ func RegisterWith(d *kit.Deps, opts Options) {
 	r.Delete("/api/support/sessions/{id}", h.endSession, d.RequireAuth, connect)
 	r.Post("/api/support/sessions/{id}/mail", h.mailSession, d.RequireAuth, connect)
 	r.Post("/api/support/devices/{id}/password", h.devicePassword, d.RequireAuth, connect)
+	r.Post("/api/support/devices/{id}/caller", h.deviceCaller, d.RequireAuth, connect)
 
 	r.Get("/api/onboard/public/{code}", h.publicCode, h.limit)
 	r.Get("/api/onboard/public/{code}/download", h.download, h.limit)

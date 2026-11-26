@@ -21,6 +21,10 @@ session that ended, or none, gets `401 {"success":false,"error":"invalid_session
 | `POST /api/support/session/end` | `{}` | The app closed. |
 | `POST /api/support/session/caller` | `{session}` | Whether a connection that came without the password is a signed-in helper (below). |
 
+The helper's viewer has one route of its own here, with the console
+session of a signed-in account: `POST /api/support/devices/{id}/caller`
+(below, "What the helper's viewer learns").
+
 ## The caller check (A271)
 
 The person at the computer may accept a connection by click instead of
@@ -35,8 +39,11 @@ The app asks once per incoming connection, when all of these hold:
 
 - the person allowed quick support (the session's status is `allowed`),
 - the connection came through the relay (the device got signal's
-  RequestRelay for it), and
-- its first login request has no password.
+  RequestRelay for it),
+- its first login request has no password, and
+- the console's address is HTTPS (A273). On a console reached over plain
+  HTTP the app does not ask, and quick support takes only the one-time
+  password.
 
 `session` is the relay session's UUID: `RequestRelay.uuid` as signal sent
 it to the device, which the device used to reach the relay. The caller
@@ -49,6 +56,7 @@ The server vouches when all of these hold, else it refuses:
 
 | Check | Refusal `reason` |
 |---|---|
+| The app's request came over HTTPS, as the console tells it from the connection or a trusted proxy (`TRUST_PROXY`, `X-Forwarded-Proto`) | `not_https` |
 | The quick support session is `allowed` and names its device | `session_state` |
 | The relay session runs, to the session's device, from the console's browser viewer (`panel-web-remote`), for a console account and a signed-in browser session of it | `session_not_open` |
 | Both sides met on the relay at most 60 seconds ago | `too_late` |
@@ -104,8 +112,41 @@ check keeps working with this server; the server only answers when asked.
 
 ### Trust
 
-The answer is as trustworthy as the channel the app already hands the
-one-time password over: the console's address from the link, with
-certificate checks on HTTPS. On a console that runs on plain HTTP, someone
-who can change that traffic could fake the answer, but could equally read
-the one-time password and connect without any click.
+The answer comes over the channel the app already hands the one-time
+password over: the console's address from the link, with certificate
+checks. Over plain HTTP someone on the way could fake it, so neither side
+uses it there (A273): the app does not ask, and the server answers
+`not_https`.
+
+## What the helper's viewer learns (A273)
+
+The computer does not tell the viewer why it offers no Allow; the console
+knows what it told the app. The viewer of a helper whose quick support
+session runs on the device asks, after it sent its login without a
+password, at 2, 5 and 10 seconds:
+
+```
+POST /api/support/devices/{id}/caller
+{"session": "<the viewer's relay session UUID>"}
+
+200
+{"success": true, "state": "not_allowed_yet", "app_https": true}
+```
+
+The account needs Connect to devices and an open quick support session on
+the device (`404 {"error": "no_session"}` otherwise). `app_https` is
+whether the app's last request came over HTTPS; it is left out when the
+console has not heard from the app since it started (the app polls every
+few seconds). `state` is what the console told the app about this relay
+session:
+
+| `state` | The viewer |
+|---|---|
+| `vouched` | keeps waiting: the person sees Allow |
+| `not_allowed_yet` | fails with `consent_not_allowed`: the person has not clicked Allow in the quick support window yet |
+| `not_https` | fails with `consent_needs_https` |
+| `refused` | keeps waiting (any other refusal; the person sees Decline) |
+| `not_asked` | with `app_https` false: `consent_needs_https`; otherwise asks again, and at the last check fails with `consent_needs_update`: an app that never asks is too old to accept by click |
+
+The texts are in `docs/failure-reasons.md`. The console keeps the states
+in memory for 10 minutes.

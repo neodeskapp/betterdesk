@@ -37,7 +37,8 @@ func TestQuickSupportVouchesOnlyForASignedInHelper(t *testing.T) {
 		made := operator.do(http.MethodPost, "/api/support/sessions", `{"name":"Ana"}`).json(t)
 		app := w.app()
 		token := str(app.do(http.MethodPost, "/api/support/redeem", `{"code":"`+str(made, "code")+`"}`).json(t), "session_token")
-		bearer := []string{"Authorization", "Bearer " + token}
+		// The app reaches the console over HTTPS (through the trusted proxy)
+		bearer := []string{"Authorization", "Bearer " + token, "X-Forwarded-Proto", "https"}
 		const device = "523456781"
 		ask := func(session string) answer {
 			t.Helper()
@@ -95,4 +96,112 @@ func TestQuickSupportVouchesOnlyForASignedInHelper(t *testing.T) {
 			t.Errorf("the refused account's entry: %d %v, want 1", n, err)
 		}
 	})
+}
+
+// supportOnDevice opens a quick support session of the operator that the
+// person allowed on device, with the app's requests over https or not.
+func supportOnDevice(t *testing.T, w *world, device string, https bool) (app *browser, header []string) {
+	t.Helper()
+	made := w.browser("operator").do(http.MethodPost, "/api/support/sessions", `{"name":"Ana"}`).json(t)
+	app = w.app()
+	token := str(app.do(http.MethodPost, "/api/support/redeem", `{"code":"`+str(made, "code")+`"}`).json(t), "session_token")
+	header = []string{"Authorization", "Bearer " + token}
+	if https {
+		header = append(header, "X-Forwarded-Proto", "https")
+	}
+	app.do(http.MethodPost, "/api/support/session/device", `{"device_id":"`+device+`","hostname":"ana-laptop"}`, header...)
+	app.do(http.MethodPost, "/api/support/session/consent", `{"allowed":true}`, header...)
+	return app, header
+}
+
+// TestQuickSupportVouchesOnlyOverHTTPS: accepting by click needs HTTPS
+// (A273). A quick support app that reaches the console over plain HTTP
+// gets no vouch, even for the helper's own relay session, and the refusal
+// does not spend the session.
+func TestQuickSupportVouchesOnlyOverHTTPS(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t))
+	const device = "523456782"
+	app, header := supportOnDevice(t, w, device, false)
+	relaySession := "plain-" + t.Name()
+	liveRelay(t, relaySession, "panel-web-remote", device, 5, "console-1")
+	res := app.do(http.MethodPost, "/api/support/session/caller", `{"session":"`+relaySession+`"}`, header...)
+	if res.status != http.StatusConflict || str(res.json(t), "reason") != "not_https" {
+		t.Fatalf("over plain HTTP: %d %s, want 409 not_https", res.status, res.body)
+	}
+	// The refusal did not spend the relay session: over HTTPS it vouches
+	res = app.do(http.MethodPost, "/api/support/session/caller", `{"session":"`+relaySession+`"}`, append(header, "X-Forwarded-Proto", "https")...)
+	if res.status != http.StatusOK {
+		t.Fatalf("over HTTPS after a plain refusal: %d %s, want 200", res.status, res.body)
+	}
+}
+
+// TestTheViewerLearnsWhyThereIsNoAllow: the helper's viewer asks what the
+// quick support app was told about its relay session (A273): nothing yet,
+// that the person has not clicked Allow yet, that the app is on plain
+// HTTP, or that it was vouched for; and whether the app reaches the
+// console over HTTPS. Only an account with a quick support session on the
+// device may ask.
+func TestTheViewerLearnsWhyThereIsNoAllow(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t))
+	operator := w.browser("operator")
+	state := func(device, relaySession string) map[string]any {
+		t.Helper()
+		res := operator.do(http.MethodPost, "/api/support/devices/"+device+"/caller", `{"session":"`+relaySession+`"}`)
+		if res.status != http.StatusOK {
+			t.Fatalf("caller state of %s: %d %s", device, res.status, res.body)
+		}
+		return res.json(t)
+	}
+	suffix := strings.ReplaceAll(t.Name(), "/", "-")
+
+	// Before Allow: the app was told the person has not allowed it yet
+	const early = "523456783"
+	made := operator.do(http.MethodPost, "/api/support/sessions", `{"name":"Ana"}`).json(t)
+	app := w.app()
+	token := str(app.do(http.MethodPost, "/api/support/redeem", `{"code":"`+str(made, "code")+`"}`).json(t), "session_token")
+	header := []string{"Authorization", "Bearer " + token, "X-Forwarded-Proto", "https"}
+	app.do(http.MethodPost, "/api/support/session/device", `{"device_id":"`+early+`","hostname":"ana-laptop"}`, header...)
+	earlySession := "early-" + suffix
+	liveRelay(t, earlySession, "panel-web-remote", early, 5, "console-1")
+	if got := state(early, earlySession); str(got, "state") != "not_asked" || got["app_https"] != true {
+		t.Fatalf("before the app asked: %v, want not_asked over HTTPS", got)
+	}
+	app.do(http.MethodPost, "/api/support/session/caller", `{"session":"`+earlySession+`"}`, header...)
+	if got := state(early, earlySession); str(got, "state") != "not_allowed_yet" {
+		t.Fatalf("before Allow: %v, want not_allowed_yet", got)
+	}
+
+	// Vouched
+	const fine = "523456784"
+	app, header = supportOnDevice(t, w, fine, true)
+	fineSession := "fine-" + suffix
+	liveRelay(t, fineSession, "panel-web-remote", fine, 5, "console-1")
+	app.do(http.MethodPost, "/api/support/session/caller", `{"session":"`+fineSession+`"}`, header...)
+	if got := state(fine, fineSession); str(got, "state") != "vouched" {
+		t.Fatalf("vouched: %v", got)
+	}
+	// Another device's relay session says nothing about this one
+	if got := state(fine, earlySession); str(got, "state") != "not_asked" {
+		t.Fatalf("another device's relay session: %v, want not_asked", got)
+	}
+
+	// Plain HTTP: refused for it, and the viewer sees the app is not on HTTPS
+	const plain = "523456785"
+	app, header = supportOnDevice(t, w, plain, false)
+	plainSession := "plainview-" + suffix
+	if got := state(plain, plainSession); str(got, "state") != "not_asked" || got["app_https"] != false {
+		t.Fatalf("an app on plain HTTP that did not ask: %v, want not_asked and app_https false", got)
+	}
+	app.do(http.MethodPost, "/api/support/session/caller", `{"session":"`+plainSession+`"}`, header...)
+	if got := state(plain, plainSession); str(got, "state") != "not_https" {
+		t.Fatalf("an app on plain HTTP that asked: %v, want not_https", got)
+	}
+
+	// Another account has no quick support session on the device
+	if res := w.browser("admin").do(http.MethodPost, "/api/support/devices/"+fine+"/caller", `{"session":"`+fineSession+`"}`); res.status != http.StatusNotFound {
+		t.Fatalf("another account: %d %s, want 404", res.status, res.body)
+	}
+	if res := operator.do(http.MethodPost, "/api/support/devices/"+fine+"/caller", `{}`); res.status != http.StatusBadRequest {
+		t.Fatalf("no relay session: %d %s, want 400", res.status, res.body)
+	}
 }

@@ -14,7 +14,7 @@
  */
 
 import type { DeviceReach } from '#lib/api/devices.ts';
-import type { DeviceSupport } from '#lib/api/onboard.ts';
+import type { DeviceSupport, SupportCaller } from '#lib/api/onboard.ts';
 import { setCsrfToken } from '#lib/api/client.ts';
 import { t } from '#lib/i18n/i18n.svelte.ts';
 import { installCapabilities } from './capabilities.ts';
@@ -117,6 +117,8 @@ export interface RemoteClient {
 		reach(): Promise<DeviceReach>;
 		unblock(): Promise<void>;
 		support(): Promise<DeviceSupport>;
+		/** What the quick support app was told about this viewer (A273) */
+		caller?(): Promise<SupportCaller | null>;
 		/** How long the viewer waits for the person to accept, when shorter than CONSENT_WAIT_MS */
 		consentWait?(): number | undefined;
 	};

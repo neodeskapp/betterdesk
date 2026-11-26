@@ -235,6 +235,36 @@ export async function takeDevicePassword(deviceId: string): Promise<DeviceSuppor
 	}
 }
 
+/**
+ * What the quick support app on the device was told about the caller of a
+ * relay session (A273): vouched (the person sees Allow), not_allowed_yet
+ * (the person has not clicked Allow in the quick support window),
+ * not_https, refused, or not_asked (the app did not ask: an app too old to
+ * accept by click never does). appHttps is whether the app reaches the
+ * console over HTTPS, null when the console has not heard from it.
+ */
+export interface SupportCaller {
+	state: 'vouched' | 'not_allowed_yet' | 'not_https' | 'refused' | 'not_asked';
+	appHttps: boolean | null;
+}
+
+/** The caller check of this account's quick support session on a device, for the viewer; null when the server can't say */
+export async function supportCaller(deviceId: string, session: string): Promise<SupportCaller | null> {
+	try {
+		const out = await api(
+			v.object({
+				state: v.picklist(['vouched', 'not_allowed_yet', 'not_https', 'refused', 'not_asked']),
+				app_https: v.optional(v.boolean())
+			}),
+			`/api/support/devices/${enc(deviceId)}/caller`,
+			{ method: 'POST', body: { session }, activity: false }
+		);
+		return { state: out.state, appHttps: out.app_https ?? null };
+	} catch {
+		return null;
+	}
+}
+
 export async function endSession(id: string): Promise<SupportSession> {
 	return (
 		await api(v.object({ session: SupportSession }), `/api/support/sessions/${enc(id)}`, { method: 'DELETE' })

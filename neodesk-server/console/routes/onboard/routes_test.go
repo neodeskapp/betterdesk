@@ -17,6 +17,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console"
 	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
@@ -79,11 +80,18 @@ func newWorld(t *testing.T, sdb *store.DB) *world {
 		"SESSION_SECRET":             "onboard-secret-0123456789abcdef0123456789abcdef",
 		"NEODESK_CLIENT_RELEASE_DIR": packages,
 	}
+	// The app's requests come through a proxy on loopback, which names the
+	// scheme (X-Forwarded-Proto), as on a console behind a reverse proxy
+	trust, err := httpx.ParseTrustProxy("loopback")
+	if err != nil {
+		t.Fatal(err)
+	}
 	ccfg := &consoleconfig.Config{
 		Host: "127.0.0.1", NodeEnv: "development", DataDir: data,
 		UploadsDir: filepath.Join(data, "uploads"), LangDir: filepath.Join("..", "..", "static", "files", "lang"),
 		WebUIDir: filepath.Join(data, "no-build"), DefaultLanguage: "en",
-		Getenv: func(key string) string { return env[key] },
+		Getenv:     func(key string) string { return env[key] },
+		TrustProxy: trust,
 	}
 	s, err := console.New(ctx, console.Options{Config: ccfg, Store: sdb, API: apiSrv.InternalHandler()})
 	if err != nil {

@@ -39,6 +39,9 @@ func (h *handlers) requireSessionToken(next http.Handler) http.Handler {
 			kit.JSON(w, r, http.StatusInternalServerError, refusal{Error: "server_error"})
 			return
 		}
+		// The viewer tells the helper when quick support takes only the
+		// password because the app reaches the console over plain HTTP
+		h.callers.NoteApp(sess.ID, kit.Secure(r))
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), sessionKey{}, sess)))
 	})
 }

@@ -9640,6 +9640,21 @@
       "why": "Niemand hat die Verbindung an {name} innerhalb von 3 Minuten angenommen.",
       "todo": "Bitte sie, auf das Fenster mit der Anfrage zu achten, und verbinde dich dann neu."
     },
+    "consent_not_allowed": {
+      "what": "{person} hat die Schnellhilfe noch nicht erlaubt.",
+      "why": "{name} bietet das Hereinlassen per Klick erst an, wenn die Person im Schnellhilfe-Fenster auf Erlauben geklickt hat.",
+      "todo": "Bitte sie, im Schnellhilfe-Fenster auf Erlauben zu klicken, und verbinde dich dann noch einmal."
+    },
+    "consent_needs_https": {
+      "what": "{name} kann dich nicht per Klick hereinlassen.",
+      "why": "Diese Konsole läuft nicht über HTTPS, deshalb nimmt die Schnellhilfe nur das Einmalpasswort.",
+      "todo": "Schick einen neuen Schnellhilfe-Link: Sein Einmalpasswort kommt zu dir und verbindet dich. Für Annehmen per Klick braucht die Konsole HTTPS."
+    },
+    "consent_needs_update": {
+      "what": "{name} kann dich nicht per Klick hereinlassen.",
+      "why": "NeoDesk auf {name} ist zu alt, um per Klick anzunehmen.",
+      "todo": "Schick einen neuen Schnellhilfe-Link: Sein Einmalpasswort kommt zu dir und verbindet dich. Oder bitte {person}, NeoDesk zu aktualisieren."
+    },
     "password_wrong": {
       "what": "Das Passwort wurde nicht angenommen.",
       "why": "{name} hat das Passwort abgewiesen.",

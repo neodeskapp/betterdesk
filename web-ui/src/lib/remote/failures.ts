@@ -78,6 +78,31 @@ export function punchHoleReason(failure: number): Reason {
 }
 
 /** A button of a failure; the viewer wires each to its step */
+/**
+ * Why a quick support computer offers the person no Allow for this viewer,
+ * from the console's answer about its caller check (A273), or null to keep
+ * waiting. An app that did not ask is one too old to accept by click, or
+ * one on plain HTTP, where quick support takes only the password; the
+ * viewer decides "too old" only at its last check, when the app had time
+ * to ask.
+ */
+export function callerFailure(
+	answer: { state: string; appHttps: boolean | null } | null,
+	last: boolean
+): Reason | null {
+	if (!answer) return null;
+	switch (answer.state) {
+		case 'not_allowed_yet':
+			return 'consent_not_allowed';
+		case 'not_https':
+			return 'consent_needs_https';
+		case 'not_asked':
+			if (answer.appHttps === false) return 'consent_needs_https';
+			return last ? 'consent_needs_update' : null;
+	}
+	return null;
+}
+
 export type FailAction = 'reconnect' | 'unblock' | 'open_device' | 'https_help' | 'copy_details';
 
 export interface Failure {
@@ -116,7 +141,10 @@ const NO_RECONNECT: ReadonlySet<Reason> = new Set([
 	'feature_off',
 	'license_blocked',
 	'billing_blocked',
-	'not_authorized'
+	'not_authorized',
+	// Quick support takes only the password there (A273)
+	'consent_needs_https',
+	'consent_needs_update'
 ] as Reason[]);
 
 function text(reason: Reason, part: string, fallback: string, p: Record<string, string>): string {

@@ -53,8 +53,23 @@ func (h *handlers) appCaller(w http.ResponseWriter, r *http.Request) {
 		appFail(w, r, http.StatusBadRequest, "invalid_body", "")
 		return
 	}
+	// The helper's viewer reads what the app was told (deviceCaller)
 	notVouched := func(reason string) {
+		state := onboard.CallerRefused
+		switch reason {
+		case "not_https":
+			state = onboard.CallerNotHTTPS
+		case "session_state":
+			state = onboard.CallerNotAllowedYet
+		}
+		h.callers.Note(relaySession, sess.DeviceID, state)
 		kit.JSON(w, r, http.StatusConflict, refusal{Error: "not_vouched", Reason: reason})
+	}
+	// Accepting by click needs HTTPS (A273): on plain HTTP someone on the
+	// way could fake this answer
+	if !kit.Secure(r) {
+		notVouched("not_https")
+		return
 	}
 	if sess.Status != onboard.StatusAllowed || sess.DeviceID == "" {
 		notVouched("session_state")
@@ -133,5 +148,45 @@ func (h *handlers) appCaller(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	h.callers.Note(relaySession, sess.DeviceID, onboard.CallerVouched)
 	kit.JSON(w, r, http.StatusOK, callerAnswer{Success: true, Vouched: true, DeviceID: sess.DeviceID, Session: relaySession, Helper: name})
+}
+
+// deviceCallerAnswer is POST /api/support/devices/{id}/caller.
+type deviceCallerAnswer struct {
+	Success bool   `json:"success"`
+	State   string `json:"state"`
+	// AppHTTPS is whether the quick support app's last request came over
+	// HTTPS; left out when the console has not heard from it since it
+	// started
+	AppHTTPS *bool `json:"app_https,omitempty"`
+}
+
+// deviceCaller answers POST /api/support/devices/{id}/caller with the body
+// {session}: the viewer of a helper whose quick support session runs on
+// the device asks what the device's app was told about the caller of its
+// relay session (A273), so it can say at once why the person sees no
+// Allow: vouched, not_allowed_yet, not_https, refused, or not_asked when
+// the app did not ask (an app too old to accept by click never asks, and
+// a new one does not ask on plain HTTP). 404 when the account has no
+// quick support session on the device.
+func (h *handlers) deviceCaller(w http.ResponseWriter, r *http.Request) {
+	deviceID := strings.TrimSpace(r.PathValue("id"))
+	var body struct {
+		Session string `json:"session"`
+	}
+	if err := kit.Bind(r, &body); err != nil || strings.TrimSpace(body.Session) == "" || len(body.Session) > 128 {
+		fail(w, r, http.StatusBadRequest, "invalid_body")
+		return
+	}
+	sess, ok := h.sessions.OpenOnDevice(r.Context(), deviceID, kit.UserID(r))
+	if !ok {
+		fail(w, r, http.StatusNotFound, "no_session")
+		return
+	}
+	out := deviceCallerAnswer{Success: true, State: h.callers.State(strings.TrimSpace(body.Session), deviceID)}
+	if https, known := h.callers.AppHTTPS(sess.ID); known {
+		out.AppHTTPS = &https
+	}
+	kit.JSON(w, r, http.StatusOK, out)
 }
