@@ -5,6 +5,13 @@
 
 ---
 
+## [3.6.7] — 2026-11-26
+
+### Changed
+- _(none yet)_
+
+---
+
 ## [3.6.6] — 2026-11-26
 
 ### Changed
@@ -420,3 +427,4 @@ Second release candidate, and the first as NeoDesk.
 [3.6.4]: https://github.com/neodeskapp/neodesk/compare/v3.6.3...v3.6.4
 [3.6.5]: https://github.com/neodeskapp/neodesk/compare/v3.6.4...v3.6.5
 [3.6.6]: https://github.com/neodeskapp/neodesk/compare/v3.6.5...v3.6.6
+[3.6.7]: https://github.com/neodeskapp/neodesk/compare/v3.6.6...v3.6.7
