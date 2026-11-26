@@ -145,7 +145,7 @@ func (m *Manager) impCookieID(r *http.Request) string {
 	if !found || !strings.HasPrefix(value, cookiePrefix) {
 		return ""
 	}
-	id, ok := unsign(value[len(cookiePrefix):], m.secret)
+	id, ok := unsignImpersonation(value[len(cookiePrefix):], m.secret)
 	if !ok {
 		return ""
 	}

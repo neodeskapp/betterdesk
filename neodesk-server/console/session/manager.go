@@ -209,6 +209,20 @@ func (m *Manager) load(r *http.Request) (s *Session, expired string, err error) 
 		return empty, "", err
 	}
 	s.id, s.originalID = id, id
+	if _, marked := s.data.get(impersonationKey); marked {
+		// An impersonation session counts only through its own cookie, next
+		// to the admin's session (loadImpersonation). Through the session
+		// cookie it would be a plain, writable session of the person viewed
+		// without the gate, the time limit or the audit trail: the row ends,
+		// and the request goes on signed out
+		if ended == "" {
+			if err := m.endRow(r.Context(), id, ReasonImpersonationEnded); err != nil {
+				return nil, "", err
+			}
+		}
+		empty, err := m.newSession(r)
+		return empty, "", err
+	}
 	if ended == "" {
 		return s, "", nil
 	}
@@ -248,11 +262,11 @@ func (m *Manager) CookieSessionID(r *http.Request) string {
 
 // cookieHeader is the Set-Cookie text for a session.
 func (m *Manager) cookieHeader(s *Session) string {
-	name := m.cookieName
+	name, value := m.cookieName, sign(s.id, m.secret)
 	if s.impersonating {
-		name = m.impCookieName()
+		name, value = m.impCookieName(), signImpersonation(s.id, m.secret)
 	}
-	return cookie.Format(name, cookiePrefix+sign(s.id, m.secret), cookie.Attributes{
+	return cookie.Format(name, cookiePrefix+value, cookie.Attributes{
 		Path:     s.cookie.path(),
 		Expires:  s.cookie.expires,
 		HTTPOnly: s.cookie.httpOnly(),
