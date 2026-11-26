@@ -67,9 +67,8 @@ const DIALOGS: { name: string; url: string; open: Open; after?: Open }[] = [
 	{
 		name: 'Quick support',
 		url: '/devices',
-		open: (p) => p.locator('.quick-support-btn').click(),
-		// The link it made would stay open and show on Help requests for other tests
-		after: (p) => p.getByRole('button', { name: 'Cancel the link' }).click()
+		// Opens on Connect by ID and Make a new link; no link is made until asked
+		open: (p) => p.locator('.quick-support-btn').click()
 	},
 	{ name: 'Add a computer', url: '/devices', open: button(/^Add a computer$/) },
 	{ name: 'Device panel', url: '/devices', open: (p) => p.locator('.device-card, tbody tr').first().click() },

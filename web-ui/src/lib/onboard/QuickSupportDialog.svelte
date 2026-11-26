@@ -1,7 +1,10 @@
 <!--
-  "Quick support" (top bar, Help requests; device.connect), as
-  launch/design/DESIGN.md draws it: opening it makes a session link at
-  once (one hour, one use) and shows it (CodeResult); then the dialog asks
+  "Quick support" (top bar, Help requests; device.connect): it opens on
+  the two ways to help someone. Connect by ID opens the device's session
+  inside the console, as Remote sessions does (on a phone, the RustDesk
+  app; the dialog has no room for the desktop app buttons beside Connect).
+  Make a new link makes a session link (one hour, one use) and shows it
+  (CodeResult); then the dialog asks
   for the session's state every 2 s while it is open: waiting for the link,
   the app is open and asks the person, then Connect (browser viewer) and
   Open in the desktop app (NeoDesk, or stock RustDesk). The browser viewer
@@ -25,7 +28,10 @@
 		type SupportSession
 	} from '#lib/api/onboard.ts';
 	import { formatDate } from '#lib/i18n/format.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { isPhone } from '#lib/remote/capabilities.ts';
+	import { sessionPath } from '#lib/remote/console-sessions.svelte.ts';
+	import QuickConnect from '#lib/remote/QuickConnect.svelte';
 	import { poll } from '#lib/state/live.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
@@ -35,7 +41,7 @@
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
-	import { APP_NAMES, DESKTOP_APPS, type DesktopApp } from '#lib/util/app-links.ts';
+	import { APP_NAMES, appLink, DESKTOP_APPS, type DesktopApp } from '#lib/util/app-links.ts';
 	import { ICONS } from '#lib/util/display.ts';
 	import CodeResult from './CodeResult.svelte';
 	import {
@@ -88,8 +94,18 @@
 		void getOnboardStatus()
 			.then((s) => (status = s))
 			.catch(() => {});
-		if (!current) void create();
 	});
+
+	const phone = typeof window !== 'undefined' && isPhone();
+
+	function connectId(id: string) {
+		close();
+		go.page(sessionPath(id));
+	}
+
+	function openIdInApp(id: string, app: DesktopApp) {
+		go.here(appLink(id, app));
+	}
 
 	// While the session is open, follow its state
 	const following = $derived(!!current && !isOver(current.status));
@@ -176,7 +192,27 @@
 <Dialog bind:open title={t('onboard.support.title')} {onclose}>
 	<div class="quick-support">
 		{#if !current}
-			{#if creating}<States kind="loading" message={t('onboard.support.creating')} />{/if}
+			{#if creating}
+				<States kind="loading" message={t('onboard.support.creating')} />
+			{:else}
+				<section aria-label={tf('remote_dashboard.quick_connect_title', 'Connect by ID')}>
+					<QuickConnect
+						{phone}
+						hint={tf(
+							'remote_dashboard.quick_connect_hint',
+							'The ID shown in the RustDesk app on the device.'
+						)}
+						onconnect={connectId}
+						onapp={phone ? openIdInApp : null}
+					/>
+				</section>
+				<p class="or"><span>{tf('auth.or', 'or')}</span></p>
+				<div>
+					<Button icon={ICONS.link} class="make-link" onclick={() => void create()}
+						>{t('onboard.support.again')}</Button
+					>
+				</div>
+			{/if}
 			<FormStatus message={error} tone={error ? 'error' : 'neutral'} />
 		{:else}
 			{#if made && current.status === 'waiting'}
@@ -256,6 +292,25 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
+	}
+	/* In a dialog the ID field fills its row (on a phone the app button goes below it) */
+	.quick-support :global(.quick-input) {
+		max-width: none;
+	}
+	/* "or" between the two ways, on a rule */
+	.or {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		margin: 0;
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+	}
+	.or::before,
+	.or::after {
+		flex: 1;
+		border-top: 1px solid var(--rule);
+		content: '';
 	}
 	.hint {
 		margin: 0;

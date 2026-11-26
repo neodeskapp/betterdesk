@@ -8891,6 +8891,10 @@
    "reason": "Called by the NeoDesk app's chat window with its device token, not by people."
   },
   {
+   "route": "GET /api/chat/device/helper/picture",
+   "reason": "Called by the NeoDesk app's chat window with its device token, not by people."
+  },
+  {
    "route": "POST /api/chat/upload",
    "reason": "An upload for the web console's editor (pictures, fonts, chat files); use the console."
   },

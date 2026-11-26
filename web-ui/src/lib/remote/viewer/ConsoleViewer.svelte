@@ -59,7 +59,10 @@
 {/if}
 
 <style>
+	/* The viewer's own layers (its bar, notes and menus) stay inside it,
+	   under the console's drawer, its overlay and the top bar's menus */
 	.console-viewer {
+		isolation: isolate;
 		display: flex;
 		flex: 1;
 		flex-direction: column;

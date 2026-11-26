@@ -53,6 +53,9 @@ type HubOptions struct {
 	FilesDir string
 	// DisplayName is an account's name to show, "" for its user name.
 	DisplayName func(ctx context.Context, id int64) string
+	// PictureVersion is the version of an account's profile picture, ""
+	// when it has none; nil: no pictures.
+	PictureVersion func(ctx context.Context, id int64) string
 	// Audit notes an edit, a deletion, an assignment and the like, by the
 	// account (0 for a device).
 	Audit func(ctx context.Context, userID int64, action string, details map[string]any)
@@ -417,7 +420,9 @@ func conversationOut(c chatstore.Conversation, assignee string) wireConversation
 }
 
 // sendHelper tells a device who helps its person: the assignee's name,
-// null when nobody took the conversation, and whether it is open.
+// null when nobody took the conversation, whether it is open, and the
+// version of the assignee's profile picture (null without one), which the
+// device fetches from GET /api/chat/device/helper/picture.
 func (h *Hub) sendHelper(ctx context.Context, m *member) {
 	if h.opts.Store == nil {
 		return
@@ -426,11 +431,16 @@ func (h *Hub) sendHelper(ctx context.Context, m *member) {
 	if err != nil {
 		return
 	}
-	var name any
+	var name, picture any
 	if c.AssigneeID != 0 && h.opts.DisplayName != nil {
 		name = h.opts.DisplayName(ctx, c.AssigneeID)
 	}
-	m.conn.SendText(frame("helper", map[string]any{"name": name, "state": c.State}))
+	if c.AssigneeID != 0 && h.opts.PictureVersion != nil {
+		if v := h.opts.PictureVersion(ctx, c.AssigneeID); v != "" {
+			picture = v
+		}
+	}
+	m.conn.SendText(frame("helper", map[string]any{"name": name, "state": c.State, "picture": picture}))
 }
 
 // sendHistory sends a page of a conversation's history and its read

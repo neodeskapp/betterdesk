@@ -155,11 +155,20 @@ function openViewer(id: string) {
 	window.open(link(standalonePath(id)), '_blank');
 }
 
-/** A device's session opens inside the console, in place of the page; the device panel closes, or it would cover it (L531) */
-function openHere(id: string) {
-	if (devicePanel.id) closeDevice();
-	// eslint-disable-next-line svelte/no-navigation-without-resolve -- link() adds the base
-	void goto(link(sessionPath(id)));
+/**
+ * A device's session opens inside the console, in place of the page; the
+ * device panel closes, or it would cover it (L531). It closes after the
+ * navigation: on /devices the open panel is a history entry of its own, and
+ * closing it first steps Back, which lands after the session opened and
+ * returns to the list.
+ */
+async function openHere(id: string) {
+	try {
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- link() adds the base
+		await goto(link(sessionPath(id)));
+	} finally {
+		if (devicePanel.id) closeDevice();
+	}
 }
 
 /**
@@ -174,10 +183,10 @@ export async function connectInBrowser(d: DeviceLike): Promise<boolean> {
 	if (isPhone()) {
 		const choice = await ask('connect-choice', { device: d, app: !d.remote_target });
 		if (choice === 'app') window.location.href = appLink(d.id, 'rustdesk');
-		else if (choice === 'web') open(d.id);
+		else if (choice === 'web') await open(d.id);
 		return choice !== null;
 	}
-	open(d.id);
+	await open(d.id);
 	return true;
 }
 
