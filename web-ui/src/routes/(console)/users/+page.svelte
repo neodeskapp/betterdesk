@@ -74,6 +74,7 @@
 		eachLimited,
 		groupNote,
 		providerOf,
+		roleLabel as labelOfRole,
 		ROLE_ORDER,
 		scopeText,
 		signInStates,
@@ -164,11 +165,7 @@
 
 	/* ── Labels ── */
 
-	function roleLabel(role: string): string {
-		const key = `users.role_${role}`;
-		const text = t(key);
-		return text === key ? role : text;
-	}
+	const roleLabel = (role: string): string => labelOfRole(role, t);
 	function providerLabel(provider: string): string {
 		const key = `users.provider_${provider}`;
 		const text = t(key);
@@ -541,7 +538,9 @@
 			cell: nameCell,
 			primary: true,
 			sortValue: (u) => u.username.toLowerCase(),
-			class: 'col-name'
+			class: 'col-name',
+			// Room for a name and its state lines, which wrap
+			minWidth: '15rem'
 		},
 		{ id: 'email', label: t('users.email'), cell: emailCell, sortValue: (u) => u.email.toLowerCase() },
 		{
@@ -1179,6 +1178,23 @@
 		position: sticky;
 		inset-inline-end: 0;
 		background: var(--bg);
+	}
+	/* The row's tint is see-through: over the page's background, so the
+	   pinned cell neither doubles it nor shows the cells it covers */
+	.users-table :global(tr.selected > td.actions) {
+		background: linear-gradient(var(--accent-tint), var(--accent-tint)), var(--bg);
+	}
+	/* The state lines under a name or an address wrap, so the columns after
+	   them (two-factor sign-in, last sign-in) stay in view */
+	.users-table :global(.cell-sub .status) {
+		white-space: normal;
+	}
+	/* On a phone each filter fills its row instead of leaving ragged gaps */
+	@media (max-width: 640px) {
+		.users-page :global(.users-filters > .form-select) {
+			flex: 1 1 100%;
+			width: 100%;
+		}
 	}
 	.roles {
 		display: flex;
