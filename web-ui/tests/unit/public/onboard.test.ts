@@ -205,6 +205,16 @@ describe('the invite page', () => {
 		expect(await screen.findByText('onboard.public.server_address')).toBeInTheDocument();
 	});
 
+	test('a click on the code or the server address copies it', async () => {
+		const writeText = vi.fn().mockResolvedValue(undefined);
+		Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+		render(CodePage, { code: 'ABCD2345', kind: 'join' });
+		(await screen.findByText('https://desk.example.com')).click();
+		await waitFor(() => expect(writeText).toHaveBeenCalledWith('https://desk.example.com'));
+		screen.getByText('ABCD-2345').click();
+		await waitFor(() => expect(writeText).toHaveBeenCalledWith('ABCD-2345'));
+	});
+
 	test('a code that cannot be used shows one plain message', async () => {
 		answer = { status: 404, body: { success: false, error: 'invalid_or_expired' } };
 		render(CodePage, { code: 'ZZZZ2345', kind: 'join' });
