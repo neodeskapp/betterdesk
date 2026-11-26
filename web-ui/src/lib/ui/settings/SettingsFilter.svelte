@@ -2,7 +2,8 @@
   The filter field and the section links of a long settings page
   (PATTERN.md rule 9). The field filters the rows of the page through the
   SettingsFilter it gets; the links jump to the groups. When nothing
-  matches it says so with what was typed.
+  matches it says so with what was typed. The field sits in a search
+  landmark named like it.
 -->
 <script lang="ts">
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
@@ -19,20 +20,14 @@
 	let { filter, label, sections = [] }: Props = $props();
 
 	const none = $derived(filter.active && filter.shown.size > 0 && filter.shownCount === 0);
+	const name = $derived(label ?? tf('settings_ui.filter', 'Filter settings'));
 </script>
 
-<!-- A search landmark: it narrows the page and is no setting itself (e2e/settings-index.spec.ts skips it) -->
-<div
-	class="settings-filter"
-	role="search"
-	aria-label={label ?? tf('settings_ui.filter', 'Filter settings')}
-	data-search-skip
->
-	<SearchField
-		label={label ?? tf('settings_ui.filter', 'Filter settings')}
-		placeholder={label ?? tf('settings_ui.filter', 'Filter settings')}
-		bind:value={filter.query}
-	/>
+<div class="settings-filter" data-search-skip>
+	<!-- A search landmark: the field finds settings and is none itself -->
+	<div role="search" aria-label={name}>
+		<SearchField label={name} placeholder={name} bind:value={filter.query} />
+	</div>
 	{#if sections.length && !filter.active}
 		<nav class="section-links" aria-label={tf('settings_ui.sections', 'Sections on this page')}>
 			<!-- Links within this page -->

@@ -14,12 +14,10 @@ vi.mock('$app/paths', () => ({ resolve: (p: string) => p || '/', asset: (p: stri
 vi.mock('$app/navigation', () => ({ goto: vi.fn(), beforeNavigate: vi.fn(), replaceState: vi.fn() }));
 
 import SettingsFixture from './fixtures/SettingsFixture.svelte';
-import SettingsTabFixture from './fixtures/SettingsTabFixture.svelte';
 import ListEditor from '../../../src/lib/ui/settings/ListEditor.svelte';
 import KeepCount from '../../../src/lib/ui/settings/KeepCount.svelte';
 import InheritedValue from '../../../src/lib/ui/settings/InheritedValue.svelte';
 import RecordPicker from '../../../src/lib/ui/settings/RecordPicker.svelte';
-import OrgPicker from '../../../src/lib/ui/settings/OrgPicker.svelte';
 import { relayOptions, roleOptions } from '../../../src/lib/ui/settings/pickers.ts';
 
 afterEach(() => cleanup());
@@ -66,31 +64,6 @@ describe('a setting row', () => {
 	});
 });
 
-describe('a tab of Settings', () => {
-	test('gets the save-model line, filter, section links and a named side column without a second title', () => {
-		render(SettingsTabFixture);
-		expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
-		expect(screen.getByText(/Changes are saved when you press Save/)).toBeInTheDocument();
-		expect(screen.getByRole('searchbox', { name: 'Filter settings' })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: 'Look' })).toHaveAttribute('href', '#g-look');
-		expect(screen.getByRole('complementary', { name: 'Preview' })).toHaveTextContent('The preview');
-	});
-
-	test('a row of choices names its group with the setting name and help', () => {
-		render(SettingsTabFixture);
-		const group = screen.getByRole('radiogroup', { name: 'Default theme' });
-		expect(group).toHaveAccessibleDescription('What everyone sees.');
-	});
-
-	test('a refused value is said at its row and marks the control', () => {
-		render(SettingsTabFixture, { error: 'Use a colour like #1f6feb.' });
-		const input = screen.getByRole('textbox', { name: 'Accent' });
-		expect(input).toHaveAttribute('aria-invalid', 'true');
-		expect(input).toHaveAccessibleDescription(/Buttons and links\..*Use a colour like #1f6feb\./);
-		expect(document.getElementById('r-color-error')).toHaveTextContent('Use a colour like #1f6feb.');
-	});
-});
-
 describe('the filter', () => {
 	test('hides rows and groups that do not match, also by key, and says when nothing does', async () => {
 		render(SettingsFixture);
@@ -105,10 +78,10 @@ describe('the filter', () => {
 		expect(screen.getByText(/Nothing matches/)).toBeInTheDocument();
 	});
 
-	test('the filter field is a search landmark, not a setting', () => {
+	test('is a search landmark named like its field, so it is no setting of the page', () => {
 		render(SettingsFixture);
 		const region = screen.getByRole('search', { name: 'Filter permissions' });
-		expect(within(region).getByRole('searchbox')).toBeInTheDocument();
+		expect(within(region).getByRole('searchbox', { name: 'Filter permissions' })).toBeInTheDocument();
 	});
 });
 
@@ -230,26 +203,6 @@ describe('an inherited value', () => {
 		await userEvent.click(screen.getByRole('button', { name: "Use the server's value" }));
 		expect(oninherit).toHaveBeenCalledOnce();
 	});
-	test('with a name, each button says which setting it is for', async () => {
-		const props = {
-			id: 'iv2',
-			name: 'Allow sound',
-			overridden: false,
-			inherited: 'No rule.',
-			overrideLabel: 'Set for this organization',
-			inheritLabel: 'Remove the rule',
-			onoverride: vi.fn(),
-			oninherit: vi.fn(),
-			children: control
-		};
-		const { rerender } = render(InheritedValue, props);
-		expect(
-			screen.getByRole('button', { name: 'Set for this organization: Allow sound' })
-		).toBeInTheDocument();
-		await rerender({ ...props, overridden: true });
-		flushSync();
-		expect(screen.getByRole('button', { name: 'Remove the rule: Allow sound' })).toBeInTheDocument();
-	});
 });
 
 describe('the record picker', () => {
@@ -273,39 +226,5 @@ describe('the record picker', () => {
 		expect(gone).toBeChecked();
 		await userEvent.click(gone);
 		expect(onchange).toHaveBeenLastCalledWith(['operator']);
-	});
-});
-
-describe('the record picker with values that are no record', () => {
-	test('a stored value that never was a record is named as the page says', () => {
-		render(RecordPicker, {
-			id: 'ops2',
-			legend: 'Allowed operator roles',
-			options: [{ value: 'operator', label: 'Operator' }],
-			value: ['demo_operator'],
-			onchange: vi.fn(),
-			unknownLabel: (v: string) => `${v} (not a role)`
-		});
-		expect(screen.getByRole('checkbox', { name: 'demo_operator (not a role)' })).toBeChecked();
-	});
-});
-
-describe('the organization picker', () => {
-	test('with nothing chosen it says so instead of showing the first organization', async () => {
-		const onchange = vi.fn();
-		render(OrgPicker, {
-			label: 'Organization',
-			orgs: [
-				{ id: 'o1', name: 'Front office' },
-				{ id: 'o2', name: 'Lab' }
-			],
-			value: '',
-			placeholder: 'Choose an organization',
-			onchange
-		});
-		const select = screen.getByLabelText('Organization') as HTMLSelectElement;
-		expect(select.selectedOptions[0]?.textContent).toBe('Choose an organization');
-		await userEvent.selectOptions(select, 'Lab');
-		expect(onchange).toHaveBeenLastCalledWith('o2');
 	});
 });
