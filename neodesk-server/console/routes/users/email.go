@@ -81,6 +81,24 @@ func changeRefusal(r *http.Request, err error) error {
 	return err
 }
 
+// partlyRefused is the reply of a change of an account whose new address
+// the changer refused with a code while the request's other fields, saved
+// (the names of the body's members), are written: its text says so
+// (A274). It is nil for any other error, and when nothing else was
+// saved: the refusal is then the answer as it is.
+func partlyRefused(r *http.Request, err error, saved []string) error {
+	var refusal *emailchange.Refusal
+	if len(saved) == 0 || !errors.As(err, &refusal) || refusal.Code == "" {
+		return nil
+	}
+	why := kit.T(r, refusal.Key, kit.Vars(varPairs(refusal.Vars)...))
+	return sayPartly(refusal.Status, refusal.Code, emailchange.RestSaved(r, why), saved)
+}
+
+// updateFields are the members of PATCH /api/users/{id} besides email, in
+// the order the update writes them.
+var updateFields = []string{"username", "role", "password", "groupGuids", "folderIds", "peerIds", "strategyGuid", "disabled", "totp_enabled", "expires_at", "inactive_exempt"}
+
 func varPairs(vars map[string]any) []any {
 	out := make([]any, 0, 2*len(vars))
 	for k, v := range vars {

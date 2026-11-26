@@ -62,6 +62,16 @@ type Refusal struct {
 // console without email settings, which can't send the confirmation link.
 const NeedsMail = "email_change_needs_mail"
 
+// NotSent is the code of a change whose confirmation mail the mail server
+// didn't take (502): the address stays as it was.
+const NotSent = "email_confirmation_not_sent"
+
+// RestSaved is the text of a refused address when the request's other
+// fields were saved (A274): they are, only the address stays, and why.
+func RestSaved(r *http.Request, why string) string {
+	return kit.T(r, "users.email_not_changed_rest_saved", kit.Vars("reason", why))
+}
+
 func (r *Refusal) Error() string { return r.Key }
 
 // Outcome is what a request did.
@@ -272,7 +282,7 @@ func (c *Changer) issue(r *http.Request, t Target, email string, self bool) (*li
 		if err != nil {
 			c.D.Log.Error("Email change mail error:", err.Error())
 		}
-		return nil, &Refusal{Status: http.StatusBadGateway, Key: "users.email_confirm_mail_failed"}
+		return nil, &Refusal{Status: http.StatusBadGateway, Code: NotSent, Key: "users.email_confirm_mail_failed"}
 	}
 	return &lifecycle.Change{UserID: t.ID, Username: t.Username, Email: email, ExpiresAt: expires.UTC()}, nil
 }

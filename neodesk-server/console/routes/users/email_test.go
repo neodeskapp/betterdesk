@@ -257,6 +257,83 @@ func TestOwnEmailChangeWithoutMailIsRefused(t *testing.T) {
 	}
 }
 
+// A274: a save whose new address is refused keeps its other fields and
+// says so: the answer has the refusal's status and code, names the
+// fields it saved, and its text says only the address stayed, and why.
+// The mail server's refusal of the confirmation has a code of its own,
+// and the operator profile still fetches the picture. Your account sends
+// only the address, so its answer is the refusal alone.
+func TestRefusedAddressKeepsTheRestOfTheSave(t *testing.T) {
+	w, box := mailWorld(t, true)
+	box.fail = true
+	operatorID := routetest.RoleIDs["operator"]
+	adminID := routetest.RoleIDs["admin"]
+	viewerID := routetest.RoleIDs["viewer"]
+	setColumn(t, w, operatorID, "email", "op@example.test")
+	setColumn(t, w, adminID, "email", "admin@example.test")
+	setColumn(t, w, viewerID, "email", "viewer@example.test")
+	why := langText(t, "en", "users.email_confirm_mail_failed")
+	rest := strings.ReplaceAll(langText(t, "en", "users.email_not_changed_rest_saved"), "{reason}", why)
+	type answer struct {
+		Success     bool     `json:"success"`
+		Error       string   `json:"error"`
+		Code        string   `json:"code"`
+		Saved       []string `json:"saved"`
+		Avatar      string   `json:"avatar"`
+		AvatarError string   `json:"avatar_error"`
+	}
+	refused := func(name string, got routetest.Answer, text string, saved ...string) answer {
+		t.Helper()
+		var a answer
+		if err := json.Unmarshal([]byte(got.Body), &a); err != nil {
+			t.Fatalf("%s: %d %s", name, got.Status, got.Body)
+		}
+		if got.Status != http.StatusBadGateway || a.Success || a.Code != "email_confirmation_not_sent" || a.Error != text || strings.Join(a.Saved, " ") != strings.Join(saved, " ") {
+			t.Errorf("%s: %d %s, want 502 email_confirmation_not_sent %q saved %v", name, got.Status, got.Body, text, saved)
+		}
+		return a
+	}
+	operator, admin := w.As("operator"), w.As("admin")
+
+	got := operator.Do("POST", "/api/users/me/email", `{"email":"mine@example.test"}`)
+	refused("Your account", got, why)
+	if strings.Contains(got.Body, `"saved"`) {
+		t.Errorf("Your account names saved fields: %s", got.Body)
+	}
+
+	a := refused("operator profile", operator.Do("PUT", "/api/users/me/profile",
+		`{"email":"profile@example.test","phone":"555","time_zone":"Europe/Berlin","avatar_url":"http://127.0.0.1/x.png"}`),
+		rest, "phone", "avatar_url", "time_zone")
+	if a.Avatar != "failed" || a.AvatarError != "fetch_failed" {
+		t.Errorf("the picture step after the refused address: %q %q", a.Avatar, a.AvatarError)
+	}
+	var phone, zone string
+	if err := w.DB.QueryRow(context.Background(), `SELECT COALESCE(phone, '') FROM users WHERE id = ?`, operatorID).Scan(&phone); err != nil || phone != "555" {
+		t.Errorf("phone: %q %v", phone, err)
+	}
+	if err := w.DB.QueryRow(context.Background(), `SELECT COALESCE(time_zone, '') FROM account_profile WHERE user_id = ?`, operatorID).Scan(&zone); err != nil || zone != "Europe/Berlin" {
+		t.Errorf("time zone: %q %v", zone, err)
+	}
+
+	// Users: the own row and another account's, each with a field beside the address
+	refused("own row in Users", admin.Do("PATCH", fmt.Sprintf("/api/users/%d", adminID), `{"email":"other@example.test","strategyGuid":""}`), rest, "strategyGuid")
+	refused("another account in Users", admin.Do("PATCH", fmt.Sprintf("/api/users/%d", viewerID), `{"email":"v2@example.test","inactive_exempt":true}`), rest, "inactive_exempt")
+	if _, target, _, found := auditAbout(t, w, "user_inactive_exempt_set"); !found || target != viewerID {
+		t.Errorf("the viewer was not exempted beside the refused address: %v %d", found, target)
+	}
+	if _, _, details, found := auditAbout(t, w, "user_updated"); !found || !strings.Contains(details, "e2e_viewer") {
+		t.Errorf("no audit of the update beside the refused address: %v %q", found, details)
+	}
+
+	for id, want := range map[int64]string{operatorID: "op@example.test", adminID: "admin@example.test", viewerID: "viewer@example.test"} {
+		if e := emailOf(t, w, id); e != want {
+			t.Errorf("account %d: address %q, want %q", id, e, want)
+		}
+	}
+	// Only the address: the refusal as it was
+	refused("only the address in Users", admin.Do("PATCH", fmt.Sprintf("/api/users/%d", viewerID), `{"email":"v3@example.test"}`), why)
+}
+
 // A reset link an admin sends is in the language of the account it goes
 // to, not in the admin's.
 func TestResetLinkInTheRecipientsLanguage(t *testing.T) {

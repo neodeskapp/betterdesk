@@ -2654,6 +2654,7 @@
     "email_change_none": "Für dieses Konto wartet keine Adressänderung auf Bestätigung.",
     "email_confirm_mail_failed": "Der Mailserver hat die Bestätigungs-E-Mail nicht angenommen, daher bleibt die Adresse, wie sie ist. Prüfe die E-Mail-Einstellungen.",
     "email_change_needs_mail": "Um deine E-Mail-Adresse zu ändern, braucht es die E-Mail-Einstellungen, denn die Konsole schickt einen Link an die neue Adresse, der sie bestätigt. Richte sie unter Einstellungen, E-Mail ein oder bitte einen Administrator darum.",
+    "email_not_changed_rest_saved": "Deine anderen Änderungen sind gespeichert, nur die E-Mail-Adresse wurde nicht geändert. {reason}",
     "email_pending": "Wartet auf Bestätigung: {email}",
     "email_pending_until": "Der Bestätigungslink gilt bis {date}.",
     "email_pending_expired": "Der Bestätigungslink ist abgelaufen. Sende ihn erneut oder brich die Änderung ab.",
