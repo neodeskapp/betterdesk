@@ -16,6 +16,7 @@
 package users
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -84,6 +85,11 @@ func Register(d *kit.Deps) {
 	r.Get("/api/users/me/security-events", h.ownSecurityEvents, d.RequireAuth)
 	r.Get("/api/users/{id}/security-events", h.userSecurityEvents, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Post("/api/users/{id}/organizations", h.assignOrganization, d.RequireAuth, d.RequirePermission("org.manage_users"))
+
+	// End dates and the rule for inactive accounts (sweep.go)
+	if d.Jobs != nil {
+		d.Jobs.Add("account life cycle", func(ctx context.Context) { runSweeps(ctx, d) })
+	}
 }
 
 // newHandlers builds the group's handlers on d.

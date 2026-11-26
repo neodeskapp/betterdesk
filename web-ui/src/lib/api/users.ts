@@ -88,7 +88,12 @@ export const ConsoleUser = v.looseObject({
 	/** Until when a reset link mailed to the account works */
 	password_reset_until: v.optional(v.nullable(v.string()), null),
 	/** A new address that waits for its confirmation; the address above stays until then */
-	email_pending: v.optional(v.nullable(PendingEmail), null)
+	email_pending: v.optional(v.nullable(PendingEmail), null),
+	/** The account's end date; expired once it has passed (the job disables it then) */
+	expires_at: v.optional(v.nullable(v.string()), null),
+	expired: v.optional(v.boolean(), false),
+	/** The rule for inactive accounts leaves it alone */
+	inactive_exempt: v.optional(v.boolean(), false)
 });
 export type ConsoleUser = v.InferOutput<typeof ConsoleUser>;
 
@@ -112,6 +117,10 @@ export interface UserInput {
 	disabled?: boolean;
 	/** false turns off the account's two-factor sign-in; never your own */
 	totp_enabled?: false;
+	/** The end date (RFC 3339), null for none; never your own */
+	expires_at?: string | null;
+	/** Keeps the rule for inactive accounts away from it */
+	inactive_exempt?: boolean;
 }
 
 /** Needs user.create; the role must be one the caller may give */

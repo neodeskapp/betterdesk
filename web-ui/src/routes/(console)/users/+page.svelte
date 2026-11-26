@@ -555,6 +555,15 @@
 				title={state.titleKey ? t(state.titleKey, { date: formatDate(state.date, {}, '') }) : undefined}
 			/></span
 		>{/each}
+	{#if u.expires_at}<span class="cell-sub"
+			>{#if u.expired}<Status
+					tone="warning"
+					label={t('users.expired_status')}
+					title={t('users.expired_on', { date: formatDate(u.expires_at, {}, '') })}
+				/>{:else}{t('users.expires_on', {
+					date: formatDate(u.expires_at, { hour: undefined, minute: undefined }, '')
+				})}{/if}</span
+		>{/if}
 	{@const invite = invites.get(String(u.id))}
 	{#if invite && !u.last_login}<span class="cell-sub"
 			><Status

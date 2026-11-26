@@ -165,7 +165,7 @@ func (s *Service) ValidateAccessToken(ctx context.Context, token string) (*Token
 		return nil, err
 	}
 	user, err := getUserByID(ctx, s.db, record.UserID.V)
-	if err != nil || user == nil || user.Disabled.True() {
+	if err != nil || user == nil || s.ended(ctx, user) {
 		return nil, err
 	}
 	if err := touchAccessToken(ctx, s.db, token); err != nil {

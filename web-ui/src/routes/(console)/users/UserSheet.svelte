@@ -26,6 +26,8 @@
 	import PasswordField from '#lib/people/PasswordField.svelte';
 	import {
 		deviceIdsOk,
+		expiryBody,
+		localDate,
 		passwordProblem,
 		providerOf,
 		roleChoices,
@@ -66,6 +68,9 @@
 
 	const uid = $props.id();
 	const editing = untrack(() => !!user);
+	/** The signed-in person's own account, which gets no end date */
+	const self = untrack(() => !!user && String(user.id) === String(session.user?.id ?? ''));
+	const today = localDate(new Date().toISOString());
 	const provider = untrack(() => (user ? providerOf(user) : 'local'));
 	const isLocal = provider === 'local';
 	const choices = $derived(
@@ -105,7 +110,9 @@
 			groups: [...(user?.user_groups ?? [])],
 			folders: [...(user?.folder_ids ?? [])],
 			direct: (user?.peer_grants ?? []).join(', '),
-			strategy: user?.strategy_guid ?? ''
+			strategy: user?.strategy_guid ?? '',
+			/** The end date as a day in this browser's time zone */
+			expires: localDate(user?.expires_at)
 		})),
 		validate: (v) => {
 			const inviting = !editing && v.mode === 'invite';
@@ -132,6 +139,7 @@
 				const { email, ...rest } = common;
 				await updateUser(user.id, {
 					...(isLocal ? common : rest),
+					...(self ? {} : expiryBody(v.expires, user.expires_at)),
 					...(provider !== 'ldap' && v.role !== user.role ? { role: v.role } : {}),
 					...(isLocal && v.password ? { password: v.password } : {})
 				});
@@ -376,6 +384,14 @@
 					</div>
 				</div>
 			{/if}
+		{/if}
+
+		{#if user && !self}
+			<Field label={t('users.expiry_label')} hint={t('users.expiry_hint')}>
+				{#snippet children(f)}
+					<Input {...f} type="date" width="medium" min={today} bind:value={form.values.expires} />
+				{/snippet}
+			</Field>
 		{/if}
 
 		<FormSection title={t('users.role')} id="{uid}-role">

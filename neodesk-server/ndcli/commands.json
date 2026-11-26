@@ -8437,6 +8437,13 @@
      "help": "true stops the account from signing in, false lets it again"
     },
     {
+     "name": "expires-at",
+     "in": "body",
+     "type": "string",
+     "help": "end date (2026-12-31 or an RFC 3339 time); the account is disabled then. An empty value removes it",
+     "field": "expires_at"
+    },
+    {
      "name": "group-guids",
      "in": "body",
      "type": "list",
@@ -8447,7 +8454,8 @@
    "permission": "user.edit",
    "examples": [
     "neodesk users update 7 --role viewer",
-    "neodesk users update 7 --disabled true"
+    "neodesk users update 7 --disabled true",
+    "neodesk users update 7 --expires-at 2026-12-31"
    ],
    "description": "A new email address waits for its confirmation: see users resend-email-change and users cancel-email-change. Accounts from LDAP or single sign-on keep the address their provider gives."
   }

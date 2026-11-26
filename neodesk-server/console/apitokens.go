@@ -14,6 +14,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
@@ -64,7 +65,15 @@ func (s *Server) tokenOrSession(next http.Handler) http.Handler {
 		if user != nil {
 			role = user.Role.String
 		}
-		if user == nil || user.Disabled.True() || role == "" || auth.IsProRole(role) || auth.IsDeviceRole(role) {
+		// An account whose end date passed counts as disabled before the
+		// job of the users routes disables it
+		expired := false
+		if user != nil {
+			if expired, err = lifecycle.Expired(r.Context(), s.deps.Store, int64(user.ID.V), time.Now()); err != nil {
+				expired = true
+			}
+		}
+		if user == nil || user.Disabled.True() || expired || role == "" || auth.IsProRole(role) || auth.IsDeviceRole(role) {
 			s.tokens.NoteFailure(ip)
 			s.refuseToken(w, r, &admintoken.Refusal{Reason: admintoken.RefusedAccount, Token: tok}, ip)
 			return

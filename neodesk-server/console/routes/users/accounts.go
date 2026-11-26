@@ -143,6 +143,12 @@ type listedAccount struct {
 	Disabled bool `json:"disabled"`
 	// EmailPending is a new address that waits for its confirmation.
 	EmailPending *pendingEmail `json:"email_pending,omitempty"`
+	// ExpiresAt is the account's end date (RFC 3339), Expired says it
+	// has passed.
+	ExpiresAt string `json:"expires_at,omitempty"`
+	Expired   bool   `json:"expired,omitempty"`
+	// InactiveExempt keeps the rule for inactive accounts away from it.
+	InactiveExempt bool `json:"inactive_exempt,omitempty"`
 }
 
 // withPicture is a listed account with what the list says about its
@@ -250,6 +256,12 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Get users error:", err)
 		return
 	}
+	states, err := h.life.All(ctx)
+	if err != nil {
+		h.serverError(w, r, "Get users error:", err)
+		return
+	}
+	now := h.now()
 	out := make([]withPicture, len(accounts))
 	for i, a := range accounts {
 		has, version := versions.Fields(a.ID.V)
@@ -257,6 +269,7 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		if c, ok := pending[a.ID.V]; ok {
 			listed.EmailPending = pendingOf(&c)
 		}
+		withLife(&listed, states[a.ID.V], now)
 		out[i] = withPicture{listedAccount: listed, HasAvatar: has, AvatarVersion: version, signInState: facts.of(a)}
 	}
 	answer(w, r, http.StatusOK, accountList{Success: true, Data: accountListData{Users: out, Total: len(out)}})
@@ -578,12 +591,13 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		if ok, err := h.canAssignRole(r, role.Str()); err != nil || !ok {
 			return nil, refusedOr(err)
 		}
-		if access.IsSuperAdminRole(user.role()) && !access.IsSuperAdminRole(role.Str()) {
-			admins, err := countAdmins(ctx, h.d.Store)
+		if !access.IsSuperAdminRole(role.Str()) {
+			// The last Super admin that can sign in keeps the role
+			last, err := isLastSuperAdmin(ctx, h.d.Store, user.ID.V, user.role(), h.now())
 			if err != nil {
 				return nil, err
 			}
-			if admins <= 1 {
+			if last {
 				return nil, sayKey(r, http.StatusBadRequest, "users.last_admin")
 			}
 		}
@@ -617,6 +631,17 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		}
 	}
 	disable, changeDisabled, err := disabledOf(r, body, user)
+	if err != nil {
+		return nil, err
+	}
+	if disable && changeDisabled {
+		if last, err := isLastSuperAdmin(ctx, h.d.Store, user.ID.V, user.role(), h.now()); err != nil {
+			return nil, err
+		} else if last {
+			return nil, sayKey(r, http.StatusBadRequest, "users.last_super_admin")
+		}
+	}
+	expiresAt, changeExpiry, err := h.expiryOf(r, body, user)
 	if err != nil {
 		return nil, err
 	}
@@ -666,6 +691,11 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 			return nil, err
 		}
 	}
+	if changeExpiry {
+		if err := h.setExpiry(r, user, expiresAt); err != nil {
+			return nil, err
+		}
+	}
 	// A new name or role ends every session of the account; a new password
 	// keeps the session of a caller who changed their own
 	if newRole := role.Truthy() && role.Str() != user.role(); renaming || newRole || password.Truthy() {
@@ -689,6 +719,11 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		return nil, err
 	}
 	out.EmailPending = pendingOf(pending)
+	st, err := h.life.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	withLife(&out, st, h.now())
 	return &out, nil
 }
 
@@ -721,6 +756,12 @@ func (h *handlers) setDisabled(r *http.Request, user *account, disable bool) err
 		return err
 	}
 	action, details := "user_enabled", "Enabled user: "
+	if !disable {
+		// Inactivity counts from now, and an end date that passed goes
+		if err := h.life.Enabled(r.Context(), user.ID.V); err != nil {
+			return err
+		}
+	}
 	if disable {
 		if err := h.endSessions(r, user.ID.V, false); err != nil {
 			return err
@@ -861,12 +902,10 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		sent(w, r, errRoleAboveOwn)
 		return
 	}
-	admins, err := countAdmins(ctx, h.d.Store)
-	if err != nil {
+	if last, err := isLastSuperAdmin(ctx, h.d.Store, user.ID.V, user.role(), h.now()); err != nil {
 		h.serverError(w, r, "Delete user error:", err)
 		return
-	}
-	if access.IsSuperAdminRole(user.role()) && admins <= 1 {
+	} else if last {
 		failKey(w, r, http.StatusBadRequest, "users.last_admin")
 		return
 	}

@@ -272,3 +272,57 @@ export function twoFactorStatus(u: Pick<ConsoleUser, 'two_factor_state' | 'totp_
 	if (state === 'required') return { tone: 'warning', key: 'users.two_factor_required_state' };
 	return { tone: 'neutral', key: 'users.two_factor_off' };
 }
+
+/* ── End dates and inactive accounts ── */
+
+/** The day of a time in the browser's time zone, as a date field takes it ('' for none) */
+export function localDate(iso: string | null | undefined): string {
+	if (!iso) return '';
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return '';
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/**
+ * What an edit sends for the End date field: nothing when the day is the
+ * one the account has, null to take the date away, else the start of the
+ * chosen day in the browser's time zone.
+ */
+export function expiryBody(day: string, current: string | null | undefined): { expires_at?: string | null } {
+	if (day === localDate(current)) return {};
+	if (!day) return { expires_at: null };
+	const start = new Date(`${day}T00:00:00`);
+	return Number.isNaN(start.getTime()) ? {} : { expires_at: start.toISOString() };
+}
+
+/** The filter of the users list for accounts that have not signed in: ?inactive=30, 60, 90 or never */
+export const INACTIVE_FILTERS = ['30', '60', '90', 'never'] as const;
+export type InactiveFilter = (typeof INACTIVE_FILTERS)[number];
+
+export function inactiveFilter(value: string | null | undefined): InactiveFilter | '' {
+	return (INACTIVE_FILTERS as readonly string[]).includes(value ?? '') ? (value as InactiveFilter) : '';
+}
+
+/**
+ * The accounts the filter keeps: never signed in, or whose last sign-in
+ * is at least that many days ago (an account that never signed in counts
+ * as inactive for every number of days).
+ */
+export function filterInactive(
+	users: readonly ConsoleUser[],
+	filter: InactiveFilter | '',
+	now = Date.now()
+): ConsoleUser[] {
+	if (!filter) return users as ConsoleUser[];
+	return users.filter((u) => {
+		// SQLite writes "2026-11-26 03:21:04" in UTC
+		const text = u.last_login ?? '';
+		const last = new Date(
+			/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/.test(text) ? `${text.replace(' ', 'T')}Z` : text
+		).getTime();
+		if (filter === 'never') return !u.last_login;
+		if (Number.isNaN(last)) return true;
+		return now - last >= Number(filter) * 24 * 60 * 60 * 1000;
+	});
+}

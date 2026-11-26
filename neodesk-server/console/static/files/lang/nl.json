@@ -1991,6 +1991,8 @@
     "action_email_change_requested": "Email address change asked for",
     "action_email_changed": "Email address changed",
     "action_email_change_cancelled": "Email address change cancelled",
+    "action_user_expiry_set": "End date set",
+    "action_user_expired": "Account reached its end date",
     "action_password_reset_cancelled": "Password reset link cancelled",
     "action_temporary_password_set": "Temporary password set",
     "action_password_change_required": "New password required at next sign-in",
@@ -2646,6 +2648,15 @@
     "email_hint_confirm": "A new address gets a confirmation link and changes once it is used. The old address gets a notice.",
     "email_hint_no_mail": "The console can't send email, so a new address takes effect at once, without a confirmation.",
     "email_from_provider_hint": "This address comes from {provider}. Change it there.",
+    "expiry_invalid": "Give the end date as a date, for example 2026-12-31, or leave it empty.",
+    "expiry_own": "You can't give your own account an end date.",
+    "expiry_past": "Choose an end date in the future.",
+    "expiry_label": "End date",
+    "expiry_hint": "On this date the account is disabled, for example when a contract ends. Admins who can change the account get a notice a week before. Leave it empty for no end date.",
+    "expiry_own_hint": "Your own account has no end date.",
+    "expires_on": "Expires {date}",
+    "expired_status": "Expired",
+    "expired_on": "The account reached its end date on {date}.",
     "security_own": "Change your own sign-in on Your account.",
     "external_password": "This account signs in with {provider}. Reset its password there.",
     "external_two_factor": "This account signs in with {provider}. Its two-factor sign-in is set there.",
@@ -9163,6 +9174,13 @@
     "done_text": "{email} is now the email address of {username}. The account's other sessions were signed out.",
     "invalid_title": "This link doesn't work",
     "no_link": "Open the link from your email to confirm the address."
+  },
+  "account_mail": {
+    "expiry_subject": "The account {username} on {server} ends on {date}",
+    "expiry_heading": "An account ends soon",
+    "expiry_lead": "The account {username} on {server} has an end date: it is disabled on {date}. To keep it, change or remove the end date under Users.",
+    "expiry_why": "You get this because you can change this account.",
+    "open_users": "Open Users"
   },
   "security_notice": {
     "button": "Open Your account",

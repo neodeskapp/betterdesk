@@ -387,7 +387,7 @@ func authSuccessFromUser(user *Account, accept *goAccept) *User {
 // account is the failure FailureAccountDisabled, a pro account the failure
 // FailureProOnly.
 func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (Outcome, error) {
-	if user.Disabled.True() {
+	if s.ended(ctx, user) {
 		s.log.Info(fmt.Sprintf("[AUTH] Login refused: '%s' is disabled", logName(user.Username)))
 		return Outcome{Failure: FailureAccountDisabled}, nil
 	}

@@ -313,16 +313,6 @@ func cascadeStep(ctx context.Context, tx *store.Tx, query string, args ...any) e
 	return nil
 }
 
-// countAdmins is the number of accounts with the role admin or
-// super_admin.
-func countAdmins(ctx context.Context, db *store.DB) (int64, error) {
-	var n int64
-	if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role IN ('admin', 'super_admin')`).Scan(&n); err != nil {
-		return 0, fmt.Errorf("count admins: %w", err)
-	}
-	return n, nil
-}
-
 // newGUID is a random version 4 UUID, as crypto.randomUUID writes it.
 func newGUID() (string, error) {
 	var b [16]byte
