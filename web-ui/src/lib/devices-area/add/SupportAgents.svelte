@@ -208,8 +208,12 @@
 {/if}
 
 <style>
-	.agents-release {
-		max-width: 880px;
+	/* Beside the side column; in one column (below 1200 px) as wide as the
+	   lists that follow from the side column */
+	@media (min-width: 1200px) {
+		.agents-release {
+			max-width: 880px;
+		}
 	}
 	.agents-page :global(.steps) {
 		max-width: var(--measure);

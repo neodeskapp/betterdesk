@@ -489,6 +489,16 @@
 	.toolbar-end {
 		margin-inline-start: auto;
 	}
+	/* Phone: the search over the full width, the rest from the start edge (as Toolbar) */
+	@media (max-width: 640px) {
+		.toolbar-search {
+			flex-basis: 100%;
+			max-width: none;
+		}
+		.toolbar-end {
+			margin-inline-start: 0;
+		}
+	}
 	.count-line {
 		margin: 0;
 		min-height: 1.5em;

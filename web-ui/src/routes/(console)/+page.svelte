@@ -593,6 +593,9 @@
 	.server-details > .facts {
 		grid-template-columns: minmax(0, 1fr) auto;
 	}
+	.server-details > .facts > dd {
+		justify-content: flex-end;
+	}
 	@media (max-width: 640px) {
 		.server-details > .facts > dt {
 			min-height: var(--row-h);

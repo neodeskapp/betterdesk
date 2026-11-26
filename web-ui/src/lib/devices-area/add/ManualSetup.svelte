@@ -345,10 +345,14 @@
 </div>
 
 <style>
-	.keys-facts,
-	.keys-page :global(.keys-local-warning),
-	.keys-page :global(.keys-scripts) {
-		max-width: 880px;
+	/* Beside the side column; in one column (below 1200 px) as wide as the
+	   lists that follow from the side column */
+	@media (min-width: 1200px) {
+		.keys-facts,
+		.keys-page :global(.keys-local-warning),
+		.keys-page :global(.keys-scripts) {
+			max-width: 880px;
+		}
 	}
 	.keys-page :global(.keys-local-warning p) {
 		margin: 0;
