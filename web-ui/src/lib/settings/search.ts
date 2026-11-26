@@ -36,6 +36,8 @@ export interface SearchContext {
 	can: (permission: string) => boolean;
 	/** The account has one of the four admin roles (Policies) */
 	admin?: boolean;
+	/** Super admins also find the permissions on Roles and permissions */
+	superAdmin?: boolean;
 	current: TabId;
 	/** The language the console shows, for lower-casing */
 	locale?: string;
@@ -49,9 +51,12 @@ const clean = (s: string) => s.replace(/\s+/g, ' ').replace(/:$/, '').trim();
 /** Rows a person with these permissions can reach */
 export function visibleRows(
 	can: (p: string) => boolean,
-	rows: readonly IndexRow[] = SEARCH_INDEX
+	rows: readonly IndexRow[] = SEARCH_INDEX,
+	superAdmin = false
 ): IndexRow[] {
-	return rows.filter((r) => isPlace(r[0]) && (r[5] === '' || can(r[5])));
+	return rows.filter(
+		(r) => isPlace(r[0]) && (r[5] === '' || (r[5] === 'super_admin' ? superAdmin : can(r[5])))
+	);
 }
 
 /** One setting for the console-wide search (Ctrl K) */
@@ -73,15 +78,16 @@ export interface SettingEntry {
  * one that needs a permission it lacks, is not in the list.
  */
 export function settingEntries(
-	ctx: Pick<SearchContext, 't' | 'can' | 'admin'>,
+	ctx: Pick<SearchContext, 't' | 'can' | 'admin' | 'superAdmin'>,
 	rows: readonly IndexRow[] = SEARCH_INDEX
 ): SettingEntry[] {
 	const canConfig = ctx.can('server.config');
+	const superAdmin = !!ctx.superAdmin;
 	const settings = clean(ctx.t('nav.settings'));
 	const seen = new Set<string>();
 	const out: SettingEntry[] = [];
-	for (const [tabName, id, labelKey, sectionKey, hintKeys] of visibleRows(ctx.can, rows)) {
-		if (!isPlace(tabName) || !placeAllowed(tabName, canConfig, ctx.admin)) continue;
+	for (const [tabName, id, labelKey, sectionKey, hintKeys] of visibleRows(ctx.can, rows, superAdmin)) {
+		if (!isPlace(tabName) || !placeAllowed(tabName, canConfig, { admin: ctx.admin, superAdmin })) continue;
 		const label = clean(ctx.t(labelKey));
 		if (!label) continue;
 		const once = `${tabName}#${id}#${label}`;
@@ -119,9 +125,13 @@ export function searchSettings(
 	const words = q.split(/\s+/).filter(Boolean);
 	const seen = new Set<string>();
 	const hits: { hit: SearchHit; score: number }[] = [];
-	for (const row of visibleRows(ctx.can, rows)) {
+	for (const row of visibleRows(ctx.can, rows, !!ctx.superAdmin)) {
 		const [tabName, id, labelKey, sectionKey, hintKeys] = row;
-		if (!isPlace(tabName) || !placeAllowed(tabName, ctx.can('server.config'), ctx.admin)) continue;
+		if (
+			!isPlace(tabName) ||
+			!placeAllowed(tabName, ctx.can('server.config'), { admin: ctx.admin, superAdmin: !!ctx.superAdmin })
+		)
+			continue;
 		const label = clean(ctx.t(labelKey));
 		if (!label) continue;
 		const once = `${tabName}#${id}#${label}`;

@@ -10,6 +10,8 @@
  * index.
  */
 
+import { PERMISSION_GROUPS, permRowId } from '#lib/people/permissions.ts';
+
 export const TAB_TERMS: Readonly<Record<string, string>> = {
 	account: 'account profile my own konto profil mein eigenes',
 	general: 'server allgemein',
@@ -25,13 +27,20 @@ export const TAB_TERMS: Readonly<Record<string, string>> = {
 	time: 'time zeit uhr clock',
 	meshcentral: 'mesh meshcentral meshagent',
 	'server-config-files': 'server advanced erweitert expert config konfiguration dateien',
-	policies: 'policy policies organization richtlinie richtlinien organisation'
+	policies: 'policy policies organization richtlinie richtlinien organisation',
+	permissions: 'role roles permission rights access rolle rollen berechtigung rechte zugriff'
 };
+
+/** A permission is also found by its key (device.delete) */
+const PERMISSION_KEYS: Readonly<Record<string, string>> = Object.fromEntries(
+	PERMISSION_GROUPS.flatMap((g) => g.permissions.map((p) => [permRowId(p), p]))
+);
 
 export const TERMS: Readonly<Record<string, string>> = {
 	'pol-features-allow-audio': 'audio sound ton',
 	'pol-connection-mode': 'consent approval accept zustimmung freigabe annehmen',
 	'pol-features-allow-clipboard': 'clipboard zwischenablage',
+	...PERMISSION_KEYS,
 	// General
 	'public-endpoints': 'address domain hostname adresse domäne host',
 	'public-server-id': 'hbbs id server rendezvous address adresse',

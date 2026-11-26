@@ -10,8 +10,19 @@
  *
  * Each entry: tab, element id it jumps to, label key, section key, up to two
  * hint keys (searched too), and the permission a person needs to see it
- * ('' for everyone who may open the tab).
+ * ('' for everyone who may open the tab, 'super_admin' for Roles and
+ * permissions). The rows of Roles and permissions come from its groups
+ * (lib/people/permissions.ts): one per permission, with its name, group
+ * and sentence.
  */
+
+import {
+	PERMISSION_GROUPS,
+	groupTitleKey,
+	permHelpKey,
+	permLabelKey,
+	permRowId
+} from '#lib/people/permissions.ts';
 
 export type IndexRow = readonly [
 	tab: string,
@@ -19,7 +30,30 @@ export type IndexRow = readonly [
 	label: string,
 	section: string,
 	hints: readonly string[],
-	need: '' | 'server.config' | 'branding.edit'
+	need: '' | 'server.config' | 'branding.edit' | 'super_admin'
+];
+
+/** Roles and permissions: the role picker, the views and one row per permission */
+const PERMISSION_ROWS: readonly IndexRow[] = [
+	['permissions', 'perm-role', 'permissions.pick_role', '', ['permissions.page_description'], 'super_admin'],
+	[
+		'permissions',
+		'perm-views',
+		'permissions.views_title',
+		'',
+		['permissions.diff_only', 'permissions.compare_label'],
+		'super_admin'
+	],
+	...PERMISSION_GROUPS.flatMap((g) =>
+		g.permissions.map((p): IndexRow => [
+			'permissions',
+			permRowId(p),
+			permLabelKey(p),
+			groupTitleKey(g.id),
+			[permHelpKey(p)],
+			'super_admin'
+		])
+	)
 ];
 
 export const SEARCH_INDEX: readonly IndexRow[] = [
@@ -1451,7 +1485,8 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'policies.update_title',
 		['policies.update_channel_hint'],
 		''
-	]
+	],
+	...PERMISSION_ROWS
 ];
 
 /** Space-separated element ids per tab or page, for #<id> links into another one */
@@ -1480,6 +1515,7 @@ export const TAB_IDS: Readonly<Record<string, string>> = {
 		'backup-contents-title backup-create backup-create-title backup-download-btn backup-download-status backup-prune-now backup-restore backup-restore-title backup-retention-input backup-retention-save backup-smb-domain backup-smb-host backup-smb-mount-path backup-smb-password backup-smb-share backup-smb-status backup-smb-test-btn backup-smb-username backup-stat-backend backup-stat-database backup-stat-env backup-stat-folders backup-stat-groups backup-stat-keys backup-stat-settings backup-stat-strategies backup-stat-uploads backup-stat-users backup-stats backup-summary restore-actions restore-database restore-env restore-file-hint restore-file-input restore-godb restore-json-note restore-options restore-options-hint restore-result restore-secrets restore-start-btn restore-status restore-uploads scheduled-backup-destination-type scheduled-backup-details scheduled-backup-enabled scheduled-backup-form scheduled-backup-interval scheduled-backup-panel scheduled-backup-path scheduled-backup-path-group scheduled-backup-retention scheduled-backup-run-btn scheduled-backup-smb-form scheduled-backup-smb-panel scheduled-backup-status scheduled-backup-test-btn scheduled-backup-title smb-title update-backups-list update-backups-panel',
 	'server-updates':
 		'update-alerts update-available-heading update-backup-toggle update-changelog update-channel-active-badge update-channel-branch update-channel-development update-channel-docker-hint update-channel-effect update-channel-panel update-channel-select update-channel-stable update-channel-title update-check-btn update-details-section update-docker-commands update-docker-desc update-docker-images update-docker-info update-docker-install-note update-files-summary update-install-blocked-hint update-install-btn update-local-version update-progress update-progress-fill update-progress-text update-rebuild-server-btn update-remote-version update-stale-detail update-stale-warning update-status-badge update-status-desc update-status-headline update-status-row updates-side-title',
+	permissions: PERMISSION_ROWS.map((r) => r[1]).join(' '),
 	'server-config-files':
 		'advanced-config-file-list advanced-config-meta advanced-config-path advanced-config-placeholder advanced-config-reload advanced-config-restart advanced-config-restart-hint advanced-config-save advanced-config-textarea advanced-config-toolbar advanced-files-label advanced-restart-desc advanced-restart-title advanced-restart-zone advanced-title'
 };
