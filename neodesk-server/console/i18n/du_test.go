@@ -53,8 +53,6 @@ var theyNotYou = []struct{ key, words, reason string }{
 	{"users.bulk_password_change_effect", "Ihre Sitzungen laufen bis dahin weiter", "the accounts"},
 	{"users.bulk_role_effect", "Ihre Sitzungen und Zugriffstoken enden", "the accounts"},
 	{"users.delete_handover_hint_no_orgs", "Sie zu übergeben", "the memberships"},
-	{"users.import_invites_sent", "Ihre Einladungen gingen", "the imported accounts"},
-	{"users.import_mode_none_hint", "Sie können sich erst anmelden", "the imported accounts"},
 	{"users.import_none_next", "Sie können sich noch nicht anmelden", "the imported accounts"},
 }
 
