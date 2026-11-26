@@ -1,7 +1,8 @@
 <!--
   "Quick support" (top bar, Help requests; device.connect): it opens on
   the two ways to help someone. Connect by ID opens the device's session
-  inside the console (or in the desktop app), as Remote sessions does.
+  inside the console, as Remote sessions does (on a phone, the RustDesk
+  app; the dialog has no room for the desktop app buttons beside Connect).
   Make a new link makes a session link (one hour, one use) and shows it
   (CodeResult); then the dialog asks
   for the session's state every 2 s while it is open: waiting for the link,
@@ -194,8 +195,7 @@
 			{#if creating}
 				<States kind="loading" message={t('onboard.support.creating')} />
 			{:else}
-				<section class="by-id" aria-labelledby="qs-by-id">
-					<h3 id="qs-by-id">{tf('remote_dashboard.quick_connect_title', 'Connect by ID')}</h3>
+				<section aria-label={tf('remote_dashboard.quick_connect_title', 'Connect by ID')}>
 					<QuickConnect
 						{phone}
 						hint={tf(
@@ -203,7 +203,7 @@
 							'The ID shown in the RustDesk app on the device.'
 						)}
 						onconnect={connectId}
-						onapp={openIdInApp}
+						onapp={phone ? openIdInApp : null}
 					/>
 				</section>
 				<p class="or"><span>{tf('auth.or', 'or')}</span></p>
@@ -292,15 +292,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
-	}
-	.by-id {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-	.by-id h3 {
-		margin: 0;
-		font-size: var(--text-md);
 	}
 	/* "or" between the two ways, on a rule */
 	.or {
