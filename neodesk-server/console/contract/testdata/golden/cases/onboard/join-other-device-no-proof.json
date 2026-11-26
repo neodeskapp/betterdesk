@@ -43,6 +43,7 @@
     "json": {
      "error": "device_refused",
      "message": "This computer's ID is already enrolled on this server. Update NeoDesk on this computer and open the invite again, or ask your administrator to delete the device in the console.",
+     "reason": "join_proof",
      "success": false
     }
    }
