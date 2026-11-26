@@ -328,10 +328,11 @@ for (const role of ROLES) {
 				expect(await refused(page, me.csrf, 'POST', '/api/panel/role-permissions')).toBe(403);
 				return;
 			}
-			await expect(page.getByRole('combobox', { name: 'Role' })).toHaveValue('viewer');
-			await expect(page.getByRole('switch').or(page.getByRole('checkbox')).first()).toBeVisible();
+			const picker = page.getByRole('radiogroup', { name: 'Role to change' });
+			await expect(picker.getByRole('radio', { name: 'Viewer' })).toBeChecked();
+			await expect(page.getByRole('checkbox', { name: 'View devices' })).toBeVisible();
 			await expectNoAxeViolations(page);
-			await page.getByRole('combobox', { name: 'Role' }).selectOption('operator');
+			await picker.getByRole('radio', { name: 'Remote operator' }).check();
 			await expect(page).toHaveURL(/[?&]role=operator/);
 		});
 
