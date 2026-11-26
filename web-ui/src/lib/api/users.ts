@@ -659,7 +659,10 @@ export function getOwnEmail(signal?: AbortSignal): Promise<OwnEmail> {
 /**
  * Asks for a new address for the signed-in account: it gets a link that
  * confirms it, and the address changes when the link is used. Without the
- * console's email settings it changes at once. "" takes the address away.
+ * console's email settings it is refused (409 email_change_needs_mail), and
+ * a mail server that doesn't take the link refuses it too (502
+ * email_confirmation_not_sent; lib/account/email-refusal.ts). "" takes the
+ * address away.
  */
 export function changeOwnEmail(email: string): Promise<OwnEmail> {
 	return api(wrapped(OwnEmail), '/api/users/me/email', { method: 'POST', body: { email } });
