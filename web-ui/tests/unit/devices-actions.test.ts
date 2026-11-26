@@ -94,6 +94,7 @@ import * as targetsApi from '#lib/api/remoteTargets.ts';
 import * as meshApi from '#lib/api/mesh.ts';
 import * as guestApi from '#lib/api/guest.ts';
 import { confirm, prompt } from '#lib/ui/dialogs.svelte.ts';
+import { goto } from '$app/navigation';
 import { dismissAll, toasts } from '#lib/ui/toasts.svelte.ts';
 import { session } from '../../src/lib/state/session.svelte.ts';
 import { devicePanel, openDevice } from '../../src/lib/state/devicePanel.svelte.ts';
@@ -509,6 +510,20 @@ describe('Connect in the web viewer (L531)', () => {
 		navigated.length = 0;
 		expect(await act.connectInBrowser(d)).toBe(true);
 		expect(navigated).toEqual([expect.stringMatching(/\/remote\/session\/900100001$/)]);
+		expect(devicePanel.id).toBeNull();
+	});
+
+	test('the panel closes only after the session opened, so closing it cannot step Back over the session', async () => {
+		as('device.connect');
+		const d = dev({ online: true });
+		openDevice(d.id);
+		let panelAtNavigation: string | null = 'not called';
+		vi.mocked(goto).mockImplementationOnce(async (to) => {
+			panelAtNavigation = devicePanel.id;
+			navigated.push(String(to));
+		});
+		await act.connectInBrowser(d);
+		expect(panelAtNavigation).toBe(d.id);
 		expect(devicePanel.id).toBeNull();
 	});
 
