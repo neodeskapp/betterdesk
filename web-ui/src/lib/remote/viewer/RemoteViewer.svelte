@@ -322,7 +322,7 @@
 		window.addEventListener('orientationchange', onOrientation);
 		window.addEventListener('neodesk:posture-change', evaluatePhone);
 
-		// F8 or Ctrl+Alt+Shift+K leaves the remote screen (capture phase: the screen keeps every other key)
+		// F8 or Ctrl+Alt+Shift+G leaves the remote screen (capture phase: the screen keeps every other key)
 		const onF8 = (e: KeyboardEvent) => {
 			if (!shown) return;
 			if (displayShortcut(e)) {

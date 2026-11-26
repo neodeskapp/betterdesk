@@ -8828,7 +8828,7 @@
     "try_generic": "Anslut igen. Om det fortsätter att misslyckas, kopiera detaljerna nedan och skicka dem till din administratör.",
     "fail_insecure": "Anslutningen till {name} stoppades eftersom den inte kunde säkras.",
     "try_insecure": "Inget lösenord skickades. Någon mellan den här webbläsaren och enheten kan avlyssna, eller så är servernyckeln inte konfigurerad. Be en administratör att kontrollera servern.",
-    "screen_keys": "Tangenterna går till enheten, även Tab. Tryck på F8 eller Ctrl+Alt+Shift+K för att lämna skärmen.",
+    "screen_keys": "Tangenterna går till enheten, även Tab. Tryck på F8 eller Ctrl+Alt+Shift+G för att lämna skärmen.",
     "displays": "Skärmar",
     "layout": "Layout",
     "layout_single": "En i taget",

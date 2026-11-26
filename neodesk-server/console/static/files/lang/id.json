@@ -8828,7 +8828,7 @@
     "try_generic": "Hubungkan ulang. Jika terus gagal, salin detail di bawah dan kirimkan ke administrator Anda.",
     "fail_insecure": "Koneksi ke {name} dihentikan karena tidak dapat diamankan.",
     "try_insecure": "Tidak ada kata sandi yang dikirim. Seseorang di antara browser ini dan perangkat mungkin menyadap, atau kunci server belum disiapkan. Minta administrator memeriksa server.",
-    "screen_keys": "Tombol dikirim ke perangkat, termasuk Tab. Tekan F8 atau Ctrl+Alt+Shift+K untuk keluar dari layar.",
+    "screen_keys": "Tombol dikirim ke perangkat, termasuk Tab. Tekan F8 atau Ctrl+Alt+Shift+G untuk keluar dari layar.",
     "displays": "Layar",
     "layout": "Tata letak",
     "layout_single": "Satu per satu",

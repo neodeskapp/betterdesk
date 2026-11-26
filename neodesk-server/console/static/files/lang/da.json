@@ -8828,7 +8828,7 @@
     "try_generic": "Forbind igen. Hvis det bliver ved med at mislykkes, så kopiér detaljerne nedenfor, og send dem til din administrator.",
     "fail_insecure": "Forbindelsen til {name} blev stoppet, fordi den ikke kunne sikres.",
     "try_insecure": "Der blev ikke sendt nogen adgangskode. Nogen mellem denne browser og enheden lytter muligvis med, eller servernøglen er ikke sat op. Bed en administrator om at kontrollere serveren.",
-    "screen_keys": "Tasterne går til enheden, også Tab. Tryk på F8 eller Ctrl+Alt+Shift+K for at forlade skærmen.",
+    "screen_keys": "Tasterne går til enheden, også Tab. Tryk på F8 eller Ctrl+Alt+Shift+G for at forlade skærmen.",
     "displays": "Skærme",
     "layout": "Layout",
     "layout_single": "Én ad gangen",

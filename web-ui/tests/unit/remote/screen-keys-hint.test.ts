@@ -58,22 +58,22 @@ const { isReleaseKey } = await import('../../../src/lib/remote/screen-focus.ts')
 
 describe('the keys that leave the remote screen', () => {
 	const key = (init: KeyboardEventInit) => new KeyboardEvent('keydown', init);
-	test('F8 alone, or Ctrl+Alt+Shift+K for keyboards without function keys', () => {
+	test('F8 alone, or Ctrl+Alt+Shift+G for keyboards without function keys', () => {
 		expect(isReleaseKey(key({ key: 'F8', code: 'F8' }))).toBe(true);
-		expect(isReleaseKey(key({ key: 'K', code: 'KeyK', ctrlKey: true, altKey: true, shiftKey: true }))).toBe(
+		expect(isReleaseKey(key({ key: 'G', code: 'KeyG', ctrlKey: true, altKey: true, shiftKey: true }))).toBe(
 			true
 		);
 		// Other layouts put another letter there: the physical key counts
-		expect(isReleaseKey(key({ key: 'Ü', code: 'KeyK', ctrlKey: true, altKey: true, shiftKey: true }))).toBe(
+		expect(isReleaseKey(key({ key: 'Ğ', code: 'KeyG', ctrlKey: true, altKey: true, shiftKey: true }))).toBe(
 			true
 		);
 	});
 	test('not with other modifiers, and not other keys', () => {
 		expect(isReleaseKey(key({ key: 'F8', code: 'F8', ctrlKey: true }))).toBe(false);
-		expect(isReleaseKey(key({ key: 'k', code: 'KeyK', ctrlKey: true, altKey: true }))).toBe(false);
+		expect(isReleaseKey(key({ key: 'k', code: 'KeyG', ctrlKey: true, altKey: true }))).toBe(false);
 		expect(
 			isReleaseKey(
-				key({ key: 'K', code: 'KeyK', ctrlKey: true, altKey: true, shiftKey: true, metaKey: true })
+				key({ key: 'G', code: 'KeyG', ctrlKey: true, altKey: true, shiftKey: true, metaKey: true })
 			)
 		).toBe(false);
 		expect(isReleaseKey(key({ key: 'Escape', code: 'Escape' }))).toBe(false);
@@ -104,7 +104,7 @@ describe('the remote screen', () => {
 		await vi.waitFor(() => expect(canvas.tabIndex).toBe(0));
 		const hint = document.getElementById(canvas.getAttribute('aria-describedby') ?? '');
 		expect(hint?.textContent, 'the screen is described by the way out').toMatch(/F8/);
-		expect(hint?.textContent, 'and by a way out without function keys').toMatch(/Ctrl\+Alt\+Shift\+K/);
+		expect(hint?.textContent, 'and by a way out without function keys').toMatch(/Ctrl\+Alt\+Shift\+G/);
 		// A screen reader passes keys through and says what it is
 		expect(canvas).toHaveAttribute('role', 'application');
 		expect(canvas).toHaveAttribute('aria-roledescription', 'remote screen');

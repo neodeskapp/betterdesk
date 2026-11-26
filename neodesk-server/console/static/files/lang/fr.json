@@ -8826,7 +8826,7 @@
     "try_generic": "Reconnectez-vous. Si l'échec persiste, copiez les détails ci-dessous et envoyez-les à votre administrateur.",
     "fail_insecure": "La connexion à {name} a été arrêtée, car elle n'a pas pu être sécurisée.",
     "try_insecure": "Aucun mot de passe n'a été envoyé. Quelqu'un entre ce navigateur et l'appareil écoute peut-être, ou la clé du serveur n'est pas configurée. Demandez à un administrateur de vérifier le serveur.",
-    "screen_keys": "Les touches vont à l'appareil, Tab aussi. Appuyez sur F8 ou Ctrl+Alt+Maj+K pour quitter l'écran.",
+    "screen_keys": "Les touches vont à l'appareil, Tab aussi. Appuyez sur F8 ou Ctrl+Alt+Maj+G pour quitter l'écran.",
     "displays": "Écrans",
     "layout": "Disposition",
     "layout_single": "Un à la fois",

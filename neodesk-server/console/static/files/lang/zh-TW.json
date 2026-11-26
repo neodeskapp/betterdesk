@@ -8826,7 +8826,7 @@
     "try_generic": "請重新連線。如果仍然失敗，請複製下方的詳細資料並傳送給管理員。",
     "fail_insecure": "無法保護與 {name} 的連線，連線已停止。",
     "try_insecure": "未傳送任何密碼。可能有人在此瀏覽器與裝置之間竊聽，或伺服器金鑰未設定。請管理員檢查伺服器。",
-    "screen_keys": "按鍵會傳送到裝置，包括 Tab。按 F8 或 Ctrl+Alt+Shift+K 離開畫面。",
+    "screen_keys": "按鍵會傳送到裝置，包括 Tab。按 F8 或 Ctrl+Alt+Shift+G 離開畫面。",
     "displays": "顯示器",
     "layout": "版面配置",
     "layout_single": "一次一個",

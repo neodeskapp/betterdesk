@@ -222,7 +222,7 @@
 	<p id="{uid}-keys" class={['screen-keys', keysHint && view === 'streaming' && 'is-shown']}>
 		{tf(
 			'remote_viewer.screen_keys',
-			'Keys go to the device, Tab too. Press F8 or Ctrl+Alt+Shift+K to leave the screen.'
+			'Keys go to the device, Tab too. Press F8 or Ctrl+Alt+Shift+G to leave the screen.'
 		)}
 	</p>
 

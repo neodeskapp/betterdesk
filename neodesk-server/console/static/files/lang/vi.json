@@ -8828,7 +8828,7 @@
     "try_generic": "Hãy kết nối lại. Nếu vẫn không được, hãy sao chép chi tiết bên dưới và gửi cho quản trị viên.",
     "fail_insecure": "Kết nối tới {name} đã bị dừng vì không thể bảo mật.",
     "try_insecure": "Không có mật khẩu nào được gửi. Có thể ai đó giữa trình duyệt này và thiết bị đang nghe lén, hoặc khóa máy chủ chưa được thiết lập. Hãy nhờ quản trị viên kiểm tra máy chủ.",
-    "screen_keys": "Phím được gửi tới thiết bị, kể cả Tab. Nhấn F8 hoặc Ctrl+Alt+Shift+K để rời màn hình.",
+    "screen_keys": "Phím được gửi tới thiết bị, kể cả Tab. Nhấn F8 hoặc Ctrl+Alt+Shift+G để rời màn hình.",
     "displays": "Màn hình",
     "layout": "Bố cục",
     "layout_single": "Từng màn hình một",

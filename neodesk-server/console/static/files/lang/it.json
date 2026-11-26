@@ -8822,7 +8822,7 @@
     "try_generic": "Riconnettiti. Se continua a non funzionare, copia i dettagli qui sotto e inviali al tuo amministratore.",
     "fail_insecure": "La connessione a {name} è stata interrotta perché non è stato possibile proteggerla.",
     "try_insecure": "Nessuna password è stata inviata. Qualcuno tra questo browser e il dispositivo potrebbe essere in ascolto, oppure la chiave del server non è configurata. Chiedi a un amministratore di controllare il server.",
-    "screen_keys": "I tasti vanno al dispositivo, anche Tab. Premi F8 o Ctrl+Alt+Maiusc+K per lasciare lo schermo.",
+    "screen_keys": "I tasti vanno al dispositivo, anche Tab. Premi F8 o Ctrl+Alt+Maiusc+G per lasciare lo schermo.",
     "displays": "Schermi",
     "layout": "Disposizione",
     "layout_single": "Uno alla volta",

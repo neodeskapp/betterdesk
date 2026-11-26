@@ -8828,7 +8828,7 @@
     "try_generic": "Reconectați-vă. Dacă tot nu funcționează, copiați detaliile de mai jos și trimiteți-le administratorului.",
     "fail_insecure": "Conexiunea la {name} a fost oprită, deoarece nu a putut fi securizată.",
     "try_insecure": "Nu a fost trimisă nicio parolă. Cineva între acest browser și dispozitiv poate asculta, sau cheia serverului nu este configurată. Cereți unui administrator să verifice serverul.",
-    "screen_keys": "Tastele merg la dispozitiv, inclusiv Tab. Apăsați F8 sau Ctrl+Alt+Shift+K pentru a părăsi ecranul.",
+    "screen_keys": "Tastele merg la dispozitiv, inclusiv Tab. Apăsați F8 sau Ctrl+Alt+Shift+G pentru a părăsi ecranul.",
     "displays": "Ecrane",
     "layout": "Aranjare",
     "layout_single": "Câte unul",

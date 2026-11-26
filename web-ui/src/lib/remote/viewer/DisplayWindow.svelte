@@ -144,7 +144,7 @@
 		<p id="{uid}-keys" class="sr-only">
 			{tf(
 				'remote_viewer.screen_keys',
-				'Keys go to the device, Tab too. Press F8 or Ctrl+Alt+Shift+K to leave the screen.'
+				'Keys go to the device, Tab too. Press F8 or Ctrl+Alt+Shift+G to leave the screen.'
 			)}
 		</p>
 		{#if orphan}
