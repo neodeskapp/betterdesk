@@ -234,6 +234,7 @@
 							/>{:else}{title}{/if}
 					</h3>
 					<p class="overlay-status" role="status">{s.statusText}</p>
+					{#if result && s.whyText}<p class="rd-state-why">{s.whyText}</p>{/if}
 					{#if result && s.tryText}<p class="rd-state-try">{s.tryText}</p>{/if}
 					{#if view === 'connecting' || view === 'failed'}
 						<ol class="rd-steps" aria-label={tf('remote_viewer.steps_label', 'Connection steps')}>
@@ -247,6 +248,7 @@
 							{/each}
 						</ol>
 					{/if}
+					{#if view === 'connecting' && s.waitHint}<p class="rd-state-hint">{s.waitHint}</p>{/if}
 					{#if view === 'connecting' && s.slowHint}<p class="rd-state-hint">{s.slowHint}</p>{/if}
 					{#if view === 'connecting'}
 						<div class="overlay-actions">
@@ -254,12 +256,23 @@
 						</div>
 					{:else}
 						<div class="overlay-actions">
-							<Button
-								variant={s.billing ? 'secondary' : 'primary'}
-								icon="refresh"
-								bind:element={reconnectBtn}
-								onclick={() => viewer.reconnect(s)}>{tf('remote.reconnect', 'Reconnect')}</Button
-							>
+							{#if s.actions.includes('unblock')}
+								<Button
+									variant="primary"
+									icon="lock_open"
+									busy={s.unblocking}
+									onclick={() => void viewer.unblock(s)}
+									>{tf('remote_viewer.unblock', 'Unblock this computer')}</Button
+								>
+							{/if}
+							{#if !s.actions.length || s.actions.includes('reconnect')}
+								<Button
+									variant={s.billing || s.actions.includes('unblock') ? 'secondary' : 'primary'}
+									icon="refresh"
+									bind:element={reconnectBtn}
+									onclick={() => viewer.reconnect(s)}>{tf('remote.reconnect', 'Reconnect')}</Button
+								>
+							{/if}
 							{#if s.helpUrl}
 								<LinkButton icon="open_in_new" href={s.helpUrl} target="_blank" rel="noopener noreferrer"
 									>{tf('remote_viewer.https_help', 'How to set up HTTPS')}</LinkButton
@@ -621,6 +634,7 @@
 		margin: 0;
 		font-size: var(--text-md);
 	}
+	.rd-state-why,
 	.rd-state-try,
 	.rd-state-text {
 		margin: 0;

@@ -30,6 +30,7 @@ import { debugLog } from './log.ts';
 import { page } from './page.ts';
 import { RDProtocol } from './protocol.ts';
 import { RDPunchHoleResponse } from './punchhole-response.ts';
+import { deviceRefusalReason, reasonOf, ReasonError, serverRefusalReason, type Reason } from '../failures.ts';
 import { RDRenderer } from './renderer.ts';
 import { RDVideo } from './video.ts';
 import type {
@@ -181,6 +182,8 @@ export interface RDClientClipboardEntry {
 /** What the rendezvous server answered: the relay to use, or why there is none */
 interface RendezvousAnswer {
 	error?: string;
+	/** Why it refused (failures.ts) */
+	reason?: Reason;
 	relayServer?: string;
 	uuid?: string;
 	pk?: Uint8Array | null;
@@ -527,7 +530,10 @@ export class RDClient {
 			if (cancelled()) return;
 
 			if (rendezvousResponse.error) {
-				throw new Error(`Connection refused: ${rendezvousResponse.error}`);
+				throw new ReasonError(
+					rendezvousResponse.reason ?? 'unknown',
+					`Connection refused: ${rendezvousResponse.error}`
+				);
 			}
 
 			// Store peer's server-signed pk for SignedId verification (from RelayResponse.pk)
@@ -577,7 +583,10 @@ export class RDClient {
 				const relayConfirm = await this._waitForSignalRelayResponse();
 				if (cancelled()) return;
 				if (relayConfirm.error) {
-					throw new Error(`Relay refused: ${relayConfirm.error}`);
+					throw new ReasonError(
+						relayConfirm.reason ?? 'relay_refused',
+						`Relay refused: ${relayConfirm.error}`
+					);
 				}
 				// Use the confirmed UUID and relay server from hbbs
 				relayUUID = relayConfirm.uuid || relayUUID;
@@ -733,7 +742,7 @@ export class RDClient {
 		try {
 			// The password hash never goes out unencrypted
 			if (!this._keyExchangeDone) {
-				throw new Error('Handshake failed: the connection is not encrypted');
+				throw new ReasonError('insecure', 'Handshake failed: the connection is not encrypted');
 			}
 			this._setState('authenticating');
 			this._emit('log', 'Authenticating...');
@@ -770,7 +779,7 @@ export class RDClient {
 	async authenticateWith(answer: LoginAnswer): Promise<boolean> {
 		try {
 			if (!this._keyExchangeDone) {
-				throw new Error('Handshake failed: the connection is not encrypted');
+				throw new ReasonError('insecure', 'Handshake failed: the connection is not encrypted');
 			}
 			const hash = await answer(this._loginSalt || '', this._loginChallenge || '');
 			if (!hash || hash.length !== 32 || this._state !== 'waiting_password') return false;
@@ -904,7 +913,8 @@ export class RDClient {
 			const timeout = setTimeout(() => {
 				this.conn.off('rendezvous:message', handler);
 				reject(
-					new Error(
+					new ReasonError(
+						'no_answer',
 						`Rendezvous response timeout (${Math.round(waitMs / 1000)}s) - target device may be offline`
 					)
 				);
@@ -972,7 +982,10 @@ export class RDClient {
 								})
 							);
 							if (rr.refuseReason && rr.refuseReason.length > 0) {
-								resolve({ error: 'Relay refused: ' + rr.refuseReason });
+								resolve({
+									error: 'Relay refused: ' + rr.refuseReason,
+									reason: serverRefusalReason(rr.refuseReason)
+								});
 							} else {
 								resolve({
 									relayServer: rr.relayServer || '',
@@ -1015,7 +1028,8 @@ export class RDClient {
 			const timeout = setTimeout(() => {
 				this.conn.off('rendezvous:message', handler);
 				reject(
-					new Error(
+					new ReasonError(
+						'no_answer',
 						`RelayResponse timeout (${Math.round(waitMs / 1000)}s) — target device may be unreachable`
 					)
 				);
@@ -1047,7 +1061,7 @@ export class RDClient {
 								})
 							);
 							if (rr.refuseReason && rr.refuseReason.length > 0) {
-								resolve({ error: rr.refuseReason });
+								resolve({ error: rr.refuseReason, reason: serverRefusalReason(rr.refuseReason) });
 							} else {
 								resolve({
 									uuid: rr.uuid || '',
@@ -1148,7 +1162,9 @@ export class RDClient {
 					first = null;
 				}
 				if (!first || !first.signedId) {
-					this._handleError(new Error('Handshake failed: the device did not identify itself'));
+					this._handleError(
+						new ReasonError('insecure', 'Handshake failed: the device did not identify itself')
+					);
 					return;
 				}
 				this._handleSignedId(first.signedId);
@@ -1171,7 +1187,9 @@ export class RDClient {
 				);
 				return;
 			} else {
-				this._handleError(new Error('Handshake failed: the device did not encrypt the connection'));
+				this._handleError(
+					new ReasonError('insecure', 'Handshake failed: the device did not encrypt the connection')
+				);
 				return;
 			}
 
@@ -1322,7 +1340,7 @@ export class RDClient {
 			this.proto.types.IdPk
 		);
 		if ('error' in checked) {
-			this._handleError(new Error(checked.error));
+			this._handleError(new ReasonError('insecure', checked.error));
 			return;
 		}
 		this._emit('log', 'Peer identified: ' + this.deviceId);
@@ -1415,8 +1433,16 @@ export class RDClient {
 				return;
 			}
 
-			this._emit('login_error', resp.error);
-			this._setState('waiting_password');
+			// A wrong password stays in the form; any other refusal of the device is a
+			// failure with its reason, and its words go to Details only
+			if (deviceRefusalReason(resp.error) === 'password_wrong') {
+				this._emit('login_error', resp.error);
+				this._setState('waiting_password');
+				return;
+			}
+			this._handleError(
+				new ReasonError(deviceRefusalReason(resp.error) ?? 'unknown', 'Login refused: ' + resp.error)
+			);
 			return;
 		}
 
@@ -1438,7 +1464,8 @@ export class RDClient {
 		// cannot play without a secure context: end here, not on a black screen
 		if (!RDVideo.isSupported() && this._peerInfo?.encoding && !this._peerInfo.encoding.h264) {
 			this._handleError(
-				new Error(
+				new ReasonError(
+					'https_required',
 					`${HTTPS_REQUIRED}: the device has no H.264 encoder, and over HTTP this browser plays only H.264`
 				)
 			);
@@ -1493,7 +1520,8 @@ export class RDClient {
 		// sends VP9 when it has no H.264 encoder, whatever the viewer asked for
 		if (!RDVideo.isSupported() && codec !== 'h264') {
 			this._handleError(
-				new Error(
+				new ReasonError(
+					'https_required',
 					`${HTTPS_REQUIRED}: the device sends ${codec.toUpperCase()} video, and over HTTP this browser plays only H.264`
 				)
 			);
@@ -1954,8 +1982,10 @@ export class RDClient {
 		// Detect peer-offline scenarios where the agent is reachable through
 		// nd-signal/CDAP but not through the RustDesk relay (no peer registration).
 		// In that case, signal the UI that a CDAP fallback viewer is available.
-		const offlineHint = /target offline|relay refused|peer.*offline|not online|not registered/i.test(msg);
-		this._emit('error', msg, { cdapFallback: offlineHint });
+		const reason = reasonOf(err);
+		const offlineHint =
+			reason === 'device_offline' || reason === 'device_unknown' || reason === 'relay_refused';
+		this._emit('error', msg, { cdapFallback: offlineHint, reason: reason ?? undefined });
 		if (offlineHint) {
 			this._emit('cdap_fallback_available', this.deviceId);
 		}

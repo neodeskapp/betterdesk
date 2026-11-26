@@ -8,6 +8,7 @@
 
 import { tf } from '#lib/i18n/i18n.svelte.ts';
 import type { Tone } from '#lib/util/display.ts';
+import { isReason, type Reason } from './failures.ts';
 
 export const STEP_IDS = ['find', 'route', 'accept', 'signin', 'screen'] as const;
 export type StepId = (typeof STEP_IDS)[number];
@@ -160,6 +161,38 @@ export interface CloseMeta {
 	cdapFallback?: boolean;
 	/** The client's close: a login waited for the device's answer (RDClientDisconnectInfo) */
 	loginUnanswered?: boolean;
+	/** Who closed: the device ('peer'), the relay, the client */
+	source?: string;
+	/** The failure reason where the client knows it (failures.ts) */
+	reason?: string;
+}
+
+/**
+ * Why a RustDesk session ended, from what the client knows about the close
+ * (who closed, whether a sign-in or the person's answer was pending), not
+ * from its message: a failure reason, or 'peer' for an end on the device.
+ */
+export function rdEndReason(
+	meta: CloseMeta | null | undefined,
+	ctx: { everStreamed: boolean; awaitingConsent: boolean }
+): Reason | 'peer' {
+	if (isReason(meta?.reason)) return meta.reason;
+	if (!ctx.everStreamed) {
+		if (ctx.awaitingConsent) return 'consent_declined';
+		if (meta?.loginUnanswered) return 'signin_closed';
+		return 'dropped_early';
+	}
+	return meta?.source === 'peer' ? 'peer' : 'dropped';
+}
+
+/** The session was ended on the device */
+export function endedOnDevice(name: string): Outcome {
+	return {
+		kind: 'peer',
+		text: tf('remote_viewer.ended_peer', 'The session was ended on {name}.', { name }),
+		tryText: tf('remote_viewer.try_ended', 'Reconnect to continue, or close the tab.'),
+		ended: true
+	};
 }
 
 /** Known messages and close codes to a sentence on what happened and what to try */

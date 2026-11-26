@@ -6,7 +6,11 @@
  * connection), several sessions are tabs (a middle click closes one), the
  * sidebar folds away, the console's shortcuts leave the remote screen
  * alone and F8 gives the keyboard back, Open in new tab moves a session
- * to the standalone viewer, and ?standalone=1 keeps that layout.
+ * to the standalone viewer, and ?standalone=1 keeps that layout. The
+ * mock device behaves like the desktop client 1.5 for the failures and
+ * waits of L550, L551 and L556: click-to-accept, a quick support session
+ * whose password the server does not hold (accepted, declined, timed out),
+ * a revoked ID and an offline one.
  *
  * Needs the console with ND_DEV_MOCK_REMOTE=1; skipped without it.
  */
@@ -234,4 +238,81 @@ test('a typed password after the login without one connects: both logins name th
 	);
 	expect(logins.map((l) => l.password)).toEqual([false, true]);
 	expect(logins[1]!.latch).toBe(logins[0]!.latch);
+});
+
+/** What the mock device saw: how often the person was asked (the consent window opened) */
+async function asked(page: Page): Promise<number> {
+	return page.evaluate(() => (Reflect.get(window, '__ndMockDevice') as { asked?: number }).asked ?? 0);
+}
+
+test('quick support without the session password: no password form, the viewer waits for the person, who accepts (L551)', async ({
+	page
+}) => {
+	await page.goto(`${UI}/remote/${A}?mock=1&scenario=quick-support`);
+	await expect(page.locator('.overlay-status')).toHaveText('Waiting for Ana to accept on their screen.', {
+		timeout: 60_000
+	});
+	await expect(page.locator('.rd-state-hint').first()).toContainText('Accept and Decline');
+	await expect(page.getByLabel('Device password')).toHaveCount(0);
+	await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible();
+	await expect.poll(() => asked(page)).toBe(1);
+	await expect(page.locator(`#rd-panel-${A}.streaming`)).toBeVisible({ timeout: 60_000 });
+});
+
+test('quick support: the person declines, and the viewer says so (L551)', async ({ page }) => {
+	await page.goto(`${UI}/remote/${A}?mock=1&scenario=quick-support-decline`);
+	await expect(page.locator('.overlay-status')).toHaveText('Ana declined the connection.', {
+		timeout: 60_000
+	});
+	await expect(page.locator('.rd-state-why')).toContainText('clicked Decline');
+	await expect(page.getByRole('button', { name: 'Reconnect' })).toBeVisible();
+	await expectNoAxeViolations(page, '.session-panel');
+});
+
+test('quick support: nobody accepts in time (L551)', async ({ page }) => {
+	await page.goto(`${UI}/remote/${A}?mock=1&scenario=quick-support-timeout`);
+	await expect(page.locator('.overlay-status')).toHaveText('Waiting for Ana to accept on their screen.', {
+		timeout: 60_000
+	});
+	await expect(page.locator('.overlay-status')).toHaveText('Ana did not answer.', { timeout: 30_000 });
+	await expect(page.locator('.rd-state-why')).toContainText('within 3 minutes');
+});
+
+test('a computer that accepts by click says whom the viewer waits for, then connects (L515, L556)', async ({
+	page
+}) => {
+	await page.goto(`${UI}/remote/${A}?mock=1&scenario=click`);
+	await expect(page.locator('.overlay-status')).toHaveText(
+		/Waiting for someone at .+ to accept on their screen\./,
+		{
+			timeout: 60_000
+		}
+	);
+	await expect(page.locator(`#rd-panel-${A}.streaming`)).toBeVisible({ timeout: 60_000 });
+});
+
+test('a revoked computer is named, not called offline, and Unblock lets it connect again (L550)', async ({
+	page
+}) => {
+	await page.goto(`${UI}/remote/${A}?mock=1&scenario=revoked`);
+	await expect(page.locator('.overlay-status')).toHaveText(/was revoked on this server\./, {
+		timeout: 60_000
+	});
+	await expect(page.locator('.rd-state-why')).toContainText('revoked this computer in the console');
+	for (const sel of ['.overlay-status', '.rd-state-why', '.rd-state-try'])
+		await expect(page.locator(sel)).not.toContainText(/offline|Connection refused/);
+	await page.getByRole('button', { name: 'Unblock this computer' }).click();
+	await expect(page.locator('.rd-state-try')).toContainText('is unblocked');
+	await page.getByRole('button', { name: 'Reconnect' }).click();
+	await expect(page.locator(`#rd-panel-${A}.streaming`)).toBeVisible({ timeout: 60_000 });
+});
+
+test('a computer that has not registered is offline, with the device panel and no Unblock (L556)', async ({
+	page
+}) => {
+	await page.goto(`${UI}/remote/${A}?mock=1&scenario=offline`);
+	await expect(page.locator('.overlay-status')).toHaveText(/is offline\./, { timeout: 60_000 });
+	await expect(page.locator('.rd-state-why')).toContainText('has not checked in with the server');
+	await expect(page.getByRole('button', { name: 'Unblock this computer' })).toHaveCount(0);
+	await expect(page.getByRole('link', { name: 'Open device' })).toBeVisible();
 });

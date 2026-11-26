@@ -25,9 +25,10 @@ import {
 	type PendingBillingSession,
 	type ViewerData
 } from '#lib/api/remote.ts';
-import { getDevice } from '#lib/api/devices.ts';
+import { getDevice, getDeviceReach, unblockDevice } from '#lib/api/devices.ts';
 import { link } from '#lib/nav.ts';
-import { takeDevicePassword } from '#lib/api/onboard.ts';
+import { takeDevicePassword, type DeviceSupport } from '#lib/api/onboard.ts';
+import { describeFailure, isReason, type FailAction, type Reason } from './failures.ts';
 import { answerConnectPassword } from '#lib/api/connectAnswer.ts';
 import {
 	getSignin,
@@ -86,7 +87,10 @@ import {
 	classifyEnd,
 	detailRows,
 	detailsText,
+	endedOnDevice,
 	endOutcome,
+	HTTPS_DOCS_URL,
+	rdEndReason,
 	isStep,
 	loginErrorText,
 	SLOW_AFTER_MS,
@@ -110,6 +114,9 @@ function isTouchRenderer(renderer: unknown): renderer is TouchRenderer {
 		typeof renderer.canvasToRemote === 'function'
 	);
 }
+
+/** How long the viewer waits for the person at the computer to accept */
+export const CONSENT_WAIT_MS = 3 * 60 * 1000;
 
 export type SheetName = 'chat' | 'files' | 'info';
 
@@ -248,8 +255,21 @@ export class ViewerSession {
 	stepId = $state<StepId | null>(null);
 	slowHint = $state('');
 	statusText = $state('');
+	/** Why it failed, as the server or the client knows it ('' while connecting) */
+	whyText = $state('');
 	tryText = $state('');
 	outcomeKind = $state('');
+	/** The buttons of a failure (failures.ts) */
+	actions = $state.raw<FailAction[]>([]);
+	/** This account may unblock the computer (the server's reach answer) */
+	canUnblock = $state(false);
+	unblocking = $state(false);
+	/** Waiting for the person at the computer to accept: what they see */
+	waitHint = $state('');
+	awaitingConsent = false;
+	/** The person at the computer (a quick support session's name), '' when unknown */
+	consentPerson = '';
+	consentTimer: ReturnType<typeof setTimeout> | null = null;
 	/** A docs page the result points to, '' for none */
 	helpUrl = $state('');
 	endInfo = $state.raw<EndInfo | null>(null);
@@ -565,6 +585,7 @@ export class Viewer {
 		s.chatBridge?.dispose();
 		s.chatBridge = null;
 		this.clearStepTimer(s);
+		this.clearConsent(s);
 		if (s.endTimer) clearTimeout(s.endTimer);
 		if (s.signinTimer) clearTimeout(s.signinTimer);
 		try {
@@ -703,6 +724,9 @@ export class Viewer {
 		s.signinPending = '';
 		if (s.signinTimer) clearTimeout(s.signinTimer);
 		s.signinTimer = null;
+		this.clearConsent(s);
+		s.consentPerson = '';
+		s.canUnblock = false;
 		if (!s.canvas) return;
 		s.client = createClient(s.canvas, this.clientOptions(s), this.transport);
 		s.client.setBackgroundFps?.(s.prefs.backgroundFps || 1);
@@ -746,8 +770,7 @@ export class Viewer {
 		on('clipboard_too_large', () => this.clipboardNotice({ kind: 'from_remote_too_large' }));
 		// The device takes no password: someone there accepts, the password prompt is not the way
 		on('approval_wait', () => {
-			if (s.view !== 'connecting') this.showView(s, 'connecting');
-			this.setStep(s, 'accept', true);
+			this.awaitConsent(s, c, s.consentPerson);
 		});
 		on('error', (msg: unknown, meta?: CloseMeta) => {
 			const text =
@@ -774,25 +797,37 @@ export class Viewer {
 		});
 		on('password_required', () => {
 			this.setStep(s, 'signin');
-			this.showView(s, 'password');
 			s.loginError = '';
 			s.password = '';
 			const local = secureStore()
 				.loadPeerPassword(s.deviceId)
 				.catch(() => '');
 			// Only a signed-in account can have a quick support session to take a password from
-			const handed =
-				this.data.mockRemote || !this.data.user ? Promise.resolve('') : takeDevicePassword(s.deviceId);
+			const none: DeviceSupport = { password: '', session: null };
+			const handed = c.mockServer
+				? c.mockServer.support()
+				: this.data.mockRemote || !this.data.user
+					? Promise.resolve(none)
+					: takeDevicePassword(s.deviceId);
 			void Promise.all([local, handed]).then(async ([mine, support]) => {
+				if (s.client !== c || s.closed) return;
 				// A quick support session's password, which the person's app handed to this
 				// supporter, is sent at once and never stored in this browser
-				if (support) {
-					s.password = support;
+				if (support.password) {
+					s.password = support.password;
 					s.remember = false;
 					s.rememberedPassword = '';
 					this.authenticate(s);
 					return;
 				}
+				// A quick support session without its password (the server lost it or gave it
+				// out already): the person accepts on their screen, there is nothing to type (L551)
+				if (support.session) {
+					this.awaitConsent(s, c, support.session.name);
+					void c.askWithoutPassword?.();
+					return;
+				}
+				this.showView(s, 'password');
 				// The device password an organisation stored comes next, once per connection:
 				// the server answers the device's question, the password never reaches this page
 				if (await this.signInWithOrgPassword(s, c)) return;
@@ -855,6 +890,7 @@ export class Viewer {
 			if (this.isActive(s)) void tick().then(() => s.focus?.tfa());
 		});
 		on('login_success', () => {
+			this.clearConsent(s);
 			if (s.view === 'password' || s.view === 'tfa') this.showView(s, 'connecting');
 			this.setStep(s, 'screen');
 			const pw = s.password;
@@ -1055,7 +1091,7 @@ export class Viewer {
 		s.slowHint = '';
 		this.clearStepTimer(s);
 		s.slowTimer = setTimeout(() => {
-			if (s.closed || s.view !== 'connecting' || s.stepId !== id) return;
+			if (s.closed || s.view !== 'connecting' || s.stepId !== id || s.awaitingConsent) return;
 			s.slowHint = stepText(id, s.label, this.transport).slow;
 		}, SLOW_AFTER_MS);
 	}
@@ -1073,6 +1109,8 @@ export class Viewer {
 		}
 		if (view === 'connecting') {
 			s.tryText = '';
+			s.whyText = '';
+			s.actions = [];
 			s.outcomeKind = '';
 			s.helpUrl = '';
 		}
@@ -1090,7 +1128,128 @@ export class Viewer {
 			this.finishEnd(s);
 			return;
 		}
-		this.showResult(s, classifyEnd(s.lastError, meta, { name: s.label, everStreamed: s.everStreamed }));
+		this.clearConsent(s);
+		// The other transports give no reason yet: their messages are still read (L557)
+		if (this.transport !== 'rd' && !isReason(meta?.reason)) {
+			this.showResult(s, classifyEnd(s.lastError, meta, { name: s.label, everStreamed: s.everStreamed }));
+			return;
+		}
+		this.showFailure(s, isReason(meta?.reason) ? meta.reason : 'unknown');
+	}
+
+	/** What happened, why and what to do, from the reason; the message stays for Details */
+	private showFailure(s: ViewerSession, reason: Reason): void {
+		const f = describeFailure(reason, {
+			name: s.label,
+			person: s.consentPerson || undefined,
+			canUnblock: s.canUnblock
+		});
+		this.showResult(s, {
+			kind: reason,
+			text: f.what,
+			tryText: f.todo,
+			helpUrl: reason === 'https_required' ? HTTPS_DOCS_URL : undefined
+		});
+		s.whyText = f.why;
+		s.actions = f.actions;
+		if (reason === 'device_offline' || reason === 'device_unknown' || reason === 'no_answer')
+			void this.checkReach(s, reason);
+	}
+
+	/**
+	 * The signal server says only that it can't find the computer, or the
+	 * computer did not answer: the server knows why (revoked, blocked,
+	 * banned, deleted, a refused key), and whether this account may unblock
+	 * it (L550)
+	 */
+	private async checkReach(s: ViewerSession, shown: Reason): Promise<void> {
+		const c = s.client;
+		try {
+			const r = c?.mockServer ? await c.mockServer.reach() : await getDeviceReach(s.deviceId);
+			if (s.client !== c || s.closed || s.view !== 'failed' || s.outcomeKind !== shown) return;
+			s.canUnblock = r.can_unblock === true;
+			// "online" or the same reason: the first reason stays. A computer that did not
+			// answer changes only for a cause that keeps it from answering
+			const known = isReason(r.reason) && r.reason !== shown ? r.reason : null;
+			const keeps = ['device_revoked', 'device_blocked', 'key_changed', 'device_banned'];
+			const next = shown === 'no_answer' ? (known && keeps.includes(known) ? known : null) : known;
+			if (next) this.showFailure(s, next);
+			else if (s.canUnblock) this.showFailure(s, shown);
+		} catch {
+			/* The first reason stays */
+		}
+	}
+
+	/** Unblock this computer: its ID leaves the server's blocklist, with an audit entry */
+	async unblock(s: ViewerSession): Promise<void> {
+		if (s.unblocking) return;
+		s.unblocking = true;
+		try {
+			if (s.client?.mockServer) await s.client.mockServer.unblock();
+			else await unblockDevice(s.deviceId);
+			s.actions = s.actions.filter((a) => a !== 'unblock');
+			s.tryText = tf(
+				'remote_viewer.unblocked_try',
+				'{name} is unblocked. It checks in with the server within a minute; then reconnect.',
+				{ name: s.label }
+			);
+			toast.success(tf('remote_viewer.unblocked', '{name} is unblocked.', { name: s.label }));
+		} catch {
+			toast.error(
+				tf('remote_viewer.unblock_failed', 'Could not unblock {name}. Try again.', { name: s.label })
+			);
+		} finally {
+			s.unblocking = false;
+		}
+	}
+
+	/**
+	 * The computer waits for the person there to accept (a quick support
+	 * session, or a computer that accepts by click): say whom it waits for
+	 * and what they see, and give up after CONSENT_WAIT_MS
+	 */
+	private awaitConsent(s: ViewerSession, c: RemoteClient, person: string): void {
+		s.consentPerson = person;
+		s.awaitingConsent = true;
+		if (s.view !== 'connecting') this.showView(s, 'connecting');
+		this.setStep(s, 'accept', true);
+		s.slowHint = '';
+		s.statusText = person
+			? tf('remote_viewer.wait_person', 'Waiting for {person} to accept on their screen.', { person })
+			: tf('remote_viewer.wait_someone', 'Waiting for someone at {name} to accept on their screen.', {
+					name: s.label
+				});
+		s.waitHint = person
+			? tf(
+					'remote_viewer.wait_person_hint',
+					'{person} sees a window that asks to let you connect, with Accept and Decline.',
+					{ person }
+				)
+			: tf(
+					'remote_viewer.wait_someone_hint',
+					'The person there sees a window that asks to let you connect, with Accept and Decline.'
+				);
+		if (s.consentTimer) clearTimeout(s.consentTimer);
+		s.consentTimer = setTimeout(() => {
+			s.consentTimer = null;
+			if (s.client !== c || s.closed || !s.awaitingConsent) return;
+			s.lastError = 'Nobody accepted the connection in time';
+			s.endInfo = { reason: s.lastError, meta: null, at: Date.now(), step: s.stepId };
+			s.awaitingConsent = false;
+			this.showFailure(s, 'consent_timeout');
+			try {
+				c.disconnect();
+			} catch {
+				/* gone */
+			}
+		}, c.mockServer?.consentWait?.() ?? CONSENT_WAIT_MS);
+	}
+
+	private clearConsent(s: ViewerSession): void {
+		if (s.consentTimer) clearTimeout(s.consentTimer);
+		s.consentTimer = null;
+		s.awaitingConsent = false;
+		s.waitHint = '';
 	}
 
 	/** The connection closed: ended by you, by the device, or failed on the way */
@@ -1102,10 +1261,17 @@ export class Viewer {
 		}
 		const end = s.endInfo ?? { reason: '', meta: null, at: Date.now(), step: s.stepId };
 		s.endInfo = end;
-		this.showResult(
-			s,
-			endOutcome(s.endedBy, end.reason, end.meta, { name: s.label, everStreamed: s.everStreamed })
-		);
+		const awaitingConsent = s.awaitingConsent;
+		this.clearConsent(s);
+		if (this.transport === 'rd' && !s.endedBy) {
+			const r = rdEndReason(end.meta, { everStreamed: s.everStreamed, awaitingConsent });
+			if (r === 'peer') this.showResult(s, endedOnDevice(s.label));
+			else this.showFailure(s, r);
+		} else
+			this.showResult(
+				s,
+				endOutcome(s.endedBy, end.reason, end.meta, { name: s.label, everStreamed: s.everStreamed })
+			);
 		if (s.everStreamed && this.data.workReports) void this.promptWorkReport(s);
 	}
 

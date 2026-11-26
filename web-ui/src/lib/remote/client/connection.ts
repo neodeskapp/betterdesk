@@ -4,6 +4,7 @@
  * via the Node.js WS proxy endpoints.
  */
 import { page } from './page.ts';
+import { ReasonError } from '../failures.ts';
 
 /**
  * The bytes as WebSocket.send's type takes them: on an ArrayBuffer. Protobuf
@@ -178,7 +179,7 @@ export class RDConnection {
 			ws.onerror = (e) => {
 				settle();
 				this._emit('rendezvous:error', e);
-				reject(new Error('Rendezvous connection failed'));
+				reject(new ReasonError('server_unreachable', 'Rendezvous connection failed'));
 			};
 
 			ws.onclose = (e) => {
@@ -240,7 +241,7 @@ export class RDConnection {
 			ws.onerror = (e) => {
 				settle();
 				this._emit('relay:error', e);
-				reject(new Error('Relay connection failed'));
+				reject(new ReasonError('relay_unreachable', 'Relay connection failed'));
 			};
 
 			ws.onclose = (e) => {
