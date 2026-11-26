@@ -147,6 +147,7 @@ func RegisterWith(d *kit.Deps, opts Options) {
 	e.Post("/api/support/session/consent", h.appConsent, h.requireSessionToken)
 	e.Post("/api/support/session/password", h.appPassword, h.requireSessionToken)
 	e.Post("/api/support/session/end", h.appEnd, h.requireSessionToken)
+	e.Post("/api/support/session/caller", h.appCaller, h.requireSessionToken)
 
 	if d.Jobs != nil {
 		d.Jobs.Add("onboard sweep", h.sweepLoop)

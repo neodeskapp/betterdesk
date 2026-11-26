@@ -153,6 +153,9 @@ type Server struct {
 	deviceVault *devicevault.Vault
 	// signinUses are the sessions that used their saved sign-in
 	signinUses signinUses
+	// callerUses are the relay sessions whose quick support caller the
+	// server vouched for (support_caller.go), once each
+	callerUses signinUses
 	// signinLiveFn stands in for the relay's live sessions in tests
 	signinLiveFn func(uuid string) (relay.LivePair, bool)
 	httpSrv      *http.Server
@@ -721,6 +724,7 @@ func (s *Server) routes() *http.ServeMux {
 	s.onboardRoutes(mux)
 	s.connectAnswerRoutes(mux)
 	s.signinRoutes(mux)
+	s.supportCallerRoutes(mux)
 
 	// CDAP device management (requires CDAP gateway to be enabled)
 	mux.HandleFunc("GET /api/cdap/status", s.requirePermission(auth.PermCDAPView, s.handleCDAPStatus))

@@ -23,6 +23,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 	"github.com/neodeskapp/neodesk/neodesk-server/security"
 )
 
@@ -57,7 +58,9 @@ func newWorld(t *testing.T, sdb *store.DB) *world {
 	gdb := storetest.GoServer(t, sdb)
 	cfg := config.DefaultConfig()
 	cfg.EnrollmentMode = config.EnrollmentModeManaged
-	apiSrv := api.New(cfg, gdb, peer.NewMap(), nil, "test")
+	// The relay's live sessions are the shared registry's, which a test
+	// fills with relay.AuthorizeRelayPairForSession and two claims
+	apiSrv := api.New(cfg, gdb, peer.NewMap(), relay.New(cfg), "test")
 	bl := security.NewBlocklist()
 	apiSrv.SetBlocklist(bl)
 
