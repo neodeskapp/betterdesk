@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"strings"
 	"time"
 
@@ -161,6 +162,13 @@ func (s *Service) MayView(ctx context.Context, admin, target *Account) (*Refusal
 	case target.Disabled.True():
 		return refusedDisabled(target.Username), nil
 	}
+	// An account past its end date is as good as disabled (sign-in and API
+	// tokens refuse it), also before the job sets disabled
+	if ended, err := lifecycle.Expired(ctx, s.d.Store, target.ID.V, s.now()); err != nil {
+		return nil, err
+	} else if ended {
+		return refusedDisabled(target.Username), nil
+	}
 	adminRole, targetRole := roleOf(admin), roleOf(target)
 	if !consoleRole(targetRole) {
 		return refusedNoConsole(target.Username), nil
@@ -278,6 +286,11 @@ func (s *Service) MayStillView(ctx context.Context, adminID, targetID int64, tar
 		return nil, err
 	}
 	if admin == nil || admin.Disabled.True() {
+		return refusedAdminDisabled(), nil
+	}
+	if ended, err := lifecycle.Expired(ctx, s.d.Store, adminID, s.now()); err != nil {
+		return nil, err
+	} else if ended {
 		return refusedAdminDisabled(), nil
 	}
 	allowed, err := s.d.Access.RoleHasEffectivePermission(ctx, roleOf(admin), auth.PermUserImpersonate)

@@ -10,7 +10,6 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
@@ -36,19 +35,15 @@ func (h *handlers) displayName(ctx context.Context, a *authn.Account) string {
 	return people.NameOf(ctx, h.d.Store, a.ID.V, a.Username)
 }
 
-// consoleBase is the address people reach the console at: the configured
-// public address, else the address of the request.
-func (h *handlers) consoleBase(r *http.Request) string {
+// consoleBase is the address people reach the console at, as configured
+// (PANEL_PUBLIC_URL, PUBLIC_URL or the panel's public host), "" when none
+// is. Never the request's Host header: the admin who starts would choose
+// where the button in the server's mail leads.
+func (h *handlers) consoleBase() string {
 	if h.d.Mail != nil {
-		if base := h.d.Mail.GetPanelBaseURL(); base != "" {
-			return strings.TrimRight(base, "/")
-		}
+		return strings.TrimRight(h.d.Mail.GetPanelBaseURL(), "/")
 	}
-	scheme := "http"
-	if kit.Secure(r) {
-		scheme = "https"
-	}
-	return scheme + "://" + r.Host
+	return ""
 }
 
 // mailLanguage is the language of a mail to the account: its preferred
@@ -84,13 +79,19 @@ func buildNotice(bundle *i18n.Bundle, lang string, f noticeFacts) noticeMail {
 	vars := i18n.V("admin", f.Admin, "username", f.Username, "reason", f.Reason, "date", f.Date, "server", f.Branding.Server)
 	t := func(key string) string { return bundle.T(lang, "impersonation."+key, vars) }
 	subject, heading, lead := t("notice_subject"), t("notice_heading"), t("notice_lead")
-	button, footer := t("notice_button"), t("notice_footer")
+	button, footer, hint := t("notice_button"), t("notice_footer"), t("notice_link_hint")
 	small := []string{t("notice_read_only"), t("notice_unexpected")}
 	lines := []string{heading, "", lead, ""}
 	lines = append(lines, small...)
-	lines = append(lines, "", button+": "+f.Link, "", "--", footer)
+	if f.Link != "" {
+		lines = append(lines, "", button+": "+f.Link)
+	} else {
+		// Without a known address the mail names no link
+		button, hint = "", ""
+	}
+	lines = append(lines, "", "--", footer)
 	page := brandmail.Page{Branding: f.Branding, Heading: heading, Lead: lead, Button: button, Link: f.Link,
-		LinkHint: t("notice_link_hint"), Small: small, Footer: footer}
+		LinkHint: hint, Small: small, Footer: footer}
 	return noticeMail{Subject: subject, Text: strings.Join(lines, "\n") + "\n", HTML: brandmail.HTML(page), Inline: brandmail.Inline(page)}
 }
 
@@ -105,10 +106,13 @@ func (h *handlers) notify(r *http.Request, admin, target *authn.Account, reason 
 	if to == "" {
 		return
 	}
-	base := h.consoleBase(r)
+	base, link := h.consoleBase(), ""
+	if base != "" {
+		link = base + "/account"
+	}
 	m := buildNotice(h.d.I18n.Bundle, mailLanguage(h.d.I18n.Bundle, target.PreferredLanguage.String), noticeFacts{
 		Admin: h.displayName(ctx, admin), Username: target.Username, Reason: reason,
-		Date: at.UTC().Format("2006-01-02 15:04") + " UTC", Link: base + "/account",
+		Date: at.UTC().Format("2006-01-02 15:04") + " UTC", Link: link,
 		Branding: brandmail.Of(h.d.Branding, base),
 	})
 	service := h.d.Mail

@@ -30,6 +30,11 @@ func cleanReason(raw string) string {
 			space = b.Len() > 0
 			continue
 		}
+		// Format characters (bidi overrides, zero-width spaces) could make
+		// the reason read differently in the audit log and the mail
+		if unicode.Is(unicode.Cf, c) {
+			continue
+		}
 		if space {
 			b.WriteByte(' ')
 			space = false
