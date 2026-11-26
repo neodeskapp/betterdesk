@@ -58,11 +58,17 @@ class ChatClient {
 	listVersion = $state(0);
 	/** A notice for the person: a colleague took one of their conversations */
 	notices = $state.raw<{ code: string; conversation_id: string; by: string; at: number }[]>([]);
+	/** Conversations' facts as last loaded, so a conversation opens with its header at once */
+	details = $state.raw<Record<string, api.ConversationDetail>>({});
 
 	private sock: LiveSocket | null = null;
 	private hooks: ChatHooks = {};
 	private summaryTimer: ReturnType<typeof setTimeout> | null = null;
 	private sinks = new Map<string, Set<SessionSink>>();
+	/** Facts on their way, one request per conversation */
+	private detailLoads = new Map<string, Promise<api.ConversationDetail>>();
+	/** When a conversation's newest page was asked for and hasn't come yet */
+	private historyAsked = new Map<string, number>();
 
 	/** Unread support conversations of mine or nobody's, and unread team messages */
 	get supportUnread(): number {
@@ -116,6 +122,9 @@ class ChatClient {
 		this.sock = null;
 		this.status = 'idle';
 		this.threads = {};
+		this.details = {};
+		this.detailLoads.clear();
+		this.historyAsked.clear();
 		this.summary = {};
 		this.me = null;
 	}
@@ -125,8 +134,46 @@ class ChatClient {
 	}
 
 	/** Loads a conversation's newest page, or the page before a message */
-	history(conv: string, before?: string): void {
-		this.send({ type: 'history', conversation_id: conv, before: before ?? '0', limit: 50 });
+	history(conv: string, before?: string): boolean {
+		return this.send({ type: 'history', conversation_id: conv, before: before ?? '0', limit: 50 });
+	}
+
+	/** Loads a conversation's newest page unless it is here or on its way */
+	ensureHistory(conv: string): void {
+		if (this.thread(conv).loaded) return;
+		const asked = this.historyAsked.get(conv);
+		if (asked && Date.now() - asked < 5000) return;
+		if (this.history(conv)) this.historyAsked.set(conv, Date.now());
+	}
+
+	/**
+	 * Loads a conversation's facts. A request on its way is shared, unless
+	 * fresh: after a change, a new one whose answer wins over older ones.
+	 */
+	loadDetail(conv: string, fresh = false): Promise<api.ConversationDetail> {
+		const running = this.detailLoads.get(conv);
+		if (running && !fresh) return running;
+		const load: Promise<api.ConversationDetail> = api
+			.loadConversation(conv)
+			.then((d) => {
+				if (this.detailLoads.get(conv) === load) this.setDetail(conv, d);
+				return d;
+			})
+			.finally(() => {
+				if (this.detailLoads.get(conv) === load) this.detailLoads.delete(conv);
+			});
+		this.detailLoads.set(conv, load);
+		return load;
+	}
+
+	setDetail(conv: string, d: api.ConversationDetail): void {
+		this.details = { ...this.details, [conv]: d };
+	}
+
+	/** A conversation about to open (its row is pointed at or has focus): its messages and facts ahead of the click */
+	preload(conv: string): void {
+		this.ensureHistory(conv);
+		if (!this.details[conv]) this.loadDetail(conv).catch(() => undefined);
 	}
 
 	/** Sends a message; it shows at once and is replaced when the server has it */
@@ -230,6 +277,7 @@ class ChatClient {
 				const conv = String(f.conversation_id ?? '');
 				const messages = (Array.isArray(f.messages) ? f.messages : []) as Message[];
 				const reads = (Array.isArray(f.reads) ? f.reads : []) as ReadMark[];
+				if (String(f.before ?? '0') === '0') this.historyAsked.delete(conv);
 				this.setThread(
 					conv,
 					withHistory(this.thread(conv), messages, reads, f.more === true, String(f.before ?? '0'))
