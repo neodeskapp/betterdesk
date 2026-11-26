@@ -597,7 +597,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=570866ec71d6e123"
+      "stringsUrl": "/api/console/strings/de?v=cc0d72de86915cdd"
      },
      "nav": [
       {
@@ -1455,7 +1455,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=570866ec71d6e123"
+      "stringsUrl": "/api/console/strings/de?v=cc0d72de86915cdd"
      },
      "nav": [
       {
@@ -2393,7 +2393,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=570866ec71d6e123"
+      "stringsUrl": "/api/console/strings/de?v=cc0d72de86915cdd"
      },
      "nav": [
       {
@@ -2777,6 +2777,7 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
+      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",
@@ -3390,7 +3391,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=570866ec71d6e123"
+      "stringsUrl": "/api/console/strings/de?v=cc0d72de86915cdd"
      },
      "nav": [
       {
@@ -3975,6 +3976,7 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
+      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",

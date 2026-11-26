@@ -629,7 +629,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=43d5a5981cd7b70e"
+      "stringsUrl": "/api/console/strings/en?v=9b5b7fbb76dd489e"
      },
      "nav": [
       {
@@ -1415,7 +1415,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=43d5a5981cd7b70e"
+      "stringsUrl": "/api/console/strings/en?v=9b5b7fbb76dd489e"
      },
      "nav": [
       {
@@ -2273,7 +2273,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=43d5a5981cd7b70e"
+      "stringsUrl": "/api/console/strings/en?v=9b5b7fbb76dd489e"
      },
      "nav": [
       {
@@ -3211,7 +3211,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=43d5a5981cd7b70e"
+      "stringsUrl": "/api/console/strings/en?v=9b5b7fbb76dd489e"
      },
      "nav": [
       {
@@ -3595,6 +3595,7 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
+      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",
@@ -4208,7 +4209,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=43d5a5981cd7b70e"
+      "stringsUrl": "/api/console/strings/en?v=9b5b7fbb76dd489e"
      },
      "nav": [
       {
@@ -5270,7 +5271,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=43d5a5981cd7b70e"
+      "stringsUrl": "/api/console/strings/en?v=9b5b7fbb76dd489e"
      },
      "nav": [
       {
@@ -5855,6 +5856,7 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
+      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",
@@ -6470,7 +6472,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=43d5a5981cd7b70e"
+      "stringsUrl": "/api/console/strings/en?v=9b5b7fbb76dd489e"
      },
      "nav": [
       {
@@ -7055,6 +7057,7 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
+      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",

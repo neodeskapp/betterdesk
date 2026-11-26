@@ -64,6 +64,7 @@
        "chat.canned_manage",
        "chat.support",
        "chat.team",
+       "chat.teams_manage",
        "device.ban",
        "device.change_id",
        "device.connect",

@@ -278,6 +278,10 @@
       },
       {
        "count": 0,
+       "name": "chat_team_groups"
+      },
+      {
+       "count": 0,
        "name": "client_feature_policies"
       },
       {
