@@ -189,8 +189,11 @@ export async function setTemporaryPassword(id: number | string, password?: strin
 export const BulkResult = v.looseObject({
 	id: v.union([v.number(), v.string()]),
 	username: v.optional(v.string(), ''),
-	/** changed, unchanged (it was so already) or refused (error says why) */
-	outcome: v.picklist(['changed', 'unchanged', 'refused']),
+	/**
+	 * changed (with a dry run: would change), unchanged (it was so already),
+	 * refused (error says why) or failed (the server couldn't)
+	 */
+	outcome: v.picklist(['changed', 'unchanged', 'refused', 'failed']),
 	error: v.optional(v.string(), '')
 });
 export type BulkResult = v.InferOutput<typeof BulkResult>;
@@ -205,6 +208,101 @@ export async function requirePasswordChange(
 		'/api/users/require-password-change',
 		{ method: 'POST', body: { ids, required } }
 	);
+	return out.results;
+}
+
+/**
+ * The actions for several accounts at once. Each has the permission of its
+ * route for one account: role, disable, enable and password-reset-link
+ * user.edit, two-factor-required and require-password-change
+ * user.security, delete user.delete, the organization ones
+ * org.manage_users.
+ */
+export type BulkKind =
+	| 'role'
+	| 'organization-add'
+	| 'organization-remove'
+	| 'two-factor-required'
+	| 'require-password-change'
+	| 'disable'
+	| 'enable'
+	| 'password-reset-link'
+	| 'delete';
+
+/**
+ * Runs an action on up to 500 accounts and answers what happened to each,
+ * in the order given. With dryRun nothing is written: the answer says what
+ * would happen. params are the action's own: { role }, { org_id },
+ * { required }.
+ */
+export async function runBulk(
+	kind: BulkKind,
+	ids: (number | string)[],
+	params: Record<string, unknown> = {},
+	dryRun = false
+): Promise<BulkResult[]> {
+	const path =
+		kind === 'require-password-change' ? '/api/users/require-password-change' : `/api/users/bulk/${kind}`;
+	const out = await api(wrapped(v.looseObject({ results: v.array(BulkResult) })), path, {
+		method: 'POST',
+		body: { ...params, ids, ...(dryRun ? { dry_run: true } : {}) }
+	});
+	return out.results;
+}
+
+/* ── Import from a CSV file (user.create) ── */
+
+/** How the accounts of an import get a password */
+export type ImportMode = 'invite' | 'temporary' | 'none';
+
+export const ImportRow = v.looseObject({
+	line: v.number(),
+	username: Str,
+	email: Str,
+	first_name: Str,
+	last_name: Str,
+	role: Str,
+	organization: Str,
+	language: Str,
+	/** What is wrong with the line, in the console language; empty when it can be imported */
+	problems: v.optional(v.array(v.string()), [])
+});
+export type ImportRow = v.InferOutput<typeof ImportRow>;
+
+export const ImportPreview = v.looseObject({
+	rows: v.array(ImportRow),
+	ready: v.optional(v.number(), 0),
+	ignored_columns: v.optional(v.array(v.string()), []),
+	mail_ready: v.optional(v.boolean(), false)
+});
+export type ImportPreview = v.InferOutput<typeof ImportPreview>;
+
+/** Checks every line of the file; nothing is written */
+export function previewImport(csv: string, mode: ImportMode): Promise<ImportPreview> {
+	return api(wrapped(ImportPreview), '/api/users/import/preview', { method: 'POST', body: { csv, mode } });
+}
+
+export const ImportResult = v.looseObject({
+	line: v.number(),
+	username: Str,
+	/** created, refused (the line has problems), skipped (not chosen) or failed */
+	outcome: Str,
+	error: Str,
+	id: v.optional(v.nullable(v.union([v.number(), v.string()])), null),
+	invite_sent: v.optional(v.nullable(v.boolean()), null),
+	/** The temporary password, shown this once */
+	password: Str,
+	/** What didn't work after the account was made (the invite mail, the organization) */
+	warning: Str
+});
+export type ImportResult = v.InferOutput<typeof ImportResult>;
+
+/** Makes the accounts of the chosen lines that have no problems */
+export async function importUsers(csv: string, mode: ImportMode, lines: number[]): Promise<ImportResult[]> {
+	const out = await api(wrapped(v.looseObject({ results: v.array(ImportResult) })), '/api/users/import', {
+		method: 'POST',
+		body: { csv, mode, lines }
+	});
 	return out.results;
 }
 
