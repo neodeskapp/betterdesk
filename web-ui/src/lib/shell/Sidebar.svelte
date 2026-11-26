@@ -661,21 +661,30 @@
 		border-radius: 2px;
 	}
 
+	/* A 24 px target (WCAG 2.5.8) around the 6 px line that shows */
 	.resize-handle {
 		position: absolute;
 		top: 0;
 		bottom: 0;
-		inset-inline-end: -3px;
+		inset-inline-end: -12px;
 		z-index: 2;
-		width: 6px;
+		width: 24px;
 		cursor: col-resize;
 		touch-action: none;
+		outline: none;
 	}
-	.resize-handle:hover,
-	.resize-handle.active {
+	.resize-handle::before {
+		content: '';
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 9px;
+		width: 6px;
+	}
+	.resize-handle:hover::before,
+	.resize-handle.active::before {
 		background: var(--border);
 	}
-	.resize-handle:focus-visible {
+	.resize-handle:focus-visible::before {
 		outline: 2px solid var(--focus);
 		outline-offset: 0;
 		background: var(--focus);
