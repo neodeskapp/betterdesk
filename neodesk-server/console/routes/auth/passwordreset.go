@@ -134,9 +134,9 @@ func (h *handlers) passwordResetRequest(w http.ResponseWriter, r *http.Request) 
 		}
 		m := passwordlinks.BuildMail(translate, passwordlinks.MailFacts{
 			Purpose: passwordlinks.PurposeReset, Self: true, Link: passwordlinks.SetPasswordLink(base, token),
-			Username: t.username, Host: host, Expires: expires.UTC().Format("2006-01-02 15:04") + " UTC", Branding: brand,
+			Username: t.username, Host: host, Expires: brandmail.When(expires), Branding: brand,
 		})
-		mails = append(mails, mail.Email{To: []string{t.email}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline})
+		mails = append(mails, mail.Email{To: []string{t.email}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline, Lang: m.Lang})
 		if err := h.audit(r, t.id, "password_reset_link_sent", "Asked for a password reset link on the sign-in page"); err != nil {
 			h.serverError(w, r, "Password reset request error:", err)
 			return
