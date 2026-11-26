@@ -106,7 +106,9 @@
 	}
 	.quick-input {
 		box-sizing: border-box;
-		flex: 1 1 12rem;
+		/* The field gives way first, so the buttons stay on its line */
+		flex: 1 1 8rem;
+		min-width: 0;
 		max-width: 20rem;
 		min-height: var(--control-h);
 		padding: 0 var(--space-3);

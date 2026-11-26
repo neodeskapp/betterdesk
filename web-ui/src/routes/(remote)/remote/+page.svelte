@@ -303,7 +303,7 @@
 			justify-content: space-between;
 		}
 		.desk-quick {
-			flex: 0 1 34rem;
+			flex: 0 1 44rem;
 		}
 	}
 	.desk-top .page-head {
