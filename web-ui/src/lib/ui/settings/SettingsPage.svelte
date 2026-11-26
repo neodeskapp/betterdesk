@@ -45,6 +45,8 @@
 		scope?: Snippet;
 		summary?: Snippet;
 		summaryLabel?: string;
+		/** Below 1200 px the summary follows the groups instead of leading them */
+		summaryLast?: boolean;
 		bar?: Snippet;
 		children: Snippet;
 	}
@@ -62,13 +64,24 @@
 		scope,
 		summary,
 		summaryLabel,
+		summaryLast = false,
 		bar,
 		children
 	}: Props = $props();
 </script>
 
 <SettingsPageFrame {id} {title} {description} {need} {allowed}>
-	<SettingsBody {saveModel} {filter} {filterLabel} {sections} {scope} {summary} {summaryLabel} {bar}>
+	<SettingsBody
+		{saveModel}
+		{filter}
+		{filterLabel}
+		{sections}
+		{scope}
+		{summary}
+		{summaryLabel}
+		{summaryLast}
+		{bar}
+	>
 		{@render children()}
 	</SettingsBody>
 </SettingsPageFrame>

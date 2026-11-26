@@ -15,6 +15,7 @@ vi.mock('$app/navigation', () => ({ goto: vi.fn(), beforeNavigate: vi.fn(), repl
 
 import SettingsFixture from './fixtures/SettingsFixture.svelte';
 import KeepRowFixture from './fixtures/KeepRowFixture.svelte';
+import SummaryPageFixture from './fixtures/SummaryPageFixture.svelte';
 import ListEditor from '../../../src/lib/ui/settings/ListEditor.svelte';
 import KeepCount from '../../../src/lib/ui/settings/KeepCount.svelte';
 import InheritedValue from '../../../src/lib/ui/settings/InheritedValue.svelte';
@@ -22,6 +23,24 @@ import RecordPicker from '../../../src/lib/ui/settings/RecordPicker.svelte';
 import { relayOptions, roleOptions } from '../../../src/lib/ui/settings/pickers.ts';
 
 afterEach(() => cleanup());
+
+describe('a page with a summary', () => {
+	test('without a scope picker no empty scope row sits above the groups', () => {
+		const { container } = render(SummaryPageFixture);
+		const body = container.querySelector('.settings-body');
+		expect(body).toHaveClass('has-summary');
+		expect(body).not.toHaveClass('has-scope');
+		cleanup();
+		const scoped = render(SummaryPageFixture, { withScope: true });
+		expect(scoped.container.querySelector('.settings-body')).toHaveClass('has-scope');
+	});
+
+	test('summaryLast puts the summary after the groups on narrow screens', () => {
+		const { container } = render(SummaryPageFixture, { summaryLast: true });
+		expect(container.querySelector('.settings-body')).toHaveClass('summary-last');
+		expect(screen.getByRole('complementary', { name: 'Summary' })).toHaveTextContent('What a backup holds');
+	});
+});
 
 describe('a keep count in a setting row', () => {
 	test('the row names the switch and number as one group, its help describes it', () => {
