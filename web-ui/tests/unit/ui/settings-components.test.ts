@@ -77,6 +77,12 @@ describe('the filter', () => {
 		await userEvent.type(field, 'xyz');
 		expect(screen.getByText(/Nothing matches/)).toBeInTheDocument();
 	});
+
+	test('is a search landmark named like its field, so it is no setting of the page', () => {
+		render(SettingsFixture);
+		const region = screen.getByRole('search', { name: 'Filter permissions' });
+		expect(within(region).getByRole('searchbox', { name: 'Filter permissions' })).toBeInTheDocument();
+	});
 });
 
 describe('the changes bar', () => {
