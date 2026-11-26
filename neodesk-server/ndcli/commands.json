@@ -5116,6 +5116,19 @@
    "permission": "an admin role, and a token with all of its account's permissions"
   },
   {
+   "name": "policies connection-clear",
+   "summary": "Clear an organization's connection policy: its devices keep their own settings.",
+   "route": "DELETE /api/panel/policies/{orgId}/connection",
+   "args": [
+    {
+     "name": "orgId",
+     "help": "The organization ID"
+    }
+   ],
+   "permission": "org.edit",
+   "destructive": true
+  },
+  {
    "name": "policies connection-set",
    "summary": "Set an organization's connection policy.",
    "route": "PUT /api/panel/policies/{orgId}/connection",
@@ -5145,6 +5158,19 @@
    "permission": "an admin role, and a token with all of its account's permissions"
   },
   {
+   "name": "policies features-clear",
+   "summary": "Clear an organization's feature policy: its devices keep their own settings.",
+   "route": "DELETE /api/panel/policies/{orgId}/features",
+   "args": [
+    {
+     "name": "orgId",
+     "help": "The organization ID"
+    }
+   ],
+   "permission": "org.edit",
+   "destructive": true
+  },
+  {
    "name": "policies features-set",
    "summary": "Set an organization's feature policy.",
    "route": "PUT /api/panel/policies/{orgId}/features",
@@ -5170,6 +5196,19 @@
    "permission": "an admin role, and a token with all of its account's permissions"
   },
   {
+   "name": "policies network-clear",
+   "summary": "Clear an organization's network policy: its devices keep their own settings.",
+   "route": "DELETE /api/panel/policies/{orgId}/network",
+   "args": [
+    {
+     "name": "orgId",
+     "help": "The organization ID"
+    }
+   ],
+   "permission": "org.edit",
+   "destructive": true
+  },
+  {
    "name": "policies network-set",
    "summary": "Set an organization's network policy.",
    "route": "PUT /api/panel/policies/{orgId}/network",
@@ -5183,6 +5222,31 @@
    "permission": "org.edit"
   },
   {
+   "name": "policies resolved",
+   "summary": "Show which policy settings an organization sets and what applies where it sets none.",
+   "route": "GET /api/panel/policies/{orgId}/resolved",
+   "args": [
+    {
+     "name": "orgId",
+     "help": "The organization ID"
+    }
+   ],
+   "permission": "an admin role, and a token with all of its account's permissions"
+  },
+  {
+   "name": "policies security-clear",
+   "summary": "Clear an organization's security policy: its devices keep their own settings.",
+   "route": "DELETE /api/panel/policies/{orgId}/security",
+   "args": [
+    {
+     "name": "orgId",
+     "help": "The organization ID"
+    }
+   ],
+   "permission": "org.edit",
+   "destructive": true
+  },
+  {
    "name": "policies security-set",
    "summary": "Set an organization's security policy.",
    "route": "PUT /api/panel/policies/{orgId}/security",
@@ -5194,6 +5258,19 @@
    ],
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
    "permission": "org.edit"
+  },
+  {
+   "name": "policies update-clear",
+   "summary": "Clear an organization's update policy: its devices keep their own settings.",
+   "route": "DELETE /api/panel/policies/{orgId}/update",
+   "args": [
+    {
+     "name": "orgId",
+     "help": "The organization ID"
+    }
+   ],
+   "permission": "org.edit",
+   "destructive": true
   },
   {
    "name": "policies update-set",
@@ -5749,6 +5826,16 @@
    "summary": "List the roles with their levels. roles permissions <role> shows what a role may do.",
    "route": "GET /api/panel/roles",
    "permission": "user.view"
+  },
+  {
+   "name": "roles override-batch",
+   "summary": "Change several permissions of a role at once (super admins).",
+   "route": "POST /api/panel/role-permissions/batch",
+   "description": "Give the body with --data JSON: {\"role\":\"operator\",\"changes\":[{\"permission\":\"device.edit\",\"granted\":true}]}. granted null puts the role's built-in permission back. Every change is checked before the first is written. The answer's previous, sent back as changes, undoes the batch.",
+   "permission": "the super_admin role, and a token with all of its account's permissions",
+   "examples": [
+    "neodesk roles override-batch --data '{\"role\":\"operator\",\"changes\":[{\"permission\":\"device.edit\",\"granted\":true},{\"permission\":\"device.ban\",\"granted\":null}]}'"
+   ]
   },
   {
    "name": "roles override-delete",
@@ -8191,6 +8278,26 @@
    "reason": "The same route at the /api/nd address the old console also served; the command line uses the main address."
   },
   {
+   "route": "DELETE /api/nd/api/panel/policies/{orgId}/connection",
+   "reason": "The same route at the /api/nd address the old console also served; the command line uses the main address."
+  },
+  {
+   "route": "DELETE /api/nd/api/panel/policies/{orgId}/features",
+   "reason": "The same route at the /api/nd address the old console also served; the command line uses the main address."
+  },
+  {
+   "route": "DELETE /api/nd/api/panel/policies/{orgId}/network",
+   "reason": "The same route at the /api/nd address the old console also served; the command line uses the main address."
+  },
+  {
+   "route": "DELETE /api/nd/api/panel/policies/{orgId}/security",
+   "reason": "The same route at the /api/nd address the old console also served; the command line uses the main address."
+  },
+  {
+   "route": "DELETE /api/nd/api/panel/policies/{orgId}/update",
+   "reason": "The same route at the /api/nd address the old console also served; the command line uses the main address."
+  },
+  {
    "route": "DELETE /api/nd/api/panel/scaling/relays/{nodeId}",
    "reason": "The same route at the /api/nd address the old console also served; the command line uses the main address."
   },
@@ -8444,6 +8551,10 @@
   },
   {
    "route": "GET /api/nd/api/panel/policies/{orgId}/effective/{deviceId}",
+   "reason": "The same route at the /api/nd address the old console also served; the command line uses the main address."
+  },
+  {
+   "route": "GET /api/nd/api/panel/policies/{orgId}/resolved",
    "reason": "The same route at the /api/nd address the old console also served; the command line uses the main address."
   },
   {
