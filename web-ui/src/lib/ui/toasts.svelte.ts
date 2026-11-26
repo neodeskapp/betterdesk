@@ -19,6 +19,13 @@ export interface ToastItem {
 	type: ToastType;
 	message: string;
 	title?: string;
+	action?: ToastAction;
+}
+
+/** A button in the toast (Undo after a save); clicking it runs onclick and closes the toast */
+export interface ToastAction {
+	label: string;
+	onclick: () => void;
 }
 
 export interface ToastOptions {
@@ -27,11 +34,14 @@ export interface ToastOptions {
 	title?: string;
 	/** Milliseconds on screen; 0 keeps it until closed */
 	duration?: number;
+	action?: ToastAction;
 }
 
 export const MAX_TOASTS = 3;
 const DURATION = 5000;
 const ERROR_DURATION = 8000;
+/** A toast with an action (Undo) stays long enough to reach it */
+const ACTION_DURATION = 12000;
 
 class Toasts {
 	items = $state.raw<ToastItem[]>([]);
@@ -65,13 +75,15 @@ function stop(id: number) {
 	timers.delete(id);
 }
 
-export function show({ type = 'info', message, title, duration }: ToastOptions): number {
-	const ms = duration ?? (type === 'error' ? ERROR_DURATION : DURATION);
-	const same = toasts.items.find((x) => x.type === type && x.message === message && x.title === title);
+export function show({ type = 'info', message, title, duration, action }: ToastOptions): number {
+	const ms = duration ?? (action ? ACTION_DURATION : type === 'error' ? ERROR_DURATION : DURATION);
+	const same = action
+		? undefined
+		: toasts.items.find((x) => x.type === type && x.message === message && x.title === title && !x.action);
 	const id = same?.id ?? nextId++;
 	stop(id);
 	if (!same) {
-		const items = [...toasts.items, { id, type, message, title }];
+		const items = [...toasts.items, { id, type, message, title, action }];
 		for (const old of items.slice(0, Math.max(0, items.length - MAX_TOASTS))) stop(old.id);
 		toasts.items = items.slice(-MAX_TOASTS);
 	}

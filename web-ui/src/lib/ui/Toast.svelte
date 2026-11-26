@@ -1,11 +1,13 @@
 <!--
   One toast (components.css "Toasts"): a rule on the start side in the
   type's colour, an optional title, the message as text, and a close
-  button. Shown by ToastHost; pages call toast.success() and the like.
+  button; with an action (Undo after a save) a button under the message
+  that runs it and closes the toast. Shown by ToastHost; pages call toast.success() and the like.
   Time stops while the pointer or focus is on it.
 -->
 <script lang="ts">
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
+	import Button from './Button.svelte';
 	import IconButton from './IconButton.svelte';
 	import { dismiss, pause, resume, type ToastItem } from './toasts.svelte.ts';
 
@@ -36,6 +38,18 @@
 	<div class="toast-content">
 		{#if toast.title}<div class="toast-title">{toast.title}</div>{/if}
 		<div class="toast-message">{toast.message}</div>
+		{#if toast.action}
+			{@const action = toast.action}
+			<Button
+				class="toast-action"
+				variant="link"
+				size="sm"
+				onclick={() => {
+					dismiss(toast.id);
+					action.onclick();
+				}}>{action.label}</Button
+			>
+		{/if}
 	</div>
 	<IconButton
 		icon="close"
@@ -80,6 +94,15 @@
 	.toast-message {
 		color: var(--text);
 		overflow-wrap: anywhere;
+	}
+	.toast-content :global(.toast-action) {
+		margin-top: var(--space-1);
+		font-weight: 600;
+	}
+	@media (pointer: coarse) {
+		.toast-content :global(.toast-action) {
+			min-height: 44px;
+		}
 	}
 	.toast-title + .toast-message {
 		color: var(--text-muted);
