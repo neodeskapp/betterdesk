@@ -118,7 +118,8 @@
     "server_backups": "Yedekler",
     "server_config_files": "Yapılandırma dosyaları",
     "meshcentral": "MeshCentral",
-    "devices_add": "Bilgisayar ekle"
+    "devices_add": "Bilgisayar ekle",
+    "registrations_waiting": "{count} bekliyor"
   },
   "auth": {
     "login": "Oturum aç",

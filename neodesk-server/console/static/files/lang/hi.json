@@ -118,7 +118,8 @@
     "server_backups": "बैकअप",
     "server_config_files": "कॉन्फ़िगरेशन फ़ाइलें",
     "meshcentral": "MeshCentral",
-    "devices_add": "Add computers"
+    "devices_add": "Add computers",
+    "registrations_waiting": "{count} प्रतीक्षा में"
   },
   "auth": {
     "login": "साइन इन करें",

@@ -112,7 +112,8 @@
     "server_backups": "Zálohy",
     "server_config_files": "Konfigurační soubory",
     "meshcentral": "MeshCentral",
-    "devices_add": "Přidat počítače"
+    "devices_add": "Přidat počítače",
+    "registrations_waiting": "Čeká: {count}"
   },
   "auth": {
     "login": "Přihlášení",

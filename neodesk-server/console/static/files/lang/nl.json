@@ -112,7 +112,8 @@
     "server_backups": "Back-ups",
     "server_config_files": "Configuratiebestanden",
     "meshcentral": "MeshCentral",
-    "devices_add": "Computers toevoegen"
+    "devices_add": "Computers toevoegen",
+    "registrations_waiting": "{count} wachtend"
   },
   "auth": {
     "login": "Inloggen",

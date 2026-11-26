@@ -118,7 +118,8 @@
     "server_backups": "Varmuuskopiot",
     "server_config_files": "Määritystiedostot",
     "meshcentral": "MeshCentral",
-    "devices_add": "Lisää tietokoneita"
+    "devices_add": "Lisää tietokoneita",
+    "registrations_waiting": "{count} odottaa"
   },
   "auth": {
     "login": "Kirjaudu sisään",

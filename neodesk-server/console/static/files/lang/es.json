@@ -112,7 +112,8 @@
     "server_backups": "Copias de seguridad",
     "server_config_files": "Archivos de configuración",
     "meshcentral": "MeshCentral",
-    "devices_add": "Añadir equipos"
+    "devices_add": "Añadir equipos",
+    "registrations_waiting": "{count} en espera"
   },
   "auth": {
     "login": "Iniciar sesión",

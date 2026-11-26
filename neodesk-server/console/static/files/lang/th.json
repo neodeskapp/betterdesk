@@ -118,7 +118,8 @@
     "server_backups": "ข้อมูลสำรอง",
     "server_config_files": "ไฟล์การกำหนดค่า",
     "meshcentral": "MeshCentral",
-    "devices_add": "Add computers"
+    "devices_add": "Add computers",
+    "registrations_waiting": "รอ {count} รายการ"
   },
   "auth": {
     "login": "ลงชื่อเข้าใช้",

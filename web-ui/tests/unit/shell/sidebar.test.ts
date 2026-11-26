@@ -103,9 +103,28 @@ describe('Sidebar', () => {
 		live.registrations = 10;
 		await setup('/devices');
 		const link = screen.getByRole('link', { name: /Join requests/ });
-		expect(link.querySelector('.nav-count')).toHaveTextContent(/^10$/);
+		expect(link.querySelector('.nav-count [aria-hidden="true"]')).toHaveTextContent(/^10$/);
 		expect(screen.getByRole('link', { name: 'All devices' }).querySelector('.nav-count')).toBeNull();
 		live.registrations = null;
+	});
+
+	test('counts are words for screen readers: the number is hidden, the sentence is in the name', async () => {
+		const { live } = await import('../../../src/lib/shell/live-events.svelte.ts');
+		const { chat } = await import('../../../src/lib/chat/client.svelte.ts');
+		live.registrations = 10;
+		chat.summary = { support: { unread_conversations: 3 } } as typeof chat.summary;
+		try {
+			await setup('/devices');
+			const join = screen.getByRole('link', { name: /Join requests/ });
+			expect(join).toHaveAccessibleName('Join requests 10 waiting');
+			expect(join.querySelector('.nav-count [aria-hidden="true"]')).toHaveTextContent(/^10$/);
+			const chatLink = screen.getByRole('link', { name: /^Chat/, hidden: true });
+			expect(chatLink).toHaveAccessibleName('Chat chat.unread_count');
+			expect(chatLink.querySelector('.nav-count')).not.toHaveAttribute('aria-label');
+		} finally {
+			live.registrations = null;
+			chat.summary = {};
+		}
 	});
 
 	test('the width handle: arrows change it in 10 px steps, Home and End jump, it is stored', async () => {

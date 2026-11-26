@@ -118,7 +118,8 @@
     "server_backups": "Резервні копії",
     "server_config_files": "Файли конфігурації",
     "meshcentral": "MeshCentral",
-    "devices_add": "Додати комп'ютери"
+    "devices_add": "Додати комп'ютери",
+    "registrations_waiting": "Очікують: {count}"
   },
   "auth": {
     "login": "Увійти",

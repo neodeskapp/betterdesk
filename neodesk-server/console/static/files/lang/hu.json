@@ -118,7 +118,8 @@
     "server_backups": "Biztonsági mentések",
     "server_config_files": "Konfigurációs fájlok",
     "meshcentral": "MeshCentral",
-    "devices_add": "Add computers"
+    "devices_add": "Add computers",
+    "registrations_waiting": "{count} várakozik"
   },
   "auth": {
     "login": "Bejelentkezés",

@@ -112,7 +112,8 @@
     "server_backups": "バックアップ",
     "server_config_files": "設定ファイル",
     "meshcentral": "MeshCentral",
-    "devices_add": "コンピューターを追加"
+    "devices_add": "コンピューターを追加",
+    "registrations_waiting": "{count} 件待機中"
   },
   "auth": {
     "login": "サインイン",

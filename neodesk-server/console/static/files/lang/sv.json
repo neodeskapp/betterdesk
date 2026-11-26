@@ -118,7 +118,8 @@
     "server_backups": "Säkerhetskopior",
     "server_config_files": "Konfigurationsfiler",
     "meshcentral": "MeshCentral",
-    "devices_add": "Lägg till datorer"
+    "devices_add": "Lägg till datorer",
+    "registrations_waiting": "{count} väntar"
   },
   "auth": {
     "login": "Logga in",

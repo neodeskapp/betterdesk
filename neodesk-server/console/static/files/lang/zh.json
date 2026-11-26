@@ -112,7 +112,8 @@
     "server_backups": "备份",
     "server_config_files": "配置文件",
     "meshcentral": "MeshCentral",
-    "devices_add": "添加计算机"
+    "devices_add": "添加计算机",
+    "registrations_waiting": "{count} 个待处理"
   },
   "auth": {
     "login": "登录",

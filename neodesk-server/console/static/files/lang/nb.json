@@ -118,7 +118,8 @@
     "server_backups": "Sikkerhetskopier",
     "server_config_files": "Konfigurasjonsfiler",
     "meshcentral": "MeshCentral",
-    "devices_add": "Legg til datamaskiner"
+    "devices_add": "Legg til datamaskiner",
+    "registrations_waiting": "{count} venter"
   },
   "auth": {
     "login": "Logg på",

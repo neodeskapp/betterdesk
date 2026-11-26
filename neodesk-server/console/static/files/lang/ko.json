@@ -112,7 +112,8 @@
     "server_backups": "백업",
     "server_config_files": "구성 파일",
     "meshcentral": "MeshCentral",
-    "devices_add": "컴퓨터 추가"
+    "devices_add": "컴퓨터 추가",
+    "registrations_waiting": "{count}개 대기 중"
   },
   "auth": {
     "login": "로그인",

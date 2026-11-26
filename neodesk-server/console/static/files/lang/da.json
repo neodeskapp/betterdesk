@@ -118,7 +118,8 @@
     "server_backups": "Sikkerhedskopier",
     "server_config_files": "Konfigurationsfiler",
     "meshcentral": "MeshCentral",
-    "devices_add": "Tilføj computere"
+    "devices_add": "Tilføj computere",
+    "registrations_waiting": "{count} venter"
   },
   "auth": {
     "login": "Log ind",

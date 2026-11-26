@@ -119,7 +119,8 @@
     "server_backups": "النسخ الاحتياطية",
     "server_config_files": "ملفات الإعداد",
     "meshcentral": "MeshCentral",
-    "devices_add": "Add computers"
+    "devices_add": "Add computers",
+    "registrations_waiting": "{count} بانتظار الموافقة"
   },
   "auth": {
     "login": "تسجيل الدخول",

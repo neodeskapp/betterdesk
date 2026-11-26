@@ -116,7 +116,8 @@
     "server_backups": "備份",
     "server_config_files": "設定檔",
     "meshcentral": "MeshCentral",
-    "devices_add": "新增電腦"
+    "devices_add": "新增電腦",
+    "registrations_waiting": "{count} 個待處理"
   },
   "auth": {
     "login": "登錄",

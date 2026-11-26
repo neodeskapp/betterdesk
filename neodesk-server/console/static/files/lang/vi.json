@@ -118,7 +118,8 @@
     "server_backups": "Bản sao lưu",
     "server_config_files": "Tệp cấu hình",
     "meshcentral": "MeshCentral",
-    "devices_add": "Add computers"
+    "devices_add": "Add computers",
+    "registrations_waiting": "{count} đang chờ"
   },
   "auth": {
     "login": "Đăng nhập",

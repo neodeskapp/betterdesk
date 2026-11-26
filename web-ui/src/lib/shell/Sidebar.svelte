@@ -17,7 +17,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import { session } from '#lib/state/session.svelte.ts';
 	import Icon from '#lib/ui/Icon.svelte';
@@ -254,11 +254,16 @@
 		>
 			<span class="nav-label">{p.page.text}</span>
 			{#if p.page.external}<span class="nav-note" aria-hidden="true">↗</span>{/if}
-			{#if p.page.countId && live.registrations}<span class="nav-count">{live.registrations}</span>{/if}
-			{#if p.page.page === 'chat' && chat.total}<span
-					class="nav-count"
-					aria-label={t('chat.unread_count', { count: chat.total })}
-					>{chat.total > 99 ? '99+' : chat.total}</span
+			<!-- The number for the eye, a sentence for screen readers (as in BottomNav) -->
+			{#if p.page.countId && live.registrations}<span class="nav-count"
+					><span class="sr-only"
+						>{tf('nav.registrations_waiting', '{count} waiting', { count: live.registrations })}</span
+					><span aria-hidden="true">{live.registrations}</span></span
+				>{/if}
+			{#if p.page.page === 'chat' && chat.total}<span class="nav-count"
+					><span class="sr-only">{t('chat.unread_count', { count: chat.total })}</span><span
+						aria-hidden="true">{chat.total > 99 ? '99+' : chat.total}</span
+					></span
 				>{/if}
 		</a>
 	</li>
