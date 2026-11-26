@@ -70,7 +70,8 @@ async function expectNoRuleYet(page: Page): Promise<void> {
 	const connection = group(page, 'connection');
 	await expect(connection.locator('.group-status')).toHaveText('No rule here', LOAD);
 	await expect(connection.getByText(NOT_APPLIED)).toBeVisible();
-	await expect(connection.getByText('Devices get this when they next ask for their policy.')).toBeVisible();
+	// No "Devices get this when they next ask" beside it: no app gets it yet
+	await expect(connection.getByText('Devices get this when they next ask for their policy.')).toHaveCount(0);
 	await expect(group(page, 'network').getByText(NOT_APPLIED)).toHaveCount(0);
 	await expect(
 		group(page, 'network').getByText('The server applies this to new connections within a minute.')
