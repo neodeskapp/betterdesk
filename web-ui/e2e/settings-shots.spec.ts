@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import { test, expect } from './fixtures.ts';
 import { UI } from './roles.ts';
 
-type Open = (page: Page) => Promise<Locator | void>;
+type Open = (page: Page) => Promise<Locator | undefined>;
 type Surface = {
 	/** File name stem */
 	name: string;
@@ -298,7 +298,7 @@ for (const theme of THEMES) {
 						await settled(page, notes);
 						const shown = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
 						if (shown !== theme) notes.push(`${size.width}: theme shows ${shown}`);
-						let overlay: Locator | void = undefined;
+						let overlay: Locator | undefined = undefined;
 						if (s.open) {
 							overlay = await s.open(page);
 							if (overlay) await expect(overlay).toBeVisible(LOAD);
