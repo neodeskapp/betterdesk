@@ -34,6 +34,11 @@ const refuseRelayProtocolMismatch = "Protocol mismatch: WebSocket and native TCP
 // a peer that is not registered (or not enrollment-approved in managed/locked).
 const refuseInitiatorNotAuthorized = "Not authorized"
 
+// refuseTargetOffline refuses a relay to a device that is not registered.
+// Every refusal value has a reason code for the console's viewer
+// (web-ui/src/lib/remote/server-refusals.json).
+const refuseTargetOffline = "Target offline"
+
 // panelWebRemoteInitiatorID is the synthetic initiator id logged when PunchHole/
 // RequestRelay arrives from the console's web client bridge, on a connection
 // that sent the panel proof (Web Remote).
@@ -1716,7 +1721,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		resp := &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_RelayResponse{
 				RelayResponse: &pb.RelayResponse{
-					RefuseReason: "Target offline",
+					RefuseReason: refuseTargetOffline,
 					RelayServer:  relayServer,
 				},
 			},
@@ -1731,7 +1736,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		resp := &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_RelayResponse{
 				RelayResponse: &pb.RelayResponse{
-					RefuseReason: "Target offline",
+					RefuseReason: refuseTargetOffline,
 					RelayServer:  relayServer,
 				},
 			},
@@ -1876,7 +1881,7 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 		return &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_RelayResponse{
 				RelayResponse: &pb.RelayResponse{
-					RefuseReason: "Target offline",
+					RefuseReason: refuseTargetOffline,
 					RelayServer:  relayServer,
 				},
 			},
@@ -1889,7 +1894,7 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 		return &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_RelayResponse{
 				RelayResponse: &pb.RelayResponse{
-					RefuseReason: "Target offline",
+					RefuseReason: refuseTargetOffline,
 					RelayServer:  relayServer,
 				},
 			},
@@ -2160,7 +2165,13 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 			rr.Uuid, initiatorID, targetID, senderAddr)
 		return
 	}
-	if refuse := s.admitSession(rr.Uuid, initiatorID, targetID, s.panelAccount(initiatorAddr), s.panelSession(initiatorAddr)); refuse != "" {
+	// A session the signal server admitted already (the console's web
+	// client gets its ticket from RequestRelay and closes its socket before
+	// the device answers): admitting it again would name no account, which
+	// the registry refuses, and register it with billing a second time
+	if relay.RelayPairAdmitted(rr.Uuid, initiatorID, targetID) {
+		log.Printf("[signal] RelayResponse forward: uuid=%q initiator=%q target=%q was admitted already", rr.Uuid, initiatorID, targetID)
+	} else if refuse := s.admitSession(rr.Uuid, initiatorID, targetID, s.panelAccount(initiatorAddr), s.panelSession(initiatorAddr)); refuse != "" {
 		log.Printf("[signal] RelayResponse forward: %s (uuid=%q initiator=%q target=%q) — not forwarding",
 			refuse, rr.Uuid, initiatorID, targetID)
 		return
@@ -2577,7 +2588,7 @@ func targetOfflineRelayResponse(relayServer string) *pb.RendezvousMessage {
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
 			RelayResponse: &pb.RelayResponse{
-				RefuseReason: "Target offline",
+				RefuseReason: refuseTargetOffline,
 				RelayServer:  relayServer,
 			},
 		},

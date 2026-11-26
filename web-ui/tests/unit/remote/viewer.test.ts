@@ -66,7 +66,9 @@ vi.mock('../../../src/lib/api/remote.ts', () => ({
 	getPendingBillingSession: vi.fn(async () => null),
 	submitWorkReport: vi.fn()
 }));
-vi.mock('../../../src/lib/api/onboard.ts', () => ({ takeDevicePassword: vi.fn(async () => '') }));
+vi.mock('../../../src/lib/api/onboard.ts', () => ({
+	takeDevicePassword: vi.fn(async () => ({ password: '', session: null }))
+}));
 /** Device passwords remembered in this browser */
 const remembered = vi.hoisted(() => new Map<string, string>());
 vi.mock('../../../src/lib/remote/secure-store.ts', () => ({
@@ -138,10 +140,11 @@ describe('remote viewer sessions', () => {
 		expect(s.slowHint).toMatch(/may be asleep, or someone has to accept/);
 	});
 
-	test('password prompt, sign-in, then the picture', () => {
+	test('password prompt, sign-in, then the picture', async () => {
 		const { s, c } = setup();
 		c.emit('password_required');
-		expect(s.view).toBe('password');
+		// The form shows once the server said there is no quick support session to wait for (L551)
+		await vi.waitFor(() => expect(s.view).toBe('password'));
 		s.password = 'demo';
 		c.emit('login_error', 'Wrong Password');
 		expect(s.loginError).toBe('That password was not accepted. Check it and try again.');
@@ -178,7 +181,10 @@ describe('remote viewer sessions', () => {
 	test("a quick support session's password is sent at once and never stored in the browser", async () => {
 		remembered.clear();
 		remembered.set('900100012', 'old-pw');
-		vi.mocked(onboardApi.takeDevicePassword).mockResolvedValueOnce('qs-pw');
+		vi.mocked(onboardApi.takeDevicePassword).mockResolvedValueOnce({
+			password: 'qs-pw',
+			session: { name: 'Ana', status: 'allowed' }
+		});
 		const { s, c } = setup();
 		c.emit('password_required');
 		await vi.waitFor(() => expect(c.authenticate).toHaveBeenCalledWith('qs-pw'));
@@ -226,7 +232,8 @@ describe('remote viewer sessions', () => {
 
 	test('a failure says what happened and keeps the details', () => {
 		const { s, c } = setup();
-		c.emit('error', 'Connection refused: Device offline');
+		// The client says why; the message stays for Details (L556)
+		c.emit('error', 'Connection refused: Device offline', { reason: 'device_offline' });
 		expect(s.view).toBe('failed');
 		expect(s.statusText).toBe('demo-build-server is offline.');
 		expect(s.tryText).toMatch(/Turn it on or wake it up/);
@@ -236,7 +243,9 @@ describe('remote viewer sessions', () => {
 	test('a device whose identity or encryption fails ends in a failure, not a warning to dismiss', () => {
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const a = setup();
-		a.c.emit('error', 'Handshake failed: the device signature does not match its key');
+		a.c.emit('error', 'Handshake failed: the device signature does not match its key', {
+			reason: 'insecure'
+		});
 		expect(a.s.view).toBe('failed');
 		expect(a.s.statusText).toBe(
 			'The connection to demo-build-server was stopped because it could not be secured.'

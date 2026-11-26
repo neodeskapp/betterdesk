@@ -34,6 +34,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/security"
 )
 
 const (
@@ -59,7 +60,9 @@ var errOnboardRefused = errors.New("device refused")
 // (unproved), and audit says an audit entry is due for it now
 // (auditJoinUnproved), standing for repeats refusals since the last one.
 type refusedJoin struct {
-	reason   string
+	reason string
+	// code is the machine-readable reason (refusal codes below)
+	code     string
 	unproved string
 	audit    bool
 	repeats  int
@@ -76,6 +79,9 @@ func refusalAnswer(err error) map[string]any {
 		"success": false, "error": "device_refused", "message": strings.TrimPrefix(err.Error(), errOnboardRefused.Error()+": "),
 	}
 	var refused *refusedJoin
+	if errors.As(err, &refused) && refused.code != "" {
+		answer["reason"] = refused.code
+	}
 	if errors.As(err, &refused) && refused.unproved != "" {
 		answer["unproved"] = refused.unproved
 		answer["audit"] = refused.audit
@@ -88,6 +94,40 @@ func refusalAnswer(err error) map[string]any {
 // not prove the ID's key: an older client, or someone else using the ID.
 // The client shows it after "did not accept this computer:".
 const joinProofRefusal = "This computer's ID is already enrolled on this server. Update NeoDesk on this computer and open the invite again, or ask your administrator to delete the device in the console."
+
+// revokedRefusal and blockedRefusal refuse an ID on the blocklist: one a
+// device revoke put there, and one blocked for another reason.
+const (
+	revokedRefusal = "This computer's ID was revoked on this server. An administrator can unblock it in the console."
+	blockedRefusal = "This computer's ID is blocked on this server. An administrator can unblock it in the console."
+)
+
+// refusalCode is the machine-readable reason of a refusal, which the
+// console and the desktop client turn into their own words
+// (console/reasons): device_revoked, device_blocked, device_banned,
+// device_removed, device_rejected, other_machine, key_changed and
+// join_proof.
+func refusalCode(refusal string) string {
+	switch refusal {
+	case revokedRefusal:
+		return "device_revoked"
+	case blockedRefusal:
+		return "device_blocked"
+	case "Device is banned":
+		return "device_banned"
+	case "Device has been removed":
+		return "device_removed"
+	case "Device enrollment was rejected":
+		return "device_rejected"
+	case "Device ID is already registered to a different machine":
+		return "other_machine"
+	case keyChangedRefusal:
+		return "key_changed"
+	case joinProofRefusal:
+		return "join_proof"
+	}
+	return ""
+}
 
 // onboardRoutes adds the routes of join and support codes.
 func (s *Server) onboardRoutes(mux *http.ServeMux) {
@@ -463,6 +503,14 @@ func (d *onboardDevice) enrollment() *EnrollmentRequest {
 // (no_proof, bad_proof, replayed, empty_key, empty_uuid), "" otherwise.
 func (s *Server) admissionRefusal(dev *onboardDevice, proved bool) (refusal, unproved string) {
 	req := dev.enrollment()
+	// The signal server refuses a blocked ID's registration: a device
+	// admitted under it could never be reached (L550)
+	switch s.blockedReason(req.DeviceID) {
+	case "device_revoked":
+		return revokedRefusal, ""
+	case "device_blocked":
+		return blockedRefusal, ""
+	}
 	if banned, _ := s.db.IsPeerBanned(req.DeviceID); banned {
 		return "Device is banned", ""
 	}
@@ -536,7 +584,7 @@ func (s *Server) admissionRefusal(dev *onboardDevice, proved bool) (refusal, unp
 func (s *Server) admitOnboardDevice(r *http.Request, dev *onboardDevice, proved bool) (created bool, err error) {
 	req := dev.enrollment()
 	if reason, unproved := s.admissionRefusal(dev, proved); reason != "" {
-		refused := &refusedJoin{reason: reason, unproved: unproved}
+		refused := &refusedJoin{reason: reason, code: refusalCode(reason), unproved: unproved}
 		if unproved != "" {
 			refused.audit, refused.repeats = s.auditJoinUnproved(req.DeviceID, s.remoteIP(r), unproved)
 		}
@@ -686,9 +734,7 @@ func (s *Server) handleOnboardAdmit(w http.ResponseWriter, r *http.Request) {
 	created, err := s.admitOnboardDevice(r, &dev, false)
 	s.onboardMu.Unlock()
 	if errors.Is(err, errOnboardRefused) {
-		writeJSON(w, http.StatusForbidden, map[string]any{
-			"success": false, "error": "device_refused", "message": strings.TrimPrefix(err.Error(), errOnboardRefused.Error()+": "),
-		})
+		writeJSON(w, http.StatusForbidden, refusalAnswer(err))
 		return
 	}
 	if err != nil {
@@ -793,4 +839,21 @@ func (s *Server) auditJoinUnproved(deviceID, ip, reason string) (due bool, repea
 		s.auditLog.Log(actionJoinUnproved, ip, deviceID, details)
 	}
 	return true, repeats
+}
+
+// blockedReason is device_revoked when a device revoke put the ID on the
+// blocklist, device_blocked when it is there for another reason, and ""
+// when it is not blocked.
+func (s *Server) blockedReason(id string) string {
+	if s.blocklist == nil {
+		return ""
+	}
+	entry, blocked := s.blocklist.IDEntry(id)
+	switch {
+	case !blocked:
+		return ""
+	case strings.HasPrefix(entry.Reason, security.RevokedReason):
+		return "device_revoked"
+	}
+	return "device_blocked"
 }

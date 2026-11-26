@@ -44,6 +44,9 @@ const (
 	// EndedByTokenEnd: the API token the session was made with was
 	// revoked, expired or deleted.
 	EndedByTokenEnd = "token_ended"
+	// EndedByRefused: the server refused the app's computer (a revoked or
+	// blocked ID, a banned device); EndReason says why.
+	EndedByRefused = "refused"
 )
 
 const (
@@ -93,14 +96,17 @@ type Session struct {
 	// Grants is what the person allowed besides the screen, the mouse and
 	// the keyboard (Grants*): the server turns everything else off for
 	// the session (signal: limitToQuickSupport).
-	Grants     []string `json:"grants,omitempty"`
-	EndedBy    string   `json:"ended_by"`
-	CreatedAt  string   `json:"created_at"`
-	ExpiresAt  string   `json:"expires_at"`
-	RedeemedAt string   `json:"redeemed_at"`
-	ConsentAt  string   `json:"consent_at"`
-	LastSeenAt string   `json:"last_seen_at"`
-	EndedAt    string   `json:"ended_at"`
+	Grants  []string `json:"grants,omitempty"`
+	EndedBy string   `json:"ended_by"`
+	// EndReason is the machine-readable reason of a session the server
+	// ended (device_revoked, device_blocked, ...), "" otherwise.
+	EndReason  string `json:"end_reason,omitempty"`
+	CreatedAt  string `json:"created_at"`
+	ExpiresAt  string `json:"expires_at"`
+	RedeemedAt string `json:"redeemed_at"`
+	ConsentAt  string `json:"consent_at"`
+	LastSeenAt string `json:"last_seen_at"`
+	EndedAt    string `json:"ended_at"`
 }
 
 // Open reports whether the session has not ended.
@@ -367,6 +373,20 @@ func (s *Sessions) SetDevice(ctx context.Context, id string, dev Device, tempora
 	})
 }
 
+// Refuse ends an opened session whose computer the server refused, with
+// the computer it was and the reason.
+func (s *Sessions) Refuse(ctx context.Context, id string, dev Device, reason string) (Session, error) {
+	now := stamp(s.now())
+	return s.change(ctx, id, func(sess *Session) error {
+		if sess.Status != StatusOpened {
+			return ErrState
+		}
+		sess.Status, sess.EndedAt, sess.EndedBy, sess.EndReason = StatusEnded, now, EndedByRefused, reason
+		sess.DeviceID, sess.Hostname, sess.Platform = dev.DeviceID, dev.Hostname, dev.Platform
+		return nil
+	})
+}
+
 // What the person can allow on the consent screen besides the screen, the
 // mouse and the keyboard.
 const (
@@ -460,6 +480,29 @@ func (s *Sessions) TakePasswordForDevice(ctx context.Context, deviceID string, u
 		}
 	}
 	return "", ErrNoPassword
+}
+
+// OpenOnDevice returns the newest session of the account on a device that
+// still asks or was allowed.
+func (s *Sessions) OpenOnDevice(ctx context.Context, deviceID string, userID int64) (Session, bool) {
+	if err := s.load(ctx); err != nil {
+		return Session{}, false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var found *Session
+	for _, sess := range s.byID {
+		if sess.DeviceID != deviceID || sess.CreatedByID != userID || (sess.Status != StatusAsking && sess.Status != StatusAllowed) {
+			continue
+		}
+		if found == nil || sess.CreatedAt > found.CreatedAt {
+			found = sess
+		}
+	}
+	if found == nil {
+		return Session{}, false
+	}
+	return *found, true
 }
 
 // End ends an open session; by says who. The token stops working and the

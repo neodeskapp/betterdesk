@@ -55,3 +55,63 @@ func TestRelayTicketNamesThePanelAccount(t *testing.T) {
 		t.Fatalf("live session %+v %v, want account 42 to TGTSIGNIN1 from %s", pair, ok, panelWebRemoteInitiatorID)
 	}
 }
+
+// TestARelayResponseAfterTheViewerLeftIsForwardedUnderItsTicket: the
+// console's web client gets its relay answer from the signal server and
+// closes its rendezvous socket, so the panel connection is gone when the
+// device's own RelayResponse comes. That response belongs to a session the
+// signal server already admitted for the same pair: it is not admitted a
+// second time with no account (which the registry refused, logged as a
+// rejected authorization, L555), and the ticket keeps its account.
+func TestARelayResponseAfterTheViewerLeftIsForwardedUnderItsTicket(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
+	initiatorAddr := udpAddr("127.0.0.1", 51858)
+	targetAddr := udpAddr("198.51.100.99", 58013)
+	putOnlinePeer(srv, "TGTL555", targetAddr.IP.String(), targetAddr.Port, peer.ConnTCP)
+
+	client, server := net.Pipe()
+	t.Cleanup(func() { client.Close(); server.Close() })
+	got := make(chan int, 16)
+	go func() {
+		buf := make([]byte, 64*1024)
+		for {
+			n, err := client.Read(buf)
+			if err != nil {
+				return
+			}
+			got <- n
+		}
+	}()
+	srv.tcpPunchConns.Store(normalizeAddrKey(initiatorAddr.String()), &tcpPunchConn{conn: server, createdAt: time.Now()})
+	srv.panelConns.Store(normalizeAddrKey(initiatorAddr.String()), &panelConn{conn: server, userID: 42})
+
+	const relayUUID = "l555-after-the-viewer-left"
+	if refuse := srv.admitSession(relayUUID, panelWebRemoteInitiatorID, "TGTL555", srv.panelAccount(initiatorAddr), srv.panelSession(initiatorAddr)); refuse != "" {
+		t.Fatalf("the viewer's own request was refused: %s", refuse)
+	}
+	// What handleRequestRelayTCP notes for the device's answer
+	srv.storePendingUUID("TGTL555", initiatorAddr, relayUUID, panelWebRemoteInitiatorID)
+	// The viewer closed its rendezvous socket
+	srv.panelConns.Delete(normalizeAddrKey(initiatorAddr.String()))
+
+	srv.handleRelayResponseForward(&pb.RendezvousMessage{
+		Union: &pb.RendezvousMessage_RelayResponse{
+			RelayResponse: &pb.RelayResponse{
+				SocketAddr: cryptopkg.EncodeAddr(initiatorAddr),
+				Uuid:       relayUUID,
+				Union:      &pb.RelayResponse_Id{Id: "TGTL555"},
+			},
+		},
+	}, targetAddr)
+	select {
+	case <-got:
+	case <-time.After(2 * time.Second):
+		t.Fatal("the device's RelayResponse of an admitted session was not forwarded")
+	}
+	if !relay.ClaimRelayPair(relayUUID) || !relay.ClaimRelayPair(relayUUID) {
+		t.Fatal("both sides claim the ticket")
+	}
+	if pair, ok := relay.New(nil).Live(relayUUID); !ok || pair.Account != 42 {
+		t.Fatalf("live session %+v %v, want account 42", pair, ok)
+	}
+}

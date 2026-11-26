@@ -6,10 +6,11 @@
  * relay_server still set — explicit non-zero failure must win over hasRelay.
  */
 import type { IPunchHoleResponse } from './generated/protos.ts';
+import { punchHoleReason, serverRefusalReason, type Reason } from '../failures.ts';
 
 /** Where the rendezvous server sends the client, or why it refused */
 export type RDPunchHoleResult =
-	| { error: string }
+	| { error: string; reason: Reason }
 	| { relayServer: string; uuid: string; pk: Uint8Array | null; natType: number | undefined };
 
 const FAILURE = {
@@ -31,7 +32,7 @@ const FAILURE_NAMES: Record<number, string> = {
  */
 function interpretPunchHoleResponse(resp: IPunchHoleResponse | null | undefined): RDPunchHoleResult {
 	if (!resp || typeof resp !== 'object') {
-		return { error: 'Empty PunchHoleResponse' };
+		return { error: 'Empty PunchHoleResponse', reason: 'unknown' };
 	}
 
 	const failure = Number(resp.failure);
@@ -50,7 +51,8 @@ function interpretPunchHoleResponse(resp: IPunchHoleResponse | null | undefined)
 		otherFailure
 	) {
 		return {
-			error: otherFailure || FAILURE_NAMES[failureCode] || `Unknown error (code: ${failureCode})`
+			error: otherFailure || FAILURE_NAMES[failureCode] || `Unknown error (code: ${failureCode})`,
+			reason: otherFailure ? serverRefusalReason(otherFailure) : punchHoleReason(failureCode)
 		};
 	}
 
@@ -65,7 +67,8 @@ function interpretPunchHoleResponse(resp: IPunchHoleResponse | null | undefined)
 	}
 
 	return {
-		error: otherFailure || FAILURE_NAMES[FAILURE.ID_NOT_EXIST] || 'Device not found'
+		error: otherFailure || FAILURE_NAMES[FAILURE.ID_NOT_EXIST] || 'Device not found',
+		reason: otherFailure ? serverRefusalReason(otherFailure) : 'device_unknown'
 	};
 }
 

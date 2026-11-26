@@ -87,12 +87,12 @@ type Server struct {
 	// (device_chat.go, L526)
 	deviceChat deviceChatHandler
 	cfg        *config.Config
-	db        db.Database
-	peers     *peer.Map
-	relay     *relay.Server
-	blocklist *security.Blocklist
-	bwLimiter *ratelimit.BandwidthLimiter
-	auditLog  *audit.Logger
+	db         db.Database
+	peers      *peer.Map
+	relay      *relay.Server
+	blocklist  *security.Blocklist
+	bwLimiter  *ratelimit.BandwidthLimiter
+	auditLog   *audit.Logger
 	// joinUnproved limits the audit entries of refused joins per device
 	// (auditJoinUnproved)
 	joinUnproved unprovedAudit
@@ -400,6 +400,8 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("POST /api/peers/{id}/ban", s.requirePermission(auth.PermDeviceBan, s.handleBanPeer))
 	mux.HandleFunc("POST /api/peers/{id}/unban", s.requirePermission(auth.PermDeviceBan, s.handleUnbanPeer))
 	mux.HandleFunc("POST /api/peers/{id}/restore", s.requirePermission(auth.PermDeviceDelete, s.handleRestorePeer))
+	mux.HandleFunc("GET /api/peers/{id}/reach", s.requirePermission(auth.PermDeviceView, s.handlePeerReach))
+	mux.HandleFunc("POST /api/peers/{id}/unblock", s.requirePermission(auth.PermDeviceDelete, s.handleUnblockPeer))
 	mux.HandleFunc("POST /api/peers/{id}/change-id", s.requirePermission(auth.PermDeviceChangeID, s.handleChangePeerID))
 
 	// Detailed device status (enhanced in Phase 4).
@@ -1142,6 +1144,10 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 		// KeyRefused: the device came back with another key, which the
 		// signal server refuses; it takes no session and is not online.
 		KeyRefused bool `json:"key_refused,omitempty"`
+		// Blocked: the ID is on the blocklist (device_revoked or
+		// device_blocked); the signal server refuses it, so it is not
+		// online.
+		Blocked string `json:"blocked,omitempty"`
 	}
 
 	result := make([]peerResponse, len(peers))
@@ -1177,6 +1183,10 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 		if liveOnline && !signalReady && s.keyRefused(p.ID) {
 			keyRefused, liveOnline, liveStatus = true, false, peer.StatusOffline
 		}
+		blocked := s.blockedReason(p.ID)
+		if blocked != "" {
+			liveOnline, signalReady, liveStatus = false, false, peer.StatusOffline
+		}
 		meshNodeID := ""
 		if s.meshGw != nil {
 			meshNodeID = s.meshGw.MeshNodeID(p.ID)
@@ -1199,6 +1209,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 			MeshConnected: meshConnected,
 			MeshNodeID:    meshNodeID,
 			KeyRefused:    keyRefused,
+			Blocked:       blocked,
 		}
 	}
 
@@ -1299,6 +1310,10 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 	if liveOnline && !s.peers.IsOnline(p.ID, config.RegTimeout) && s.keyRefused(p.ID) {
 		keyRefused, liveOnline, liveStatus = true, false, peer.StatusOffline
 	}
+	blocked := s.blockedReason(p.ID)
+	if blocked != "" {
+		liveOnline, liveStatus = false, peer.StatusOffline
+	}
 	meshNodeID := ""
 	if s.meshGw != nil {
 		meshNodeID = s.meshGw.MeshNodeID(p.ID)
@@ -1316,6 +1331,7 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		MeshConnected bool        `json:"mesh_connected"`
 		MeshNodeID    string      `json:"mesh_node_id,omitempty"`
 		KeyRefused    bool        `json:"key_refused,omitempty"`
+		Blocked       string      `json:"blocked,omitempty"`
 		// KeyRequest is a new key the device brought to an invite,
 		// which an administrator approves (device_key.go)
 		KeyRequest map[string]any `json:"key_request,omitempty"`
@@ -1325,7 +1341,7 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 	if p.Disabled {
 		statusInt = 0
 	}
-	signalReady := s.peers.IsOnline(p.ID, config.RegTimeout)
+	signalReady := s.peers.IsOnline(p.ID, config.RegTimeout) && blocked == ""
 
 	writeJSON(w, http.StatusOK, singlePeerResponse{
 		Peer:          p,
@@ -1339,6 +1355,7 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		MeshConnected: meshConnected,
 		MeshNodeID:    meshNodeID,
 		KeyRefused:    keyRefused,
+		Blocked:       blocked,
 		KeyRequest:    s.keyRequestOf(p.ID),
 	})
 }

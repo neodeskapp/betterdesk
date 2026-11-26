@@ -524,6 +524,7 @@
       "action_device_token_issued": "Gerätetoken ausgestellt",
       "action_device_unban": "Gerät entsperrt",
       "action_device_unbanned": "Gerät entsperrt",
+      "action_device_unblocked": "Gerät entsperrt",
       "action_device_updated": "Gerät geändert",
       "action_devices_bulk_deleted": "Geräte gelöscht",
       "action_devices_moved": "Geräte verschoben",
@@ -616,6 +617,7 @@
       "action_quick_support_ended": "Schnellhilfe beendet",
       "action_quick_support_opened": "Schnellhilfe-Link geöffnet",
       "action_quick_support_password_taken": "Passwort der Schnellhilfe abgerufen",
+      "action_quick_support_refused": "Computer der Schnellhilfe abgewiesen",
       "action_recovery_codes_invalidated": "Wiederherstellungscodes von einem Admin ungültig gemacht",
       "action_registration_approved": "Registrierung freigegeben",
       "action_registration_rejected": "Registrierung abgelehnt",
@@ -3314,6 +3316,7 @@
       "unban_effect": "{device} kann sich wieder mit diesem Server verbinden.",
       "unban_success": "Gerät erfolgreich entsperrt",
       "unban_title": "Gerät entsperren",
+      "unblock_not_blocked": "Dieser Computer ist auf diesem Server nicht gesperrt.",
       "username": "Benutzername",
       "version": "Version"
      },
@@ -3416,6 +3419,205 @@
       "signed_in_as": "Du bist als {user} mit der Rolle {role} angemeldet.",
       "try_again": "Erneut versuchen",
       "unban_failed": "Gerät konnte nicht entsperrt werden"
+     },
+     "failure": {
+      "billing_blocked": {
+       "todo": "Bitte einen Administrator, den Vertrag des Computers zu prüfen.",
+       "what": "Der Server erlaubt gerade keine Sitzungen zu {name}.",
+       "why": "Der Vertrag dieses Computers erlaubt keine Sitzungen."
+      },
+      "client_too_old": {
+       "todo": "Aktualisiere NeoDesk auf {name} und verbinde dich dann neu.",
+       "what": "NeoDesk auf {name} ist dafür zu alt.",
+       "why": "Die Version auf dem Computer unterstützt diese Verbindung nicht."
+      },
+      "consent_declined": {
+       "todo": "Bitte sie, es noch einmal zu versuchen, und verbinde dich dann neu.",
+       "what": "{person} hat die Verbindung abgelehnt.",
+       "why": "Die Person an {name} hat auf Ablehnen geklickt oder das Fenster mit der Anfrage geschlossen."
+      },
+      "consent_scope": {
+       "todo": "Bitte {person}, es im Schnellhilfe-Fenster zu erlauben.",
+       "what": "{person} hat das nicht erlaubt.",
+       "why": "In dieser Schnellhilfe-Sitzung hat {person} nur manches erlaubt."
+      },
+      "consent_timeout": {
+       "todo": "Bitte sie, auf das Fenster mit der Anfrage zu achten, und verbinde dich dann neu.",
+       "what": "{person} hat nicht geantwortet.",
+       "why": "Niemand hat die Verbindung an {name} innerhalb von 3 Minuten angenommen."
+      },
+      "device_banned": {
+       "todo": "Wenn er sich wieder verbinden soll, hebe den Bann im Gerätebereich auf.",
+       "what": "{name} ist auf diesem Server gebannt.",
+       "why": "Ein Administrator hat diesen Computer gebannt. Deshalb weist der Server ihn ab."
+      },
+      "device_blocked": {
+       "todo": "Wenn er sich wieder verbinden soll, entsperre ihn hier. Verbinde dich dann neu.",
+       "todo_ask": "Bitte einen Administrator, diesen Computer zu entsperren, und verbinde dich dann neu.",
+       "what": "{name} ist auf diesem Server gesperrt.",
+       "why": "Seine ID steht auf der Sperrliste des Servers. Deshalb weist der Server ihn ab, auch wenn er an ist."
+      },
+      "device_blocks_you": {
+       "todo": "Bitte jemanden an {name}, die Sperre in den Einstellungen zu entfernen.",
+       "what": "{name} sperrt dich.",
+       "why": "NeoDesk auf {name} hat deine ID oder Adresse auf seiner eigenen Sperrliste."
+      },
+      "device_feature_off": {
+       "todo": "Bitte jemanden an {name}, es unter Einstellungen, Sicherheit zu erlauben.",
+       "what": "{name} hat das ausgeschaltet.",
+       "why": "NeoDesk auf {name} erlaubt diese Art von Sitzung nicht."
+      },
+      "device_not_allowed": {
+       "todo": "Bitte jemanden an {name}, unter Einstellungen, Sicherheit ein Passwort zu setzen oder Verbindungen zu erlauben.",
+       "what": "{name} nimmt diese Verbindung nicht an.",
+       "why": "NeoDesk auf {name} lässt nur mit Passwort herein, und dort ist keins gesetzt, oder seine Einstellungen schalten Verbindungen aus."
+      },
+      "device_not_installed": {
+       "todo": "Bitte jemanden an {name}, NeoDesk zu installieren, und verbinde dich dann neu.",
+       "what": "{name} kann das ohne installiertes NeoDesk nicht.",
+       "why": "NeoDesk läuft dort, ohne installiert zu sein, und dafür braucht es die installierte Version."
+      },
+      "device_not_ready": {
+       "todo": "Bitte jemanden an {name}, NeoDesk zu öffnen, und verbinde dich dann neu.",
+       "what": "{name} ist für diese Verbindung nicht bereit.",
+       "why": "NeoDesk auf {name} hat gemeldet, dass es die Sitzung jetzt nicht annehmen kann."
+      },
+      "device_offline": {
+       "todo": "Schalte ihn ein oder wecke ihn auf und prüfe, ob NeoDesk darauf läuft. Verbinde dich dann neu.",
+       "what": "{name} ist offline.",
+       "why": "Er hat sich schon eine Weile nicht beim Server gemeldet."
+      },
+      "device_rejected": {
+       "todo": "Bitte einen Administrator, ihn unter Computer hinzufügen zuzulassen, und versuche es dann noch einmal.",
+       "what": "Dieser Server hat {name} abgewiesen.",
+       "why": "Ein Administrator hat diesen Computer abgelehnt, als er beitreten wollte."
+      },
+      "device_removed": {
+       "todo": "Stelle ihn im Gerätebereich wieder her oder füge ihn unter Computer hinzufügen neu hinzu.",
+       "what": "{name} wurde auf diesem Server gelöscht.",
+       "why": "Der Computer liegt bei den gelöschten Geräten."
+      },
+      "device_revoked": {
+       "todo": "Wenn er sich wieder verbinden soll, entsperre ihn hier. Verbinde dich dann neu.",
+       "todo_ask": "Bitte einen Administrator, diesen Computer zu entsperren, und verbinde dich dann neu.",
+       "what": "{name} wurde auf diesem Server widerrufen.",
+       "why": "Jemand hat diesen Computer in der Konsole widerrufen. Deshalb weist der Server ihn ab, auch wenn er an ist."
+      },
+      "device_unknown": {
+       "todo": "Prüfe die ID. Wenn der Computer entfernt wurde, füge ihn unter Computer hinzufügen wieder hinzu.",
+       "what": "Der Server kennt {name} nicht.",
+       "why": "Auf diesem Server ist kein Computer mit dieser ID angemeldet."
+      },
+      "dropped": {
+       "todo": "Verbinde dich neu. Wenn es wieder passiert, prüfe das Netzwerk des Computers.",
+       "what": "Die Verbindung zu {name} ist abgebrochen.",
+       "why": "Das Netzwerk zwischen diesem Browser, dem Server und {name} wurde unterbrochen."
+      },
+      "dropped_early": {
+       "todo": "Verbinde dich neu. Wenn es wieder passiert, prüfe das Netzwerk des Computers.",
+       "what": "Die Verbindung wurde geschlossen, bevor {name} geantwortet hat.",
+       "why": "Das Netzwerk zwischen diesem Browser, dem Server und {name} wurde beim Start der Sitzung unterbrochen."
+      },
+      "feature_off": {
+       "todo": "Bitte einen Administrator, sie einzuschalten.",
+       "what": "Diese Art von Sitzung ist für dein Konto ausgeschaltet.",
+       "why": "Ein Administrator hat sie in den Client-Funktionen deines Kontos ausgeschaltet."
+      },
+      "https_required": {
+       "todo": "Öffne die Konsole über HTTPS, um den Bildschirm zu sehen.",
+       "what": "{name} kann über einfaches HTTP nicht angezeigt werden.",
+       "why": "Dieser Computer sendet ein Videoformat, das der Browser nur über HTTPS abspielt."
+      },
+      "insecure": {
+       "todo": "Es wurde kein Passwort gesendet. Bitte einen Administrator, den Server zu prüfen.",
+       "what": "Die Verbindung zu {name} wurde gestoppt, weil sie nicht gesichert werden konnte.",
+       "why": "{name} hat seine Identität nicht bewiesen oder die Verbindung nicht verschlüsselt. Vielleicht hört jemand zwischen diesem Browser und dem Computer mit, oder der Serverschlüssel ist nicht eingerichtet."
+      },
+      "join_proof": {
+       "todo": "Aktualisiere NeoDesk auf diesem Computer und öffne den Link noch einmal, oder bitte einen Administrator, das alte Gerät in der Konsole zu löschen.",
+       "what": "{name} konnte nicht beweisen, dass er der Computer ist, den der Server kennt.",
+       "why": "Die ID ist schon angemeldet, und dieser Computer hat den Beitritt nicht mit dem Schlüssel unterschrieben, den der Server für ihn hat."
+      },
+      "key_changed": {
+       "todo": "Wenn du die Änderung erwartet hast, gib den neuen Schlüssel im Gerätebereich frei. Verbinde dich dann neu.",
+       "what": "{name} hat sich mit einem neuen Schlüssel zurückgemeldet.",
+       "why": "Der Server weist einen Computer mit geändertem Schlüssel ab, bis ein Administrator ihn freigibt. So kann niemand seine ID übernehmen."
+      },
+      "license_blocked": {
+       "todo": "Bitte einen Administrator, die Lizenz zu prüfen.",
+       "what": "Die Lizenz des Servers erlaubt diese Verbindung nicht.",
+       "why": "Der Lizenzschlüssel passt nicht zu diesem Server."
+      },
+      "login_screen": {
+       "todo": "Melde dich zuerst an {name} an oder stelle den Anmeldebildschirm auf X11 um. Verbinde dich dann neu.",
+       "what": "{name} zeigt einen Anmeldebildschirm, den NeoDesk nicht teilen kann.",
+       "why": "Der Anmeldebildschirm von {name} läuft unter Wayland, das NeoDesk nicht aufnehmen kann."
+      },
+      "no_answer": {
+       "todo": "Wecke ihn auf oder warte kurz und verbinde dich dann neu.",
+       "what": "{name} hat nicht geantwortet.",
+       "why": "Der Server hat {name} um eine Verbindung gebeten, und es kam keine Antwort. Er schläft vielleicht, ist beschäftigt, oder sein Netzwerk blockiert NeoDesk."
+      },
+      "not_authorized": {
+       "todo": "Bitte einen Administrator, dir Zugriff auf diesen Computer zu geben.",
+       "what": "Du kannst dich nicht mit {name} verbinden.",
+       "why": "Der Server lässt dein Konto keine Sitzungen zu diesem Computer starten."
+      },
+      "other_machine": {
+       "todo": "Bitte einen Administrator, das alte Gerät in der Konsole zu löschen, und versuche es dann noch einmal.",
+       "what": "Ein anderer Computer nutzt die ID von {name} schon.",
+       "why": "Der Server kennt diese ID von einem anderen Gerät."
+      },
+      "password_wrong": {
+       "todo": "Gib das Passwort ein, das auf {name} gesetzt ist. NeoDesk zeigt es auf diesem Computer unter Einstellungen, Sicherheit.",
+       "what": "Das Passwort wurde nicht angenommen.",
+       "why": "{name} hat das Passwort abgewiesen."
+      },
+      "privacy_mode": {
+       "todo": "Warte, bis diese Sitzung endet, und verbinde dich dann neu.",
+       "what": "Jemand hat an {name} den Privatsphäremodus eingeschaltet.",
+       "why": "Eine andere Sitzung hält {name} im Privatsphäremodus, der keinen zweiten Zuschauer hereinlässt."
+      },
+      "rate_limited": {
+       "todo": "Warte eine Minute und verbinde dich dann neu.",
+       "what": "Zu viele Versuche.",
+       "why": "{name} sperrt die Anmeldung eine Weile nach mehreren falschen Versuchen."
+      },
+      "relay_refused": {
+       "todo": "Verbinde dich neu. Wenn es wieder passiert, kopiere die Details und schicke sie einem Administrator.",
+       "what": "Der Server hat die Verbindung zu {name} gestoppt.",
+       "why": "Der Server hat diese Sitzung nicht durchgelassen."
+      },
+      "relay_unreachable": {
+       "todo": "Verbinde dich neu. Wenn es weiter scheitert, bitte einen Administrator zu prüfen, ob die Ports des Servers offen sind.",
+       "what": "Die Verbindung zu {name} kam nicht zustande.",
+       "why": "Dieser Browser hat den Teil des Servers nicht erreicht, der die Sitzung überträgt."
+      },
+      "server_unreachable": {
+       "todo": "Prüfe dein Netzwerk und verbinde dich neu. Wenn es weiter scheitert, bitte einen Administrator, den Server zu prüfen.",
+       "what": "Dieser Browser erreicht den NeoDesk-Server nicht.",
+       "why": "Der Server hat beim Verbindungsaufbau nicht geantwortet."
+      },
+      "session_limit": {
+       "todo": "Warte, bis eine andere Sitzung endet, oder frag einen Administrator.",
+       "what": "Der Server nimmt gerade keine weiteren Sitzungen an.",
+       "why": "Die Zahl der Sitzungen hat die Grenze der Lizenz erreicht."
+      },
+      "signin_closed": {
+       "todo": "Verbinde dich neu und melde dich noch einmal an. Wenn es wieder passiert, bitte einen Administrator, sich das Protokoll von NeoDesk auf dem Computer anzusehen.",
+       "what": "{name} hat die Verbindung geschlossen, als sich dieser Browser angemeldet hat.",
+       "why": "Der Computer hat die Anmeldung abgewiesen."
+      },
+      "tfa_wrong": {
+       "todo": "Gib den aktuellen Code aus der Authenticator-App ein, die mit {name} verknüpft ist.",
+       "what": "Der Code wurde nicht angenommen.",
+       "why": "{name} hat den Zwei-Faktor-Code abgewiesen."
+      },
+      "unknown": {
+       "todo": "Verbinde dich neu. Wenn es weiter scheitert, kopiere die Details und schicke sie einem Administrator.",
+       "what": "Die Verbindung zu {name} ist fehlgeschlagen.",
+       "why": "Die Ursache ist nicht bekannt. Die Details unten zeigen, was dieser Browser gesehen hat."
+      }
      },
      "file_transfer": {
       "browse_files": "Dateien durchsuchen",
@@ -5041,12 +5243,16 @@
        "state_ended": "Die Sitzung ist beendet.",
        "state_ended_customer": "Die Sitzung ist beendet: Die Person hat die App geschlossen.",
        "state_expired": "Der Link ist abgelaufen, ohne benutzt zu werden. Erstelle einen neuen Link, wenn die Person noch Hilfe braucht.",
+       "state_refused": "Der Server hat {name} abgewiesen.",
        "state_timeout": "Die Sitzung ist beendet: Die App antwortet nicht mehr.",
        "state_waiting": "Warten, bis die Person den Link öffnet. Der Link läuft um {time} ab.",
        "system": "System",
        "text": "Schick diesen Link an die Person, die Hilfe braucht. Sie lädt eine kleine App herunter und klickt auf Erlauben, dann kannst du dich verbinden. Der Link gilt einmal und eine Stunde.",
        "the_person": "die Person",
-       "title": "Schnellhilfe"
+       "title": "Schnellhilfe",
+       "unblock": "Diesen Computer entsperren",
+       "unblock_failed": "{name} konnte nicht entsperrt werden. Versuche es noch einmal.",
+       "unblocked": "{name} ist entsperrt. Erstelle einen neuen Link und schicke ihn noch einmal."
       }
      },
      "organizations": {
@@ -6403,7 +6609,15 @@
       "try_relay": "Prüfe, ob der Relay-Server läuft und dieser Browser ihn erreicht, und verbinde dich dann erneut.",
       "try_signin_closed": "Das Gerät hat die Anmeldung abgelehnt. Verbinde dich neu und melde dich noch einmal an. Wenn das immer wieder passiert, bitte einen Administrator, das Protokoll von NeoDesk auf dem Gerät anzusehen.",
       "try_timeout": "Das Gerät ist vielleicht im Ruhezustand, ausgelastet oder offline. Weck es auf oder warte kurz, und verbinde dich dann erneut.",
+      "unblock": "Diesen Computer entsperren",
+      "unblock_failed": "{name} konnte nicht entsperrt werden. Versuche es noch einmal.",
+      "unblocked": "{name} ist entsperrt.",
+      "unblocked_try": "{name} ist entsperrt. Er meldet sich innerhalb einer Minute beim Server, dann verbinde dich neu.",
       "unmute": "Ton an",
+      "wait_person": "Warte darauf, dass {person} auf dem eigenen Bildschirm annimmt.",
+      "wait_person_hint": "{person} sieht ein Fenster, das fragt, ob du dich verbinden darfst, mit Erlauben und Ablehnen.",
+      "wait_someone": "Warte darauf, dass jemand an {name} auf dem Bildschirm annimmt.",
+      "wait_someone_hint": "Die Person dort sieht ein Fenster, das fragt, ob du dich verbinden darfst, mit Erlauben und Ablehnen.",
       "window_blocked": "Der Browser hat das neue Fenster blockiert. Erlaube Pop-ups für diese Seite und versuche es erneut.",
       "window_without_viewer": "Dieses Fenster zeigt einen Bildschirm einer Fernsitzung. Öffne es in der Fernansicht mit „In eigenem Fenster öffnen“.",
       "windows": "Fenster",

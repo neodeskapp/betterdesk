@@ -182,6 +182,25 @@ export function deleteDevice(id: string, opts: { revoke?: boolean; cascade?: boo
 	});
 }
 
+export const DeviceReach = v.object({
+	/** online, or a failure reason of the server (failures.ts): device_offline, device_revoked, ... */
+	reason: Text,
+	last_online: v.optional(Text, ''),
+	/** This account may unblock a revoked or blocked ID */
+	can_unblock: v.optional(BoolLike, false)
+});
+export type DeviceReach = v.InferOutput<typeof DeviceReach>;
+
+/** Why the server can or cannot reach the computer, as it knows it */
+export function getDeviceReach(id: string, signal?: AbortSignal): Promise<DeviceReach> {
+	return api(DeviceReach, `/api/devices/${encodeURIComponent(id)}/reach`, { signal, activity: false });
+}
+
+/** The computer's ID leaves the server's blocklist: it can register and join again */
+export function unblockDevice(id: string) {
+	return api(Ok, `/api/devices/${encodeURIComponent(id)}/unblock`, { method: 'POST' });
+}
+
 export function restoreDevice(id: string) {
 	return api(Ok, `/api/devices/${encodeURIComponent(id)}/restore`, { method: 'POST' });
 }

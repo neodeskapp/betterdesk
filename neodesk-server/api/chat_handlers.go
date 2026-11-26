@@ -256,6 +256,9 @@ func (s *Server) chatGroupMates(deviceID string) (map[string]bool, error) {
 // The status stored in the database is not enough: it stays ONLINE for a
 // device that went away.
 func (s *Server) chatPeerOnline(p *db.Peer) bool {
+	if s.blockedReason(p.ID) != "" {
+		return false
+	}
 	if s.peers != nil && s.peers.IsOnline(p.ID, config.RegTimeout) {
 		return true
 	}

@@ -7,6 +7,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { SupportSession } from '../../src/lib/api/onboard.ts';
+import { session as signedIn } from '../../src/lib/state/session.svelte.ts';
 import { inviteBody } from '../../src/lib/onboard/invite.ts';
 import {
 	canConnect,
@@ -89,6 +90,7 @@ function session(over: Partial<SupportSession> = {}): SupportSession {
 		consent_at: '',
 		ended_at: '',
 		ended_by: '',
+		end_reason: '',
 		device_id: '',
 		hostname: '',
 		platform: '',
@@ -268,6 +270,39 @@ describe('Quick support', () => {
 		render(QuickSupportDialog, { onclose: () => {}, session: state });
 		expect(screen.getByText('onboard.support.state_waiting')).toBeInTheDocument();
 		expect(screen.queryByRole('textbox', { name: 'ID' })).toBeNull();
+	});
+
+	test('a computer the server refused says why, and an admin can unblock it there (L550)', async () => {
+		signedIn.isSuperAdmin = true;
+		const state = session({
+			status: 'ended',
+			ended_by: 'refused',
+			end_reason: 'device_revoked',
+			device_id: '828416401',
+			hostname: 'desktop-3mu2dcg'
+		});
+		routes['POST /api/devices/828416401/unblock'] = () => ({ body: { success: true } });
+		render(QuickSupportDialog, { onclose: () => {}, session: state });
+		expect(screen.getByText('desktop-3mu2dcg was revoked on this server.')).toBeInTheDocument();
+		expect(screen.getByText(/revoked this computer in the console/)).toBeInTheDocument();
+		const user = userEvent.setup();
+		await user.click(screen.getByRole('button', { name: 'onboard.support.unblock' }));
+		await waitFor(() =>
+			expect(calls.some((c) => c.method === 'POST' && c.path === '/api/devices/828416401/unblock')).toBe(true)
+		);
+		expect(screen.getByRole('button', { name: 'onboard.support.again' })).toBeInTheDocument();
+	});
+
+	test('someone who may not unblock is told to ask an administrator', async () => {
+		signedIn.isSuperAdmin = false;
+		signedIn.permissions = ['device.connect'];
+		render(QuickSupportDialog, {
+			onclose: () => {},
+			session: session({ status: 'ended', ended_by: 'refused', end_reason: 'device_revoked', hostname: 'pc' })
+		});
+		expect(screen.getByText(/Ask an administrator to unblock this computer/)).toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: 'onboard.support.unblock' })).toBeNull();
+		signedIn.isSuperAdmin = true;
 	});
 
 	test('a declined session offers a new link', async () => {

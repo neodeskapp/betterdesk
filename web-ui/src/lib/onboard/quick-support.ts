@@ -37,6 +37,7 @@ export function stateKey(s: Pick<SupportSession, 'status' | 'ended_by' | 'passwo
 		case 'expired':
 			return 'onboard.support.state_expired';
 		default:
+			if (s.ended_by === 'refused') return 'onboard.support.state_refused';
 			return s.ended_by === 'timeout'
 				? 'onboard.support.state_timeout'
 				: s.ended_by === 'customer'
