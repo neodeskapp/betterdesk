@@ -43,7 +43,7 @@ export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export interface RequestOptions {
 	method?: Method;
-	/** JSON body (objects) or FormData for uploads */
+	/** JSON body (objects), FormData for uploads, or a file (Blob) sent as it is with its own type */
 	body?: unknown;
 	query?: Record<string, string | number | boolean | null | undefined>;
 	signal?: AbortSignal;
@@ -134,7 +134,10 @@ export async function request(path: string, opts: RequestOptions = {}): Promise<
 	if (method !== 'GET') {
 		if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
 		if (opts.body instanceof FormData) body = opts.body;
-		else if (opts.body !== undefined) {
+		else if (opts.body instanceof Blob) {
+			headers['Content-Type'] = opts.body.type || 'application/octet-stream';
+			body = opts.body;
+		} else if (opts.body !== undefined) {
 			headers['Content-Type'] = 'application/json';
 			body = JSON.stringify(opts.body);
 		} else if (method !== 'DELETE') {

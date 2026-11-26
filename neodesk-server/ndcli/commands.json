@@ -9335,6 +9335,14 @@
    "reason": "The RustDesk client API: desktop clients call it with their own sign-in."
   },
   {
+   "route": "PUT /api/users/me/avatar",
+   "reason": "Your own profile picture: upload it in the console. API tokens cannot change their account's profile."
+  },
+  {
+   "route": "DELETE /api/users/me/avatar",
+   "reason": "Your own profile picture: remove it in the console. API tokens cannot change their account's profile."
+  },
+  {
    "route": "PUT /api/users/me/profile",
    "reason": "Your own profile: change it in the console. API tokens cannot change their account's profile."
   }
