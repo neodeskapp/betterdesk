@@ -1359,7 +1359,6 @@
       "running_for": "En marcha desde hace",
       "dev_build": "Versión de desarrollo",
       "auto": "detectada automáticamente",
-      "endpoint_auto": "Vacío: los clientes reciben la dirección detectada automáticamente, que aparece en Lo que reciben ahora los clientes.",
       "endpoint_id_help": "Nombre de host o dirección IP del servidor de ID, tal como lo alcanzan los clientes en internet. Rellénelo cuando los clientes llegan a este servidor por otra dirección que esta consola, por ejemplo detrás de un proxy inverso. Por ejemplo remote.example.com.",
       "endpoint_relay_help": "Nombre de host o dirección IP del servidor de retransmisión. Déjelo vacío para usar la dirección del servidor de ID.",
       "endpoint_api_help": "Dirección completa que usan los clientes para iniciar sesión. El servidor usa el puerto 21114 salvo que lo haya cambiado. Por ejemplo https://api.example.com o http://203.0.113.10:21114.",
@@ -1370,7 +1369,9 @@
       "api_url_invalid": "Use una dirección completa que empiece por https:// o http://, como https://api.example.com.",
       "conn_no_effect_relay": "No tiene efecto: todas las sesiones pasan por el servidor de retransmisión.",
       "conn_no_effect_operator": "Ya está en vigor: Solo las cuentas que pueden conectarse a dispositivos pueden iniciar sesiones incluye esta regla.",
-      "conn_no_effect_signed_in": "No tiene efecto mientras solo las apps con sesión iniciada puedan iniciar sesiones."
+      "conn_no_effect_signed_in": "No tiene efecto mientras solo las apps con sesión iniciada puedan iniciar sesiones.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "La apariencia predeterminada para todos los que usan esta consola.",

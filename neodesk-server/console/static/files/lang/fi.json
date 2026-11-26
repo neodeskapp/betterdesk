@@ -1365,7 +1365,6 @@
       "running_for": "Käynnissä",
       "dev_build": "Kehitysversio",
       "auto": "löydetty automaattisesti",
-      "endpoint_auto": "Tyhjä: asiakkaat saavat automaattisesti löydetyn osoitteen, joka näkyy kohdassa Mitä asiakkaat saavat nyt.",
       "endpoint_id_help": "ID-palvelimen isäntänimi tai IP-osoite sellaisena kuin asiakkaat tavoittavat sen internetistä. Täytä tämä, kun asiakkaat tavoittavat tämän palvelimen eri osoitteesta kuin tämän konsolin, esimerkiksi käänteisen välityspalvelimen takana. Esimerkiksi remote.example.com.",
       "endpoint_relay_help": "Välityspalvelimen isäntänimi tai IP-osoite. Jätä tyhjäksi, niin käytetään ID-palvelimen osoitetta.",
       "endpoint_api_help": "Koko osoite, jolla asiakkaat kirjautuvat sisään. Palvelin käyttää porttia 21114, ellet ole muuttanut sitä. Esimerkiksi https://api.example.com tai http://203.0.113.10:21114.",
@@ -1376,7 +1375,9 @@
       "api_url_invalid": "Käytä koko osoitetta, joka alkaa https:// tai http://, kuten https://api.example.com.",
       "conn_no_effect_relay": "Ei vaikutusta: jokainen istunto kulkee välityspalvelimen kautta.",
       "conn_no_effect_operator": "On jo voimassa: Vain tilit, joilla on oikeus muodostaa yhteys laitteisiin, voivat aloittaa istuntoja sisältää tämän säännön.",
-      "conn_no_effect_signed_in": "Ei vaikutusta niin kauan kuin vain kirjautuneet sovellukset voivat aloittaa istuntoja."
+      "conn_no_effect_signed_in": "Ei vaikutusta niin kauan kuin vain kirjautuneet sovellukset voivat aloittaa istuntoja.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "Oletusulkoasu kaikille tämän konsolin käyttäjille.",

@@ -1365,7 +1365,6 @@
       "running_for": "Đã chạy được",
       "dev_build": "Bản phát triển",
       "auto": "tìm tự động",
-      "endpoint_auto": "Để trống: máy khách nhận địa chỉ được tìm tự động, hiển thị trong Những gì máy khách nhận lúc này.",
       "endpoint_id_help": "Tên máy chủ hoặc địa chỉ IP của máy chủ ID, theo cách máy khách trên internet truy cập. Điền khi máy khách truy cập máy chủ này bằng địa chỉ khác với bảng điều khiển này, ví dụ sau reverse proxy. Ví dụ remote.example.com.",
       "endpoint_relay_help": "Tên máy chủ hoặc địa chỉ IP của máy chủ chuyển tiếp. Để trống để dùng địa chỉ máy chủ ID.",
       "endpoint_api_help": "Địa chỉ đầy đủ mà máy khách dùng để đăng nhập. Máy chủ dùng cổng 21114 trừ khi bạn đã đổi. Ví dụ https://api.example.com hoặc http://203.0.113.10:21114.",
@@ -1376,7 +1375,9 @@
       "api_url_invalid": "Dùng địa chỉ đầy đủ bắt đầu bằng https:// hoặc http://, như https://api.example.com.",
       "conn_no_effect_relay": "Không có tác dụng: mọi phiên đều đi qua máy chủ chuyển tiếp.",
       "conn_no_effect_operator": "Đã có hiệu lực: Chỉ tài khoản được phép kết nối tới thiết bị mới bắt đầu được phiên đã bao gồm quy tắc này.",
-      "conn_no_effect_signed_in": "Không có tác dụng khi chỉ ứng dụng đã đăng nhập mới bắt đầu được phiên."
+      "conn_no_effect_signed_in": "Không có tác dụng khi chỉ ứng dụng đã đăng nhập mới bắt đầu được phiên.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "Giao diện mặc định cho mọi người dùng bảng điều khiển này.",

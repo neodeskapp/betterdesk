@@ -1366,7 +1366,6 @@
       "running_for": "يعمل منذ",
       "dev_build": "إصدار تطوير",
       "auto": "تم العثور عليه تلقائيًا",
-      "endpoint_auto": "فارغ: يحصل العملاء على العنوان الذي عُثر عليه تلقائيًا، ويظهر تحت ما يحصل عليه العملاء الآن.",
       "endpoint_id_help": "اسم المضيف أو عنوان IP لخادم المعرّفات كما يصل إليه العملاء على الإنترنت. املأه عندما يصل العملاء إلى هذا الخادم بعنوان غير عنوان هذه الوحدة، مثلًا خلف وكيل عكسي. مثلًا remote.example.com.",
       "endpoint_relay_help": "اسم المضيف أو عنوان IP لخادم الترحيل. اتركه فارغًا لاستخدام عنوان خادم المعرّفات.",
       "endpoint_api_help": "العنوان الكامل الذي يستخدمه العملاء لتسجيل الدخول. يستخدم الخادم المنفذ 21114 ما لم تغيّره. مثلًا https://api.example.com أو http://203.0.113.10:21114.",
@@ -1377,7 +1376,9 @@
       "api_url_invalid": "استخدم عنوانًا كاملًا يبدأ بـ https:// أو http://، مثل https://api.example.com.",
       "conn_no_effect_relay": "لا أثر له: كل جلسة تمر عبر خادم الترحيل.",
       "conn_no_effect_operator": "ساري بالفعل: يمكن فقط للحسابات المسموح لها بالاتصال بالأجهزة بدء الجلسات يشمل هذه القاعدة.",
-      "conn_no_effect_signed_in": "لا أثر له ما دامت تطبيقات RustDesk المسجّلة الدخول فقط يمكنها بدء الجلسات."
+      "conn_no_effect_signed_in": "لا أثر له ما دامت تطبيقات RustDesk المسجّلة الدخول فقط يمكنها بدء الجلسات.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "المظهر الافتراضي لكل من يستخدم وحدة التحكم هذه.",

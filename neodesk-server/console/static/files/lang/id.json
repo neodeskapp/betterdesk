@@ -1365,7 +1365,6 @@
       "running_for": "Berjalan selama",
       "dev_build": "Build pengembangan",
       "auto": "ditemukan otomatis",
-      "endpoint_auto": "Kosong: klien mendapat alamat yang ditemukan otomatis, ditampilkan di Yang diterima klien sekarang.",
       "endpoint_id_help": "Nama host atau alamat IP server ID, seperti yang dijangkau klien di internet. Isi jika klien menjangkau server ini lewat alamat lain dari konsol ini, misalnya di balik reverse proxy. Misalnya remote.example.com.",
       "endpoint_relay_help": "Nama host atau alamat IP server relai. Biarkan kosong untuk memakai alamat server ID.",
       "endpoint_api_help": "Alamat lengkap yang dipakai klien untuk masuk. Server memakai port 21114 kecuali Anda mengubahnya. Misalnya https://api.example.com atau http://203.0.113.10:21114.",
@@ -1376,7 +1375,9 @@
       "api_url_invalid": "Gunakan alamat lengkap yang diawali https:// atau http://, seperti https://api.example.com.",
       "conn_no_effect_relay": "Tidak berpengaruh: setiap sesi melewati server relai.",
       "conn_no_effect_operator": "Sudah berlaku: Hanya akun yang boleh terhubung ke perangkat yang dapat memulai sesi sudah mencakup aturan ini.",
-      "conn_no_effect_signed_in": "Tidak berpengaruh selama hanya aplikasi yang sudah masuk yang dapat memulai sesi."
+      "conn_no_effect_signed_in": "Tidak berpengaruh selama hanya aplikasi yang sudah masuk yang dapat memulai sesi.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "Tampilan default untuk semua orang yang menggunakan konsol ini.",

@@ -1359,7 +1359,6 @@
       "running_for": "已运行",
       "dev_build": "开发版本",
       "auto": "自动检测",
-      "endpoint_auto": "留空：客户端获得自动检测到的地址，显示在“客户端当前获得的值”下。",
       "endpoint_id_help": "互联网上的客户端访问 ID 服务器时使用的主机名或 IP 地址。如果客户端通过与本控制台不同的地址访问此服务器（例如在反向代理后面），请填写。例如 remote.example.com。",
       "endpoint_relay_help": "中继服务器的主机名或 IP 地址。留空则使用 ID 服务器地址。",
       "endpoint_api_help": "客户端登录时使用的完整地址。除非您改过，服务器使用端口 21114。例如 https://api.example.com 或 http://203.0.113.10:21114。",
@@ -1370,7 +1369,9 @@
       "api_url_invalid": "请使用以 https:// 或 http:// 开头的完整地址，例如 https://api.example.com。",
       "conn_no_effect_relay": "无效：所有会话都经过中继服务器。",
       "conn_no_effect_operator": "已经生效：“只有可以连接设备的账户才能发起会话”已包含这条规则。",
-      "conn_no_effect_signed_in": "只要只有已登录的应用可以发起会话，此项就无效。"
+      "conn_no_effect_signed_in": "只要只有已登录的应用可以发起会话，此项就无效。",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "所有使用此控制台的人默认看到的外观。",

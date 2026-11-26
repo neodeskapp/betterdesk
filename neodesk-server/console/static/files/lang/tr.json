@@ -1365,7 +1365,6 @@
       "running_for": "Çalışma süresi",
       "dev_build": "Geliştirme sürümü",
       "auto": "otomatik bulundu",
-      "endpoint_auto": "Boş: istemciler otomatik bulunan adresi alır; bu adres İstemcilerin şu an aldıkları altında gösterilir.",
       "endpoint_id_help": "İnternetteki istemcilerin ulaştığı şekliyle ID sunucusunun ana bilgisayar adı veya IP adresi. İstemciler bu sunucuya bu konsoldan farklı bir adresle ulaşıyorsa doldurun, örneğin ters proxy arkasında. Örneğin remote.example.com.",
       "endpoint_relay_help": "Aktarma sunucusunun ana bilgisayar adı veya IP adresi. ID sunucusunun adresini kullanmak için boş bırakın.",
       "endpoint_api_help": "İstemcilerin oturum açmak için kullandığı tam adres. Değiştirmediyseniz sunucu 21114 portunu kullanır. Örneğin https://api.example.com veya http://203.0.113.10:21114.",
@@ -1376,7 +1375,9 @@
       "api_url_invalid": "https:// veya http:// ile başlayan tam bir adres kullanın, örneğin https://api.example.com.",
       "conn_no_effect_relay": "Etkisi yok: her oturum aktarma sunucusundan geçer.",
       "conn_no_effect_operator": "Zaten geçerli: Yalnızca cihazlara bağlanma izni olan hesaplar oturum başlatabilir bu kuralı da kapsar.",
-      "conn_no_effect_signed_in": "Yalnızca oturum açmış uygulamalar oturum başlatabildiği sürece etkisi yok."
+      "conn_no_effect_signed_in": "Yalnızca oturum açmış uygulamalar oturum başlatabildiği sürece etkisi yok.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "Bu konsolu kullanan herkes için varsayılan görünüm.",

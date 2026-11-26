@@ -1365,7 +1365,6 @@
       "running_for": "Futási idő",
       "dev_build": "Fejlesztői változat",
       "auto": "automatikusan megtalálva",
-      "endpoint_auto": "Üres: a kliensek az automatikusan megtalált címet kapják, amely az Amit a kliensek most kapnak alatt látható.",
       "endpoint_id_help": "Az ID-szerver gépneve vagy IP-címe, ahogy az interneten lévő kliensek elérik. Akkor töltse ki, ha a kliensek más címen érik el ezt a szervert, mint ezt a konzolt, például fordított proxy mögött. Például remote.example.com.",
       "endpoint_relay_help": "A továbbító szerver gépneve vagy IP-címe. Hagyja üresen az ID-szerver címének használatához.",
       "endpoint_api_help": "A teljes cím, amellyel a kliensek bejelentkeznek. A szerver a 21114-es portot használja, hacsak meg nem változtatta. Például https://api.example.com vagy http://203.0.113.10:21114.",
@@ -1376,7 +1375,9 @@
       "api_url_invalid": "Teljes címet használjon, amely https:// vagy http:// előtaggal kezdődik, például https://api.example.com.",
       "conn_no_effect_relay": "Nincs hatása: minden munkamenet a továbbító szerveren át megy.",
       "conn_no_effect_operator": "Már érvényben van: a Csak az eszközökhöz csatlakozni jogosult fiókok indíthatnak munkamenetet beállítás ezt a szabályt is magában foglalja.",
-      "conn_no_effect_signed_in": "Nincs hatása, amíg csak bejelentkezett alkalmazások indíthatnak munkamenetet."
+      "conn_no_effect_signed_in": "Nincs hatása, amíg csak bejelentkezett alkalmazások indíthatnak munkamenetet.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "Az alapértelmezett megjelenés mindenkinek, aki ezt a konzolt használja.",

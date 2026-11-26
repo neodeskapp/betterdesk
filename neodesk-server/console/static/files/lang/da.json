@@ -1365,7 +1365,6 @@
       "running_for": "Kørt i",
       "dev_build": "Udviklingsversion",
       "auto": "fundet automatisk",
-      "endpoint_auto": "Tom: klienterne får den automatisk fundne adresse, vist under Hvad klienter får nu.",
       "endpoint_id_help": "Værtsnavn eller IP-adresse på ID-serveren, som klienter på internettet når den. Udfyld det, når klienter når denne server på en anden adresse end denne konsol, for eksempel bag en reverse proxy. For eksempel remote.example.com.",
       "endpoint_relay_help": "Værtsnavn eller IP-adresse på relæserveren. Lad den være tom for at bruge ID-serverens adresse.",
       "endpoint_api_help": "Fuld adresse, som klienter bruger til at logge ind. Serveren bruger port 21114, medmindre du har ændret den. For eksempel https://api.example.com eller http://203.0.113.10:21114.",
@@ -1376,7 +1375,9 @@
       "api_url_invalid": "Brug en fuld adresse, der starter med https:// eller http://, som https://api.example.com.",
       "conn_no_effect_relay": "Har ingen virkning: alle sessioner går gennem relæserveren.",
       "conn_no_effect_operator": "Allerede gældende: Kun konti, der må oprette forbindelse til enheder, kan starte sessioner omfatter denne regel.",
-      "conn_no_effect_signed_in": "Har ingen virkning, så længe kun indloggede apps kan starte sessioner."
+      "conn_no_effect_signed_in": "Har ingen virkning, så længe kun indloggede apps kan starte sessioner.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "Standardudseendet for alle, der bruger denne konsol.",

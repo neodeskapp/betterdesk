@@ -1359,7 +1359,6 @@
       "running_for": "稼働時間",
       "dev_build": "開発版",
       "auto": "自動検出",
-      "endpoint_auto": "空欄: クライアントは自動検出したアドレスを受け取ります。このアドレスは「クライアントに今渡している値」に表示されます。",
       "endpoint_id_help": "インターネット上のクライアントから見た ID サーバーのホスト名または IP アドレスです。クライアントがこのコンソールとは別のアドレスでこのサーバーにアクセスする場合 (リバースプロキシの背後など) に入力します。例: remote.example.com。",
       "endpoint_relay_help": "リレーサーバーのホスト名または IP アドレスです。空欄にすると ID サーバーのアドレスを使います。",
       "endpoint_api_help": "クライアントがサインインに使う完全なアドレスです。変更していなければ、サーバーはポート 21114 を使います。例: https://api.example.com または http://203.0.113.10:21114。",
@@ -1370,7 +1369,9 @@
       "api_url_invalid": "https:// または http:// で始まる完全なアドレスを使ってください (例: https://api.example.com)。",
       "conn_no_effect_relay": "効果はありません: すべてのセッションがリレーサーバーを経由します。",
       "conn_no_effect_operator": "すでに有効です: 「デバイスへの接続が許可されたアカウントだけがセッションを開始できる」がこのルールを含んでいます。",
-      "conn_no_effect_signed_in": "サインイン済みのアプリだけがセッションを開始できる間は効果がありません。"
+      "conn_no_effect_signed_in": "サインイン済みのアプリだけがセッションを開始できる間は効果がありません。",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "このコンソールを使う全員に適用される既定の見た目です。",

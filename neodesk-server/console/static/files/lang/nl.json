@@ -1359,7 +1359,6 @@
       "running_for": "Actief sinds",
       "dev_build": "Ontwikkelversie",
       "auto": "automatisch gevonden",
-      "endpoint_auto": "Leeg: clients krijgen het automatisch gevonden adres, te zien onder Wat clients nu krijgen.",
       "endpoint_id_help": "Hostnaam of IP-adres van de ID-server, zoals clients op internet hem bereiken. Vul dit in als clients deze server via een ander adres bereiken dan deze console, bijvoorbeeld achter een reverse proxy. Bijvoorbeeld remote.example.com.",
       "endpoint_relay_help": "Hostnaam of IP-adres van de relayserver. Laat leeg om het adres van de ID-server te gebruiken.",
       "endpoint_api_help": "Volledig adres waarmee clients inloggen. De server gebruikt poort 21114, tenzij u die hebt gewijzigd. Bijvoorbeeld https://api.example.com of http://203.0.113.10:21114.",
@@ -1370,7 +1369,9 @@
       "api_url_invalid": "Gebruik een volledig adres dat begint met https:// of http://, zoals https://api.example.com.",
       "conn_no_effect_relay": "Heeft geen effect: elke sessie loopt via de relayserver.",
       "conn_no_effect_operator": "Al van kracht: Alleen accounts die met apparaten mogen verbinden, kunnen sessies starten omvat deze regel.",
-      "conn_no_effect_signed_in": "Heeft geen effect zolang alleen ingelogde apps sessies kunnen starten."
+      "conn_no_effect_signed_in": "Heeft geen effect zolang alleen ingelogde apps sessies kunnen starten.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "De standaardweergave voor iedereen die deze console gebruikt.",

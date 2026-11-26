@@ -1359,7 +1359,6 @@
       "running_for": "Běží",
       "dev_build": "Vývojové sestavení",
       "auto": "zjištěno automaticky",
-      "endpoint_auto": "Prázdné: klienti dostanou automaticky zjištěnou adresu, zobrazenou v části Co teď klienti dostávají.",
       "endpoint_id_help": "Název hostitele nebo IP adresa ID serveru, jak ho klienti z internetu dosáhnou. Vyplňte, když klienti tento server dosahují na jiné adrese než tuto konzoli, třeba za reverzní proxy. Například remote.example.com.",
       "endpoint_relay_help": "Název hostitele nebo IP adresa přenosového serveru. Nechte prázdné a použije se adresa ID serveru.",
       "endpoint_api_help": "Celá adresa, kterou klienti používají k přihlášení. Server používá port 21114, pokud jste ho nezměnili. Například https://api.example.com nebo http://203.0.113.10:21114.",
@@ -1370,7 +1369,9 @@
       "api_url_invalid": "Použijte celou adresu začínající https:// nebo http://, třeba https://api.example.com.",
       "conn_no_effect_relay": "Nemá žádný účinek: každá relace jde přes přenosový server.",
       "conn_no_effect_operator": "Už platí: Relace mohou zahájit jen účty, které se smějí připojovat k zařízením zahrnuje toto pravidlo.",
-      "conn_no_effect_signed_in": "Nemá žádný účinek, dokud relace mohou zahájit jen přihlášené aplikace."
+      "conn_no_effect_signed_in": "Nemá žádný účinek, dokud relace mohou zahájit jen přihlášené aplikace.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "Výchozí vzhled pro všechny, kdo tuto konzoli používají.",

@@ -1363,7 +1363,6 @@
       "running_for": "En marche depuis",
       "dev_build": "Version de développement",
       "auto": "trouvée automatiquement",
-      "endpoint_auto": "Vide : les clients reçoivent l'adresse trouvée automatiquement, affichée sous Ce que reçoivent les clients.",
       "endpoint_id_help": "Nom d'hôte ou adresse IP du serveur d'ID, tel que les clients sur Internet l'atteignent. Remplissez-le quand les clients atteignent ce serveur sous une autre adresse que cette console, par exemple derrière un proxy inverse. Par exemple remote.example.com.",
       "endpoint_relay_help": "Nom d'hôte ou adresse IP du serveur relais. Laissez vide pour utiliser l'adresse du serveur d'ID.",
       "endpoint_api_help": "Adresse complète que les clients utilisent pour se connecter. Le serveur utilise le port 21114, sauf si vous l'avez changé. Par exemple https://api.example.com ou http://203.0.113.10:21114.",
@@ -1374,7 +1373,9 @@
       "api_url_invalid": "Utilisez une adresse complète qui commence par https:// ou http://, comme https://api.example.com.",
       "conn_no_effect_relay": "Sans effet : chaque session passe par le serveur relais.",
       "conn_no_effect_operator": "Déjà en vigueur : Seuls les comptes autorisés à se connecter aux appareils peuvent lancer des sessions inclut cette règle.",
-      "conn_no_effect_signed_in": "Sans effet tant que seules les applis connectées peuvent lancer des sessions."
+      "conn_no_effect_signed_in": "Sans effet tant que seules les applis connectées peuvent lancer des sessions.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "L'apparence par défaut pour tous ceux qui utilisent cette console.",

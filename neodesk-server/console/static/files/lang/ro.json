@@ -1365,7 +1365,6 @@
       "running_for": "Rulează de",
       "dev_build": "Versiune de dezvoltare",
       "auto": "găsită automat",
-      "endpoint_auto": "Gol: clienții primesc adresa găsită automat, afișată la Ce primesc acum clienții.",
       "endpoint_id_help": "Numele de gazdă sau adresa IP a serverului ID, așa cum îl ating clienții de pe internet. Completați-l când clienții ajung la acest server pe altă adresă decât această consolă, de exemplu în spatele unui reverse proxy. De exemplu remote.example.com.",
       "endpoint_relay_help": "Numele de gazdă sau adresa IP a serverului de releu. Lăsați gol pentru a folosi adresa serverului ID.",
       "endpoint_api_help": "Adresa completă pe care clienții o folosesc pentru conectare. Serverul folosește portul 21114, dacă nu l-ați schimbat. De exemplu https://api.example.com sau http://203.0.113.10:21114.",
@@ -1376,7 +1375,9 @@
       "api_url_invalid": "Folosiți o adresă completă care începe cu https:// sau http://, de exemplu https://api.example.com.",
       "conn_no_effect_relay": "Nu are efect: fiecare sesiune trece prin serverul de releu.",
       "conn_no_effect_operator": "Deja în vigoare: Doar conturile care se pot conecta la dispozitive pot porni sesiuni include această regulă.",
-      "conn_no_effect_signed_in": "Nu are efect cât timp doar aplicațiile conectate pot porni sesiuni."
+      "conn_no_effect_signed_in": "Nu are efect cât timp doar aplicațiile conectate pot porni sesiuni.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "Aspectul implicit pentru toți cei care folosesc această consolă.",

@@ -1359,7 +1359,6 @@
       "running_for": "Läuft seit",
       "dev_build": "Entwicklungsversion",
       "auto": "automatisch gefunden",
-      "endpoint_auto": "Leer: Clients bekommen die automatisch gefundene Adresse, zu sehen unter Was Clients jetzt erhalten.",
       "endpoint_id_help": "Hostname oder IP-Adresse des ID-Servers, so wie Clients im Internet ihn erreichen. Füll das Feld aus, wenn Clients diesen Server unter einer anderen Adresse erreichen als diese Konsole, etwa hinter einem Reverse Proxy. Zum Beispiel remote.example.com.",
       "endpoint_relay_help": "Hostname oder IP-Adresse des Relay-Servers. Lass das Feld leer, um die Adresse des ID-Servers zu nutzen.",
       "endpoint_api_help": "Vollständige Adresse, mit der sich Clients anmelden. Der Server nutzt Port 21114, wenn du ihn nicht geändert hast. Zum Beispiel https://api.example.com oder http://203.0.113.10:21114.",
@@ -1370,7 +1369,9 @@
       "api_url_invalid": "Gib eine vollständige Adresse an, die mit https:// oder http:// beginnt, etwa https://api.example.com.",
       "conn_no_effect_relay": "Hat keine Wirkung: Jede Sitzung läuft über den Relay-Server.",
       "conn_no_effect_operator": "Gilt schon: Nur Konten, die sich mit Geräten verbinden dürfen, können Sitzungen starten schließt diese Regel ein.",
-      "conn_no_effect_signed_in": "Hat keine Wirkung, solange nur angemeldete Apps Sitzungen starten können."
+      "conn_no_effect_signed_in": "Hat keine Wirkung, solange nur angemeldete Apps Sitzungen starten können.",
+      "endpoint_auto_short": "Automatisch gefunden",
+      "endpoint_auto_note": "Ein leeres Feld gibt Clients die automatisch gefundene Adresse, zu sehen unter Was Clients jetzt erhalten."
     },
     "appearance": {
       "theme_note": "Das Standard-Erscheinungsbild für alle, die diese Konsole verwenden.",

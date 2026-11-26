@@ -1365,7 +1365,6 @@
       "running_for": "Har körts i",
       "dev_build": "Utvecklingsversion",
       "auto": "hittad automatiskt",
-      "endpoint_auto": "Tomt: klienterna får den automatiskt hittade adressen, som visas under Vad klienterna får nu.",
       "endpoint_id_help": "Värdnamn eller IP-adress till ID-servern, så som klienter på internet når den. Fyll i det när klienter når den här servern på en annan adress än den här konsolen, till exempel bakom en omvänd proxy. Till exempel remote.example.com.",
       "endpoint_relay_help": "Värdnamn eller IP-adress till reläservern. Lämna tomt för att använda ID-serverns adress.",
       "endpoint_api_help": "Fullständig adress som klienterna använder för att logga in. Servern använder port 21114 om du inte har ändrat den. Till exempel https://api.example.com eller http://203.0.113.10:21114.",
@@ -1376,7 +1375,9 @@
       "api_url_invalid": "Använd en fullständig adress som börjar med https:// eller http://, som https://api.example.com.",
       "conn_no_effect_relay": "Har ingen effekt: alla sessioner går genom reläservern.",
       "conn_no_effect_operator": "Gäller redan: Bara konton som får ansluta till enheter kan starta sessioner omfattar den här regeln.",
-      "conn_no_effect_signed_in": "Har ingen effekt så länge bara inloggade appar kan starta sessioner."
+      "conn_no_effect_signed_in": "Har ingen effekt så länge bara inloggade appar kan starta sessioner.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "Standardutseendet för alla som använder den här konsolen.",

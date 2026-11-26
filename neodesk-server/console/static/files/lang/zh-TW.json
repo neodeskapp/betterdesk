@@ -1363,7 +1363,6 @@
       "running_for": "已執行",
       "dev_build": "開發版本",
       "auto": "自動偵測",
-      "endpoint_auto": "留空：用戶端取得自動偵測到的位址，顯示在「用戶端目前取得的值」下。",
       "endpoint_id_help": "網際網路上的用戶端連到 ID 伺服器時使用的主機名稱或 IP 位址。如果用戶端透過與此主控台不同的位址連到這台伺服器（例如在反向代理後方），請填寫。例如 remote.example.com。",
       "endpoint_relay_help": "中繼伺服器的主機名稱或 IP 位址。留空則使用 ID 伺服器位址。",
       "endpoint_api_help": "用戶端登入時使用的完整位址。除非您改過，伺服器使用連接埠 21114。例如 https://api.example.com 或 http://203.0.113.10:21114。",
@@ -1374,7 +1373,9 @@
       "api_url_invalid": "請使用以 https:// 或 http:// 開頭的完整位址，例如 https://api.example.com。",
       "conn_no_effect_relay": "沒有作用：每個工作階段都經過中繼伺服器。",
       "conn_no_effect_operator": "已經生效：「只有可連線到裝置的帳戶能開始工作階段」已包含這條規則。",
-      "conn_no_effect_signed_in": "只要只有已登入的應用程式能開始工作階段，此項就沒有作用。"
+      "conn_no_effect_signed_in": "只要只有已登入的應用程式能開始工作階段，此項就沒有作用。",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "所有使用此主控台的人預設看到的外觀。",

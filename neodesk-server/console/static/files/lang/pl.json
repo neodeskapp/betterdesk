@@ -1359,7 +1359,6 @@
       "running_for": "Działa od",
       "dev_build": "Wersja deweloperska",
       "auto": "wykryty automatycznie",
-      "endpoint_auto": "Puste: klienci dostają automatycznie wykryty adres, widoczny w sekcji Co teraz dostają klienci.",
       "endpoint_id_help": "Nazwa hosta lub adres IP serwera ID, pod którym klienci w internecie go osiągają. Wypełnij, gdy klienci łączą się z tym serwerem pod innym adresem niż ta konsola, np. za reverse proxy. Na przykład remote.example.com.",
       "endpoint_relay_help": "Nazwa hosta lub adres IP serwera przekaźnikowego. Zostaw puste, aby użyć adresu serwera ID.",
       "endpoint_api_help": "Pełny adres, którego klienci używają do logowania. Serwer używa portu 21114, chyba że go zmieniono. Na przykład https://api.example.com lub http://203.0.113.10:21114.",
@@ -1370,7 +1369,9 @@
       "api_url_invalid": "Użyj pełnego adresu zaczynającego się od https:// lub http://, np. https://api.example.com.",
       "conn_no_effect_relay": "Nie ma znaczenia: każda sesja przechodzi przez serwer przekaźnikowy.",
       "conn_no_effect_operator": "Już obowiązuje: Sesje mogą rozpoczynać tylko konta, które mogą łączyć się z urządzeniami obejmuje tę zasadę.",
-      "conn_no_effect_signed_in": "Nie ma znaczenia, dopóki sesje mogą rozpoczynać tylko zalogowane aplikacje."
+      "conn_no_effect_signed_in": "Nie ma znaczenia, dopóki sesje mogą rozpoczynać tylko zalogowane aplikacje.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "Domyślny wygląd dla wszystkich użytkowników tej konsoli.",

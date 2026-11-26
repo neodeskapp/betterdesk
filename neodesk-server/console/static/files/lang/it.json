@@ -1359,7 +1359,6 @@
       "running_for": "In esecuzione da",
       "dev_build": "Versione di sviluppo",
       "auto": "trovato automaticamente",
-      "endpoint_auto": "Vuoto: i client ricevono l'indirizzo trovato automaticamente, mostrato sotto Cosa ricevono ora i client.",
       "endpoint_id_help": "Nome host o indirizzo IP dell'ID server, come lo raggiungono i client su internet. Compilalo quando i client raggiungono questo server a un indirizzo diverso da questa console, per esempio dietro un reverse proxy. Per esempio remote.example.com.",
       "endpoint_relay_help": "Nome host o indirizzo IP del server di inoltro. Lascialo vuoto per usare l'indirizzo dell'ID server.",
       "endpoint_api_help": "Indirizzo completo che i client usano per accedere. Il server usa la porta 21114, a meno che tu non l'abbia cambiata. Per esempio https://api.example.com o http://203.0.113.10:21114.",
@@ -1370,7 +1369,9 @@
       "api_url_invalid": "Usa un indirizzo completo che inizia con https:// o http://, come https://api.example.com.",
       "conn_no_effect_relay": "Non ha effetto: ogni sessione passa dal server di inoltro.",
       "conn_no_effect_operator": "Già in vigore: Solo gli account che possono connettersi ai dispositivi possono avviare sessioni include questa regola.",
-      "conn_no_effect_signed_in": "Non ha effetto finché solo le app con accesso effettuato possono avviare sessioni."
+      "conn_no_effect_signed_in": "Non ha effetto finché solo le app con accesso effettuato possono avviare sessioni.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "L'aspetto predefinito per tutti coloro che usano questa console.",
