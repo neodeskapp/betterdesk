@@ -111,10 +111,10 @@
 		align-items: center;
 		gap: var(--space-2) var(--space-3);
 	}
+	/* Plain text, so it never reads as a button beside the group's actions */
 	.group-status {
 		color: var(--text-muted);
 		font-size: var(--text-sm);
-		font-weight: 600;
 	}
 	/* Rows sit flush with the group's edges: their padding lines the text up with the heading */
 	.group-rows {
