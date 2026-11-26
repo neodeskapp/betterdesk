@@ -18,6 +18,7 @@ import {
 } from '../../src/lib/onboard/quick-support.ts';
 
 vi.mock('$app/paths', () => ({ resolve: (p: string) => p || '/', asset: (p: string) => '/' + p }));
+vi.mock('$app/navigation', () => ({ goto: vi.fn(), pushState: vi.fn(), replaceState: vi.fn() }));
 
 const AddComputerDialog = (await import('../../src/lib/onboard/AddComputerDialog.svelte')).default;
 const QuickSupportDialog = (await import('../../src/lib/onboard/QuickSupportDialog.svelte')).default;
@@ -196,8 +197,12 @@ describe('Quick support', () => {
 
 		render(QuickSupportDialog, { onclose: () => {} });
 		const user = userEvent.setup();
-		// Opening the dialog makes the link at once
+		// Opening the dialog makes no link; Make a new link does
+		expect(screen.getByRole('heading', { name: 'Connect by ID' })).toBeInTheDocument();
+		expect(calls.some((c) => c.method === 'POST')).toBe(false);
+		await user.click(screen.getByRole('button', { name: 'onboard.support.again' }));
 		expect(await screen.findByText('onboard.support.state_waiting')).toBeInTheDocument();
+		expect(screen.queryByRole('heading', { name: 'Connect by ID' })).toBeNull();
 		expect(calls.filter((c) => c.method === 'POST' && c.path === '/api/support/sessions')).toHaveLength(1);
 		expect(screen.getByRole('button', { name: 'onboard.support.cancel_link' })).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: 'onboard.support.connect_browser' })).toBeNull();
@@ -232,6 +237,43 @@ describe('Quick support', () => {
 		);
 		expect(calls.filter((c) => c.path.endsWith('/password'))).toHaveLength(1);
 	}, 15000);
+
+	test('Connect by ID opens the session in the console or the app, without a link', async () => {
+		const pages: string[] = [];
+		const hrefs: string[] = [];
+		vi.spyOn(go, 'page').mockImplementation((path: string) => void pages.push(path));
+		vi.spyOn(go, 'here').mockImplementation((url: string) => void hrefs.push(url));
+		const onclose = vi.fn();
+		render(QuickSupportDialog, { onclose });
+		const user = userEvent.setup();
+		const field = screen.getByLabelText('ID');
+
+		// Not an ID: says so and stays open
+		await user.type(field, 'x{Enter}');
+		expect(screen.getByText(/Enter a device ID/)).toBeInTheDocument();
+		expect(pages).toEqual([]);
+
+		await user.clear(field);
+		await user.type(field, '423 456 789');
+		await user.click(screen.getByRole('button', { name: 'Open in NeoDesk' }));
+		expect(hrefs).toEqual(['neodesk://423456789']);
+		expect(onclose).not.toHaveBeenCalled();
+
+		await user.type(field, '{Enter}');
+		expect(pages).toEqual(['/remote/session/423456789']);
+		expect(onclose).toHaveBeenCalledOnce();
+		expect(calls.some((c) => c.path.startsWith('/api/support/sessions'))).toBe(false);
+	});
+
+	test('a session from the list shows its state, not the choice', async () => {
+		const state = session({ status: 'waiting' });
+		routes['GET /api/support/sessions/aaaaaaaaaaaaaaaa'] = () => ({
+			body: { success: true, session: state }
+		});
+		render(QuickSupportDialog, { onclose: () => {}, session: state });
+		expect(screen.getByText('onboard.support.state_waiting')).toBeInTheDocument();
+		expect(screen.queryByLabelText('ID')).toBeNull();
+	});
 
 	test('a declined session offers a new link', async () => {
 		let state = session({ status: 'asking', device_id: '423456789' });
