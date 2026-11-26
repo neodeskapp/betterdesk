@@ -4,6 +4,8 @@
  * renderBillingPeriod). No DOM.
  */
 
+import { tf } from '#lib/i18n/i18n.svelte.ts';
+
 /** UTC offset of a zone now, "UTC+01:00" ("UTC" for UTC itself); '' for a name the browser doesn't know */
 export function zoneOffset(zone: string, at: Date = new Date()): string {
 	if (!zone) return '';
@@ -120,4 +122,80 @@ export function skewValid(ms: number): boolean {
 /** At least one time server; the server checks each name */
 export function serversGiven(list: string): boolean {
 	return list.split(',').some((s) => s.trim() !== '');
+}
+
+/* ── The draft of Settings › Time ── */
+
+export interface TimeValues {
+	zone: string;
+	/** A zone typed in; it wins over the picked one */
+	custom: string;
+	ntp_servers: string[];
+	max_skew_ms: number | null;
+	require_synced_clock: boolean;
+	trust_os_ntp: boolean;
+	[key: string]: unknown;
+}
+
+/** The stored time servers as a list (the server splits at commas) */
+export function splitServers(raw: unknown): string[] {
+	return String(raw ?? '')
+		.split(',')
+		.map((s) => s.trim())
+		.filter(Boolean);
+}
+
+const NTP_HOST = /^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$/;
+
+function isIP(text: string): boolean {
+	if (/^\d{1,3}(\.\d{1,3}){3}$/.test(text)) return text.split('.').every((n) => Number(n) <= 255);
+	if (!text.includes(':')) return false;
+	try {
+		new URL(`http://[${text}]/`);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+/** What is wrong with one time server ('' when nothing): a host name or an IP address (IsValidNTPServerEntry) */
+export function ntpServerProblem(entry: string): string {
+	const s = entry.trim();
+	if (!s) return '';
+	return s.length <= 253 && (isIP(s) || NTP_HOST.test(s))
+		? ''
+		: tf(
+				'settings.time.server_invalid',
+				'Enter a host name or IP address without a port, like pool.ntp.org.'
+			);
+}
+
+/** The problems of the form by field */
+export function timeProblems(v: TimeValues): Partial<Record<keyof TimeValues & string, string>> {
+	const out: Partial<Record<string, string>> = {};
+	if (!v.ntp_servers.length || v.ntp_servers.some((s) => ntpServerProblem(s)))
+		out.ntp_servers = tf(
+			'settings.time.error_servers_list',
+			'Enter at least one time server. Each row is a host name or IP address.'
+		);
+	if (!skewValid(Number(v.max_skew_ms)) || v.max_skew_ms === null || !Number.isInteger(Number(v.max_skew_ms)))
+		out.max_skew_ms = tf(
+			'settings.time.error_skew',
+			'Enter an allowed difference between 1 and 600000 milliseconds.'
+		);
+	return out;
+}
+
+/** What a save sends (saveClockSettings) */
+export function clockPayload(v: TimeValues) {
+	return {
+		ntp_servers: v.ntp_servers
+			.map((s) => s.trim())
+			.filter(Boolean)
+			.join(','),
+		max_skew_ms: Number(v.max_skew_ms),
+		require_synced_clock: v.require_synced_clock,
+		trust_os_ntp: v.trust_os_ntp,
+		billing_timezone: chosenZone(v.custom, v.zone)
+	};
 }
