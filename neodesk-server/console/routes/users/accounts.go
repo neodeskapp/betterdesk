@@ -550,7 +550,11 @@ func (h *handlers) clientError(w http.ResponseWriter, r *http.Request, err error
 // sessions and revokes its access tokens; the account and its history
 // stay. Turning off the second factor deletes its secret and recovery
 // codes and ends the account's sessions too. The answer is the account as
-// the list has it.
+// the list has it. A new email address the changer refuses with a code
+// (no email settings for one's own, a mail server that doesn't take the
+// confirmation) leaves the other members to be written all the same: the
+// answer is then the refusal with its status and the members it saved
+// (sayPartly, A274).
 func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	userID, ok := pathID(r)
 	if !ok {
@@ -687,10 +691,13 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	if err := h.applyScope(ctx, id, user.username(), body, strategy); err != nil {
 		return nil, err
 	}
+	var emailRefused error
 	if !email.IsUndefined() {
 		// A new address waits for its confirmation (package emailchange)
 		if _, err := h.changer().Request(r, targetOf(user), textOf(normalized), isSessionAccount(r, id)); err != nil {
-			return nil, changeRefusal(r, err)
+			if emailRefused = partlyRefused(r, err, givenFields(body)); emailRefused == nil {
+				return nil, changeRefusal(r, err)
+			}
 		}
 	}
 	if changeDisabled {
@@ -722,6 +729,9 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	}
 	if err := h.d.LogAction(r, "user_updated", "Updated user: "+user.username()); err != nil {
 		return nil, err
+	}
+	if emailRefused != nil {
+		return nil, emailRefused
 	}
 	updated, err := accountByID(ctx, h.d.Store, userID)
 	if err != nil {

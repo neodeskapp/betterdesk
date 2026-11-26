@@ -37,8 +37,10 @@ func Register(d *kit.Deps) {
 	r := d.Router
 	may := d.RequirePermission(auth.PermUserImpersonate)
 	r.Get("/api/users/{id}/impersonation", h.check, d.RequireAuth, may)
-	// Starting reads the users section, it changes no account
-	r.SectionLevel("users", access.LevelRead).Post("/api/users/{id}/impersonate", h.start, d.RequireAuth, may)
+	// Starting asks the users section at write (A274): a panel access row
+	// that leaves an admin's Users at read takes Sign in as away. Extend
+	// and stop belong to no section, so whoever is viewing can get back.
+	r.SectionLevel("users", access.LevelWrite).Post("/api/users/{id}/impersonate", h.start, d.RequireAuth, may)
 	r.Get("/api/impersonation", h.status, d.RequireAuth)
 	r.Post("/api/impersonation/extend", h.extend, d.RequireAuth)
 	r.Post("/api/impersonation/stop", h.stop, d.RequireAuth)

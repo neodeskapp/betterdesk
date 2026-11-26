@@ -12,6 +12,7 @@
  */
 
 import type { ConsoleUser } from '#lib/api/users.ts';
+import { can, sectionWritable } from '#lib/state/session.svelte.ts';
 import { ICONS } from '#lib/util/display.ts';
 import { mayChangeUser, mayDisableUser, providerOf } from './users.ts';
 
@@ -67,7 +68,7 @@ export interface ActionRights {
 	canSecurity: boolean;
 	/** Withdrawing an invite undoes Add user (user.create) */
 	canWithdraw: boolean;
-	/** Sign in as (user.impersonate, not while viewing as someone) */
+	/** Sign in as (mayViewAs) */
 	canViewAs: boolean;
 	/** The person may use Team chat (chat.team) */
 	canTeamChat: boolean;
@@ -83,6 +84,16 @@ export interface ActionFacts {
 	teamChat?: boolean;
 	/** The row menu leads to the user's page */
 	withOpen?: boolean;
+}
+
+/**
+ * Sign in as: user.impersonate and the Users section at write, as the
+ * server asks (A274), so a panel access row that leaves Users at read
+ * hides it like the other writes; never while viewing as someone. The
+ * server decides per account and the dialog says why not.
+ */
+export function mayViewAs(): boolean {
+	return can('user.impersonate') && sectionWritable();
 }
 
 const A = (

@@ -281,7 +281,8 @@ func TestSaveProfileKeepsFieldsTheBodyLeavesOut(t *testing.T) {
 		if res := admin.Do("PUT", "/api/users/me/profile", full); res.Status != http.StatusOK {
 			t.Fatalf("save the whole profile: %d %s", res.Status, res.Body)
 		}
-		const refused = `{"success":false,"error":"users.email_change_needs_mail","code":"email_change_needs_mail"}`
+		// The phone beside it is saved, and the answer says so (A274)
+		const refused = `{"success":false,"error":"users.email_not_changed_rest_saved","code":"email_change_needs_mail","saved":["phone"]}`
 		for _, c := range []struct{ body, answer, want string }{
 			{`{"phone":"555"}`, "", `"first_name":"Grace","last_name":"Hopper","email":"grace@example.test","phone":"555","role_display":"Rear admiral"`},
 			{`{"last_name":null,"role_display":""}`, "", `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"555","role_display":""`},
