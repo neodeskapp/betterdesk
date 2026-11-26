@@ -9203,7 +9203,13 @@
     "language_note": "La langue de la console pour votre compte, sur chaque appareil.",
     "accessibility_note": "Contraste, taille du texte, animations et filtres de couleur pour ce navigateur.",
     "accessibility_on": "Certains réglages d'accessibilité sont activés dans ce navigateur.",
-    "accessibility_open": "Réglages d'accessibilité"
+    "accessibility_open": "Réglages d'accessibilité",
+    "prefs_description": "How the console looks and reads for you.",
+    "prefs_where": "Theme and accessibility stay in this browser. The language goes with your account to every device.",
+    "theme_system": "System (follows this device)",
+    "theme_now_default": "Now: {theme}, the console default.",
+    "theme_now_own": "Set in this browser. The console default is {theme}.",
+    "theme_source_link": "Settings › Appearance"
   },
   "devices_add": {
     "tab_invites": "Invitations et liens d'installation",

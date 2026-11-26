@@ -9199,7 +9199,13 @@
     "language_note": "Die Sprache der Konsole für dein Konto, auf jedem Gerät.",
     "accessibility_note": "Kontrast, Textgröße, Bewegung und Farbfilter für diesen Browser.",
     "accessibility_on": "In diesem Browser sind Einstellungen zur Barrierefreiheit an.",
-    "accessibility_open": "Barrierefreiheit einstellen"
+    "accessibility_open": "Barrierefreiheit einstellen",
+    "prefs_description": "Wie die Konsole für dich aussieht und sich liest.",
+    "prefs_where": "Design und Barrierefreiheit gelten in diesem Browser. Die Sprache gilt für dein Konto auf jedem Gerät.",
+    "theme_system": "System (folgt diesem Gerät)",
+    "theme_now_default": "Jetzt: {theme}, der Standard der Konsole.",
+    "theme_now_own": "In diesem Browser festgelegt. Der Standard der Konsole ist {theme}.",
+    "theme_source_link": "Einstellungen › Darstellung"
   },
   "devices_add": {
     "tab_invites": "Einladungen und Installationslinks",

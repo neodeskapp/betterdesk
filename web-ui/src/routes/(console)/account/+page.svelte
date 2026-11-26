@@ -13,6 +13,10 @@
   The old addresses lead here (lib/redirects.ts). A #<id> scrolls to that
   part or field and marks it, as on the Settings page (SettingsPageFrame);
   the settings search finds the fields (search-index.ts, place "account").
+  It is the one settings template (SettingsPage) with links to its parts
+  and no page-wide save line: password and two-factor are actions with
+  their own forms, devices and tokens are records, and Preferences is the
+  one group that applies at once, which it says itself (PATTERN.md rule 1).
 -->
 <script lang="ts">
 	import ApiTokens from '#lib/account/ApiTokens.svelte';
@@ -22,19 +26,36 @@
 	import Sessions from '#lib/account/Sessions.svelte';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { mayMakeTokens } from '#lib/people/apiTokens.ts';
-	import SettingsPageFrame from '#lib/settings/SettingsPageFrame.svelte';
 	import { session } from '#lib/state/session.svelte.ts';
+	import SettingsPage from '#lib/ui/settings/SettingsPage.svelte';
+
+	const tokens = $derived(mayMakeTokens(session.user?.role));
+	const sections = $derived([
+		{ id: 'profile', label: t('account.profile') },
+		{ id: 'password', label: t('account.password') },
+		{ id: 'two-factor', label: t('settings.totp_title') },
+		{ id: 'sessions', label: t('account.sessions') },
+		...(tokens ? [{ id: 'api-tokens', label: t('api_tokens.title') }] : []),
+		{ id: 'preferences', label: t('account.preferences') }
+	]);
 </script>
 
-<SettingsPageFrame id="account" need="" title={t('account.title')} description={t('account.description')}>
+<SettingsPage
+	id="account"
+	need=""
+	saveModel="none"
+	title={t('account.title')}
+	description={t('account.description')}
+	{sections}
+>
 	<div class="account-parts">
 		<Profile />
 		<PasswordAndTwoFactor />
 		<Sessions />
-		{#if mayMakeTokens(session.user?.role)}<ApiTokens />{/if}
+		{#if tokens}<ApiTokens />{/if}
 		<Preferences />
 	</div>
-</SettingsPageFrame>
+</SettingsPage>
 
 <style>
 	.account-parts {

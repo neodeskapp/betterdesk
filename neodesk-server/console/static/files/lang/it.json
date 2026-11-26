@@ -9199,7 +9199,13 @@
     "language_note": "The language of the console for your account, on every device.",
     "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
     "accessibility_on": "Some accessibility settings are on in this browser.",
-    "accessibility_open": "Impostazioni di accessibilità"
+    "accessibility_open": "Impostazioni di accessibilità",
+    "prefs_description": "How the console looks and reads for you.",
+    "prefs_where": "Theme and accessibility stay in this browser. The language goes with your account to every device.",
+    "theme_system": "System (follows this device)",
+    "theme_now_default": "Now: {theme}, the console default.",
+    "theme_now_own": "Set in this browser. The console default is {theme}.",
+    "theme_source_link": "Settings › Appearance"
   },
   "devices_add": {
     "tab_invites": "Inviti e link di installazione",
