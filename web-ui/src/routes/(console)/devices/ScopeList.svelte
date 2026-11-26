@@ -281,12 +281,24 @@
 		padding: 0;
 		list-style: none;
 	}
-	/* Name and count, then a column for the ⋮ menu, so every count ends on the same line */
+	/* The entry fills the row (its highlight runs to the rules' end) and its
+	   count ends where the heading's button label does; the ⋮ menu lies over
+	   the row's end and takes the count's place while it shows */
 	.filter-item {
 		position: relative;
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) var(--control-h-sm);
 		align-items: center;
+	}
+	.filter-item > :global(*) {
+		grid-row: 1;
+	}
+	.filter-item > .filter-option {
+		grid-column: 1 / -1;
+	}
+	.filter-item > :global(.chip-menu) {
+		grid-column: 2;
+		justify-self: center;
 	}
 	.all-groups {
 		display: none;
@@ -348,15 +360,31 @@
 	/* The ⋮ menu shows on hover or keyboard focus; always on touch */
 	.filter-item > :global(.chip-menu) {
 		opacity: 0;
+		pointer-events: none;
 	}
 	.filter-item:hover > :global(.chip-menu),
 	.filter-item > :global(.chip-menu:focus-within),
 	.filter-item.menu-open > :global(.chip-menu) {
 		opacity: 1;
+		pointer-events: auto;
 	}
+	@media not (pointer: coarse) {
+		.filter-item:has(> :global(.chip-menu)):hover .chip-count,
+		.filter-item:has(> :global(.chip-menu:focus-within)) .chip-count,
+		.filter-item.menu-open .chip-count {
+			visibility: hidden;
+		}
+	}
+	/* Touch: the menu always shows, so every entry keeps its column free */
 	@media (pointer: coarse) {
 		.filter-item > :global(.chip-menu) {
 			opacity: 1;
+			pointer-events: auto;
+		}
+	}
+	@media (pointer: coarse) and (min-width: 900px) {
+		.filter-item > .filter-option {
+			padding-inline-end: calc(var(--control-h-sm) + var(--space-1));
 		}
 	}
 

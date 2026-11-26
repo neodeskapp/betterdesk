@@ -68,6 +68,7 @@
 {/if}
 
 <style>
+	/* Not .facts: that global class is the bordered list of facts */
 	.session-facts {
 		display: flex;
 		flex-wrap: wrap;

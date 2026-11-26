@@ -380,10 +380,16 @@
 			id: 'devices',
 			label: t('users.column_devices'),
 			cell: scopeCell,
-			class: 'col-nowrap',
+			class: 'col-nowrap col-devices',
 			minWidth: '8rem'
 		},
-		{ id: 'orgs', label: t('users.column_organizations'), cell: orgsCell, minWidth: '12rem' },
+		{
+			id: 'orgs',
+			label: t('users.column_organizations'),
+			cell: orgsCell,
+			minWidth: '12rem',
+			class: 'col-orgs'
+		},
 		{
 			id: 'two_factor',
 			label: t('nav.account_2fa'),
@@ -404,7 +410,7 @@
 			label: t('users.created'),
 			cell: createdCell,
 			sortValue: (u) => u.created_at ?? '',
-			class: 'col-nowrap'
+			class: 'col-nowrap col-created'
 		},
 		{ id: 'actions', label: t('users.actions'), labelHidden: true, cell: actionsCell, align: 'actions' }
 	]);
@@ -763,6 +769,22 @@
 		display: inline-flex;
 		flex-wrap: wrap;
 		gap: var(--space-1);
+	}
+	/* Narrower tables leave out the creation date and the device scope (set
+	   in the user's sheet), then the organizations (their own sheet), so the
+	   table fits without scrolling sideways under the sticky actions */
+	.users-table {
+		container: userstable / inline-size;
+	}
+	@container userstable (max-width: 1299px) {
+		.users-table :global(:is(th, td):is(.col-created, .col-devices)) {
+			display: none;
+		}
+	}
+	@container userstable (max-width: 1099px) {
+		.users-table :global(:is(th, td).col-orgs) {
+			display: none;
+		}
 	}
 	/* When the table is wider than the page, the row actions stay in view at the end */
 	.users-table :global(:is(td, th).actions) {

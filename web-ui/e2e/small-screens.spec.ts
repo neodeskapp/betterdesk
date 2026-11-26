@@ -179,6 +179,7 @@ test.describe('quick support on phones', () => {
 			await open(page, '/help-requests', 'en');
 			await page.locator('.shell-topbar').getByRole('button', { name: 'Quick support' }).click();
 			const dialog = page.getByRole('dialog');
+			await dialog.getByRole('button', { name: 'Make a new link' }).click();
 			await expect(dialog.locator('.status').filter({ hasText: 'Waiting for the person' })).toBeVisible();
 			expect(await pastTheEdge(page), `Quick support dialog at ${size.width}`).toEqual({
 				over: 0,

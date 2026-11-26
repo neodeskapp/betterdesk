@@ -241,7 +241,7 @@ func TestRoutesInTheOrderOfTheOldFile(t *testing.T) {
 	}
 	// The routes of the device's chat window (A242) are device API routes,
 	// before the CSRF gate (L526)
-	if got, want := list(d.Early), "POST /api/chat/device/files\nGET /api/chat/device/files/{fileId}"; got != want {
+	if got, want := list(d.Early), "POST /api/chat/device/files\nGET /api/chat/device/files/{fileId}\nGET /api/chat/device/helper/picture"; got != want {
 		t.Errorf("device routes:\n%s\nwant:\n%s", got, want)
 	}
 }

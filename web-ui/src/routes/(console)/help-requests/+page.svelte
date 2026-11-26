@@ -528,8 +528,10 @@
 		color: var(--text-muted);
 		font-weight: 400;
 	}
+	/* A host name keeps its line; it doesn't break at its hyphens */
 	.hr-host {
 		font-weight: 600;
+		white-space: nowrap;
 	}
 	.cell-sub {
 		display: block;
@@ -547,6 +549,7 @@
 	.hr-table :global(.row-open) {
 		text-align: start;
 		white-space: normal;
+		text-wrap: pretty;
 	}
 	.hr-actions {
 		display: inline-flex;

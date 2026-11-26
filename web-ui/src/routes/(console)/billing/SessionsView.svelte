@@ -532,8 +532,14 @@
 		gap: 2px;
 		min-width: 0;
 	}
+	/* The bar over the row's full width, the numbers under it, so every bar ends on one line */
 	.usage-main :global(.meter) {
+		flex-wrap: wrap;
+		gap: var(--space-1);
 		margin-top: var(--space-1);
+	}
+	.usage-main :global(.meter-bar) {
+		flex-basis: 100%;
 	}
 	.usage-end {
 		flex: none;

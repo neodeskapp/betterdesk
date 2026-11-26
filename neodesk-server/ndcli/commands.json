@@ -9008,6 +9008,10 @@
    "reason": "Called by the NeoDesk app's chat window with its device token, not by people."
   },
   {
+   "route": "GET /api/chat/device/helper/picture",
+   "reason": "Called by the NeoDesk app's chat window with its device token, not by people."
+  },
+  {
    "route": "POST /api/chat/upload",
    "reason": "An upload for the web console's editor (pictures, fonts, chat files); use the console."
   },
@@ -9450,6 +9454,14 @@
   {
    "route": "PUT /api/strategies/{guid}/status",
    "reason": "The RustDesk client API: desktop clients call it with their own sign-in."
+  },
+  {
+   "route": "PUT /api/users/me/avatar",
+   "reason": "Your own profile picture: upload it in the console. API tokens cannot change their account's profile."
+  },
+  {
+   "route": "DELETE /api/users/me/avatar",
+   "reason": "Your own profile picture: remove it in the console. API tokens cannot change their account's profile."
   },
   {
    "route": "PUT /api/users/me/profile",

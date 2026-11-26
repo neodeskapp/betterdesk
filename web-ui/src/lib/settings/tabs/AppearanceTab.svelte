@@ -1019,8 +1019,10 @@
 		align-items: center;
 		gap: var(--space-2);
 	}
+	/* The select gives way first, so its buttons stay on its line on a phone */
 	.inline-controls > :global(.form-select) {
-		flex: 1 1 220px;
+		flex: 1 1 140px;
+		min-width: 0;
 		width: auto;
 	}
 	.color-legend {

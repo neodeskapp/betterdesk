@@ -205,6 +205,27 @@ describe('the invite page', () => {
 		expect(await screen.findByText('onboard.public.server_address')).toBeInTheDocument();
 	});
 
+	test('Open NeoDesk carries the join link for a NeoDesk that is already installed', async () => {
+		for (const agent of [WIN, LINUX, MAC]) {
+			ua = agent;
+			render(CodePage, { code: 'ABCD2345', kind: 'join' });
+			const open = await screen.findAllByRole('link', { name: 'onboard.public.open_app' });
+			expect(open).toHaveLength(1);
+			expect(open[0]).toHaveAttribute('href', 'neodesk://join/desk.example.com/ABCD2345');
+			cleanup();
+		}
+	});
+
+	test('a click on the code or the server address copies it', async () => {
+		const writeText = vi.fn().mockResolvedValue(undefined);
+		Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+		render(CodePage, { code: 'ABCD2345', kind: 'join' });
+		(await screen.findByText('https://desk.example.com')).click();
+		await waitFor(() => expect(writeText).toHaveBeenCalledWith('https://desk.example.com'));
+		screen.getByText('ABCD-2345').click();
+		await waitFor(() => expect(writeText).toHaveBeenCalledWith('ABCD-2345'));
+	});
+
 	test('a code that cannot be used shows one plain message', async () => {
 		answer = { status: 404, body: { success: false, error: 'invalid_or_expired' } };
 		render(CodePage, { code: 'ZZZZ2345', kind: 'join' });
