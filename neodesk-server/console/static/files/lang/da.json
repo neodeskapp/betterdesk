@@ -1591,7 +1591,9 @@
       "fact_tools": "Byggeværktøjer (Go)",
       "tools_system": "Installeret på serveren",
       "tools_console": "Hentet af konsollen",
-      "tools_missing": "Ikke installeret"
+      "tools_missing": "Ikke installeret",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "Vælg en fil for at se og redigere den. Hver gang du gemmer, beholdes en kopi af den forrige version.",

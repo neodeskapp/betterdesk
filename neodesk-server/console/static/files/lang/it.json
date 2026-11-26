@@ -1585,7 +1585,9 @@
       "fact_tools": "Strumenti di compilazione (Go)",
       "tools_system": "Installati sul server",
       "tools_console": "Scaricati dalla console",
-      "tools_missing": "Non installati"
+      "tools_missing": "Non installati",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "Scegliere un file per visualizzarlo e modificarlo. Ogni salvataggio conserva una copia della versione precedente.",

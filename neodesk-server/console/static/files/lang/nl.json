@@ -1585,7 +1585,9 @@
       "fact_tools": "Buildtools (Go)",
       "tools_system": "Geïnstalleerd op de server",
       "tools_console": "Gedownload door de console",
-      "tools_missing": "Niet geïnstalleerd"
+      "tools_missing": "Niet geïnstalleerd",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "Kies een bestand om het te bekijken en te bewerken. Bij elke keer opslaan wordt een kopie van de vorige versie bewaard.",
