@@ -191,7 +191,11 @@
     "forgot_back": "Torna all'accesso",
     "session_seconds_left": "Ancora {seconds} secondi",
     "session_end_warning_title": "La sessione sta per scadere",
-    "session_end_warning_body": "La sessione scade alle {time}. Salva ora il tuo lavoro, poi accedi di nuovo."
+    "session_end_warning_body": "La sessione scade alle {time}. Salva ora il tuo lavoro, poi accedi di nuovo.",
+    "enter_username": "Inserisci il tuo nome utente.",
+    "enter_password": "Inserisci la tua password.",
+    "hide_password": "Nascondi password",
+    "totp_sixth_digit": "L’accesso parte appena digiti la sesta cifra."
   },
   "dashboard": {
     "title": "Panoramica",

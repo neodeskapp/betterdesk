@@ -197,7 +197,11 @@
     "forgot_back": "Quay lại đăng nhập",
     "session_seconds_left": "Còn {seconds} giây",
     "session_end_warning_title": "Phiên của bạn sắp kết thúc",
-    "session_end_warning_body": "Phiên của bạn kết thúc lúc {time}. Hãy lưu công việc ngay, sau đó đăng nhập lại."
+    "session_end_warning_body": "Phiên của bạn kết thúc lúc {time}. Hãy lưu công việc ngay, sau đó đăng nhập lại.",
+    "enter_username": "Nhập tên người dùng của bạn.",
+    "enter_password": "Nhập mật khẩu của bạn.",
+    "hide_password": "Ẩn mật khẩu",
+    "totp_sixth_digit": "Đăng nhập ngay khi bạn nhập chữ số thứ sáu."
   },
   "dashboard": {
     "title": "Trang tổng quan",

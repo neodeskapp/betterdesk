@@ -191,7 +191,11 @@
     "forgot_back": "サインインに戻る",
     "session_seconds_left": "残り {seconds} 秒",
     "session_end_warning_title": "まもなくセッションが終了します",
-    "session_end_warning_body": "セッションは {time} に終了します。今のうちに作業を保存し、その後もう一度サインインしてください。"
+    "session_end_warning_body": "セッションは {time} に終了します。今のうちに作業を保存し、その後もう一度サインインしてください。",
+    "enter_username": "ユーザー名を入力してください。",
+    "enter_password": "パスワードを入力してください。",
+    "hide_password": "パスワードを隠す",
+    "totp_sixth_digit": "6 桁目を入力するとすぐにサインインします。"
   },
   "dashboard": {
     "title": "ダッシュボード",

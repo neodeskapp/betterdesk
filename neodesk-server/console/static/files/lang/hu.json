@@ -197,7 +197,11 @@
     "forgot_back": "Vissza a bejelentkezéshez",
     "session_seconds_left": "Még {seconds} másodperc",
     "session_end_warning_title": "A munkamenet hamarosan lejár",
-    "session_end_warning_body": "A munkamenet {time}-kor lejár. Most mentse a munkáját, majd jelentkezzen be újra."
+    "session_end_warning_body": "A munkamenet {time}-kor lejár. Most mentse a munkáját, majd jelentkezzen be újra.",
+    "enter_username": "Adja meg a felhasználónevét.",
+    "enter_password": "Adja meg a jelszavát.",
+    "hide_password": "Jelszó elrejtése",
+    "totp_sixth_digit": "A hatodik számjegy beírásakor azonnal bejelentkezik."
   },
   "dashboard": {
     "title": "Irányítópult",

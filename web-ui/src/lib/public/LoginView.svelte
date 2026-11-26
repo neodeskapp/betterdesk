@@ -153,7 +153,11 @@
 		const name = username.trim();
 		missing = !name ? 'username' : !password ? 'password' : null;
 		if (missing) {
-			error = compact ? t('desktop_login.fill_all_fields') : t('auth.fill_all_fields');
+			// Name the field that is empty (WCAG 3.3.3)
+			error =
+				missing === 'username'
+					? tf('auth.enter_username', 'Enter your username.')
+					: tf('auth.enter_password', 'Enter your password.');
 			(missing === 'username' ? usernameInput : passwordInput)?.focus();
 			return;
 		}
@@ -388,8 +392,7 @@
 									class="password-toggle"
 									size="sm"
 									variant="ghost"
-									aria-pressed={shown}
-									aria-label={t('auth.show_password')}
+									aria-label={shown ? tf('auth.hide_password', 'Hide password') : t('auth.show_password')}
 									aria-controls="password"
 									onclick={() => (shown = !shown)}
 									>{shown ? t('actions.hide_value') : t('actions.show_value')}</Button
@@ -422,7 +425,10 @@
 				<form class="login-form" novalidate onsubmit={submitSetup}>
 					<div class="totp-header">
 						<h2 class="totp-title">{t('auth.totp_setup_required_title')}</h2>
-						<p class="totp-subtitle" id="{uid}-setup-sub">{t('auth.totp_setup_required')}</p>
+						<p class="totp-subtitle" id="{uid}-setup-sub">
+							{t('auth.totp_setup_required')}
+							{tf('auth.totp_sixth_digit', 'Signs in as soon as you type the sixth digit.')}
+						</p>
 					</div>
 					{#if qrSrc}<img
 							src={qrSrc}
@@ -473,7 +479,10 @@
 				<form class="login-form" novalidate onsubmit={submitTotp}>
 					<div class="totp-header">
 						<h2 class="totp-title">{t('auth.totp_title')}</h2>
-						<p class="totp-subtitle" id="{uid}-totp-sub">{t('auth.totp_subtitle')}</p>
+						<p class="totp-subtitle" id="{uid}-totp-sub">
+							{t('auth.totp_subtitle')}
+							{tf('auth.totp_sixth_digit', 'Signs in as soon as you type the sixth digit.')}
+						</p>
 					</div>
 					{#if useRecovery}
 						<Field label={t('auth.totp_recovery_code')} id="recovery-code">

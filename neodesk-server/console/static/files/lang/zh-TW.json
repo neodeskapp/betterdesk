@@ -195,7 +195,11 @@
     "forgot_back": "返回登入",
     "session_seconds_left": "還剩 {seconds} 秒",
     "session_end_warning_title": "工作階段即將結束",
-    "session_end_warning_body": "工作階段將於 {time} 結束。請立即儲存你的工作，然後重新登入。"
+    "session_end_warning_body": "工作階段將於 {time} 結束。請立即儲存你的工作，然後重新登入。",
+    "enter_username": "請輸入使用者名稱。",
+    "enter_password": "請輸入密碼。",
+    "hide_password": "隱藏密碼",
+    "totp_sixth_digit": "輸入第六位數字後會立即登入。"
   },
   "dashboard": {
     "title": "儀表板",

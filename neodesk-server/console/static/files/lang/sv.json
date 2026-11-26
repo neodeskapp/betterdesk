@@ -197,7 +197,11 @@
     "forgot_back": "Tillbaka till inloggning",
     "session_seconds_left": "{seconds} sekunder kvar",
     "session_end_warning_title": "Din session tar snart slut",
-    "session_end_warning_body": "Din session tar slut kl. {time}. Spara ditt arbete nu och logga sedan in igen."
+    "session_end_warning_body": "Din session tar slut kl. {time}. Spara ditt arbete nu och logga sedan in igen.",
+    "enter_username": "Ange ditt användarnamn.",
+    "enter_password": "Ange ditt lösenord.",
+    "hide_password": "Dölj lösenord",
+    "totp_sixth_digit": "Du loggas in så fort du skriver den sjätte siffran."
   },
   "dashboard": {
     "title": "Instrumentbräda",

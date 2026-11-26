@@ -72,6 +72,9 @@ afterEach(() => {
 	document.body.className = '';
 });
 
+/** A field by its label; a required field's label also says "(required)" */
+const label = (text: string) => new RegExp('^' + text.replaceAll('.', '\\.'));
+
 const posted = (path: string) => sent.filter((s) => s.url.startsWith(path)).map((s) => s.body);
 
 describe('sign-in', () => {
@@ -80,8 +83,8 @@ describe('sign-in', () => {
 		reply('/api/auth/login', { body: { success: true, redirect: '/devices?open=7' } });
 		const go = vi.fn();
 		render(LoginView, { page: page(), query: readLoginQuery('?return=%2Fdevices%3Fopen%3D7'), go });
-		await userEvent.type(screen.getByLabelText('auth.username'), ' demo ');
-		await userEvent.type(screen.getByLabelText('auth.password'), 'secret');
+		await userEvent.type(screen.getByLabelText(label('auth.username')), ' demo ');
+		await userEvent.type(screen.getByLabelText(label('auth.password')), 'secret');
 		await userEvent.click(screen.getByRole('button', { name: 'auth.login' }));
 		await waitFor(() => expect(go).toHaveBeenCalledWith('/devices?open=7'));
 		const body = posted('/api/auth/login')[0]!;
@@ -99,8 +102,8 @@ describe('sign-in', () => {
 		reply('/api/auth/login', { body: { success: true, redirect: '//evil.example' } });
 		const go = vi.fn();
 		render(LoginView, { page: page(), query: readLoginQuery(''), go });
-		await userEvent.type(screen.getByLabelText('auth.username'), 'demo');
-		await userEvent.type(screen.getByLabelText('auth.password'), 'secret{Enter}');
+		await userEvent.type(screen.getByLabelText(label('auth.username')), 'demo');
+		await userEvent.type(screen.getByLabelText(label('auth.password')), 'secret{Enter}');
 		await waitFor(() => expect(go).toHaveBeenCalledWith('/'));
 	});
 
@@ -108,9 +111,13 @@ describe('sign-in', () => {
 		reply('/api/auth/oidc/status', { body: { enabled: false } });
 		render(LoginView, { page: page(), query: readLoginQuery(''), go: vi.fn() });
 		await userEvent.click(screen.getByRole('button', { name: 'auth.login' }));
-		expect(screen.getByRole('alert')).toHaveTextContent('auth.fill_all_fields');
-		expect(screen.getByLabelText('auth.username')).toHaveAttribute('aria-invalid', 'true');
-		expect(screen.getByLabelText('auth.username')).toHaveFocus();
+		// The message names the field that is empty
+		expect(screen.getByRole('alert')).toHaveTextContent('Enter your username.');
+		expect(screen.getByLabelText(label('auth.username'))).toHaveAttribute('aria-invalid', 'true');
+		expect(screen.getByLabelText(label('auth.username'))).toHaveFocus();
+		await userEvent.type(screen.getByLabelText(label('auth.username')), 'demo{Enter}');
+		expect(screen.getByRole('alert')).toHaveTextContent('Enter your password.');
+		expect(screen.getByLabelText(label('auth.password'))).toHaveFocus();
 		expect(posted('/api/auth/login')).toHaveLength(0);
 	});
 
@@ -122,11 +129,11 @@ describe('sign-in', () => {
 		});
 		const go = vi.fn();
 		render(LoginView, { page: page(), query: readLoginQuery(''), go });
-		await userEvent.type(screen.getByLabelText('auth.username'), 'demo');
-		await userEvent.type(screen.getByLabelText('auth.password'), 'wrong');
+		await userEvent.type(screen.getByLabelText(label('auth.username')), 'demo');
+		await userEvent.type(screen.getByLabelText(label('auth.password')), 'wrong');
 		await userEvent.click(screen.getByRole('button', { name: 'auth.login' }));
 		expect(await screen.findByRole('alert')).toHaveTextContent('Invalid username or password.');
-		await waitFor(() => expect(screen.getByLabelText('auth.password')).toHaveFocus());
+		await waitFor(() => expect(screen.getByLabelText(label('auth.password'))).toHaveFocus());
 		expect(go).not.toHaveBeenCalled();
 	});
 
@@ -137,18 +144,20 @@ describe('sign-in', () => {
 		reply('/api/auth/totp/verify', { body: { success: true, redirect: '/tickets' } });
 		const go = vi.fn();
 		render(LoginView, { page: page(), query: readLoginQuery('?return=%2Ftickets'), go });
-		await userEvent.type(screen.getByLabelText('auth.username'), 'demo');
-		await userEvent.type(screen.getByLabelText('auth.password'), 'secret{Enter}');
-		const code = await screen.findByLabelText('auth.totp_code');
+		await userEvent.type(screen.getByLabelText(label('auth.username')), 'demo');
+		await userEvent.type(screen.getByLabelText(label('auth.password')), 'secret{Enter}');
+		const code = await screen.findByLabelText(label('auth.totp_code'));
 		await waitFor(() => expect(code).toHaveFocus());
+		// It says ahead that the sixth digit signs in
+		expect(code).toHaveAccessibleDescription(/Signs in as soon as you type the sixth digit/);
 		await userEvent.type(code, '12a345');
 		// Five digits: nothing sent yet
 		expect(posted('/api/auth/totp/verify')).toHaveLength(0);
 		await userEvent.type(code, '6');
 		expect(await screen.findByRole('alert')).toHaveTextContent('Invalid code.');
 		expect(posted('/api/auth/totp/verify')[0]).toMatchObject({ code: '123456', return: '/tickets' });
-		await waitFor(() => expect(screen.getByLabelText('auth.totp_code')).toHaveValue(''));
-		await userEvent.type(screen.getByLabelText('auth.totp_code'), '654321');
+		await waitFor(() => expect(screen.getByLabelText(label('auth.totp_code'))).toHaveValue(''));
+		await userEvent.type(screen.getByLabelText(label('auth.totp_code')), '654321');
 		await waitFor(() => expect(go).toHaveBeenCalledWith('/tickets'));
 	});
 
@@ -158,10 +167,10 @@ describe('sign-in', () => {
 		reply('/api/auth/totp/verify', { body: { success: true } });
 		const go = vi.fn();
 		render(LoginView, { page: page(), query: readLoginQuery(''), go });
-		await userEvent.type(screen.getByLabelText('auth.username'), 'demo');
-		await userEvent.type(screen.getByLabelText('auth.password'), 'secret{Enter}');
+		await userEvent.type(screen.getByLabelText(label('auth.username')), 'demo');
+		await userEvent.type(screen.getByLabelText(label('auth.password')), 'secret{Enter}');
 		await userEvent.click(await screen.findByRole('button', { name: 'auth.totp_use_recovery' }));
-		const rc = screen.getByLabelText('auth.totp_recovery_code');
+		const rc = screen.getByLabelText(label('auth.totp_recovery_code'));
 		expect(rc).toHaveFocus();
 		await userEvent.click(screen.getByRole('button', { name: 'auth.totp_verify' }));
 		expect(screen.getByRole('alert')).toHaveTextContent('auth.totp_enter_recovery');
@@ -174,20 +183,29 @@ describe('sign-in', () => {
 		reply('/api/auth/oidc/status', { body: { enabled: false } });
 		reply('/api/auth/login', { body: { success: true, totpRequired: true } });
 		render(LoginView, { page: page(), query: readLoginQuery(''), go: vi.fn() });
-		await userEvent.type(screen.getByLabelText('auth.username'), 'demo');
-		await userEvent.type(screen.getByLabelText('auth.password'), 'secret{Enter}');
+		await userEvent.type(screen.getByLabelText(label('auth.username')), 'demo');
+		await userEvent.type(screen.getByLabelText(label('auth.password')), 'secret{Enter}');
 		await userEvent.click(await screen.findByRole('button', { name: 'auth.totp_back_to_login' }));
-		await waitFor(() => expect(screen.getByLabelText('auth.password')).toHaveFocus());
+		await waitFor(() => expect(screen.getByLabelText(label('auth.password'))).toHaveFocus());
 	});
 
-	test('Show reveals the password and says so', async () => {
+	test('Show reveals the password; the name follows the visible word (voice control)', async () => {
 		reply('/api/auth/oidc/status', { body: { enabled: false } });
+		setStrings('en', 'ltr', {
+			auth: { show_password: 'Show password', password: 'Password' },
+			actions: { show_value: 'Show', hide_value: 'Hide' }
+		} as never);
 		render(LoginView, { page: page(), query: readLoginQuery(''), go: vi.fn() });
-		const toggle = screen.getByRole('button', { name: 'auth.show_password' });
-		expect(screen.getByLabelText('auth.password')).toHaveAttribute('type', 'password');
+		const toggle = screen.getByRole('button', { name: 'Show password' });
+		expect(toggle).toHaveTextContent(/^Show$/);
+		expect(screen.getByLabelText(label('Password'))).toHaveAttribute('type', 'password');
 		await userEvent.click(toggle);
-		expect(toggle).toHaveAttribute('aria-pressed', 'true');
-		expect(screen.getByLabelText('auth.password')).toHaveAttribute('type', 'text');
+		expect(screen.getByLabelText(label('Password'))).toHaveAttribute('type', 'text');
+		// "Hide" on the button, "Hide password" as its name: not "Show password, pressed"
+		expect(toggle).toHaveTextContent(/^Hide$/);
+		expect(toggle).toHaveAccessibleName('Hide password');
+		expect(toggle).not.toHaveAttribute('aria-pressed');
+		setStrings('en', 'ltr', {});
 	});
 });
 
@@ -204,7 +222,7 @@ describe('single sign-on', () => {
 		const go = vi.fn();
 		render(LoginView, { page: page(), query: readLoginQuery('?return=%2Fchat'), go });
 		await waitFor(() => expect(go).toHaveBeenCalledWith('/api/auth/oidc/authorize?return_url=%2Fchat', true));
-		expect(screen.queryByLabelText('auth.password')).toBeNull();
+		expect(screen.queryByLabelText(label('auth.password'))).toBeNull();
 	});
 
 	test('?autoLaunch=0 keeps the password form', async () => {
@@ -213,7 +231,7 @@ describe('single sign-on', () => {
 		render(LoginView, { page: page(), query: readLoginQuery('?autoLaunch=0'), go });
 		await screen.findByRole('link', { name: 'auth.login_sso' });
 		expect(go).not.toHaveBeenCalled();
-		expect(screen.getByLabelText('auth.password')).toBeInTheDocument();
+		expect(screen.getByLabelText(label('auth.password'))).toBeInTheDocument();
 	});
 
 	test('?error=oidc_* shows the error and does not start again', async () => {
@@ -310,7 +328,7 @@ describe('notices, branding and the compact sign-in', () => {
 			query: readLoginQuery('?desktop=1'),
 			go
 		});
-		expect(screen.queryByLabelText('auth.remember_me')).toBeNull();
+		expect(screen.queryByLabelText(label('auth.remember_me'))).toBeNull();
 		expect(screen.queryByRole('link', { name: /auth.login_sso/ })).toBeNull();
 		expect(document.querySelector('.login-promo')).toBeNull();
 		expect(screen.queryByText('desktop_login.accounts_title')).toBeNull();
@@ -321,7 +339,7 @@ describe('notices, branding and the compact sign-in', () => {
 
 	test('the old desktop-mode cookie (desktopMode) also gives the compact sign-in', () => {
 		render(LoginView, { page: page({ desktopMode: true }), query: readLoginQuery(''), go: vi.fn() });
-		expect(screen.queryByLabelText('auth.remember_me')).toBeNull();
+		expect(screen.queryByLabelText(label('auth.remember_me'))).toBeNull();
 	});
 
 	test('the capacity badge shows the tier after a test', () => {

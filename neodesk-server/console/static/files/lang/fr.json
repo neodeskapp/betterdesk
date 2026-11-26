@@ -195,7 +195,11 @@
     "forgot_back": "Retour à la connexion",
     "session_seconds_left": "Encore {seconds} secondes",
     "session_end_warning_title": "Votre session se termine bientôt",
-    "session_end_warning_body": "Votre session se termine à {time}. Enregistrez votre travail maintenant, puis reconnectez-vous."
+    "session_end_warning_body": "Votre session se termine à {time}. Enregistrez votre travail maintenant, puis reconnectez-vous.",
+    "enter_username": "Saisissez votre nom d’utilisateur.",
+    "enter_password": "Saisissez votre mot de passe.",
+    "hide_password": "Masquer le mot de passe",
+    "totp_sixth_digit": "La connexion se fait dès que vous saisissez le sixième chiffre."
   },
   "dashboard": {
     "title": "Tableau de bord",

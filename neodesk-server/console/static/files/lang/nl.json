@@ -191,7 +191,11 @@
     "forgot_back": "Terug naar inloggen",
     "session_seconds_left": "Nog {seconds} seconden",
     "session_end_warning_title": "Je sessie loopt bijna af",
-    "session_end_warning_body": "Je sessie loopt af om {time}. Sla je werk nu op en meld je daarna opnieuw aan."
+    "session_end_warning_body": "Je sessie loopt af om {time}. Sla je werk nu op en meld je daarna opnieuw aan.",
+    "enter_username": "Voer je gebruikersnaam in.",
+    "enter_password": "Voer je wachtwoord in.",
+    "hide_password": "Wachtwoord verbergen",
+    "totp_sixth_digit": "Je wordt aangemeld zodra je het zesde cijfer typt."
   },
   "dashboard": {
     "title": "Overzicht",

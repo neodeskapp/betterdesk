@@ -197,7 +197,11 @@
     "forgot_back": "Oturum açmaya dön",
     "session_seconds_left": "{seconds} saniye kaldı",
     "session_end_warning_title": "Oturumunuz yakında sona erecek",
-    "session_end_warning_body": "Oturumunuz {time} saatinde sona erecek. Çalışmanızı şimdi kaydedin, sonra yeniden oturum açın."
+    "session_end_warning_body": "Oturumunuz {time} saatinde sona erecek. Çalışmanızı şimdi kaydedin, sonra yeniden oturum açın.",
+    "enter_username": "Kullanıcı adınızı girin.",
+    "enter_password": "Parolanızı girin.",
+    "hide_password": "Parolayı gizle",
+    "totp_sixth_digit": "Altıncı rakamı yazdığınız anda oturum açılır."
   },
   "dashboard": {
     "title": "Kontrol Paneli",

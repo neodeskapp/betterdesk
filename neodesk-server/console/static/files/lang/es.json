@@ -191,7 +191,11 @@
     "forgot_back": "Volver al inicio de sesión",
     "session_seconds_left": "Quedan {seconds} segundos",
     "session_end_warning_title": "Tu sesión termina pronto",
-    "session_end_warning_body": "Tu sesión termina a las {time}. Guarda tu trabajo ahora y luego vuelve a iniciar sesión."
+    "session_end_warning_body": "Tu sesión termina a las {time}. Guarda tu trabajo ahora y luego vuelve a iniciar sesión.",
+    "enter_username": "Introduce tu nombre de usuario.",
+    "enter_password": "Introduce tu contraseña.",
+    "hide_password": "Ocultar contraseña",
+    "totp_sixth_digit": "Inicia sesión en cuanto escribes el sexto dígito."
   },
   "dashboard": {
     "title": "Panel",

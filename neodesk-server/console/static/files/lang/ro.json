@@ -197,7 +197,11 @@
     "forgot_back": "Înapoi la autentificare",
     "session_seconds_left": "Mai sunt {seconds} secunde",
     "session_end_warning_title": "Sesiunea se încheie în curând",
-    "session_end_warning_body": "Sesiunea se încheie la {time}. Salvează-ți acum munca, apoi conectează-te din nou."
+    "session_end_warning_body": "Sesiunea se încheie la {time}. Salvează-ți acum munca, apoi conectează-te din nou.",
+    "enter_username": "Introdu numele de utilizator.",
+    "enter_password": "Introdu parola.",
+    "hide_password": "Ascunde parola",
+    "totp_sixth_digit": "Conectarea pornește imediat ce tastezi a șasea cifră."
   },
   "dashboard": {
     "title": "Tabloul de bord",

@@ -191,7 +191,11 @@
     "forgot_back": "Powrót do logowania",
     "session_seconds_left": "Pozostało {seconds} s",
     "session_end_warning_title": "Sesja wkrótce się zakończy",
-    "session_end_warning_body": "Sesja zakończy się o {time}. Zapisz teraz swoją pracę, a potem zaloguj się ponownie."
+    "session_end_warning_body": "Sesja zakończy się o {time}. Zapisz teraz swoją pracę, a potem zaloguj się ponownie.",
+    "enter_username": "Wpisz nazwę użytkownika.",
+    "enter_password": "Wpisz hasło.",
+    "hide_password": "Ukryj hasło",
+    "totp_sixth_digit": "Logowanie nastąpi zaraz po wpisaniu szóstej cyfry."
   },
   "dashboard": {
     "title": "Panel",

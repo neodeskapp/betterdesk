@@ -198,7 +198,11 @@
     "forgot_back": "العودة لتسجيل الدخول",
     "session_seconds_left": "متبقٍ {seconds} ثانية",
     "session_end_warning_title": "ستنتهي جلستك قريبًا",
-    "session_end_warning_body": "تنتهي جلستك في {time}. احفظ عملك الآن، ثم سجّل الدخول مرة أخرى."
+    "session_end_warning_body": "تنتهي جلستك في {time}. احفظ عملك الآن، ثم سجّل الدخول مرة أخرى.",
+    "enter_username": "أدخل اسم المستخدم.",
+    "enter_password": "أدخل كلمة المرور.",
+    "hide_password": "إخفاء كلمة المرور",
+    "totp_sixth_digit": "يتم تسجيل الدخول فور كتابة الرقم السادس."
   },
   "dashboard": {
     "title": "لوحة القيادة",

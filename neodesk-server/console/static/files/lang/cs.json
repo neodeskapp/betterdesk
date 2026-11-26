@@ -191,7 +191,11 @@
     "forgot_back": "Zpět na přihlášení",
     "session_seconds_left": "Zbývá {seconds} s",
     "session_end_warning_title": "Vaše relace brzy skončí",
-    "session_end_warning_body": "Vaše relace skončí v {time}. Uložte si teď práci a pak se znovu přihlaste."
+    "session_end_warning_body": "Vaše relace skončí v {time}. Uložte si teď práci a pak se znovu přihlaste.",
+    "enter_username": "Zadejte uživatelské jméno.",
+    "enter_password": "Zadejte heslo.",
+    "hide_password": "Skrýt heslo",
+    "totp_sixth_digit": "Přihlášení proběhne hned po zadání šesté číslice."
   },
   "dashboard": {
     "title": "Nástěnka",

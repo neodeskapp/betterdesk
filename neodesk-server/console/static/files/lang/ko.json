@@ -191,7 +191,11 @@
     "forgot_back": "로그인으로 돌아가기",
     "session_seconds_left": "{seconds}초 남음",
     "session_end_warning_title": "곧 세션이 종료됩니다",
-    "session_end_warning_body": "세션이 {time}에 종료됩니다. 지금 작업을 저장한 다음 다시 로그인하세요."
+    "session_end_warning_body": "세션이 {time}에 종료됩니다. 지금 작업을 저장한 다음 다시 로그인하세요.",
+    "enter_username": "사용자 이름을 입력하세요.",
+    "enter_password": "비밀번호를 입력하세요.",
+    "hide_password": "비밀번호 숨기기",
+    "totp_sixth_digit": "여섯 번째 숫자를 입력하면 바로 로그인됩니다."
   },
   "dashboard": {
     "title": "대시보드",

@@ -197,7 +197,11 @@
     "forgot_back": "साइन इन पर वापस जाएँ",
     "session_seconds_left": "{seconds} सेकंड बाकी",
     "session_end_warning_title": "आपका सत्र जल्द समाप्त होगा",
-    "session_end_warning_body": "आपका सत्र {time} पर समाप्त होगा। अभी अपना काम सहेजें, फिर दोबारा साइन इन करें।"
+    "session_end_warning_body": "आपका सत्र {time} पर समाप्त होगा। अभी अपना काम सहेजें, फिर दोबारा साइन इन करें।",
+    "enter_username": "अपना उपयोगकर्ता नाम दर्ज करें।",
+    "enter_password": "अपना पासवर्ड दर्ज करें।",
+    "hide_password": "पासवर्ड छिपाएँ",
+    "totp_sixth_digit": "छठा अंक लिखते ही साइन इन हो जाता है।"
   },
   "dashboard": {
     "title": "डैशबोर्ड",

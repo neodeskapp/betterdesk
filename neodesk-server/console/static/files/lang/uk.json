@@ -197,7 +197,11 @@
     "forgot_back": "Назад до входу",
     "session_seconds_left": "Залишилось {seconds} с",
     "session_end_warning_title": "Сеанс скоро завершиться",
-    "session_end_warning_body": "Сеанс завершиться о {time}. Збережіть роботу зараз, а потім увійдіть знову."
+    "session_end_warning_body": "Сеанс завершиться о {time}. Збережіть роботу зараз, а потім увійдіть знову.",
+    "enter_username": "Введіть ім’я користувача.",
+    "enter_password": "Введіть пароль.",
+    "hide_password": "Сховати пароль",
+    "totp_sixth_digit": "Вхід відбудеться одразу після введення шостої цифри."
   },
   "dashboard": {
     "title": "Приладова панель",

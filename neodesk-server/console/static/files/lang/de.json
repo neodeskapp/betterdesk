@@ -191,7 +191,11 @@
     "forgot_back": "Zurück zur Anmeldung",
     "session_seconds_left": "Noch {seconds} Sekunden",
     "session_end_warning_title": "Deine Sitzung endet bald",
-    "session_end_warning_body": "Deine Sitzung endet um {time}. Speichere jetzt deine Arbeit und melde dich danach neu an."
+    "session_end_warning_body": "Deine Sitzung endet um {time}. Speichere jetzt deine Arbeit und melde dich danach neu an.",
+    "enter_username": "Gib deinen Benutzernamen ein.",
+    "enter_password": "Gib dein Passwort ein.",
+    "hide_password": "Passwort verbergen",
+    "totp_sixth_digit": "Die Anmeldung startet, sobald du die sechste Ziffer eingibst."
   },
   "dashboard": {
     "title": "Übersicht",

@@ -199,7 +199,11 @@
         "forgot_back": "Back to sign-in",
         "session_seconds_left": "{seconds} seconds left",
         "session_end_warning_title": "Your session ends soon",
-        "session_end_warning_body": "Your session ends at {time}. Save your work now, then sign in again."
+        "session_end_warning_body": "Your session ends at {time}. Save your work now, then sign in again.",
+        "enter_username": "Enter your username.",
+        "enter_password": "Enter your password.",
+        "hide_password": "Hide password",
+        "totp_sixth_digit": "Signs in as soon as you type the sixth digit."
     },
     "dashboard": {
         "title": "Dashboard",

@@ -197,7 +197,11 @@
     "forgot_back": "Tilbage til login",
     "session_seconds_left": "{seconds} sekunder tilbage",
     "session_end_warning_title": "Din session slutter snart",
-    "session_end_warning_body": "Din session slutter kl. {time}. Gem dit arbejde nu, og log derefter ind igen."
+    "session_end_warning_body": "Din session slutter kl. {time}. Gem dit arbejde nu, og log derefter ind igen.",
+    "enter_username": "Angiv dit brugernavn.",
+    "enter_password": "Angiv din adgangskode.",
+    "hide_password": "Skjul adgangskode",
+    "totp_sixth_digit": "Du logges ind, så snart du skriver det sjette ciffer."
   },
   "dashboard": {
     "title": "Oversigt",

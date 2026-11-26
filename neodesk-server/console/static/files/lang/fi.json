@@ -197,7 +197,11 @@
     "forgot_back": "Takaisin kirjautumiseen",
     "session_seconds_left": "{seconds} sekuntia jäljellä",
     "session_end_warning_title": "Istuntosi päättyy pian",
-    "session_end_warning_body": "Istuntosi päättyy klo {time}. Tallenna työsi nyt ja kirjaudu sitten uudelleen."
+    "session_end_warning_body": "Istuntosi päättyy klo {time}. Tallenna työsi nyt ja kirjaudu sitten uudelleen.",
+    "enter_username": "Anna käyttäjätunnuksesi.",
+    "enter_password": "Anna salasanasi.",
+    "hide_password": "Piilota salasana",
+    "totp_sixth_digit": "Kirjautuminen alkaa heti, kun kirjoitat kuudennen numeron."
   },
   "dashboard": {
     "title": "Kojelauta",
