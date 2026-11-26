@@ -119,7 +119,8 @@ test('one account on two browsers: both stay signed in, and each can be signed o
 		// The second browser goes to the sign-in page at its next page and is
 		// told why, also when a poll or a closed socket noticed first
 		await openAPage(second.page);
-		await expect(second.page.getByRole('status')).toHaveText(
+		// The notice's text, without its tone icon
+		await expect(second.page.getByRole('status').locator('.notice-body')).toHaveText(
 			'You were signed out from another device. Please sign in again.'
 		);
 		expect(await stillSignedIn(second.context)).toBe(false);
@@ -135,7 +136,9 @@ test('one account on two browsers: both stay signed in, and each can be signed o
 		await expect(userSheet.getByText(`${username} is not signed in anywhere.`)).toBeVisible();
 
 		await openAPage(a);
-		await expect(a.getByRole('status')).toHaveText('An administrator signed you out. Please sign in again.');
+		await expect(a.getByRole('status').locator('.notice-body')).toHaveText(
+			'An administrator signed you out. Please sign in again.'
+		);
 	} finally {
 		await first.context.close();
 		await second.context.close();
