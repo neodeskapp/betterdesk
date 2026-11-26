@@ -140,8 +140,8 @@
 						<output id={f.id} aria-describedby={f.describedby} class={['state', p.set && 'is-set']}
 							>{policyState(p.set, p.count)}</output
 						>
+						{#if p.set}{@render storedValue(p.raw)}{/if}
 					{/snippet}
-					{#if p.set}{@render storedValue(p.raw)}{/if}
 				</SettingRow>
 			{/each}
 		</SettingsGroup>
