@@ -629,7 +629,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=cb8a64ff1a435b78"
+      "stringsUrl": "/api/console/strings/en?v=76507040afddf7ee"
      },
      "nav": [
       {
@@ -1486,7 +1486,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=cb8a64ff1a435b78"
+      "stringsUrl": "/api/console/strings/en?v=76507040afddf7ee"
      },
      "nav": [
       {
@@ -2071,6 +2071,7 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
+      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",
