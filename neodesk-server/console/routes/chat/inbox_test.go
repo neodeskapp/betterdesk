@@ -26,6 +26,15 @@ type inboxWorld struct {
 	handler http.Handler
 	// audits are the audit entries the routes wrote: action and details
 	audits []string
+	// auditLog are the same entries with the account that wrote them
+	auditLog []auditEntry
+}
+
+// auditEntry is one audit entry the routes wrote.
+type auditEntry struct {
+	by      int64
+	action  string
+	details map[string]any
 }
 
 func newInboxWorld(t *testing.T, db *store.DB) *inboxWorld {
@@ -39,9 +48,10 @@ func newInboxWorld(t *testing.T, db *store.DB) *inboxWorld {
 	w := &inboxWorld{t: t, db: db, st: st}
 	hub := NewHub(HubOptions{Store: st, Scope: scope, IsAdmin: func(role string) bool { return role == "admin" },
 		Holds: func(_ context.Context, role, p string) (bool, error) { return p != permAssign || role != "viewer", nil },
-		Audit: func(_ context.Context, _ int64, action string, details map[string]any) {
+		Audit: func(_ context.Context, by int64, action string, details map[string]any) {
 			b, _ := json.Marshal(details)
 			w.audits = append(w.audits, action+" "+string(b))
+			w.auditLog = append(w.auditLog, auditEntry{by: by, action: action, details: details})
 		}})
 	d := &kit.Deps{Router: kit.NewRouter(), Store: db, Chat: st}
 	registerInbox(d, hub).user = testUser

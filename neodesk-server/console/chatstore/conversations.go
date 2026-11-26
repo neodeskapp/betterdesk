@@ -21,6 +21,8 @@ const (
 	ConvDirect = "dm"
 	// ConvGroup is a group of console accounts: "group:<id>".
 	ConvGroup = "group"
+	// ConvTeam is a team that managers set up: "team:<id>" (teams.go).
+	ConvTeam = "team"
 	// ConvLegacy is a conversation of version 1 that is no device's:
 	// "operator", "operator:<name>", "panel". The inbox doesn't list them.
 	ConvLegacy = "legacy"
@@ -47,6 +49,8 @@ func KindOf(id string) string {
 		return ConvDirect
 	case strings.HasPrefix(id, "group:"):
 		return ConvGroup
+	case strings.HasPrefix(id, "team:"):
+		return ConvTeam
 	case id == "" || id == "operator" || id == "panel" || id == "default" || strings.HasPrefix(id, "operator:"):
 		return ConvLegacy
 	}
@@ -323,7 +327,7 @@ func (s *Store) Conversation(ctx context.Context, id string) (Conversation, erro
 			return Conversation{}, ErrNotFound
 		}
 	}
-	if kind == ConvGroup || kind == ConvOld {
+	if kind == ConvGroup || kind == ConvTeam || kind == ConvOld {
 		c, err := scanConversation(s.db.QueryRow(ctx, convSelect+` WHERE id = ?`, id))
 		if errors.Is(err, sql.ErrNoRows) {
 			return c, ErrNotFound
@@ -342,8 +346,8 @@ type Filter struct {
 	// Assignee lists the conversations assigned to the account, -1 the
 	// unassigned ones, 0 any
 	Assignee int64
-	// Member lists the direct and group conversations of the account
-	// (0: of anyone)
+	// Member lists the direct, group and team conversations of the
+	// account (0: of anyone)
 	Member int64
 	// WithMessages leaves out conversations without a message
 	WithMessages bool
@@ -378,8 +382,8 @@ func (s *Store) List(ctx context.Context, f Filter) ([]Conversation, error) {
 		where = append(where, "assignee_id IS NULL")
 	}
 	if f.Member > 0 {
-		where = append(where, "(kind = 'support' OR id IN (SELECT conversation_id FROM chat_members WHERE account_id = ?))")
-		args = append(args, f.Member)
+		where = append(where, "(kind = 'support' OR "+memberOf+")")
+		args = append(args, f.Member, f.Member)
 	}
 	if f.WithMessages {
 		where = append(where, "last_message_id > 0")
@@ -568,9 +572,10 @@ func (s *Store) addMembers(ctx context.Context, id string, members []int64) erro
 	return nil
 }
 
-// Members are the accounts of a direct or group conversation.
+// Members are the accounts of a direct, group or team conversation; a
+// team's include the members of its user groups.
 func (s *Store) Members(ctx context.Context, id string) ([]int64, error) {
-	rows, err := s.db.Query(ctx, `SELECT account_id FROM chat_members WHERE conversation_id = ? ORDER BY account_id`, id)
+	rows, err := s.db.Query(ctx, memberSelect+` ORDER BY 1`, id, id)
 	if err != nil {
 		return nil, fmt.Errorf("chat: members of %s: %w", id, err)
 	}
@@ -586,13 +591,13 @@ func (s *Store) Members(ctx context.Context, id string) ([]int64, error) {
 	return out, rows.Err()
 }
 
-// IsMember reports whether an account is in a direct or group
+// IsMember reports whether an account is in a direct, group or team
 // conversation.
 func (s *Store) IsMember(ctx context.Context, id string, account int64) (bool, error) {
 	if a, b, ok := DirectPeople(id); ok {
 		return account == a || account == b, nil
 	}
 	var n int
-	err := s.db.QueryRow(ctx, `SELECT COUNT(*) FROM chat_members WHERE conversation_id = ? AND account_id = ?`, id, account).Scan(&n)
+	err := s.db.QueryRow(ctx, `SELECT COUNT(*) FROM (`+memberSelect+`) m WHERE m.account_id = ?`, id, id, account).Scan(&n)
 	return n > 0, err
 }

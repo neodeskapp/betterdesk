@@ -149,7 +149,7 @@ func mayDownload(ctx context.Context, dir string, scope Scope, user *session.Use
 	private := false
 	for _, conversation := range links.conversations {
 		switch chatstore.KindOf(conversation) {
-		case chatstore.ConvDirect, chatstore.ConvGroup:
+		case chatstore.ConvDirect, chatstore.ConvGroup, chatstore.ConvTeam:
 			if members == nil {
 				return true, nil
 			}

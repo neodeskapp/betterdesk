@@ -296,7 +296,7 @@ func TestBootstrap(t *testing.T) {
 		}
 
 		admin := decode(t, w.As("admin").Do("GET", "/api/console/bootstrap", "").Body)
-		if admin["isSuperAdmin"] != true || len(admin["permissions"].([]any)) != 50 {
+		if admin["isSuperAdmin"] != true || len(admin["permissions"].([]any)) != 51 {
 			t.Errorf("admin: isSuperAdmin %v, %d permissions", admin["isSuperAdmin"], len(admin["permissions"].([]any)))
 		}
 	})
