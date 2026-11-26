@@ -143,7 +143,6 @@
 						<Input
 							{...f}
 							type="email"
-							width="host"
 							autocomplete="email"
 							spellcheck="false"
 							bind:value={form.values.email}
