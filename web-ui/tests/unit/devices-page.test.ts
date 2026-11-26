@@ -3,7 +3,7 @@
  * pushes and a reload every 60 s), so the head offers no Sync status
  * button, and opening the page asks nothing of POST /api/sync-status.
  */
-import { cleanup, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -18,6 +18,7 @@ import { dismissAll } from '../../src/lib/ui/toasts.svelte.ts';
 import { setLivePaused } from '../../src/lib/state/live-updates.svelte.ts';
 
 let requests: string[] = [];
+let devices: object[] = [];
 
 class QuietSocket extends EventTarget {
 	static last: QuietSocket | null = null;
@@ -33,11 +34,12 @@ class QuietSocket extends EventTarget {
 
 beforeEach(() => {
 	requests = [];
+	devices = [];
 	vi.stubGlobal('WebSocket', QuietSocket);
 	vi.stubGlobal('fetch', async (input: string, init: RequestInit = {}) => {
 		const url = new URL(input, location.origin);
 		requests.push(`${init.method ?? 'GET'} ${url.pathname}`);
-		const data = url.pathname === '/api/devices' ? { success: true, devices: [] } : { success: true };
+		const data = url.pathname === '/api/devices' ? { success: true, data: { devices } } : { success: true };
 		return new Response(JSON.stringify(data), {
 			status: 200,
 			headers: { 'Content-Type': 'application/json' }
@@ -98,5 +100,54 @@ describe('Pause live updates', () => {
 		expect(screen.queryByRole('button', { name: 'common.refresh' })).toBeNull();
 		push({ type: 'device_id_changed', old_id: 'a', new_id: 'z' });
 		await vi.waitFor(() => expect(listLoads()).toBe(2));
+	});
+});
+
+describe('device row menu', () => {
+	beforeEach(() => {
+		// jsdom lays nothing out: the menu's box is where its style puts it,
+		// so the correction for transformed ancestors finds nothing to correct
+		const real = HTMLElement.prototype.getBoundingClientRect;
+		vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+			if (!this.matches('[role="menu"]')) return real.call(this);
+			const x = parseFloat(this.style.left) || 0;
+			const y = parseFloat(this.style.top) || 0;
+			return new DOMRect(x, y, 0, 0);
+		});
+	});
+	afterEach(() => vi.restoreAllMocks());
+
+	async function row() {
+		devices = [{ id: '987654321', hostname: 'desk-1', online: true, tags: [] }];
+		render(Page, early());
+		const cell = await screen.findByText('987654321');
+		const tr = cell.closest('tr');
+		if (!tr) throw new Error('no row');
+		return tr;
+	}
+
+	test('a right-click opens the menu where the pointer is', async () => {
+		const tr = await row();
+		await fireEvent.contextMenu(tr, { clientX: 300, clientY: 200 });
+		const menu = await screen.findByRole('menu');
+		expect(menu.style.left).toBe('300px');
+		expect(menu.style.top).toBe('200px');
+		// A right-click elsewhere in the row moves it
+		await fireEvent.pointerDown(document.body);
+		await fireEvent.contextMenu(tr, { clientX: 420, clientY: 260 });
+		const moved = await screen.findByRole('menu');
+		expect(moved.style.left).toBe('420px');
+		expect(moved.style.top).toBe('260px');
+	});
+
+	test('the menu button still opens it below the button', async () => {
+		const tr = await row();
+		await fireEvent.contextMenu(tr, { clientX: 300, clientY: 200 });
+		await fireEvent.pointerDown(document.body);
+		expect(screen.queryByRole('menu')).toBeNull();
+		await userEvent.click(screen.getByRole('button', { name: /devices\.actions/ }));
+		const menu = await screen.findByRole('menu');
+		expect(menu.style.left).not.toBe('300px');
+		expect(menu.style.top).not.toBe('200px');
 	});
 });

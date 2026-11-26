@@ -394,6 +394,8 @@
 
 	/** The row whose menu is open (also opened by a right-click on the row) */
 	let rowMenuFor = $state<string | null>(null);
+	/** Where the right-click was, so the menu opens there; null: below the row's menu button */
+	let rowMenuAt = $state<{ x: number; y: number } | null>(null);
 
 	function rowClass(d: Device) {
 		return [
@@ -410,7 +412,16 @@
 		const tr = el.closest<HTMLElement>('tr[data-key]');
 		if (!tr?.dataset.key) return;
 		e.preventDefault();
+		// The context-menu key can report no position: fall back to the menu button
+		rowMenuAt = e.clientX || e.clientY ? { x: e.clientX, y: e.clientY } : null;
 		rowMenuFor = tr.dataset.key;
+	}
+
+	function setRowMenu(id: string, open: boolean) {
+		if (open) {
+			rowMenuAt = null;
+			rowMenuFor = id;
+		} else if (rowMenuFor === id) rowMenuFor = null;
 	}
 
 	/* ── Selection and bulk actions ── */
@@ -653,9 +664,8 @@
 {#snippet actionsCell(d: Device)}<MenuButton
 		kebab
 		label="{t('devices.actions')}: {deviceName(d) || d.id}"
-		bind:open={
-			() => rowMenuFor === d.id, (v) => (rowMenuFor = v ? d.id : rowMenuFor === d.id ? null : rowMenuFor)
-		}
+		at={rowMenuFor === d.id ? rowMenuAt : null}
+		bind:open={() => rowMenuFor === d.id, (v) => setRowMenu(d.id, v)}
 	>
 		{#each deviceMenu(d, { knownTags }) as group, gi (gi)}
 			{#if gi > 0}<MenuDivider />{/if}
