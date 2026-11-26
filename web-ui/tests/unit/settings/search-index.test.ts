@@ -74,7 +74,7 @@ describe('settingEntries', () => {
 		expect(entries.find((e) => e.id === 'public-server-id')?.href).toBe('/settings#public-server-id');
 		// The server's own settings are on the pages of the Server section
 		const scheduled = entries.find((e) => e.id === 'scheduled-backup-enabled');
-		expect(scheduled?.where).toBe('Server, Backups, Scheduled full backup');
+		expect(scheduled?.where).toBe('Server, Backups, Scheduled backups');
 		expect(scheduled?.href).toBe('/server/backups#scheduled-backup-enabled');
 		expect(entries.find((e) => e.id === 'backup-retention-input')).toMatchObject({
 			label: 'Keep update backups',
@@ -147,7 +147,8 @@ describe('English and German find the same setting', () => {
 		['application name', 'anwendungsname', 'brand-name'],
 		['update channel', 'update-kanal', 'update-channel-panel'],
 		['scheduled backups', 'geplante sicherungen', 'scheduled-backup-panel'],
-		['relay server', 'relay-server', 'public-relay-server']
+		['relay server', 'relay-server', 'public-relay-server'],
+		['backup every night', 'sicherung nachts', 'scheduled-backup-time']
 	])('"%s" in English and "%s" in German', (qEn, qDe, id) => {
 		expect(first(qEn, inEn)).toBe(id);
 		expect(first(qDe, inDe)).toBe(id);

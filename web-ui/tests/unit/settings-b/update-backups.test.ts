@@ -18,7 +18,6 @@ vi.mock('#lib/api/settings-system.ts', async (orig) => ({
 			sizeBytes: 10
 		}
 	]),
-	getBackupRetention: vi.fn(async () => ({ count: 5 })),
 	getConsoleStatus: vi.fn(async () => ({ status: 'ok', cacheVersion: 'v1' })),
 	restoreUpdateBackup: vi.fn(async () => ({
 		restored: 1,
@@ -47,7 +46,6 @@ describe('update backups', () => {
 	test('a restore without a supervisor says to start the server again and does not claim a restart', async () => {
 		const user = userEvent.setup();
 		render(UpdateBackups);
-		await user.click(screen.getByText('updates.backups_title'));
 		const restore = await screen.findByRole('button', { name: /settings.updates_tab.restore_files/ });
 		await user.click(restore);
 		await vi.waitFor(() => expect(api.restoreUpdateBackup).toHaveBeenCalledWith('backup-1'));

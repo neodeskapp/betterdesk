@@ -116,7 +116,8 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'backup-create': 'download backup now export herunterladen sichern',
 	'scheduled-backup-panel': 'schedule automatic cron zeitplan automatisch',
 	'scheduled-backup-enabled': 'schedule automatic zeitplan automatisch',
-	'scheduled-backup-retention': 'retention keep aufbewahrung behalten',
+	'scheduled-backup-time': 'night nightly daily time clock hour nachts nächtlich täglich uhrzeit',
+	'scheduled-backup-retention': 'retention keep copies aufbewahrung behalten kopien',
 	'scheduled-backup-destination-type': 'smb nas share network folder netzlaufwerk freigabe',
 	'scheduled-backup-path': 'folder path ordner',
 	'backup-restore': 'restore import wiederherstellen zurückspielen',
@@ -124,6 +125,7 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'update-backups-panel': 'backup before update sicherung vorher',
 	'update-channel-panel': 'beta nightly stable channel kanal',
 	'backup-retention-input': 'retention keep backups aufbewahrung sicherungen',
+	'backup-danger': 'prune delete old update backups aufräumen löschen',
 	'update-local-version': 'version installed installiert',
 	// Email
 	'email-smtp-host': 'smtp mail server host postausgang',
