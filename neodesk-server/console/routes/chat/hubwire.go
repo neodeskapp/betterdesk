@@ -40,7 +40,13 @@ func HubOf(d *kit.Deps) *Hub {
 		Insert:      APIInsert(d.GoAPI),
 		FilesDir:    FilesDir(d.Config),
 		DisplayName: displayNames(d.Store),
-		Audit:       auditTo(d.Audit),
+		PictureVersion: func(ctx context.Context, id int64) string {
+			if d.Avatars == nil {
+				return ""
+			}
+			return d.Avatars.GetAvatarVersion(ctx, id).String
+		},
+		Audit: auditTo(d.Audit),
 	})
 	if d.Authn != nil {
 		h.opts.VerifyDevice = d.Authn.VerifyDeviceWSAuth

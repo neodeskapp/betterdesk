@@ -352,17 +352,21 @@ Replace your copy by `id`.
 
 ### helper (computers only)
 
-Who in the console has the computer's conversation, and whether it is
-open. Sent after `history` and whenever it changes.
+Who in the console has the computer's conversation, whether it is open,
+and the version of the helper's profile picture. Sent after `history` and
+whenever it changes.
 
 ```json
-{"type": "helper", "name": "Anna Weber", "state": "open"}
-{"type": "helper", "name": null, "state": "open"}
-{"type": "helper", "name": "Anna Weber", "state": "closed"}
+{"type": "helper", "name": "Anna Weber", "state": "open", "picture": "3f2a9c01d4e5b678"}
+{"type": "helper", "name": null, "state": "open", "picture": null}
+{"type": "helper", "name": "Anna Weber", "state": "closed", "picture": null}
 ```
 
 `name: null` means nobody took it yet. `closed` means the console closed
-the conversation; the person's next message opens it again.
+the conversation; the person's next message opens it again. `picture:
+null` means the helper has no profile picture (or there is no helper);
+otherwise fetch it with the device token (section 8) and fetch it again
+when the version changes. Older servers send no `picture`.
 
 ### Console only
 
@@ -474,6 +478,18 @@ only files of its own conversation: anything else answers 404. The
 server checks a file's type by its bytes, not its name; text files come
 as `text/plain`.
 
+The profile picture of the person who helps, which `helper` names by its
+version:
+
+```
+GET /api/chat/device/helper/picture
+Authorization: Bearer <device token>
+```
+
+It answers the picture (PNG, JPEG, WebP or GIF, with its type and an
+ETag of its version), or 404 when nobody took the conversation or the
+helper has no picture.
+
 ## 9. What a computer's chat window must show
 
 - **Messages** in order of `id`, grouped by day. A message `from.kind ==
@@ -492,7 +508,8 @@ as `text/plain`.
 - **Deleted:** "Message deleted" in place of the text, in a muted style.
 - **Reactions:** each emoji with its count under the message; one's own
   reaction marked. Clicking an emoji toggles one's own.
-- **Who helps:** from `helper`: "Anna Weber is helping you", or "Waiting
+- **Who helps:** from `helper`: "Anna Weber is helping you" with Anna's
+  picture when `picture` is set (her initials otherwise), or "Waiting
   for someone" when `name` is null, and "This conversation was closed.
   Write to open it again." when `state` is `closed`.
 - **Typing:** "Anna Weber is typing" for 4 s after a `typing` frame.
