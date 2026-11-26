@@ -8,10 +8,13 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/smtpwire"
@@ -38,6 +41,94 @@ type Email struct {
 
 // Inline is an image a mail's HTML shows by its Content-ID.
 type Inline = message.Inline
+
+// englishMailWords are the texts of the alert and help request mails as
+// en.json has them, for a service without language files.
+var englishMailWords = map[string]string{
+	"meta.lang":                        "en",
+	"automation.severity":              "Severity",
+	"automation.severity_info":         "Info",
+	"automation.severity_warning":      "Warning",
+	"automation.severity_critical":     "Critical",
+	"automation.device":                "Device",
+	"automation.device_id":             "Device ID",
+	"automation.triggered_at":          "Triggered",
+	"automation.condition_type":        "Condition",
+	"automation.description":           "Description",
+	"automation.op_gt":                 "Greater than",
+	"automation.op_gte":                "Greater or equal",
+	"automation.op_lt":                 "Less than",
+	"automation.op_lte":                "Less or equal",
+	"automation.op_eq":                 "Equal to",
+	"automation.op_neq":                "Not equal to",
+	"automation.type_cpu_usage":        "CPU use (%)",
+	"automation.type_memory_usage":     "Memory use (%)",
+	"automation.type_disk_usage":       "Disk use (%)",
+	"automation.type_offline_duration": "Time offline (seconds)",
+	"automation.type_idle_duration":    "Time idle (seconds)",
+	"automation.type_custom":           "Custom",
+	"help_request.message":             "Message",
+	"device_detail.folder":             "Folder",
+	"notifications.mail_alert_heading": "Alert: {rule}",
+	"notifications.mail_help_heading":  "Help request from {device}",
+	"notifications.mail_help_lead":     "A new help request was submitted.",
+	"notifications.mail_help_button":   "Open help requests in {app}",
+}
+
+// mailWords are the texts of the alert and help request mails in one
+// language: say gives the text of a key with its {name} placeholders
+// filled from name, value pairs, or "" for a key the language files lack.
+type mailWords struct {
+	lang string
+	say  func(key string, pairs ...string) string
+}
+
+// words are the console's default language, or English without language
+// files.
+func (s *Service) words() mailWords {
+	var b *i18n.Bundle
+	if s.opts.Texts != nil {
+		b = s.opts.Texts()
+	}
+	if b == nil {
+		return mailWords{lang: "en", say: func(key string, pairs ...string) string {
+			text := englishMailWords[key]
+			for i := 0; i+1 < len(pairs); i += 2 {
+				text = strings.ReplaceAll(text, "{"+pairs[i]+"}", pairs[i+1])
+			}
+			return text
+		}}
+	}
+	lang := b.DefaultLang
+	say := func(key string, pairs ...string) string {
+		vars := make([]any, len(pairs))
+		for i, p := range pairs {
+			vars[i] = p
+		}
+		text := b.Translate(lang, key, i18n.V(vars...))
+		if text == key {
+			return ""
+		}
+		return text
+	}
+	if l := say("meta.lang"); l != "" {
+		lang = l
+	}
+	return mailWords{lang: lang, say: say}
+}
+
+// brand is the console's branding for the alert and help request mails.
+func (s *Service) brand() brandmail.Branding {
+	if s.opts.Branding != nil {
+		return s.opts.Branding()
+	}
+	return brandmail.Branding{Server: "NeoDesk"}
+}
+
+// opNames are the alert rules' comparisons, by the names the rules store
+// and by the signs older rules have.
+var opNames = map[string]string{"gt": "gt", "gte": "gte", "lt": "lt", "lte": "lte", "eq": "eq", "neq": "neq",
+	">": "gt", ">=": "gte", "<": "lt", "<=": "lte", "==": "eq", "=": "eq", "!=": "neq"}
 
 // countRecipients counts the recipients for the log: the entries of a
 // list that are not empty, or the parts of a text between commas that are
@@ -351,10 +442,15 @@ func (t *texts) or(v jsbind.Value, fallback string) string {
 	return t.of(v)
 }
 
-// alertMail builds subject, text and HTML of an alert mail. The error is
-// the TypeError the console threw: for a severity that is no text, and
-// for a value it could not make text of.
-func alertMail(alert Alert, rule AlertRule) (subject, text, html string, err error) {
+// alertMail builds subject, text and HTML of an alert mail, in the words'
+// language and the console's branded layout (brandmail): the rule as the
+// heading, then severity, device, message, the time in the server's zone
+// and the condition in words as a table with row headers, and the rule's
+// description below it. The subject stays as the Node console wrote it,
+// in English, for the mail filters that look for it. The error is the
+// TypeError the console threw: for a severity that is no text, and for a
+// value it could not make text of.
+func alertMail(alert Alert, rule AlertRule, w mailWords, brand brandmail.Branding) (subject, text, html string, err error) {
 	var t texts
 	name := t.of(rule.Name)
 	if t.err != nil {
@@ -384,33 +480,60 @@ func alertMail(alert Alert, rule AlertRule) (subject, text, html string, err err
 	}
 
 	subject = "[NeoDesk Alert] " + name + " — " + upper(severity)
-	text = strings.Join([]string{
-		"Alert: " + name,
-		"Severity: " + severity,
-		"Device: " + device,
-		"Message: " + message,
-		"Triggered at: " + triggered,
-		"",
-		"Rule: " + about + " " + op + " " + threshold,
-	}, "\n")
-	html = `
-        <div style="font-family: sans-serif; max-width: 600px;">
-            <h2 style="color: #e74c3c;">NeoDesk Alert: ` + escapeHTML(name) + `</h2>
-            <table style="border-collapse: collapse; width: 100%;">
-                <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Severity</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">` + escapeHTML(severity) + `</td></tr>
-                <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Device</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">` + escapeHTML(device) + `</td></tr>
-                <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Message</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">` + escapeHTML(message) + `</td></tr>
-                <tr><td style="padding: 8px; font-weight: bold;">Time</td>
-                    <td style="padding: 8px;">` + escapeHTML(triggered) + `</td></tr>
-            </table>
-            <p style="color: #888; font-size: 12px; margin-top: 16px;">
-                Rule: ` + escapeHTML(description) + `
-            </p>
-        </div>`
-	return subject, text, html, nil
+
+	// The severity, the time, the measure and the comparison in the
+	// reader's words where the language files have them
+	if word := w.say("automation.severity_" + strings.ToLower(severity)); word != "" {
+		severity = word
+	}
+	if at, err := time.Parse(time.RFC3339Nano, triggered); err == nil {
+		triggered = brandmail.When(at)
+	}
+	// about is the rule's description, or its measure without one
+	measure := about
+	if rule.Description.Truthy() {
+		measure = t.of(rule.ConditionType)
+	}
+	if word := w.say("automation.type_" + measure); word != "" {
+		measure = word
+	}
+	if word := w.say("automation.op_" + opNames[op]); opNames[op] != "" && word != "" {
+		op = word
+	}
+	facts := []brandmail.Fact{
+		{Label: w.say("automation.severity"), Value: severity},
+		{Label: w.say("automation.device"), Value: device},
+		{Label: w.say("help_request.message"), Value: message},
+		{Label: w.say("automation.triggered_at"), Value: triggered},
+		{Label: w.say("automation.condition_type"), Value: strings.TrimSpace(measure + " " + op + " " + threshold)},
+	}
+	var small []string
+	if description != "" {
+		small = []string{description}
+	}
+	heading := w.say("notifications.mail_alert_heading", "rule", name)
+	page := brandmail.Page{Branding: brand, Lang: w.lang, Heading: heading, Facts: facts, Small: small}
+	return subject, factsText(heading, "", facts, small, "", ""), brandmail.HTML(page), nil
+}
+
+// factsText is the plain text part of a mail with facts: the heading, the
+// lead, one "Label: value" line per fact, the small lines and the link.
+func factsText(heading, lead string, facts []brandmail.Fact, small []string, button, link string) string {
+	lines := []string{heading, ""}
+	if lead != "" {
+		lines = append(lines, lead, "")
+	}
+	for _, f := range facts {
+		lines = append(lines, f.Label+": "+f.Value)
+	}
+	if len(small) > 0 {
+		lines = append(lines, "")
+		lines = append(lines, small...)
+	}
+	if link != "" {
+		lines = append(lines, "", button+": "+link)
+	}
+	return strings.Join(lines, "\n") + "\n"
 }
 
 // recipients reads who a mail goes to from a value: text as it is, a list
@@ -446,7 +569,8 @@ func recipients(v jsbind.Value) (to []string, list bool, err error) {
 // is no text, or for a value it could not make text of. Rows of the
 // console's own tables never cause one.
 func (s *Service) SendAlertEmail(ctx context.Context, alert Alert, rule AlertRule) (bool, error) {
-	subject, text, html, err := alertMail(alert, rule)
+	w, brand := s.words(), s.brand()
+	subject, text, html, err := alertMail(alert, rule, w, brand)
 	if err != nil {
 		return false, err
 	}
@@ -454,7 +578,7 @@ func (s *Service) SendAlertEmail(ctx context.Context, alert Alert, rule AlertRul
 		return false, nil
 	}
 	to, list, unreadable := recipients(rule.NotifyEmails)
-	return s.deliver(ctx, Email{To: to, ToList: list, Subject: subject, Text: &text, HTML: &html}, unreadable)
+	return s.deliver(ctx, Email{To: to, ToList: list, Subject: subject, Text: &text, HTML: &html, Inline: brandmail.Inline(brandmail.Page{Branding: brand}), Lang: w.lang}, unreadable)
 }
 
 // HelpRequest is the help request a notification mail is about.
@@ -476,9 +600,13 @@ type HelpRequestEmail struct {
 	FolderName jsbind.Value
 }
 
-// helpRequestMail builds subject, text and HTML of a help request mail.
-// Without a baseURL the mail has no link to the console.
-func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string) (subject, text, html string, err error) {
+// helpRequestMail builds subject, text and HTML of a help request mail, in
+// the words' language and the console's branded layout: who asked as the
+// heading, the device, its ID, its folder and the message as a table with
+// row headers, and a button to the console's help requests. The subject
+// stays as the Node console wrote it. Without a baseURL the mail has no
+// link to the console.
+func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string, w mailWords, brand brandmail.Branding) (subject, text, html string, err error) {
 	var t texts
 	hostname := "Unknown device"
 	switch {
@@ -501,44 +629,24 @@ func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string) 
 	}
 	subject += "Help request — " + hostname
 
-	// Blank lines set the parts apart; the device id and the folder have a
-	// line only when they are set
-	lines := []string{"A new help request was submitted.", "", "Device: " + hostname}
+	// The device ID and the folder have a row only when they are set
+	facts := []brandmail.Fact{{Label: w.say("automation.device"), Value: hostname}}
 	if hasDevice {
-		lines = append(lines, "Device ID: "+deviceID)
+		facts = append(facts, brandmail.Fact{Label: w.say("automation.device_id"), Value: deviceID})
 	}
 	if hasFolder {
-		lines = append(lines, "Folder: "+folder)
+		facts = append(facts, brandmail.Fact{Label: w.say("device_detail.folder"), Value: folder})
 	}
-	lines = append(lines, "", "Message: "+message)
-	linkRow := ""
-	if baseURL != "" {
-		lines = append(lines, "", "Open in panel: "+link)
-		linkRow = `
-            <p style="margin-top: 16px;"><a href="` + escapeHTML(link) + `">Open help requests in NeoDesk</a></p>`
+	facts = append(facts, brandmail.Fact{Label: w.say("help_request.message"), Value: message})
+	heading := w.say("notifications.mail_help_heading", "device", hostname)
+	lead := w.say("notifications.mail_help_lead")
+	page := brandmail.Page{Branding: brand, Lang: w.lang, Heading: heading, Lead: lead, Facts: facts}
+	if baseURL == "" {
+		link = ""
+	} else {
+		page.Button, page.Link = w.say("notifications.mail_help_button", "app", brand.Server), link
 	}
-	text = strings.Join(lines, "\n")
-
-	deviceRow, folderRow := "", ""
-	if hasDevice {
-		deviceRow = `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Device ID</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">` + escapeHTML(deviceID) + `</td></tr>`
-	}
-	if hasFolder {
-		folderRow = `<tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Folder</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">` + escapeHTML(folder) + `</td></tr>`
-	}
-	html = `
-        <div style="font-family: sans-serif; max-width: 600px;">
-            <h2 style="color: #2563eb;">Help request — ` + escapeHTML(hostname) + `</h2>
-            <table style="border-collapse: collapse; width: 100%;">
-                ` + deviceRow + `
-                ` + folderRow + `
-                <tr><td style="padding: 8px; font-weight: bold;">Message</td>
-                    <td style="padding: 8px;">` + escapeHTML(message) + `</td></tr>
-            </table>` + linkRow + `
-        </div>`
-	return subject, text, html, nil
+	return subject, factsText(heading, lead, facts, nil, page.Button, link), brandmail.HTML(page), nil
 }
 
 // SendHelpRequestEmail sends the notification for a help request and
@@ -546,9 +654,10 @@ func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string) 
 // /help-requests; without that address the mail has no link. The error is
 // as for SendAlertEmail.
 func (s *Service) SendHelpRequestEmail(ctx context.Context, m HelpRequestEmail) (bool, error) {
-	subject, text, html, err := helpRequestMail(m.HelpRequest, m.FolderName, s.GetPanelBaseURL())
+	w, brand := s.words(), s.brand()
+	subject, text, html, err := helpRequestMail(m.HelpRequest, m.FolderName, s.GetPanelBaseURL(), w, brand)
 	if err != nil {
 		return false, err
 	}
-	return s.SendEmail(ctx, Email{To: m.To, ToList: m.ToList, Subject: subject, Text: &text, HTML: &html})
+	return s.SendEmail(ctx, Email{To: m.To, ToList: m.ToList, Subject: subject, Text: &text, HTML: &html, Inline: brandmail.Inline(brandmail.Page{Branding: brand}), Lang: w.lang})
 }

@@ -40,6 +40,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/guestaccess"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/helpmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/housekeeping"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jobs"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -372,6 +373,14 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		PanelHost:   s.deps.ServerInfo.ReadPanelPublicHostValue,
 		ServesHTTPS: func() bool { return s.net.cert != nil },
 		Logger:      s.deps.Log.Child("Email"),
+		// The alert and help request mails: the default language and the branding
+		Texts: func() *i18n.Bundle {
+			if s.deps.I18n == nil {
+				return nil
+			}
+			return s.deps.I18n.Bundle
+		},
+		Branding: func() brandmail.Branding { return brandmail.Of(s.deps.Branding, s.deps.Mail.GetPanelBaseURL()) },
 	})
 	// Alert mails and evaluations beside a request end with the console:
 	// the job below cancels them and waits for them when the jobs stop.
