@@ -171,7 +171,7 @@
 			cell: checkCell,
 			sortValue: (r) => r.problems.length,
 			class: 'col-check',
-			minWidth: '14rem'
+			minWidth: '10rem'
 		},
 		{ id: 'email', label: t('users.email'), cell: emailCell },
 		{ id: 'role', label: t('users.role'), cell: roleCell }

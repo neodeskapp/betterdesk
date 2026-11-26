@@ -540,7 +540,7 @@
 			sortValue: (u) => u.username.toLowerCase(),
 			class: 'col-name',
 			// Room for a name and its state lines, which wrap
-			minWidth: '15rem'
+			minWidth: '17rem'
 		},
 		{ id: 'email', label: t('users.email'), cell: emailCell, sortValue: (u) => u.email.toLowerCase() },
 		{
