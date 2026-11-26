@@ -44,6 +44,9 @@ func normalisePeer(peer any, now time.Time) *Object {
 
 	liveOnline := Truthy(p("live_online"))
 	banned := Truthy(p("banned"))
+	// On the blocklist (device_revoked, device_blocked): the signal server
+	// refuses the ID, so its heartbeats are no sign of a missing signal
+	blocked := jsString(text("blocked"))
 	lastOnline := text("last_online")
 	deviceType := strings.ToLower(jsTrim(jsString(text("device_type"))))
 	if deviceType == "" {
@@ -99,7 +102,7 @@ func normalisePeer(peer any, now time.Time) *Object {
 		"online", liveOnline,
 		"signal_ready", p("signal_ready") != false && liveOnline,
 		"banned", banned,
-		"no_signal", !liveOnline && !banned && seenRecently(lastOnline, now) && !agentConnected,
+		"no_signal", !liveOnline && !banned && blocked == "" && seenRecently(lastOnline, now) && !agentConnected,
 		"created_at", text("created_at"),
 		"last_online", lastOnline,
 		"ban_reason", text("ban_reason"),
@@ -122,6 +125,9 @@ func normalisePeer(peer any, now time.Time) *Object {
 	// The device came back with another key, which the server refuses
 	if Truthy(p("key_refused")) {
 		out.Set("key_refused", true)
+	}
+	if blocked != "" {
+		out.Set("blocked", blocked)
 	}
 	// A new key it brought to an invite, which an administrator approves
 	if req, ok := p("key_request").(*Object); ok {

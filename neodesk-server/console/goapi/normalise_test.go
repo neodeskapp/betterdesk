@@ -60,6 +60,9 @@ func TestNormalisePeerFields(t *testing.T) {
 		{"seen two minutes ago", `{"last_online":"` + recent + `"}`, map[string]string{"online": "false", "no_signal": "true"}},
 		{"seen six minutes ago", `{"last_online":"` + old + `"}`, map[string]string{"no_signal": "false"}},
 		{"seen in the future", `{"last_online":"2030-01-01T00:00:00Z"}`, map[string]string{"no_signal": "true"}},
+		// The signal server refuses a blocked ID: no "no signal", the reason instead (L550)
+		{"recent but blocked", `{"last_online":"` + recent + `","blocked":"device_revoked"}`,
+			map[string]string{"no_signal": "false", "online": "false", "blocked": `"device_revoked"`}},
 		{"recent but banned", `{"last_online":"` + recent + `","banned":true}`, map[string]string{"no_signal": "false", "banned": "true"}},
 		{"recent agent on CDAP", `{"last_online":"` + recent + `","device_type":"os_agent","cdap_connected":true}`,
 			map[string]string{"no_signal": "false", "device_type": `"os_agent"`, "client_type": `"os_agent"`, "cdap_connected": "true"}},
