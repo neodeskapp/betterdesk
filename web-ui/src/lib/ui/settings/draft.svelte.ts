@@ -11,6 +11,10 @@
  *
  * track() registers the draft with lib/settings/dirty.ts, so the page frame
  * asks before the page is left while it has changes.
+ *
+ * A page that saves its changes to several endpoints in turn throws
+ * PartlySaved from the save when only some of them took: those fields
+ * count as saved, the others stay as changes, and the message says which.
  */
 
 import { tf } from '#lib/i18n/i18n.svelte.ts';
@@ -33,6 +37,16 @@ export interface Change {
 	to: string;
 	fromValue: unknown;
 	toValue: unknown;
+}
+
+/** A save that stored some fields and not others; `message` says which and why */
+export class PartlySaved extends Error {
+	constructor(
+		message: string,
+		readonly saved: readonly string[]
+	) {
+		super(message);
+	}
 }
 
 const same = (a: unknown, b: unknown): boolean => a === b || JSON.stringify(a) === JSON.stringify(b);
@@ -99,6 +113,13 @@ export class SettingsDraft<T extends Values = Values> {
 		(this.values as Values)[field] = copy(this.loaded[field]);
 	}
 
+	/** Take the current values of these fields (all when none are named) as the saved ones */
+	commit(fields?: readonly string[]): void {
+		const next = copy(this.loaded) as Values;
+		for (const f of fields ?? Object.keys(this.values)) next[f] = copy((this.values as Values)[f]);
+		this.loaded = next as T;
+	}
+
 	discard(): void {
 		this.values = copy(this.loaded);
 		this.error = '';
@@ -147,7 +168,9 @@ export class SettingsDraft<T extends Values = Values> {
 			this.loaded = saved;
 			return true;
 		} catch (err) {
-			this.lastSaved = [];
+			const kept = err instanceof PartlySaved ? err.saved : null;
+			this.lastSaved = kept ? changes.filter((c) => kept.includes(c.field)) : [];
+			if (kept) this.commit([...kept]);
 			this.error =
 				err instanceof Error && err.message
 					? err.message

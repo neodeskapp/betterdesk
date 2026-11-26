@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { SettingsDraft } from '../../../src/lib/ui/settings/draft.svelte.ts';
+import { PartlySaved, SettingsDraft } from '../../../src/lib/ui/settings/draft.svelte.ts';
 import { anyDirty } from '../../../src/lib/settings/dirty.ts';
 
 function draft() {
@@ -106,5 +106,29 @@ describe('SettingsDraft', () => {
 			from: '10.0.0.0/8',
 			to: '10.0.0.0/8, 192.168.0.0/16'
 		});
+	});
+	test('commit takes the current values of some fields as saved and keeps the rest as changes', () => {
+		const d = draft();
+		d.set('keep', 7);
+		d.set('device.view', false);
+		d.commit(['keep']);
+		expect(d.loaded.keep).toBe(7);
+		expect(d.changes.map((c) => c.field)).toEqual(['device.view']);
+		d.commit();
+		expect(d.dirty).toBe(false);
+	});
+
+	test('a save that stored only some parts keeps the others as changes and says what was saved', async () => {
+		const d = draft();
+		d.set('keep', 7);
+		d.set('device.view', false);
+		const saved = await d.save(() =>
+			Promise.reject(new PartlySaved('Saved: Keep. Not saved: View devices.', ['keep']))
+		);
+		expect(saved).toBe(false);
+		expect(d.loaded.keep).toBe(7);
+		expect(d.changes.map((c) => c.field)).toEqual(['device.view']);
+		expect(d.lastSaved.map((c) => c.field)).toEqual(['keep']);
+		expect(d.error).toBe('Saved: Keep. Not saved: View devices.');
 	});
 });
