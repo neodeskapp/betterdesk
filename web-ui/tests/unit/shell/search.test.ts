@@ -130,6 +130,19 @@ describe('isSearchShortcut', () => {
 		editable.setAttribute('contenteditable', 'true');
 		expect(isSearchShortcut(key('/', {}, editable))).toBe(false);
 	});
+
+	test('Turn off single-key shortcuts leaves only Ctrl+K (WCAG 2.1.4)', async () => {
+		const { a11y, DEFAULTS } = await import('../../../src/lib/shell/a11y.svelte.ts');
+		a11y.settings = { ...DEFAULTS, noSingleKeyShortcuts: true };
+		try {
+			expect(isSearchShortcut(key('/'))).toBe(false);
+			expect(isSearchShortcut(key('k', { ctrlKey: true }))).toBe(true);
+			expect(isSearchShortcut(key('K', { metaKey: true }, input))).toBe(true);
+		} finally {
+			a11y.settings = { ...DEFAULTS };
+		}
+		expect(isSearchShortcut(key('/'))).toBe(true);
+	});
 });
 
 describe('SearchDialog', () => {
@@ -187,10 +200,28 @@ describe('SearchDialog', () => {
 		void opener;
 	});
 
-	test('Tab stays in the field', async () => {
+	test('Tab moves on to Cancel and cycles inside the dialog', async () => {
 		const { user, box } = await setup();
+		const cancel = screen.getByRole('button', { name: 'common.cancel' });
+		await user.keyboard('{Tab}');
+		expect(document.activeElement).toBe(cancel);
 		await user.keyboard('{Tab}');
 		expect(document.activeElement).toBe(box);
+		await user.keyboard('{Shift>}{Tab}{/Shift}');
+		expect(document.activeElement).toBe(cancel);
+	});
+
+	test('in the list, Home and End jump to the first and last result; in the field they move the caret', async () => {
+		const { user, box } = await setup();
+		await user.keyboard('settings');
+		const options = screen.getAllByRole('option');
+		// Still typing: End is the end of the text
+		await user.keyboard('{End}');
+		expect(box.getAttribute('aria-activedescendant')).toBe(options[0]!.id);
+		await user.keyboard('{ArrowDown}{End}');
+		expect(box.getAttribute('aria-activedescendant')).toBe(options.at(-1)!.id);
+		await user.keyboard('{Home}');
+		expect(box.getAttribute('aria-activedescendant')).toBe(options[0]!.id);
 	});
 
 	test('Cancel next to the field closes it (phones have no Escape key)', async () => {
@@ -288,6 +319,17 @@ describe('SearchDialog: settings, things to do and recent searches', () => {
 		const { user } = await setup();
 		await user.keyboard('zzqx');
 		expect(screen.getByRole('status')).toHaveTextContent('zzqx');
+	});
+
+	test('Tab reaches Clear recent searches', async () => {
+		const first = await setup();
+		await first.user.keyboard('zeitzone{Enter}');
+		cleanup();
+		const { user, box } = await setup();
+		await user.keyboard('{Tab}{Tab}');
+		expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Clear recent searches' }));
+		await user.keyboard('{Tab}');
+		expect(document.activeElement).toBe(box);
 	});
 
 	test('recent searches show in an empty field, per account, and fill it again', async () => {

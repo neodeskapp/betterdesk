@@ -3,18 +3,21 @@
   event kind) or a tag people set. A quiet token: a faint tint of the text
   colour, 3 px corners, never a pill, never coloured per value. `icon`: an
   ICONS meaning, only where it tells values apart faster than the word.
-  `title`: the full text on hover; long labels (over 24 characters) get it
-  by default, since the token cuts them with an ellipsis.
+  `title`: the full text in a tooltip on hover and focus (Tip.svelte); long
+  labels (over 24 characters) get it by default, since the token cuts them
+  with an ellipsis.
 -->
 <script lang="ts">
 	import Icon from './Icon.svelte';
+	import Tip from './Tip.svelte';
 
 	let { label, icon, title }: { label: string; icon?: string; title?: string } = $props();
 	const hover = $derived(title ?? (label.length > 24 ? label : undefined));
 </script>
 
-<span class="tag" title={hover}
-	>{#if icon}<Icon name={icon} />{/if}<span class="tag-text">{label}</span></span
+<span class="tag"
+	>{#if icon}<Icon name={icon} />{/if}{#if hover}<Tip text={hover}><span class="tag-text">{label}</span></Tip
+		>{:else}<span class="tag-text">{label}</span>{/if}</span
 >
 
 <style>
@@ -37,6 +40,11 @@
 	.tag > :global(.material-icons) {
 		font-size: 15px;
 		color: var(--text-muted);
+	}
+	/* The tooltip's anchor lets the text shrink, so the ellipsis still shows */
+	.tag :global(.tip) {
+		display: flex;
+		min-width: 0;
 	}
 	.tag-text {
 		min-width: 0;

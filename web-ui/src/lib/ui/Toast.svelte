@@ -1,16 +1,21 @@
 <!--
   One toast (components.css "Toasts"): a rule on the start side in the
-  type's colour, an optional title, the message as text, and a close
-  button; with an action (Undo after a save) a button under the message
-  that runs it and closes the toast. Shown by ToastHost; pages call toast.success() and the like.
+  type's colour, "Warning:" or "Error:" in words for those types, an
+  optional title, the message as text, and a close button; with an action
+  (Undo after a save) a button under the message that runs it and closes
+  the toast. Shown by ToastHost; pages call toast.success() and the like.
   Time stops while the pointer or focus is on it. An undo action names its
-  key (Ctrl+Z, Cmd+Z on a Mac), which ToastHost listens for.
+  key (Ctrl+Z, Cmd+Z on a Mac), which ToastHost listens for. Screen
+  readers hear the text through the announcer (toasts.svelte.ts); here the
+  text is hidden from them and the close button names the message
+  instead, so browse mode doesn't read it twice. The action button stays
+  visible to them.
 -->
 <script lang="ts">
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from './Button.svelte';
 	import IconButton from './IconButton.svelte';
-	import { dismiss, pause, resume, type ToastItem } from './toasts.svelte.ts';
+	import { dismiss, pause, resume, tonePrefix, type ToastItem } from './toasts.svelte.ts';
 
 	let { toast }: { toast: ToastItem } = $props();
 
@@ -39,8 +44,11 @@
 
 <div class={['toast', toast.type]} {@attach holdWhileUsed}>
 	<div class="toast-content">
-		{#if toast.title}<div class="toast-title">{toast.title}</div>{/if}
-		<div class="toast-message">{toast.message}</div>
+		{#if toast.title}<div class="toast-title" aria-hidden="true">{toast.title}</div>{/if}
+		<div class="toast-message" aria-hidden="true">
+			{#if tonePrefix(toast.type)}<strong class="toast-tone">{tonePrefix(toast.type)}:</strong>{/if}
+			{toast.message}
+		</div>
 		{#if toast.action}
 			{@const action = toast.action}
 			<Button
@@ -60,7 +68,7 @@
 	</div>
 	<IconButton
 		icon="close"
-		label={tf('common.close', 'Close')}
+		label={`${tf('common.close', 'Close')}: ${toast.message}`}
 		class="toast-close"
 		onclick={() => dismiss(toast.id)}
 	/>

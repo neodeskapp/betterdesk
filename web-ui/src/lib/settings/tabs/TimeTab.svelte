@@ -540,10 +540,13 @@
 		gap: var(--space-2) var(--space-3);
 		align-items: center;
 	}
+	/* A select is as wide as its longest zone name unless it may shrink:
+	   on a 320 px screen it fits the row (WCAG 1.4.10) */
 	.inline-controls :global(.zone-select) {
 		flex: 1 1 260px;
 		width: auto;
-		max-width: 48ch;
+		min-width: 0;
+		max-width: min(48ch, 100%);
 	}
 	.advanced {
 		padding: var(--space-2) var(--row-pad-x) 0;

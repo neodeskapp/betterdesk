@@ -21,6 +21,8 @@ import (
 	"sync"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
@@ -59,6 +61,9 @@ type Outgoing struct {
 	HTML *string
 	// Inline are the images the HTML shows by Content-ID.
 	Inline []Inline
+	// Lang is the language the mail is written in, for its
+	// Content-Language header; "" leaves the header out.
+	Lang string
 }
 
 // Transport does what nodemailer did: Send delivers one message over a
@@ -79,6 +84,14 @@ type Logger interface {
 // Options are the settings of a Service. Each field names what the Node
 // console read for it.
 type Options struct {
+	// Texts gives the console's language files: the alert and help
+	// request mails are written in their default language. Nil, or nil
+	// from it, writes them in English.
+	Texts func() *i18n.Bundle
+	// Branding gives the console's name, accent colour and logo for the
+	// alert and help request mails (brandmail.Of). Nil is NeoDesk in its
+	// own colours.
+	Branding func() brandmail.Branding
 	// DB is the console's database: the settings table and the
 	// notification log.
 	DB *store.DB

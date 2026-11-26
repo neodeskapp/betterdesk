@@ -115,7 +115,8 @@ for (const role of ROLES) {
 			// says so in its content (the toast region is another alert, empty)
 			problems.allow.push(/http 404: GET .*\/api\/users\/999999$/, /status of 404/);
 			await page.goto(`${UI}/users/999999`);
-			await expect(page.locator('main').getByRole('alert')).toContainText("doesn't exist");
+			// The error line is on the page; screen readers hear it through the announcer
+			await expect(page.locator('main .state.is-error')).toContainText("doesn't exist");
 			await page.goto(`${UI}/users?search=e2e_viewer`);
 
 			if (!can('user.create')) expect(await refused(page, me.csrf, 'POST', '/api/users')).toBe(403);

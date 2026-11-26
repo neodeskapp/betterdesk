@@ -16,6 +16,10 @@
   the view to show it. Connecting and removing wires without a pointer
   happens in the page's settings panel.
 
+  Without dragging (WCAG 2.5.7): while a node is selected and the page
+  takes moves, Move left, up, down and right sit in the canvas's bottom
+  start corner; a click moves the node one step, as an arrow key does.
+
   The drawing runs left to right in every language (outputs on the right
   edge, inputs on the left), so text in a node starts at its left edge.
   `children` are overlays inside the canvas box (empty state, zoom
@@ -53,6 +57,8 @@
 
 <script lang="ts" generics="N extends CanvasNode">
 	import type { Snippet } from 'svelte';
+	import { tf } from '#lib/i18n/i18n.svelte.ts';
+	import IconButton from '#lib/ui/IconButton.svelte';
 	import {
 		fitView,
 		revealNode,
@@ -320,6 +326,17 @@
 		ArrowDown: [0, 1]
 	};
 
+	/** One step in a direction, by an arrow key or a Move button */
+	function step(n: N, dir: [number, number]) {
+		onmovestart?.(n.id);
+		onmove?.(n.id, n.x + dir[0] * keyStep, n.y + dir[1] * keyStep);
+		onmoveend?.(n.id);
+		view = revealNode(view, { x: n.x + dir[0] * keyStep, y: n.y + dir[1] * keyStep }, nodeW, nodeH, {
+			width,
+			height
+		});
+	}
+
 	function onnodekey(e: KeyboardEvent, n: N) {
 		if (e.key === 'Enter' || e.key === ' ') {
 			e.preventDefault();
@@ -332,14 +349,16 @@
 		e.preventDefault();
 		selectedNode = n.id;
 		selectedWire = null;
-		onmovestart?.(n.id);
-		onmove?.(n.id, n.x + dir[0] * keyStep, n.y + dir[1] * keyStep);
-		onmoveend?.(n.id);
-		view = revealNode(view, { x: n.x + dir[0] * keyStep, y: n.y + dir[1] * keyStep }, nodeW, nodeH, {
-			width,
-			height
-		});
+		step(n, dir);
 	}
+
+	const moving = $derived(onmove && selectedNode ? byId.get(selectedNode) : undefined);
+	const MOVES = [
+		{ dir: [-1, 0], icon: 'chevron_left', key: 'canvas.move_left', text: 'Move left' },
+		{ dir: [0, -1], icon: 'expand_less', key: 'canvas.move_up', text: 'Move up' },
+		{ dir: [0, 1], icon: 'expand_more', key: 'canvas.move_down', text: 'Move down' },
+		{ dir: [1, 0], icon: 'chevron_right', key: 'canvas.move_right', text: 'Move right' }
+	] as const;
 
 	function onnodefocus(n: N) {
 		if (width && height) view = revealNode(view, n, nodeW, nodeH, { width, height });
@@ -451,6 +470,18 @@
 			{/if}
 		</g>
 	</svg>
+	{#if moving}
+		{@const n = moving}
+		<div
+			class="node-move"
+			role="group"
+			aria-label={tf('canvas.move_node', 'Move {name}', { name: nodeName(n) })}
+		>
+			{#each MOVES as m (m.key)}
+				<IconButton icon={m.icon} label={tf(m.key, m.text)} onclick={() => step(n, [m.dir[0], m.dir[1]])} />
+			{/each}
+		</div>
+	{/if}
 	{@render children?.()}
 </div>
 
@@ -460,6 +491,18 @@
 		min-width: 0;
 		overflow: hidden;
 		background: var(--bg-subtle);
+	}
+	/* Bottom start corner: the pages put zoom and the minimap at the end */
+	.node-move {
+		position: absolute;
+		inset-block-end: var(--space-2);
+		inset-inline-start: var(--space-2);
+		display: flex;
+		gap: var(--space-1);
+		padding: 2px;
+		border: 1px solid var(--rule);
+		border-radius: var(--radius);
+		background: var(--bg-float);
 	}
 	.canvas-svg {
 		display: block;

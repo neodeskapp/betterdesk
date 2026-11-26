@@ -17,7 +17,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import { session } from '#lib/state/session.svelte.ts';
 	import Icon from '#lib/ui/Icon.svelte';
@@ -254,11 +254,16 @@
 		>
 			<span class="nav-label">{p.page.text}</span>
 			{#if p.page.external}<span class="nav-note" aria-hidden="true">↗</span>{/if}
-			{#if p.page.countId && live.registrations}<span class="nav-count">{live.registrations}</span>{/if}
-			{#if p.page.page === 'chat' && chat.total}<span
-					class="nav-count"
-					aria-label={t('chat.unread_count', { count: chat.total })}
-					>{chat.total > 99 ? '99+' : chat.total}</span
+			<!-- The number for the eye, a sentence for screen readers (as in BottomNav) -->
+			{#if p.page.countId && live.registrations}<span class="nav-count"
+					><span class="sr-only"
+						>{tf('nav.registrations_waiting', '{count} waiting', { count: live.registrations })}</span
+					><span aria-hidden="true">{live.registrations}</span></span
+				>{/if}
+			{#if p.page.page === 'chat' && chat.total}<span class="nav-count"
+					><span class="sr-only">{t('chat.unread_count', { count: chat.total })}</span><span
+						aria-hidden="true">{chat.total > 99 ? '99+' : chat.total}</span
+					></span
 				>{/if}
 		</a>
 	</li>
@@ -347,7 +352,8 @@
 		>
 	</div>
 
-	<div class="sidebar-footer">
+	<!-- Site information: a landmark of its own, like the page footer -->
+	<footer class="sidebar-footer">
 		{#if footerText || showPoweredBy}
 			<div class="sidebar-attribution">
 				{#if footerText}<span>{footerText}</span>{/if}
@@ -361,28 +367,27 @@
 				{/if}
 			</div>
 		{/if}
-	</div>
-
-	{#if !drawer}
-		<!-- A focusable separator is a widget (ARIA): it takes the arrow keys -->
-		<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
-		<div
-			class={['resize-handle', dragging && 'active']}
-			role="separator"
-			aria-orientation="vertical"
-			tabindex="0"
-			aria-label={t('ux35.resize_sidebar')}
-			title={t('ux35.resize_sidebar')}
-			aria-valuemin={WIDTH_MIN}
-			aria-valuemax={WIDTH_MAX}
-			aria-valuenow={width}
-			{onpointerdown}
-			{onpointermove}
-			onpointerup={endDrag}
-			onpointercancel={endDrag}
-			onkeydown={onHandleKey}
-		></div>
-	{/if}
+		{#if !drawer}
+			<!-- A focusable separator is a widget (ARIA): it takes the arrow keys -->
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+			<div
+				class={['resize-handle', dragging && 'active']}
+				role="separator"
+				aria-orientation="vertical"
+				tabindex="0"
+				aria-label={t('ux35.resize_sidebar')}
+				title={t('ux35.resize_sidebar')}
+				aria-valuemin={WIDTH_MIN}
+				aria-valuemax={WIDTH_MAX}
+				aria-valuenow={width}
+				{onpointerdown}
+				{onpointermove}
+				onpointerup={endDrag}
+				onpointercancel={endDrag}
+				onkeydown={onHandleKey}
+			></div>
+		{/if}
+	</footer>
 </div>
 
 <style>
@@ -657,21 +662,30 @@
 		border-radius: 2px;
 	}
 
+	/* A 24 px target (WCAG 2.5.8) around the 6 px line that shows */
 	.resize-handle {
 		position: absolute;
 		top: 0;
 		bottom: 0;
-		inset-inline-end: -3px;
+		inset-inline-end: -12px;
 		z-index: 2;
-		width: 6px;
+		width: 24px;
 		cursor: col-resize;
 		touch-action: none;
+		outline: none;
 	}
-	.resize-handle:hover,
-	.resize-handle.active {
+	.resize-handle::before {
+		content: '';
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 9px;
+		width: 6px;
+	}
+	.resize-handle:hover::before,
+	.resize-handle.active::before {
 		background: var(--border);
 	}
-	.resize-handle:focus-visible {
+	.resize-handle:focus-visible::before {
 		outline: 2px solid var(--focus);
 		outline-offset: 0;
 		background: var(--focus);
@@ -705,6 +719,17 @@
 		.nav-item,
 		.nav-heading {
 			min-height: 44px;
+		}
+	}
+	/* Windows contrast themes make the transparent start rule of every item
+	   visible: only the current item keeps it, in the system's selection
+	   colour */
+	@media (forced-colors: active) {
+		.nav-item {
+			border-inline-start-color: Canvas;
+		}
+		.nav-item.active {
+			border-inline-start-color: Highlight;
 		}
 	}
 </style>

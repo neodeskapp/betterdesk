@@ -96,34 +96,7 @@ const bootScriptHead = `(function (boot) {
     if (mode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
     root.setAttribute('data-theme', theme);
     root.style.colorScheme = theme;
-    // Accessibility panel settings: same key, defaults and limits as
-    // web-ui/src/lib/shell/a11y.svelte.ts
-    var a = {};
-    try { a = JSON.parse(get('neodesk_accessibility_v1') || '{}') || {}; } catch (e) { a = {}; }
-    function num(v, min, max, d) { v = Number(v); return isFinite(v) ? Math.min(max, Math.max(min, v)) : d; }
-    var fontScale = num(a.fontScale, 90, 160, 100), lineHeight = num(a.lineHeight, 1.2, 2.1, 1.5);
-    var letter = num(a.letterSpacing, 0, 0.14, 0), word = num(a.wordSpacing, 0, 0.22, 0), sat = num(a.saturation, 0, 180, 100);
-    var contrast = ['normal', 'high-dark', 'high-light', 'yellow-black'].indexOf(a.contrast) >= 0 ? a.contrast : 'normal';
-    var filter = ['none', 'protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia'].indexOf(a.colorFilter) >= 0 ? a.colorFilter : 'none';
-    var FLAGS = { readableFont: 'a11yReadableFont', dyslexiaFont: 'a11yDyslexia', underlineLinks: 'a11yUnderlineLinks',
-        highlightLinks: 'a11yHighlightLinks', highlightHeadings: 'a11yHighlightHeadings', strongFocus: 'a11yStrongFocus',
-        largeCursor: 'a11yLargeCursor', reduceMotion: 'a11yReduceMotion', pauseAnimations: 'a11yPauseAnimations',
-        readingGuide: 'a11yReadingGuide', readingMask: 'a11yReadingMask', hideMedia: 'a11yHideMedia' };
-    var active = fontScale !== 100 || lineHeight !== 1.5 || letter !== 0 || word !== 0 || sat !== 100 || contrast !== 'normal' || filter !== 'none';
-    for (var f in FLAGS) { var on = a[f] === true; if (on) active = true; root.dataset[FLAGS[f]] = String(on); }
-    root.style.setProperty('--bd-a11y-font-scale', String(fontScale / 100));
-    root.style.setProperty('--bd-a11y-line-height', String(lineHeight));
-    root.style.setProperty('--bd-a11y-letter-spacing', letter + 'em');
-    root.style.setProperty('--bd-a11y-word-spacing', word + 'em');
-    root.dataset.a11yActive = String(active);
-    root.dataset.a11yFontScaled = String(fontScale !== 100);
-    root.dataset.a11yContrast = contrast;
-    var filters = [];
-    if (filter !== 'none') filters.push('url(#bd-a11y-' + filter + ')');
-    if (sat !== 100) filters.push('saturate(' + sat + '%)');
-    root.dataset.a11yFiltered = String(filters.length > 0);
-    root.style.setProperty('--bd-a11y-visual-filter', filters.length ? filters.join(' ') : 'none');
-    // Sidebar width (same key and 200-320 px range as the shell), so the layout does not jump on load
+` + bootScriptA11y + `    // Sidebar width (same key and 200-320 px range as the shell), so the layout does not jump on load
     var sw = parseInt(get('nd_ux35_sidebar_width') || '', 10);
     if (sw > 0) root.style.setProperty('--sidebar-w', Math.min(320, Math.max(200, sw)) + 'px');
     window.__ND_BOOT__ = boot;
@@ -136,3 +109,28 @@ const bootScriptHead = `(function (boot) {
     for (var i = 0; i < boot.publicPaths.length; i++) { if (path === boot.publicPaths[i] || path.indexOf(boot.publicPaths[i] + '/') === 0) isPublic = true; }
     if (!isPublic) window.__ND_BOOT__.session = fetch('/api/console/bootstrap', opts);
 })(`
+
+// bootScriptA11y applies the accessibility settings the browser keeps,
+// with the same key, defaults and rules as web-ui/src/lib/shell/a11y.svelte.ts
+// (applyToRoot). Before the app has moved the old panel's settings to the
+// new key, it reads them the way the app's fromV1 does.
+const bootScriptA11y = `    // Accessibility settings (web-ui/src/lib/shell/a11y.svelte.ts)
+    var a = null;
+    try { a = JSON.parse(get('neodesk_accessibility_v2') || 'null'); } catch (e) { a = null; }
+    if (!a || typeof a !== 'object') {
+        var v1 = null;
+        try { v1 = JSON.parse(get('neodesk_accessibility_v1') || 'null'); } catch (e) { v1 = null; }
+        v1 = v1 && typeof v1 === 'object' ? v1 : {};
+        a = { reduceMotion: v1.reduceMotion === true || v1.pauseAnimations === true ? 'on' : 'system',
+            moreContrast: typeof v1.contrast === 'string' && v1.contrast !== 'normal' && v1.contrast !== '' ? 'on' : 'system',
+            underlineLinks: v1.underlineLinks === true, readableFont: v1.readableFont === true || v1.dyslexiaFont === true };
+    }
+    function applies(choice, query) {
+        if (choice === 'on' || choice === 'off') return choice === 'on';
+        try { return !!(window.matchMedia && window.matchMedia(query).matches); } catch (e) { return false; }
+    }
+    root.dataset.a11yReduceMotion = String(applies(a.reduceMotion, '(prefers-reduced-motion: reduce)'));
+    root.dataset.a11yMoreContrast = String(applies(a.moreContrast, '(prefers-contrast: more)'));
+    root.dataset.a11yUnderlineLinks = String(a.underlineLinks === true);
+    root.dataset.a11yReadableFont = String(a.readableFont === true);
+`

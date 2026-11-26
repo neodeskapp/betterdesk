@@ -17,6 +17,7 @@
 	import { initTheme } from '#lib/state/theme.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import DialogHost from '#lib/ui/DialogHost.svelte';
+	import SkipLink from '#lib/ui/SkipLink.svelte';
 	import ToastHost from '#lib/ui/ToastHost.svelte';
 
 	let { children }: { children: Snippet } = $props();
@@ -54,6 +55,7 @@
 </script>
 
 {#if session.ready}
+	<SkipLink />
 	{@render children()}
 	<IdleWarning />
 	<DialogHost />

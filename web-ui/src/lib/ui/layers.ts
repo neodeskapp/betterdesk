@@ -6,6 +6,12 @@
  * (unless it is blocking). Closing a sheet also closes a dialog on it.
  * When a layer closes, focus goes back to what opened it.
  *
+ * Everything in <body> outside the top layer is inert while it is open,
+ * so screen readers in browse mode and on touch screens can't wander into
+ * the page behind (aria-modal alone doesn't stop all of them). Elements
+ * marked data-layer-live (the toast regions) stay live, so their messages
+ * are still announced.
+ *
  * Dialog.svelte and Sheet.svelte register here; pages don't.
  */
 
@@ -29,6 +35,26 @@ interface Layer extends LayerOptions {
 }
 
 const stack: Layer[] = [];
+
+/** Elements this module made inert, so it never undoes an inert set by others */
+const madeInert = new Set<Element>();
+
+/** Make every child of <body> but the top layer's inert; undo it when no layer is open */
+function syncInert(): void {
+	const top = stack.at(-1)?.element;
+	for (const child of Array.from(document.body.children)) {
+		const keep = !top || child.contains(top) || child.hasAttribute('data-layer-live');
+		if (keep) {
+			if (madeInert.delete(child)) child.removeAttribute('inert');
+		} else if (!child.hasAttribute('inert')) {
+			child.setAttribute('inert', '');
+			madeInert.add(child);
+		}
+	}
+	for (const el of madeInert) {
+		if (!el.isConnected) madeInert.delete(el);
+	}
+}
 
 function onKeydown(event: KeyboardEvent): void {
 	// Menus, comboboxes and the like handle their own Escape first
@@ -62,6 +88,7 @@ export function openLayer(options: LayerOptions): () => void {
 	if (!stack.length) document.addEventListener('keydown', onKeydown);
 	stack.push(layer);
 	overlays.layers = stack.length;
+	syncInert();
 
 	return function closed() {
 		const index = stack.indexOf(layer);
@@ -70,6 +97,7 @@ export function openLayer(options: LayerOptions): () => void {
 			for (const l of above.slice(1).reverse()) l.replace();
 		}
 		overlays.layers = stack.length;
+		syncInert();
 		if (!stack.length) document.removeEventListener('keydown', onKeydown);
 		// Only take focus back when it went nowhere (the layer's markup is gone)
 		// or is still inside it; not when another layer has taken it

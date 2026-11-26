@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { poll, socket } from '../../src/lib/state/live.ts';
+import { poll, reloadWhileShown, socket } from '../../src/lib/state/live.ts';
+import { liveUpdates, refreshNow, setLivePaused } from '../../src/lib/state/live-updates.svelte.ts';
 
 let hidden = false;
 beforeEach(() => {
@@ -10,7 +11,10 @@ beforeEach(() => {
 	});
 	vi.useFakeTimers();
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+	setLivePaused(false);
+	vi.useRealTimers();
+});
 
 function setHidden(h: boolean) {
 	hidden = h;
@@ -72,6 +76,67 @@ describe('poll', () => {
 		await vi.advanceTimersByTimeAsync(1000);
 		expect(fn).toHaveBeenCalledTimes(4);
 		stop();
+	});
+});
+
+describe('Pause live updates (WCAG 2.2.2)', () => {
+	test('a paused poller loads once at the start and then not by itself', async () => {
+		setLivePaused(true);
+		const fn = vi.fn().mockResolvedValue(undefined);
+		const stop = poll(fn, { every: 1000 });
+		await vi.advanceTimersByTimeAsync(10_000);
+		expect(fn).toHaveBeenCalledTimes(1);
+		// Not when the tab is shown again either
+		setHidden(true);
+		setHidden(false);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(fn).toHaveBeenCalledTimes(1);
+		stop();
+	});
+
+	test('Refresh loads every poller on screen once; the end of the pause loads and goes back to the timer', async () => {
+		setLivePaused(true);
+		const a = vi.fn().mockResolvedValue(undefined);
+		const b = vi.fn().mockResolvedValue(undefined);
+		const stopA = poll(a, { every: 1000 });
+		const stopB = reloadWhileShown(b, 1000);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect([a.mock.calls.length, b.mock.calls.length]).toEqual([1, 0]);
+		expect(liveUpdates.active).toBe(2);
+		await refreshNow();
+		expect([a.mock.calls.length, b.mock.calls.length]).toEqual([2, 1]);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect([a.mock.calls.length, b.mock.calls.length]).toEqual([2, 1]);
+		setLivePaused(false);
+		await vi.advanceTimersByTimeAsync(0);
+		expect([a.mock.calls.length, b.mock.calls.length]).toEqual([3, 2]);
+		await vi.advanceTimersByTimeAsync(1000);
+		expect([a.mock.calls.length, b.mock.calls.length]).toEqual([4, 3]);
+		stopA();
+		stopB();
+		expect(liveUpdates.active).toBe(0);
+	});
+
+	test('an essential poller keeps running, and is not one Refresh counts', async () => {
+		setLivePaused(true);
+		const fn = vi.fn().mockResolvedValue(undefined);
+		const stop = poll(fn, { every: 1000, essential: true });
+		await vi.advanceTimersByTimeAsync(3000);
+		expect(fn).toHaveBeenCalledTimes(4);
+		expect(liveUpdates.active).toBe(0);
+		stop();
+	});
+
+	test('the time of the last load that worked', async () => {
+		vi.setSystemTime(new Date('2026-11-26T10:00:00Z'));
+		const fn = vi.fn().mockRejectedValueOnce(new Error('x')).mockResolvedValue(undefined);
+		const stop = poll(fn, { every: 1000 });
+		await vi.advanceTimersByTimeAsync(0);
+		expect(liveUpdates.lastUpdated).toBeNull();
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(liveUpdates.lastUpdated).toBe(Date.parse('2026-11-26T10:00:02Z'));
+		stop();
+		expect(liveUpdates.lastUpdated).toBeNull();
 	});
 });
 

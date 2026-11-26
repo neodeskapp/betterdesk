@@ -628,7 +628,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=2af464a750dd3cdb"
+      "stringsUrl": "/api/console/strings/en?v=22202c23f7913e2c"
      },
      "nav": [
       {
@@ -783,7 +783,7 @@
        "accentBlue": "#1b62cf",
        "accentBlueHover": "#1854b3",
        "accentBlueMuted": "rgba(27, 98, 207, 0.15)",
-       "accentGreen": "#1c7a3b",
+       "accentGreen": "#1c793b",
        "accentGreenHover": "#135c2b",
        "accentGreenMuted": "rgba(28, 122, 59, 0.15)",
        "accentPurple": "#4a5a62",
@@ -817,6 +817,7 @@
      },
      "success": true,
      "user": {
+      "accessibility": null,
       "avatarVersion": null,
       "displayName": "e2e_guest_issuer",
       "id": 11,
@@ -1415,7 +1416,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=2af464a750dd3cdb"
+      "stringsUrl": "/api/console/strings/en?v=22202c23f7913e2c"
      },
      "nav": [
       {
@@ -1637,7 +1638,7 @@
        "accentBlue": "#1b62cf",
        "accentBlueHover": "#1854b3",
        "accentBlueMuted": "rgba(27, 98, 207, 0.15)",
-       "accentGreen": "#1c7a3b",
+       "accentGreen": "#1c793b",
        "accentGreenHover": "#135c2b",
        "accentGreenMuted": "rgba(28, 122, 59, 0.15)",
        "accentPurple": "#4a5a62",
@@ -1676,6 +1677,7 @@
      },
      "success": true,
      "user": {
+      "accessibility": null,
       "avatarVersion": null,
       "displayName": "e2e_viewer",
       "id": 10,
@@ -2274,7 +2276,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=2af464a750dd3cdb"
+      "stringsUrl": "/api/console/strings/en?v=22202c23f7913e2c"
      },
      "nav": [
       {
@@ -2563,7 +2565,7 @@
        "accentBlue": "#1b62cf",
        "accentBlueHover": "#1854b3",
        "accentBlueMuted": "rgba(27, 98, 207, 0.15)",
-       "accentGreen": "#1c7a3b",
+       "accentGreen": "#1c793b",
        "accentGreenHover": "#135c2b",
        "accentGreenMuted": "rgba(28, 122, 59, 0.15)",
        "accentPurple": "#4a5a62",
@@ -2615,6 +2617,7 @@
      },
      "success": true,
      "user": {
+      "accessibility": null,
       "avatarVersion": null,
       "displayName": "e2e_operator",
       "id": 9,
@@ -3213,7 +3216,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=2af464a750dd3cdb"
+      "stringsUrl": "/api/console/strings/en?v=22202c23f7913e2c"
      },
      "nav": [
       {
@@ -3736,7 +3739,7 @@
        "accentBlue": "#1b62cf",
        "accentBlueHover": "#1854b3",
        "accentBlueMuted": "rgba(27, 98, 207, 0.15)",
-       "accentGreen": "#1c7a3b",
+       "accentGreen": "#1c793b",
        "accentGreenHover": "#135c2b",
        "accentGreenMuted": "rgba(28, 122, 59, 0.15)",
        "accentPurple": "#4a5a62",
@@ -3819,6 +3822,7 @@
      },
      "success": true,
      "user": {
+      "accessibility": null,
       "avatarVersion": null,
       "displayName": "e2e_admin",
       "id": 5,

@@ -69,6 +69,7 @@
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
 	import { lazy } from '#lib/util/lazy.ts';
+	import LiveStatus from '#lib/ui/LiveStatus.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -252,6 +253,7 @@
 	<div class="page-head">
 		<h1>{t('nav.dashboard')}</h1>
 		<p class="page-description">{t('dashboard.page_intro')}</p>
+		<LiveStatus />
 	</div>
 
 	<div class="page-cols">

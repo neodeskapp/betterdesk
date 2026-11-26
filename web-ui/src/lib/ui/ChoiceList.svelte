@@ -153,4 +153,12 @@
 	.choice > input:disabled {
 		cursor: not-allowed;
 	}
+	/* Windows contrast themes drop the tint and the inset rule: the chosen
+	   option gets a frame in the system's selection colour */
+	@media (forced-colors: active) {
+		.choice:has(input:checked) {
+			outline: 2px solid Highlight;
+			outline-offset: -2px;
+		}
+	}
 </style>

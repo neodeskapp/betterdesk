@@ -108,7 +108,7 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'preferences-theme': 'theme dark light mode dunkel hell modus design',
 	'preferences-language': 'language sprache',
 	'preferences-accessibility':
-		'accessibility a11y contrast text size motion barrierefreiheit kontrast schriftgröße',
+		'accessibility a11y contrast motion links font shortcuts live updates barrierefreiheit kontrast bewegung schrift kurzbefehle',
 	// Sign-in
 	'require-two-factor': '2fa mfa enforce force pflicht erzwingen',
 	'enrollment-settings-section':

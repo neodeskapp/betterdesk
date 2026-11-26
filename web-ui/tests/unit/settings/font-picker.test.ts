@@ -2,7 +2,9 @@
  * The font picker on Settings › Appearance with the keyboard (BUGS L326):
  * the fonts are reached with the arrow keys, not one Tab stop each, and
  * the list closes when focus leaves the picker, so it never covers the
- * control that has focus.
+ * control that has focus. It is an APG combobox: the field keeps focus,
+ * the fonts are options of a listbox, aria-activedescendant points at the
+ * one the arrows reached, and Enter picks it.
  */
 import { cleanup, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -36,20 +38,42 @@ describe('font picker with the keyboard', () => {
 		const field = screen.getByRole('combobox');
 		expect(field).toHaveFocus();
 		const list = document.getElementById(field.getAttribute('aria-controls')!)!;
-		await vi.waitFor(() => expect(list.hidden).toBe(false));
-		const fonts = list.querySelectorAll('button');
+		expect(list).toHaveAttribute('role', 'listbox');
+		await vi.waitFor(() => expect(list.closest('[hidden]')).toBeNull());
+		const fonts = screen.getAllByRole('option');
 		expect(fonts.length).toBe(60);
-		expect([...fonts].filter((b) => b.tabIndex !== -1).length, 'fonts that are Tab stops').toBe(0);
+		expect([...fonts].filter((b) => b.tabIndex >= 0).length, 'fonts that are Tab stops').toBe(0);
 
-		// Arrow down still moves into the list
+		// Arrow down moves the active option; focus stays in the field
 		await user.keyboard('{ArrowDown}');
-		expect(fonts[0]).toHaveFocus();
+		expect(field).toHaveFocus();
+		expect(field).toHaveAttribute('aria-activedescendant', fonts[0]!.id);
+		expect(fonts[0]).toHaveAttribute('aria-selected', 'true');
+		await user.keyboard('{ArrowDown}{ArrowDown}{ArrowUp}');
+		expect(field).toHaveAttribute('aria-activedescendant', fonts[1]!.id);
 
 		await user.tab();
 		expect(after).toHaveFocus();
-		expect(list.hidden, 'the list closed when focus left').toBe(true);
+		expect(list.closest('[hidden]'), 'the list closed when focus left').not.toBeNull();
 		expect(field.getAttribute('aria-expanded')).toBe('false');
 		after.remove();
+	});
+
+	test('Enter picks the active font; Escape closes the list', async () => {
+		const user = userEvent.setup();
+		render(FontPicker, { slot: 'body', value: '', source: 'google', category: '', canEdit: true });
+		await user.tab();
+		const field = screen.getByRole('combobox');
+		await vi.waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(60));
+		await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+		await vi.waitFor(() => expect(document.getElementById('font-body-current')?.textContent).toBe('Font 2'));
+		expect(field).toHaveFocus();
+		expect(field).toHaveAttribute('aria-expanded', 'false');
+		expect(field).not.toHaveAttribute('aria-activedescendant');
+		await user.keyboard('{ArrowDown}');
+		await vi.waitFor(() => expect(field).toHaveAttribute('aria-expanded', 'true'));
+		await user.keyboard('{Escape}');
+		expect(field).toHaveAttribute('aria-expanded', 'false');
 	});
 });
 

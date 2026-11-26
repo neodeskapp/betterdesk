@@ -40,6 +40,10 @@ var allowed = map[string]bool{
 	"GET /api/impersonation":         true,
 	"POST /api/impersonation/stop":   true,
 	"POST /api/impersonation/extend": true,
+	// The admin's own accessibility settings: routes/accessibility takes
+	// the admin's id (kit.ActorID), so this write never reaches the
+	// account viewed
+	"PUT /api/accessibility": true,
 }
 
 // signOuts are the sign-out routes: during an impersonation they end it

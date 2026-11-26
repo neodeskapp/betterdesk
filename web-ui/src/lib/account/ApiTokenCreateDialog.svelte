@@ -114,7 +114,8 @@
 
 			<fieldset class="group">
 				<legend>{t('api_tokens.access')}</legend>
-				<div role="radiogroup" aria-label={t('api_tokens.access')}>
+				<!-- The fieldset is the group and its legend the name; native radios with one name move with the arrows -->
+				<div>
 					<Radio
 						name="access"
 						value="read"

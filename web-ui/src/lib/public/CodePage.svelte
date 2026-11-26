@@ -167,8 +167,12 @@
 	>
 {/snippet}
 
+<!-- Every state names the page in the title, the dead link and the failure too (WCAG 2.4.2) -->
 <svelte:head>
-	{#if data}<title>{heading}</title>{/if}
+	{#if data}<title>{heading}</title>
+	{:else if phase === 'gone'}<title>{t('onboard.public.gone_title')}</title>
+	{:else if phase === 'failed'}<title>{t('errors.server_error_title')}</title>
+	{/if}
 </svelte:head>
 
 {#if phase === 'loading'}

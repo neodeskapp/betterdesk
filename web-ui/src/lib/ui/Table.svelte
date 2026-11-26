@@ -30,12 +30,14 @@
 <script lang="ts" generics="T">
 	import { tick, untrack } from 'svelte';
 	import type { ClassValue } from 'svelte/elements';
-	import { i18n, t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { i18n, plural, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from './Button.svelte';
+	import { announce } from './announce.svelte.ts';
 	import {
 		ariaSort,
 		isSortable,
 		nextSort,
+		sortMessage,
 		sortRows,
 		uniqueKeys,
 		visibleWindow,
@@ -113,12 +115,44 @@
 
 	const captionId = $props.id();
 
+	/* When loading ends, screen readers hear the result once: the error,
+	   the empty sentence, or "Devices: 3 rows" (WCAG 4.1.3). Updates while
+	   the table is shown say nothing. */
+	let wasLoading = false;
+	$effect(() => {
+		const now = loading;
+		const failed = error;
+		const count = sorted.length;
+		untrack(() => {
+			if (wasLoading && !now) {
+				if (failed) announce(failed, { assertive: true });
+				else if (count === 0) announce(emptyText);
+				else
+					announce(
+						`${label}: ${plural(count, {
+							one: tf('table.rows_one', '{count} row'),
+							other: tf('table.rows_other', '{count} rows')
+						})}`
+					);
+			}
+			wasLoading = now;
+		});
+	});
+
+	/** A header click sorts, and says so: not every screen reader reads an aria-sort change */
+	function sortBy(col: Column<T>) {
+		sort = nextSort(sort, col.id);
+		announce(sortMessage(col.label, sort.dir));
+	}
+
 	let box = $state<HTMLDivElement | null>(null);
 	let tbody = $state<HTMLTableSectionElement | null>(null);
 
 	/* A box that scrolls must be reachable with the keyboard (arrow keys
 	   scroll it), also when nothing in the table can take focus: while it
-	   scrolls it is a focusable region named by the caption. */
+	   scrolls it is a focusable group named by the caption. A group, not a
+	   region: the page's section around the table usually has the same
+	   name, and two landmarks with one name can't be told apart. */
 	let scrolls = $state(false);
 	/* The visible width of the box: the loading, empty and error sentence
 	   wraps within it, also when the columns make the table wider */
@@ -383,7 +417,7 @@
 	bind:this={box}
 	class={['table-scroll', height && 'is-box', !scrollX && 'no-scroll-x', cls]}
 	style:max-height={height}
-	role={scrolls ? 'region' : undefined}
+	role={scrolls ? 'group' : undefined}
 	aria-labelledby={scrolls ? captionId : undefined}
 	tabindex={scrolls ? 0 : undefined}
 >
@@ -432,7 +466,7 @@
 						style:min-width={col.minWidth}
 					>
 						{#if sortable}
-							<button type="button" class="sort-btn" onclick={() => (sort = nextSort(sort, col.id))}>
+							<button type="button" class="sort-btn" onclick={() => sortBy(col)}>
 								<span class={col.labelHidden ? 'sr-only' : undefined}>{col.label}</span>
 							</button>
 						{:else if col.labelHidden}
@@ -524,7 +558,11 @@
 		overflow-x: auto;
 		min-width: 0;
 		margin-inline: calc(-1 * var(--row-pad-x));
+		/* A control that gets focus scrolls in with room for its focus ring
+		   (2px and 2px off), which the box would cut at its edge */
+		scroll-padding: var(--space-2);
 	}
+
 	.table-scroll.is-box {
 		overflow: auto;
 		overscroll-behavior: contain;

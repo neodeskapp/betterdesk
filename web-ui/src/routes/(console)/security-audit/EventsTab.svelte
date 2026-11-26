@@ -9,7 +9,7 @@
 	import { untrack } from 'svelte';
 	import { listServerEvents, type ServerEvent } from '#lib/api/audit.ts';
 	import { formatDate, formatNumber, parseDate } from '#lib/i18n/format.ts';
-	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
+	import { i18n, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import DetailsText from '#lib/people/DetailsText.svelte';
 	import { actionLabel, EVENT_FILTERS, formatDetails } from '#lib/people/audit.ts';
 	import { countPerDay, coversDays, lastDays } from '#lib/people/dates.ts';
@@ -211,7 +211,12 @@
 		/>
 	</div>
 	{#if pageCount > 1 && !loadError}
-		<Pagination page={pageNo} {pageCount} label={t('security_audit.pages')} onchange={goPage} />
+		<Pagination
+			page={pageNo}
+			{pageCount}
+			label={tf('pagination.pages_of', 'Pages of {name}', { name: t('security_audit.tab_server_events') })}
+			onchange={goPage}
+		/>
 	{/if}
 </section>
 

@@ -120,7 +120,7 @@ func TestShapeOfEveryVariant(t *testing.T) {
 			t.Errorf("the signal server's peers table exists = %v, want %v", got, want)
 		}
 		tables := shape.Tables()
-		wantTables := map[storetest.Origin]int{storetest.ConsoleFirst: 55, storetest.NodeFirst: 56, storetest.GoServerFirst: 91}[origin]
+		wantTables := map[storetest.Origin]int{storetest.ConsoleFirst: 55, storetest.NodeFirst: 56, storetest.GoServerFirst: 91}[origin] + len(goTables)
 		if len(tables) != wantTables || !sortedStrings(tables) {
 			t.Errorf("%d tables (sorted %v), want %d", len(tables), sortedStrings(tables), wantTables)
 		}
@@ -181,7 +181,7 @@ func TestShapeLifecycle(t *testing.T) {
 
 		mustMigrate(t, db)
 		migrated := db.Shape()
-		if migrated == empty || len(migrated.Tables()) != 55 || len(empty.Tables()) != 0 {
+		if migrated == empty || len(migrated.Tables()) != 55+len(goTables) || len(empty.Tables()) != 0 {
 			t.Errorf("after Migrate: %d tables in the new shape, %d in the old one", len(migrated.Tables()), len(empty.Tables()))
 		}
 

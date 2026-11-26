@@ -36,8 +36,8 @@
    "body": {
     "kind": "bytes",
     "type": "application/javascript",
-    "length": 6636,
-    "sha256": "80c3181e845498fedede271a96fb7bd2a280c1d789bf8285fb8ffdeb2a2963a7",
+    "length": 5664,
+    "sha256": "4b7649b4e4e07c100ae87f3b24e3441d1594edc10e41eb14e7ed4012699920a3",
     "head": "(function (boot) {\n    var root = document.documentElement;\n    var VARS = {\n        bgPrimary: '--bg-primary', bgSecondary: '--bg-secondary', bgTertiary: '--bg-tertiary',\n        bgElevated: '--bg-elevated', textPrimary: '--text-primary', textSecondary: '--text-secondary',\n        accentBlue: '--ac"
    }
   }

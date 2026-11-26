@@ -12,7 +12,10 @@
 
   A modal dialog: combobox field with a listbox of results in groups.
   ArrowUp and ArrowDown move, Enter opens, Escape closes and returns
-  focus, Tab stays in the field; a click on the dimmed page closes. On
+  focus. Once the arrows have moved into the list, Home and End jump to
+  the first and last result; while typing they move the caret. Tab cycles
+  through the field, Cancel and Clear recent searches (trapTab, as in
+  Dialog); a click on the dimmed page closes. On
   phones and touch screens, which have no Escape key, Cancel next to the
   field closes it too.
 -->
@@ -29,6 +32,7 @@
 	import { can, session } from '#lib/state/session.svelte.ts';
 	import { theme } from '#lib/state/theme.svelte.ts';
 	import Icon from '#lib/ui/Icon.svelte';
+	import { trapTab } from '#lib/ui/focus.ts';
 	import { openLayer } from '#lib/ui/layers.ts';
 	import { portal } from '#lib/ui/portal.ts';
 	import { searchActions } from './actions.ts';
@@ -55,6 +59,8 @@
 
 	let query = $state('');
 	let active = $state(0);
+	/** The arrows moved into the list: Home and End move there, not the caret */
+	let inList = false;
 	let dialog = $state<HTMLElement | null>(null);
 	let input = $state<HTMLInputElement | null>(null);
 	let overlay = $state<HTMLElement | null>(null);
@@ -186,6 +192,7 @@
 		if (r.kind === 'recent') {
 			query = r.title;
 			active = 0;
+			inList = false;
 			input?.focus();
 			return;
 		}
@@ -213,11 +220,19 @@
 		switch (e.key) {
 			case 'ArrowDown':
 				e.preventDefault();
+				inList = true;
 				setActive(Math.min(results.length - 1, current + 1));
 				break;
 			case 'ArrowUp':
 				e.preventDefault();
+				inList = true;
 				setActive(Math.max(0, current - 1));
+				break;
+			case 'Home':
+			case 'End':
+				if (!inList || !results.length || e.shiftKey) break;
+				e.preventDefault();
+				setActive(e.key === 'Home' ? 0 : results.length - 1);
 				break;
 			case 'Enter':
 				e.preventDefault();
@@ -226,9 +241,6 @@
 			case 'Escape':
 				e.preventDefault();
 				close();
-				break;
-			case 'Tab':
-				e.preventDefault();
 				break;
 		}
 	}
@@ -252,10 +264,14 @@
 				if (e.target === back) close();
 			};
 			back.addEventListener('pointerdown', down);
+			const tab = (e: KeyboardEvent) => trapTab(el, e);
+			el.addEventListener('keydown', tab);
+			inList = false;
 			input?.focus();
 			void loadData();
 			return () => {
 				back.removeEventListener('pointerdown', down);
+				el.removeEventListener('keydown', tab);
 				closed();
 			};
 		});
@@ -287,7 +303,10 @@
 					placeholder={t('search.placeholder')}
 					autocomplete="off"
 					spellcheck="false"
-					oninput={() => (active = 0)}
+					oninput={() => {
+						active = 0;
+						inList = false;
+					}}
 					{onkeydown}
 				/>
 				<button type="button" class="search-cancel" onclick={close}>{t('common.cancel')}</button>

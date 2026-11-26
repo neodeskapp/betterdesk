@@ -51,7 +51,7 @@
 {/snippet}
 
 {#if name}
-	<span class="lang">{@render flag()}<span class="lang-name">{name}</span></span>
+	<span class="lang">{@render flag()}<span class="lang-name" lang={code}>{name}</span></span>
 {:else}
 	{@render flag()}
 {/if}

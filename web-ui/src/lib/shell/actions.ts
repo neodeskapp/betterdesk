@@ -86,7 +86,8 @@ const ACTIONS: readonly ActionDef[] = [
 		id: 'accessibility',
 		icon: 'accessibility_new',
 		title: (c) => c.t('search.action_accessibility'),
-		keywords: 'accessibility a11y contrast text size motion barrierefreiheit kontrast schriftgröße bewegung',
+		keywords:
+			'accessibility a11y contrast motion underline links readable font shortcuts live updates pause barrierefreiheit kontrast bewegung links schrift kurzbefehle aktualisierung',
 		allowed: () => true
 	},
 	{

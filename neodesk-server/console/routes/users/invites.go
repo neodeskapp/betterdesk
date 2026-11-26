@@ -79,10 +79,10 @@ func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose
 	}
 	m := passwordlinks.BuildMail(translate, passwordlinks.MailFacts{
 		Purpose: purpose, Link: passwordlinks.SetPasswordLink(base, token), Username: username,
-		Sender: h.senderName(r), Host: host, Expires: expires.UTC().Format("2006-01-02 15:04") + " UTC",
+		Sender: h.senderName(r), Host: host, Expires: brandmail.When(expires),
 		Branding: brandmail.Of(h.d.Branding, base),
 	})
-	sent, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline})
+	sent, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline, Lang: m.Lang})
 	if err != nil || !sent {
 		return false, expires, err
 	}

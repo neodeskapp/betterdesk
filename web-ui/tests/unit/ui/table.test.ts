@@ -4,6 +4,8 @@ import { createRawSnippet, tick } from 'svelte';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import Table from '../../../src/lib/ui/Table.svelte';
 import ColumnChooser from '../../../src/lib/ui/ColumnChooser.svelte';
+import Announcer from '../../../src/lib/ui/Announcer.svelte';
+import { resetAnnouncer } from '../../../src/lib/ui/announce.svelte.ts';
 import type { Column } from '../../../src/lib/ui/table.ts';
 import { openPopup } from '../../../src/lib/ui/popups.svelte.ts';
 import { i18n } from '../../../src/lib/i18n/i18n.svelte.ts';
@@ -78,7 +80,8 @@ describe('Table: sorting', () => {
 	test('a header click sorts and toggles aria-sort; the button fills the header cell', async () => {
 		render(Table<Dev>, { ...base, rows: few, columns: cols() });
 		const th = header('Seen');
-		expect(th).toHaveAttribute('aria-sort', 'none');
+		// Only the sorted column carries aria-sort (APG sortable table)
+		expect(th).not.toHaveAttribute('aria-sort');
 		expect(th).toHaveClass('is-num');
 		expect(header('Actions')).not.toHaveAttribute('aria-sort');
 
@@ -91,8 +94,26 @@ describe('Table: sorting', () => {
 		expect(names()).toEqual(['Apfel', 'Zebra', 'Öl', 'Ofen', 'Äpfel']); // still last
 
 		await userEvent.click(within(header('Name')).getByRole('button'));
-		expect(th).toHaveAttribute('aria-sort', 'none');
+		expect(th).not.toHaveAttribute('aria-sort');
 		expect(header('Name')).toHaveAttribute('aria-sort', 'ascending');
+	});
+
+	test('a sort change is announced with the column and the direction', async () => {
+		vi.useFakeTimers({ shouldAdvanceTime: true });
+		try {
+			render(Announcer);
+			render(Table<Dev>, { ...base, rows: few, columns: cols() });
+			const polite = document.querySelector('[data-announcer="polite"]')!;
+			await userEvent.click(within(header('Seen')).getByRole('button'));
+			await vi.advanceTimersByTimeAsync(200);
+			expect(polite.textContent).toBe('Sorted by Seen, ascending');
+			await userEvent.click(within(header('Seen')).getByRole('button'));
+			await vi.advanceTimersByTimeAsync(200);
+			expect(polite.textContent).toBe('Sorted by Seen, descending');
+		} finally {
+			resetAnnouncer();
+			vi.useRealTimers();
+		}
 	});
 
 	test('text sorts with the console language: German umlauts next to their letter', async () => {
@@ -298,7 +319,7 @@ describe('Table: repeated keys', () => {
 });
 
 describe('Table: scroll box', () => {
-	test('while the table is wider than its box, the box is a focusable region named by the caption', async () => {
+	test('while the table is wider than its box, the box is a focusable group named by the caption (not a landmark: the section around it has that name)', async () => {
 		// jsdom has no layout: report sizes and run the observer by hand
 		let notify: () => void = () => {};
 		vi.stubGlobal(
@@ -323,7 +344,7 @@ describe('Table: scroll box', () => {
 		notify();
 		await tick();
 		expect(box).toHaveAttribute('tabindex', '0');
-		expect(screen.getByRole('region', { name: 'Devices' })).toBe(box);
+		expect(screen.getByRole('group', { name: 'Devices' })).toBe(box);
 
 		wide = false;
 		notify();

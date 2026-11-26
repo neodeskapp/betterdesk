@@ -330,10 +330,10 @@
 									</span>
 									<span class="row-bottom">
 										<span class="row-last">{lastLine(c.last_message, t)}</span>
-										{#if unread > 0}<span
-												class="row-badge"
-												aria-label={t('chat.unread_count', { count: unread })}
-												>{unread > 99 ? '99+' : unread}</span
+										{#if unread > 0}<span class="row-badge"
+												><span class="sr-only">{t('chat.unread_count', { count: unread })}</span><span
+													aria-hidden="true">{unread > 99 ? '99+' : unread}</span
+												></span
 											>{/if}
 									</span>
 									<span class="row-tags">
@@ -400,10 +400,10 @@
 									</span>
 									<span class="row-bottom">
 										<span class="row-last">{lastLine(c.last_message, t)}</span>
-										{#if unread > 0}<span
-												class="row-badge"
-												aria-label={t('chat.unread_count', { count: unread })}
-												>{unread > 99 ? '99+' : unread}</span
+										{#if unread > 0}<span class="row-badge"
+												><span class="sr-only">{t('chat.unread_count', { count: unread })}</span><span
+													aria-hidden="true">{unread > 99 ? '99+' : unread}</span
+												></span
 											>{/if}
 									</span>
 								</span>

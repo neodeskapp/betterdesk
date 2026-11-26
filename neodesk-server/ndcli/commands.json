@@ -10340,6 +10340,14 @@
   {
    "route": "POST /api/impersonation/stop",
    "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
+  },
+  {
+   "route": "GET /api/accessibility",
+   "reason": "The signed-in account's own accessibility settings for the web console (motion, contrast, links, font, shortcuts, live updates): they only change how the console looks in a browser."
+  },
+  {
+   "route": "PUT /api/accessibility",
+   "reason": "The signed-in account's own accessibility settings for the web console (motion, contrast, links, font, shortcuts, live updates): they only change how the console looks in a browser."
   }
  ]
 }

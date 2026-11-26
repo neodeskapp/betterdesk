@@ -112,4 +112,14 @@
 			min-width: var(--control-h);
 		}
 	}
+	/* Windows contrast themes drop the tint: the chosen filter takes the
+	   system's selection colours instead */
+	@media (forced-colors: active) {
+		.filter-btn[aria-pressed='true'] {
+			border-color: Highlight;
+			background: Highlight;
+			color: HighlightText;
+			forced-color-adjust: none;
+		}
+	}
 </style>

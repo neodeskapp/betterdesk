@@ -24,6 +24,8 @@
 		type Widget
 	} from '#lib/devices-area/cdap/model.ts';
 	import Button from '#lib/ui/Button.svelte';
+	import { announce } from '#lib/ui/announce.svelte.ts';
+	import { sortMessage } from '#lib/ui/table.ts';
 	import Empty from '#lib/ui/Empty.svelte';
 	import Pagination from '#lib/ui/Pagination.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
@@ -63,10 +65,11 @@
 			sortBy = col.id;
 			dir = 'asc';
 		}
+		announce(sortMessage(col.label, dir));
 	}
 
-	function ariaSort(col: TableColumn): 'ascending' | 'descending' | 'none' {
-		if (sortBy !== col.id) return 'none';
+	function ariaSort(col: TableColumn): 'ascending' | 'descending' | undefined {
+		if (sortBy !== col.id) return undefined;
 		return dir === 'asc' ? 'ascending' : 'descending';
 	}
 
@@ -154,7 +157,7 @@
 			bind:page
 			total={view.total}
 			pageSize={widget.pageSize}
-			label={widget.label}
+			label={tf('pagination.pages_of', 'Pages of {name}', { name: widget.label })}
 		/>
 	{/if}
 </div>
