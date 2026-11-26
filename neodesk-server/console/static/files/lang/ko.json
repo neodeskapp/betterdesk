@@ -6998,7 +6998,9 @@
     "page_purpose": "콘솔의 각 번역이 얼마나 완성되었는지, 그리고 영어 옆의 모든 텍스트.",
     "page_only_shows": "이 페이지는 언어 파일만 보여 줍니다. 텍스트는 서버의 파일에서 바꿉니다. 보이는 언어를 바꾸려면 다음을 여세요:",
     "page_own_link": "내 계정 › 환경설정",
-    "status_legend": "기준 언어: 다른 파일과 비교하는 기준 파일. 검토 필요: 아직 사람이 확인하지 않았다고 표시된 파일."
+    "status_legend": "기준 언어: 다른 파일과 비교하는 기준 파일. 검토 필요: 아직 사람이 확인하지 않았다고 표시된 파일.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "자원 제어",

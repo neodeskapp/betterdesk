@@ -7004,7 +7004,9 @@
     "page_purpose": "Hvor komplet hver oversættelse af konsollen er, og hver tekst ved siden af den engelske.",
     "page_only_shows": "Denne side viser kun sprogfilerne; teksterne ændres i filerne på serveren. For at ændre det sprog, du ser, skal du åbne",
     "page_own_link": "Din konto › Præferencer",
-    "status_legend": "Referencesprog: de filer, de andre sammenlignes med. Skal gennemgås: filen er markeret som endnu ikke tjekket af en person."
+    "status_legend": "Referencesprog: de filer, de andre sammenlignes med. Skal gennemgås: filen er markeret som endnu ikke tjekket af en person.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Ressourcekontrol",

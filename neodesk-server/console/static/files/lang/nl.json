@@ -6998,7 +6998,9 @@
     "page_purpose": "Hoe compleet elke vertaling van de console is, en elke tekst naast de Engelse.",
     "page_only_shows": "Deze pagina toont alleen de taalbestanden; teksten wijzigt u in de bestanden op de server. Om de taal te wijzigen die u ziet, opent u",
     "page_own_link": "Uw account › Voorkeuren",
-    "status_legend": "Referentietaal: de bestanden waarmee de andere worden vergeleken. Controle nodig: het bestand is gemarkeerd als nog niet door een persoon nagekeken."
+    "status_legend": "Referentietaal: de bestanden waarmee de andere worden vergeleken. Controle nodig: het bestand is gemarkeerd als nog niet door een persoon nagekeken.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Resourcebeheer",

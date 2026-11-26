@@ -7004,7 +7004,9 @@
     "page_purpose": "คำแปลของคอนโซลแต่ละภาษาครบแค่ไหน และข้อความแต่ละรายการเทียบกับภาษาอังกฤษ",
     "page_only_shows": "หน้านี้แสดงเฉพาะไฟล์ภาษา ข้อความเปลี่ยนได้ในไฟล์บนเซิร์ฟเวอร์ หากต้องการเปลี่ยนภาษาที่คุณเห็น ให้เปิด",
     "page_own_link": "บัญชีของคุณ › Preferences",
-    "status_legend": "ภาษาอ้างอิง: ไฟล์ที่ใช้เปรียบเทียบไฟล์อื่น ต้องตรวจทาน: ไฟล์ถูกทำเครื่องหมายว่ายังไม่มีคนตรวจ"
+    "status_legend": "ภาษาอ้างอิง: ไฟล์ที่ใช้เปรียบเทียบไฟล์อื่น ต้องตรวจทาน: ไฟล์ถูกทำเครื่องหมายว่ายังไม่มีคนตรวจ",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "การควบคุมทรัพยากร",

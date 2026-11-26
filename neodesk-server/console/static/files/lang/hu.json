@@ -7004,7 +7004,9 @@
     "page_purpose": "Mennyire teljes a konzol egyes fordításai, és minden szöveg az angol mellett.",
     "page_only_shows": "Ez az oldal csak a nyelvi fájlokat mutatja; a szövegek a szerveren lévő fájlokban módosíthatók. A látott nyelv módosításához nyissa meg ezt:",
     "page_own_link": "Fiókja › Preferences",
-    "status_legend": "Referencianyelv: a fájlok, amelyekhez a többit hasonlítják. Átnézendő: a fájl úgy van megjelölve, hogy ember még nem ellenőrizte."
+    "status_legend": "Referencianyelv: a fájlok, amelyekhez a többit hasonlítják. Átnézendő: a fájl úgy van megjelölve, hogy ember még nem ellenőrizte.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Erőforrás-szabályozás",

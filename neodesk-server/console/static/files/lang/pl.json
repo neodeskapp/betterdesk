@@ -7274,7 +7274,9 @@
     "page_purpose": "Na ile kompletne jest każde tłumaczenie konsoli, i każdy tekst obok angielskiego.",
     "page_only_shows": "Ta strona tylko pokazuje pliki językowe; teksty zmienia się w plikach na serwerze. Aby zmienić język, który widzisz, otwórz",
     "page_own_link": "Twoje konto › Preferencje",
-    "status_legend": "Język odniesienia: pliki, z którymi porównuje się pozostałe. Wymaga przeglądu: plik jest oznaczony jako jeszcze niesprawdzony przez człowieka."
+    "status_legend": "Język odniesienia: pliki, z którymi porównuje się pozostałe. Wymaga przeglądu: plik jest oznaczony jako jeszcze niesprawdzony przez człowieka.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Kontrola zasobów",

@@ -7004,7 +7004,9 @@
     "page_purpose": "Konsolun her çevirisinin ne kadar tamam olduğu ve her metin İngilizcesinin yanında.",
     "page_only_shows": "Bu sayfa yalnızca dil dosyalarını gösterir; metinler sunucudaki dosyalarda değiştirilir. Gördüğünüz dili değiştirmek için şunu açın:",
     "page_own_link": "Hesabınız › Tercihler",
-    "status_legend": "Referans dil: diğerlerinin karşılaştırıldığı dosyalar. İnceleme gerekiyor: dosya henüz bir kişi tarafından kontrol edilmemiş olarak işaretli."
+    "status_legend": "Referans dil: diğerlerinin karşılaştırıldığı dosyalar. İnceleme gerekiyor: dosya henüz bir kişi tarafından kontrol edilmemiş olarak işaretli.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Kaynak Kontrolü",

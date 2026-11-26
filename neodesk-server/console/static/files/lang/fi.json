@@ -7004,7 +7004,9 @@
     "page_purpose": "Kuinka valmis kukin konsolin käännös on, ja jokainen teksti englanninkielisen rinnalla.",
     "page_only_shows": "Tämä sivu näyttää vain kielitiedostot; tekstejä muutetaan palvelimen tiedostoissa. Jos haluat vaihtaa näkemäsi kielen, avaa",
     "page_own_link": "Oma tili › Asetukset",
-    "status_legend": "Viitekieli: tiedostot, joihin muita verrataan. Tarvitsee tarkistuksen: tiedosto on merkitty sellaiseksi, jota kukaan ei ole vielä tarkistanut."
+    "status_legend": "Viitekieli: tiedostot, joihin muita verrataan. Tarvitsee tarkistuksen: tiedosto on merkitty sellaiseksi, jota kukaan ei ole vielä tarkistanut.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Resurssien hallinta",

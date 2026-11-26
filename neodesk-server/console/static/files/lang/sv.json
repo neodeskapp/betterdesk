@@ -7004,7 +7004,9 @@
     "page_purpose": "Hur komplett varje översättning av konsolen är, och varje text bredvid den engelska.",
     "page_only_shows": "Den här sidan visar bara språkfilerna; texterna ändras i filerna på servern. För att ändra språket du ser, öppna",
     "page_own_link": "Ditt konto › Inställningar",
-    "status_legend": "Referensspråk: filerna som de andra jämförs med. Behöver granskas: filen är markerad som ännu inte kontrollerad av en person."
+    "status_legend": "Referensspråk: filerna som de andra jämförs med. Behöver granskas: filen är markerad som ännu inte kontrollerad av en person.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Resurskontroll",

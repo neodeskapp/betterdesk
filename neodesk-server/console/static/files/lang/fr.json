@@ -7278,7 +7278,9 @@
     "page_purpose": "Le degré d'avancement de chaque traduction de la console, et chaque texte à côté de l'anglais.",
     "page_only_shows": "Cette page montre seulement les fichiers de langue ; les textes se modifient dans les fichiers sur le serveur. Pour changer la langue que vous voyez, ouvrez",
     "page_own_link": "Votre compte › Préférences",
-    "status_legend": "Langue de référence : les fichiers auxquels les autres sont comparés. À relire : le fichier est marqué comme pas encore vérifié par une personne."
+    "status_legend": "Langue de référence : les fichiers auxquels les autres sont comparés. À relire : le fichier est marqué comme pas encore vérifié par une personne.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Contrôle des ressources",

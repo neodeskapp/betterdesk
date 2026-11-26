@@ -6998,7 +6998,9 @@
     "page_purpose": "Jak kompletní je každý překlad konzole, a každý text vedle anglického.",
     "page_only_shows": "Tato stránka jen zobrazuje jazykové soubory; texty se mění v souborech na serveru. Chcete-li změnit jazyk, který vidíte, otevřete",
     "page_own_link": "Váš účet › Předvolby",
-    "status_legend": "Referenční jazyk: soubory, se kterými se ostatní porovnávají. Potřebuje kontrolu: soubor je označen jako dosud nezkontrolovaný člověkem."
+    "status_legend": "Referenční jazyk: soubory, se kterými se ostatní porovnávají. Potřebuje kontrolu: soubor je označen jako dosud nezkontrolovaný člověkem.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Řízení prostředků",

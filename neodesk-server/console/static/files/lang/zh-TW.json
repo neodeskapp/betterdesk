@@ -7278,7 +7278,9 @@
     "page_purpose": "主控台的每個翻譯完成了多少，以及每段文字與英文的對照。",
     "page_only_shows": "此頁面只顯示語言檔案；文字在伺服器上的檔案中變更。若要變更您看到的語言，請開啟",
     "page_own_link": "您的帳戶 › 偏好設定",
-    "status_legend": "參考語言：其他檔案與之比較的檔案。需要審閱：該檔案被標示為尚未經人工檢查。"
+    "status_legend": "參考語言：其他檔案與之比較的檔案。需要審閱：該檔案被標示為尚未經人工檢查。",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "資源控制",

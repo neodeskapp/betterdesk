@@ -6998,7 +6998,9 @@
     "page_purpose": "Quão completa está cada tradução da consola, e cada texto ao lado do inglês.",
     "page_only_shows": "Esta página só mostra os ficheiros de idioma; os textos alteram-se nos ficheiros no servidor. Para mudar o idioma que vê, abra",
     "page_own_link": "A sua conta › Preferências",
-    "status_legend": "Idioma de referência: os ficheiros com que os outros são comparados. Precisa de revisão: o ficheiro está marcado como ainda não verificado por uma pessoa."
+    "status_legend": "Idioma de referência: os ficheiros com que os outros são comparados. Precisa de revisão: o ficheiro está marcado como ainda não verificado por uma pessoa.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Controle de recursos",

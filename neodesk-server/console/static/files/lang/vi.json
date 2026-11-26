@@ -7004,7 +7004,9 @@
     "page_purpose": "Mỗi bản dịch của bảng điều khiển đã hoàn thiện đến đâu, và mỗi văn bản bên cạnh bản tiếng Anh.",
     "page_only_shows": "Trang này chỉ hiển thị các tệp ngôn ngữ; văn bản được đổi trong các tệp trên máy chủ. Để đổi ngôn ngữ bạn thấy, mở",
     "page_own_link": "Tài khoản của bạn › Preferences",
-    "status_legend": "Ngôn ngữ tham chiếu: các tệp mà những tệp khác được so sánh với. Cần xem lại: tệp được đánh dấu là chưa được người kiểm tra."
+    "status_legend": "Ngôn ngữ tham chiếu: các tệp mà những tệp khác được so sánh với. Cần xem lại: tệp được đánh dấu là chưa được người kiểm tra.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Kiểm soát tài nguyên",

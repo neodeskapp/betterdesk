@@ -7004,7 +7004,9 @@
     "page_purpose": "Наскільки повний кожен переклад консолі, і кожен текст поруч з англійським.",
     "page_only_shows": "Ця сторінка лише показує мовні файли; тексти змінюються у файлах на сервері. Щоб змінити мову, яку ви бачите, відкрийте",
     "page_own_link": "Ваш обліковий запис › Налаштування",
-    "status_legend": "Мова-еталон: файли, з якими порівнюють інші. Потребує перевірки: файл позначено як ще не перевірений людиною."
+    "status_legend": "Мова-еталон: файли, з якими порівнюють інші. Потребує перевірки: файл позначено як ще не перевірений людиною.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Контроль ресурсів",

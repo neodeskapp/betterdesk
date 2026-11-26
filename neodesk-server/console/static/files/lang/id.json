@@ -7004,7 +7004,9 @@
     "page_purpose": "Seberapa lengkap setiap terjemahan konsol, dan setiap teks di samping teks Inggrisnya.",
     "page_only_shows": "Halaman ini hanya menampilkan file bahasa; teks diubah di file pada server. Untuk mengubah bahasa yang Anda lihat, buka",
     "page_own_link": "Akun Anda › Preferensi",
-    "status_legend": "Bahasa acuan: file yang menjadi pembanding file lain. Perlu ditinjau: file ditandai belum diperiksa oleh orang."
+    "status_legend": "Bahasa acuan: file yang menjadi pembanding file lain. Perlu ditinjau: file ditandai belum diperiksa oleh orang.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Kontrol Sumber Daya",
