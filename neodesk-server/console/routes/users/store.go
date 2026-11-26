@@ -155,8 +155,10 @@ func updateEmail(ctx context.Context, db *store.DB, id int64, email string) erro
 }
 
 // deleteAccount deletes an account with its user group memberships, its
-// places on device group access lists and its picture (deleteUser). Its
-// sessions, grants and strategy assignment stay.
+// places on device group access lists and its picture (deleteUser). The
+// foreign keys take its device grants, access tokens, client sessions and
+// notification reads with it; its ended sessions and strategy assignment
+// stay (deletion.go says what else goes).
 func deleteAccount(ctx context.Context, db *store.DB, id int64) error {
 	for _, query := range []string{
 		`DELETE FROM user_group_members WHERE user_id = ?`,
