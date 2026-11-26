@@ -352,6 +352,7 @@ class ChatClient {
 				const id = String(f.conversation_id ?? '');
 				if (!id) return;
 				this.threads = Object.fromEntries(Object.entries(this.threads).filter(([k]) => k !== id));
+				this.details = Object.fromEntries(Object.entries(this.details).filter(([k]) => k !== id));
 				for (const fn of this.removeListeners) fn(id);
 				this.listVersion++;
 				this.refreshSummary();
