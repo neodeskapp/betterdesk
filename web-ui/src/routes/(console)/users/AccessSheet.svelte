@@ -13,6 +13,12 @@
   full access in every section whatever is set (the server applies no
   section setting to them), so for one the sections give way to a note
   and only the client features show.
+
+  For a user, the "Role or group default" choice names what that default
+  gives right now (PATTERN.md rule 2): where the setting comes from the
+  role or a group, the level in force; where the person has their own
+  setting, what their groups' stored rows and the role would give without
+  it (lib/people/access-inherited.ts, the server's rules).
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -20,6 +26,7 @@
 		getAccessCatalog,
 		getAccessPolicy,
 		saveAccessPolicy,
+		type AccessLevel,
 		type AccessCatalog,
 		type AccessPolicy,
 		type AccessSubject
@@ -36,6 +43,12 @@
 		toPayload,
 		type Draft
 	} from '#lib/people/access.ts';
+	import {
+		inheritedFeature,
+		inheritedSection,
+		type InheritedFeature,
+		type InheritedLevel
+	} from '#lib/people/access-inherited.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
@@ -101,6 +114,7 @@
 			catalog = c;
 			effective = p.effective;
 			form.reset(toDraft(c, p));
+			if (kind === 'user') void loadGroupRows(p.effective.groups.map((g) => g.guid));
 			// The sheet focused a footer button while loading; the first field is where work starts
 			await tick();
 			const active = document.activeElement;
@@ -119,6 +133,48 @@
 		untrack(() => void load());
 	});
 
+	/** The stored rows of the person's groups, for what their default gives (users only) */
+	let groupRows = $state.raw<{
+		sections: { resource_key: string; access_level: string }[];
+		features: { feature_key: string; enabled: boolean }[];
+	} | null>(null);
+
+	async function loadGroupRows(guids: string[]) {
+		try {
+			const policies = await Promise.all(
+				guids.filter(Boolean).map((guid) => getAccessPolicy({ kind: 'group', guid }, aborter.signal))
+			);
+			groupRows = {
+				sections: policies.flatMap((p) => p.sections),
+				features: policies.flatMap((p) => p.features)
+			};
+		} catch {
+			// Without them the choice keeps its plain name where the person has their own setting
+			groupRows = null;
+		}
+	}
+
+	/** The catalog group the server resolves a section under (its last entry) */
+	const sectionGroup = $derived(new Map((catalog?.sections ?? []).map((s) => [s.key, s.group])));
+
+	function sectionDefault(key: string): InheritedLevel | null {
+		const eff = effective?.sections[key];
+		if (!eff || kind !== 'user') return null;
+		if (eff.source === 'role' || eff.source === 'group')
+			return { level: eff.access as AccessLevel, source: eff.source };
+		if (!groupRows) return null;
+		return inheritedSection(key, sectionGroup.get(key) ?? '', groupRows.sections, eff.role_ceiling);
+	}
+
+	function featureDefault(key: string, hardLock: boolean): InheritedFeature | null {
+		const eff = effective?.features[key];
+		if (!eff || kind !== 'user') return null;
+		if (eff.source === 'default' || eff.source === 'group')
+			return { enabled: eff.enabled, source: eff.source };
+		if (!groupRows) return null;
+		return inheritedFeature(key, groupRows.features, hardLock);
+	}
+
 	const groups = $derived(catalog ? catalogGroups(catalog) : []);
 
 	/** The first of the keys that has a string, else the catalog's label */
@@ -130,17 +186,41 @@
 	const inheritLabel = $derived(
 		kind === 'user' ? t('users.access_policy_inherit') : tf('users.access_not_set', 'Not set')
 	);
-	const levelOptions = $derived([
-		{ value: 'inherit', label: inheritLabel },
-		{ value: 'none', label: t('users.access_none') },
-		{ value: 'read', label: t('users.access_read') },
-		{ value: 'write', label: t('users.access_write') }
-	]);
-	const featureOptions = $derived([
-		{ value: 'inherit', label: tf('users.access_feature_inherit', 'Default') },
-		{ value: 'on', label: t('common.on') },
-		{ value: 'off', label: t('common.off') }
-	]);
+	/** The choices of a section; for a user the default names its level and where it comes from */
+	function levelOptions(def: InheritedLevel | null) {
+		return [
+			{
+				value: 'inherit',
+				label: def
+					? tf('users.access_default_is', '{label}: {level}, {source}', {
+							label: inheritLabel,
+							level: levelText(def.level),
+							source: sourceText(def.source)
+						})
+					: inheritLabel
+			},
+			{ value: 'none', label: t('users.access_none') },
+			{ value: 'read', label: t('users.access_read') },
+			{ value: 'write', label: t('users.access_write') }
+		];
+	}
+	function featureOptions(def: InheritedFeature | null) {
+		const base = tf('users.access_feature_inherit', 'Default');
+		return [
+			{
+				value: 'inherit',
+				label: def
+					? tf('users.access_default_is', '{label}: {level}, {source}', {
+							label: base,
+							level: def.enabled ? t('common.on') : t('common.off'),
+							source: sourceText(def.source)
+						})
+					: base
+			},
+			{ value: 'on', label: t('common.on') },
+			{ value: 'off', label: t('common.off') }
+		];
+	}
 
 	/** English for the source words until the server has loaded the new strings */
 	const SOURCE_FALLBACK: Record<string, string> = {
@@ -213,12 +293,12 @@
 		</span>
 		{#if editable}
 			{#if isGroup}
-				<Select id="{uid}-g-{key}" small options={levelOptions} bind:value={form.values.groups[key]} />
+				<Select id="{uid}-g-{key}" small options={levelOptions(null)} bind:value={form.values.groups[key]} />
 			{:else}
 				<Select
 					id="{uid}-s-{key}"
 					small
-					options={levelOptions}
+					options={levelOptions(sectionDefault(key))}
 					aria-describedby={eff ? `${uid}-s-${key}-now${above ? ` ${uid}-s-${key}-warn` : ''}` : undefined}
 					bind:value={form.values.sections[key]}
 				/>
@@ -328,7 +408,7 @@
 								<Select
 									id="{uid}-f-{f.key}"
 									small
-									options={featureOptions}
+									options={featureOptions(featureDefault(f.key, !!f.hardLock))}
 									aria-describedby={described || undefined}
 									bind:value={form.values.features[f.key]}
 								/>
