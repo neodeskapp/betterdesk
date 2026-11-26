@@ -273,7 +273,8 @@
 				</form>
 			</div>
 
-			<aside class="page-side is-sticky" aria-labelledby="cb-preview-title">
+			<!-- Named with its section, so it differs from the console preview beside it -->
+			<aside class="page-side is-sticky" aria-labelledby="client-app-title cb-preview-title">
 				<section class="section">
 					<div class="section-head"><h3 id="cb-preview-title">{t('client_branding.preview_title')}</h3></div>
 					<p class="section-note">{t('client_branding.preview_note')}</p>

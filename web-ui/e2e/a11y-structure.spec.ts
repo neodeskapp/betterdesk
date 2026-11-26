@@ -17,7 +17,15 @@ async function structureViolations(page: Page): Promise<string[]> {
 }
 
 test.describe('page structure', () => {
-	for (const path of ['/help-requests', '/users', '/account', '/organizations', '/languages', '/billing']) {
+	for (const path of [
+		'/help-requests',
+		'/users',
+		'/account',
+		'/organizations',
+		'/languages',
+		'/billing',
+		'/settings?tab=brand'
+	]) {
 		test(`${path}: content in landmarks with distinct names`, async ({ page }) => {
 			await page.goto(`${UI}${path}`);
 			await expect(page.locator('#main-content h1')).toBeVisible();
