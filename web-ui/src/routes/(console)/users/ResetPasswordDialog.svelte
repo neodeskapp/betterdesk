@@ -233,4 +233,8 @@
 	.shown-value {
 		font-size: var(--text-md);
 	}
+	/* Copying is what this dialog is for: the button shows without hovering first */
+	.shown-value :global(.copy-btn) {
+		opacity: 1;
+	}
 </style>
