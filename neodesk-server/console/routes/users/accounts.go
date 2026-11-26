@@ -329,7 +329,7 @@ func (h *handlers) invite(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) createWith(w http.ResponseWriter, r *http.Request, inviting bool) {
-	created, err := h.createAccount(r, inviting)
+	created, err := h.createAccount(r, inviting, nil)
 	if err == nil {
 		answer(w, r, http.StatusOK, struct {
 			Success bool            `json:"success"`
@@ -349,7 +349,11 @@ func (h *handlers) createWith(w http.ResponseWriter, r *http.Request, inviting b
 	h.clientError(w, r, err)
 }
 
-func (h *handlers) createAccount(r *http.Request, inviting bool) (*createdAccount, error) {
+// createAccount makes the account the body describes (see create and
+// invite). extra, when given, writes more about the new account before
+// its invite goes out (an import's names and language, which the invite
+// mail is written in).
+func (h *handlers) createAccount(r *http.Request, inviting bool, extra func(ctx context.Context, id int64) error) (*createdAccount, error) {
 	ctx := r.Context()
 	body := kit.Body(r)
 	username, password, role, email := member(body, "username"), member(body, "password"), member(body, "role"), member(body, "email")
@@ -451,7 +455,12 @@ func (h *handlers) createAccount(r *http.Request, inviting bool) (*createdAccoun
 	if err := h.applyScope(ctx, id.V, name, body, strategy); err != nil {
 		return nil, err
 	}
-	if err := h.d.LogAction(r, "user_created", "Created user: "+name+" ("+assigned+")"); err != nil {
+	if extra != nil {
+		if err := extra(ctx, id.V); err != nil {
+			return nil, err
+		}
+	}
+	if err := h.d.LogAccountAction(r, id.V, "user_created", "Created user: "+name+" ("+assigned+")"); err != nil {
 		return nil, err
 	}
 	out := &createdAccount{ID: id, Username: name, Role: assigned, Email: textOf(saved)}
@@ -473,7 +482,7 @@ func (h *handlers) createAccount(r *http.Request, inviting bool) (*createdAccoun
 		}
 		out.InviteSent = &delivered
 		if delivered {
-			if err := h.d.LogAction(r, "user_invite_sent", "Sent an invite to user: "+name); err != nil {
+			if err := h.d.LogAccountAction(r, id.V, "user_invite_sent", "Sent an invite to user: "+name); err != nil {
 				return nil, err
 			}
 		}
@@ -581,25 +590,11 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 			return nil, err
 		}
 	}
-	if isSessionAccount(r, user.ID.V) && role.Truthy() && access.IsSuperAdminRole(callerRole(r)) && !(role.IsString() && access.IsSuperAdminRole(role.Str())) {
-		return nil, sayKey(r, http.StatusBadRequest, "users.cannot_demote_self")
-	}
 	if role.Truthy() {
-		if !validRole(role) {
-			return nil, sayKey(r, http.StatusBadRequest, "users.invalid_role")
-		}
-		if ok, err := h.canAssignRole(r, role.Str()); err != nil || !ok {
-			return nil, refusedOr(err)
-		}
-		if !access.IsSuperAdminRole(role.Str()) {
-			// The last Super admin that can sign in keeps the role
-			last, err := isLastSuperAdmin(ctx, h.d.Store, user.ID.V, user.role(), h.now())
-			if err != nil {
-				return nil, err
-			}
-			if last {
-				return nil, sayKey(r, http.StatusBadRequest, "users.last_admin")
-			}
+		if err := h.checkRole(r, user, role, func() (bool, error) {
+			return isLastSuperAdmin(ctx, h.d.Store, user.ID.V, user.role(), h.now())
+		}); err != nil {
+			return nil, err
 		}
 	}
 	hash := ""
@@ -736,6 +731,34 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	return &out, nil
 }
 
+// checkRole refuses a new role for the account: the caller's own
+// demotion from a super admin role, a role the server doesn't know, one
+// the caller may not give, and a role without super admin rights for the
+// last Super admin that can sign in (last says whether the account is
+// that). nil when the role may be given.
+func (h *handlers) checkRole(r *http.Request, user *account, role jsbind.Value, last func() (bool, error)) error {
+	if isSessionAccount(r, user.ID.V) && access.IsSuperAdminRole(callerRole(r)) && !(role.IsString() && access.IsSuperAdminRole(role.Str())) {
+		return sayKey(r, http.StatusBadRequest, "users.cannot_demote_self")
+	}
+	if !validRole(role) {
+		return sayKey(r, http.StatusBadRequest, "users.invalid_role")
+	}
+	if ok, err := h.canAssignRole(r, role.Str()); err != nil || !ok {
+		return refusedOr(err)
+	}
+	if !access.IsSuperAdminRole(role.Str()) {
+		// The last Super admin that can sign in keeps the role
+		isLast, err := last()
+		if err != nil {
+			return err
+		}
+		if isLast {
+			return sayKey(r, http.StatusBadRequest, "users.last_admin")
+		}
+	}
+	return nil
+}
+
 // disabledOf reads the body's "disabled": change says it is there and
 // differs from the account's flag. It must be true or false, and an
 // account cannot disable itself.
@@ -777,7 +800,7 @@ func (h *handlers) setDisabled(r *http.Request, user *account, disable bool) err
 		}
 		action, details = "user_disabled", "Disabled user: "
 	}
-	return h.d.LogAction(r, action, details+user.username())
+	return h.d.LogAccountAction(r, user.ID.V, action, details+user.username())
 }
 
 // totpOffOf reads the body's "totp_enabled": off says it is false and the
@@ -895,28 +918,32 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	details := "Deleted user: " + user.username()
-	if to != nil {
-		moved, err := h.handOver(r, user, to)
-		if err != nil {
-			h.serverError(w, r, "Delete user error:", err)
-			return
-		}
-		details += "; handed over to " + to.username() + ": " + moved.String()
-	}
-	if err := h.leftovers(r, user); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	if err := h.wipe(r, user); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	if err := h.d.LogAccountAction(r, user.ID.V, "user_deleted", details); err != nil {
+	if err := h.deleteChecked(r, user, to); err != nil {
 		h.serverError(w, r, "Delete user error:", err)
 		return
 	}
 	answer(w, r, http.StatusOK, done{Success: true})
+}
+
+// deleteChecked deletes an account the delete checks let go, after it
+// gave its things to the account to (nil for none), and notes it in the
+// audit log.
+func (h *handlers) deleteChecked(r *http.Request, user, to *account) error {
+	details := "Deleted user: " + user.username()
+	if to != nil {
+		moved, err := h.handOver(r, user, to)
+		if err != nil {
+			return err
+		}
+		details += "; handed over to " + to.username() + ": " + moved.String()
+	}
+	if err := h.leftovers(r, user); err != nil {
+		return err
+	}
+	if err := h.wipe(r, user); err != nil {
+		return err
+	}
+	return h.d.LogAccountAction(r, user.ID.V, "user_deleted", details)
 }
 
 // wipe deletes an account the checks let go: its panel access policy, its

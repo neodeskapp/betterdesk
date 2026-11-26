@@ -7949,6 +7949,244 @@
    "route": "GET /api/users/avatars"
   },
   {
+   "name": "users bulk-delete",
+   "summary": "Delete several accounts. Their history stays in the audit log.",
+   "route": "POST /api/users/bulk/delete",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.delete",
+   "destructive": true,
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out. Nothing is handed over: their API tokens are revoked and their organization memberships go. To hand them over, delete one account at a time with users delete --handover-to.",
+   "examples": [
+    "neodesk users bulk-delete --ids 12,14 --dry-run true",
+    "neodesk users bulk-delete --ids 12,14 --yes"
+   ]
+  },
+  {
+   "name": "users bulk-disable",
+   "summary": "Disable several accounts.",
+   "route": "POST /api/users/bulk/disable",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.edit",
+   "destructive": true,
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out. Their sessions and access tokens end. The last Super admin that can sign in stays enabled.",
+   "examples": [
+    "neodesk users bulk-disable --ids 12,14 --yes"
+   ]
+  },
+  {
+   "name": "users bulk-enable",
+   "summary": "Enable several disabled accounts.",
+   "route": "POST /api/users/bulk/enable",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out."
+  },
+  {
+   "name": "users bulk-org-add",
+   "summary": "Add several accounts to an organization.",
+   "route": "POST /api/users/bulk/organization-add",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "org-id",
+     "in": "body",
+     "type": "string",
+     "help": "the organization's ID (see organizations list)",
+     "required": true,
+     "field": "org_id"
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "org.manage_users",
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out."
+  },
+  {
+   "name": "users bulk-org-remove",
+   "summary": "Remove several accounts from an organization.",
+   "route": "POST /api/users/bulk/organization-remove",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "org-id",
+     "in": "body",
+     "type": "string",
+     "help": "the organization's ID (see organizations list)",
+     "required": true,
+     "field": "org_id"
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "org.manage_users",
+   "destructive": true,
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out."
+  },
+  {
+   "name": "users bulk-require-two-factor",
+   "summary": "Require two-factor sign-in of several accounts, or take that back.",
+   "route": "POST /api/users/bulk/two-factor-required",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "required",
+     "in": "body",
+     "type": "bool",
+     "help": "true: they set it up at their next sign-in",
+     "required": true
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.security",
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out. Only for local accounts."
+  },
+  {
+   "name": "users bulk-role",
+   "summary": "Give several accounts a role.",
+   "route": "POST /api/users/bulk/role",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "role",
+     "in": "body",
+     "type": "string",
+     "help": "the role",
+     "required": true,
+     "enum": [
+      "viewer",
+      "guest_issuer",
+      "operator",
+      "pro",
+      "global_admin",
+      "server_admin",
+      "super_admin",
+      "admin"
+     ]
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out. The same rules as users update --role: only roles you may give, LDAP accounts keep their directory's role, and the last Super admin keeps the role. Their sessions and access tokens end.",
+   "examples": [
+    "neodesk users bulk-role --ids 12,14 --role operator --dry-run true",
+    "neodesk users bulk-role --ids 12,14 --role operator"
+   ]
+  },
+  {
+   "name": "users bulk-send-reset-link",
+   "summary": "Mail several accounts a link to set a new password.",
+   "route": "POST /api/users/bulk/password-reset-link",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out. Each link works once, for 24 hours. Needs the email settings; LDAP and single sign-on accounts and accounts without an address are refused."
+  },
+  {
    "name": "users cancel-email-change",
    "summary": "Cancel an account's email address change that waits for its confirmation.",
    "route": "DELETE /api/users/{id}/email-change",
@@ -8082,6 +8320,89 @@
     }
    ],
    "permission": "user.delete"
+  },
+  {
+   "name": "users import",
+   "summary": "Make accounts from a CSV file.",
+   "route": "POST /api/users/import",
+   "flags": [
+    {
+     "name": "csv",
+     "in": "body",
+     "type": "string",
+     "help": "the file's content",
+     "required": true
+    },
+    {
+     "name": "mode",
+     "in": "body",
+     "type": "string",
+     "help": "invite: mail each an invite (default); temporary: a temporary password each, printed once; none: no password yet",
+     "enum": [
+      "invite",
+      "temporary",
+      "none"
+     ]
+    },
+    {
+     "name": "lines",
+     "in": "body",
+     "type": "json",
+     "help": "only these lines of the file, as a JSON list ([2,5])"
+    }
+   ],
+   "permission": "user.create",
+   "secrets": true,
+   "rows": "data.results",
+   "columns": [
+    "line",
+    "username",
+    "outcome",
+    "error",
+    "password"
+   ],
+   "description": "The lines with problems (see users import-preview) are refused, the others become accounts with the role rules of users create. With --mode temporary the answer holds each password, shown this once; they choose a new one at their first sign-in.",
+   "examples": [
+    "neodesk users import --csv \"$(cat people.csv)\" --mode temporary"
+   ]
+  },
+  {
+   "name": "users import-preview",
+   "summary": "Check a CSV file of accounts before importing it. Nothing is written.",
+   "route": "POST /api/users/import/preview",
+   "flags": [
+    {
+     "name": "csv",
+     "in": "body",
+     "type": "string",
+     "help": "the file's content",
+     "required": true
+    },
+    {
+     "name": "mode",
+     "in": "body",
+     "type": "string",
+     "help": "how the accounts get a password (default invite)",
+     "enum": [
+      "invite",
+      "temporary",
+      "none"
+     ]
+    }
+   ],
+   "permission": "user.create",
+   "rows": "data.rows",
+   "columns": [
+    "line",
+    "username",
+    "email",
+    "role",
+    "problems"
+   ],
+   "description": "Columns: username (required), email (required for invites), first name, last name, role (default viewer), organization (name or ID), language. Commas or semicolons, up to 1000 accounts and 1 MB.",
+   "examples": [
+    "neodesk users import-preview --csv \"$(cat people.csv)\""
+   ]
   },
   {
    "name": "users invalidate-recovery-codes",

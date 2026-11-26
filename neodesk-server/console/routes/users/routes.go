@@ -45,6 +45,20 @@ func Register(d *kit.Deps) {
 	h := newHandlers(d)
 	r := d.Router
 	r.Get("/api/users", h.list, d.RequireAuth, d.RequirePermission("user.view"))
+	// Several accounts at once (bulk.go), and the import from a CSV file
+	// (importing.go); before the routes of /api/users/{id}, which would
+	// take "bulk" for an id
+	edit := d.RequirePermission("user.edit")
+	r.Post("/api/users/bulk/role", h.bulkRole, d.RequireAuth, edit)
+	r.Post("/api/users/bulk/disable", h.bulkDisabled(true), d.RequireAuth, edit)
+	r.Post("/api/users/bulk/enable", h.bulkDisabled(false), d.RequireAuth, edit)
+	r.Post("/api/users/bulk/password-reset-link", h.bulkResetLinks, d.RequireAuth, edit)
+	r.Post("/api/users/bulk/two-factor-required", h.bulkTwoFactorRequired, d.RequireAuth, d.RequirePermission("user.security"))
+	r.Post("/api/users/bulk/delete", h.bulkDelete, d.RequireAuth, d.RequirePermission("user.delete"))
+	r.Post("/api/users/bulk/organization-add", h.bulkOrganization(true), d.RequireAuth, d.RequirePermission("org.manage_users"))
+	r.Post("/api/users/bulk/organization-remove", h.bulkOrganization(false), d.RequireAuth, d.RequirePermission("org.manage_users"))
+	r.Post("/api/users/import/preview", h.importPreview, d.RequireAuth, d.RequirePermission("user.create"))
+	r.Post("/api/users/import", h.importUsers, d.RequireAuth, d.RequirePermission("user.create"))
 	r.Get("/api/panel/user-groups", h.userGroups, d.RequireAuth, d.RequireAnyPermission("user.view", "device.edit"))
 	r.Post("/api/panel/user-groups", h.createUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Patch("/api/panel/user-groups/{guid}", h.updateUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))

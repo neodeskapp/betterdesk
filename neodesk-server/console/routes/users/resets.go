@@ -38,40 +38,60 @@ func (h *handlers) sendResetLink(w http.ResponseWriter, r *http.Request) {
 		sent(w, r, errRoleAboveOwn)
 		return
 	}
-	if d := externalPassword(r, user); d != nil {
-		deny(w, r, d)
+	if err := resetLinkRefusal(r, user); err != nil {
+		sent(w, r, err)
 		return
 	}
-	email := ""
-	if v := user.Email.Value(); v.IsString() {
-		email = strings.TrimSpace(v.Str())
-	}
-	switch {
-	case email == "":
-		failKey(w, r, http.StatusBadRequest, "users.reset_email_required")
-		return
-	case !h.mailReady(ctx):
+	if !h.mailReady(ctx) {
 		failKey(w, r, http.StatusConflict, "users.invite_needs_email")
 		return
 	}
-	language := securitymail.Language(ctx, h.d, user.ID.V)
-	delivered, expires, err := h.sendLink(r, user.ID.V, user.username(), email, passwordlinks.PurposeReset, language)
+	expires, err := h.mailResetLink(r, user)
 	if err != nil {
-		h.serverError(w, r, "Reset link error:", err)
-		return
-	}
-	if !delivered {
-		failKey(w, r, http.StatusBadGateway, "users.link_mail_failed")
-		return
-	}
-	if err := h.d.LogAccountAction(r, user.ID.V, "password_reset_link_sent", "Sent a password reset link to user: "+user.username()); err != nil {
-		h.serverError(w, r, "Reset link error:", err)
+		if !sent(w, r, err) {
+			h.serverError(w, r, "Reset link error:", err)
+		}
 		return
 	}
 	answer(w, r, http.StatusOK, struct {
 		Success bool `json:"success"`
 		Data    any  `json:"data"`
 	}{true, map[string]string{"expires_at": expires.UTC().Format(time.RFC3339)}})
+}
+
+// addressOf is the account's email address, trimmed; "" for none.
+func addressOf(user *account) string {
+	if v := user.Email.Value(); v.IsString() {
+		return strings.TrimSpace(v.Str())
+	}
+	return ""
+}
+
+// resetLinkRefusal refuses a reset link for a directory or single sign-on
+// account and for an account without an address; nil when one can go.
+func resetLinkRefusal(r *http.Request, user *account) error {
+	if d := externalPassword(r, user); d != nil {
+		return d.err()
+	}
+	if addressOf(user) == "" {
+		return sayKey(r, http.StatusBadRequest, "users.reset_email_required")
+	}
+	return nil
+}
+
+// mailResetLink mails the account a reset link in the person's language
+// and notes it in the audit log. It answers until when the link works; a
+// mail the mail server didn't take is a refusal (502).
+func (h *handlers) mailResetLink(r *http.Request, user *account) (time.Time, error) {
+	language := securitymail.Language(r.Context(), h.d, user.ID.V)
+	delivered, expires, err := h.sendLink(r, user.ID.V, user.username(), addressOf(user), passwordlinks.PurposeReset, language)
+	if err != nil {
+		return time.Time{}, err
+	}
+	if !delivered {
+		return time.Time{}, sayKey(r, http.StatusBadGateway, "users.link_mail_failed")
+	}
+	return expires, h.d.LogAccountAction(r, user.ID.V, "password_reset_link_sent", "Sent a password reset link to user: "+user.username())
 }
 
 // cancelResetLink answers DELETE /api/users/{id}/password-reset-link: the

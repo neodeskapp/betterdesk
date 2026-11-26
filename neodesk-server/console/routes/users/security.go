@@ -2,7 +2,6 @@ package users
 
 import (
 	"crypto/rand"
-	"encoding/json"
 	"math/big"
 	"net/http"
 	"strings"
@@ -11,7 +10,6 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
@@ -32,6 +30,19 @@ type denial struct {
 // deny answers a denial.
 func deny(w http.ResponseWriter, r *http.Request, d *denial) {
 	fail(w, r, d.status, d.text)
+}
+
+// err is the denial as the reply of a route.
+func (d *denial) err() error { return say(d.status, d.text) }
+
+// securityRefusal is securityDenial as the reply of a route, nil when
+// the caller may make the change.
+func (h *handlers) securityRefusal(r *http.Request, user *account, own bool) error {
+	d, err := h.securityDenial(r, user, own)
+	if err != nil || d == nil {
+		return err
+	}
+	return d.err()
 }
 
 // securityTarget reads the account of the path for a change of its
@@ -196,127 +207,48 @@ func (h *handlers) temporaryPassword(w http.ResponseWriter, r *http.Request) {
 
 // ---- New password at the next sign-in, for several accounts ----
 
-// maxBulkAccounts is the most accounts one request names.
-const maxBulkAccounts = 500
-
-// bulkResult is what happened to one account of a request for several.
-type bulkResult struct {
-	ID       any    `json:"id"`
-	Username string `json:"username,omitempty"`
-	// Outcome is "changed", "unchanged" (it was so already) or "refused",
-	// with the reason in Error.
-	Outcome string `json:"outcome"`
-	Error   string `json:"error,omitempty"`
-}
-
-// bulkIDs reads the body's "ids": a list of account ids, as numbers or as
-// text of digits, 1 to maxBulkAccounts of them.
-func bulkIDs(r *http.Request) ([]jsbind.Value, error) {
-	given := member(kit.Body(r), "ids")
-	list := given.Items()
-	if !given.IsArray() || len(list) == 0 || len(list) > maxBulkAccounts {
-		return nil, sayKey(r, http.StatusBadRequest, "users.bulk_ids_required")
-	}
-	return list, nil
-}
-
-// bulkID is an id of the list as a number, false for one that is none.
-func bulkID(v jsbind.Value) (float64, bool) {
-	switch {
-	case v.IsNumber():
-		n := v.ToNumber()
-		return n, n > 0 && n == float64(int64(n))
-	case v.IsString():
-		n, ok := jsreq.ParseInt(v.Str(), 10)
-		return n, ok && n > 0 && jsreq.NumberString(n) == strings.TrimSpace(v.Str())
-	}
-	return 0, false
-}
-
 // requirePasswordChange answers POST /api/users/require-password-change
-// with the body {ids, required?}: each local account of the list must
-// choose a new password at its next sign-in (required true, the default),
-// or no longer (false). Its sessions go on until then. The answer says
-// for each id what happened, in the order given: changed, unchanged, or
-// refused with the reason (an unknown account, one the caller may not
-// change, the caller's own, a directory or single sign-on account).
+// with the body {ids, required?, dry_run?}: each local account of the list
+// must choose a new password at its next sign-in (required true, the
+// default), or no longer (false). Its sessions go on until then. The
+// answer says for each id what happened, in the order given (bulk.go):
+// changed, unchanged, or refused with the reason (an unknown account, one
+// the caller may not change, the caller's own, a directory or single
+// sign-on account).
 func (h *handlers) requirePasswordChange(w http.ResponseWriter, r *http.Request) {
-	ids, err := bulkIDs(r)
-	if err != nil {
-		sent(w, r, err)
+	required, ok := bulkFlag(w, r, "required", true)
+	if !ok {
 		return
 	}
-	required := true
-	if v := member(kit.Body(r), "required"); !v.IsUndefined() {
-		switch v.JSON() {
-		case "true":
-		case "false":
-			required = false
-		default:
-			fail(w, r, http.StatusBadRequest, "Invalid value for required")
-			return
-		}
-	}
-	ctx := r.Context()
-	policies, err := h.d.Authn.AccountPolicies(ctx)
-	if err != nil {
-		h.serverError(w, r, "Require password change error:", err)
-		return
-	}
-	results := make([]bulkResult, 0, len(ids))
-	for _, raw := range ids {
-		res := bulkResult{ID: json.RawMessage(raw.JSON()), Outcome: "refused"}
-		results = append(results, res)
-		last := &results[len(results)-1]
-		id, ok := bulkID(raw)
-		if !ok {
-			last.Error = "Invalid user ID"
-			continue
-		}
-		user, err := accountByID(ctx, h.d.Store, id)
-		if err != nil {
-			h.serverError(w, r, "Require password change error:", err)
-			return
-		}
-		if user == nil {
-			last.Error = kit.T(r, "users.not_found", nil)
-			continue
-		}
-		last.ID, last.Username = user.ID, user.username()
-		d, err := h.securityDenial(r, user, false)
-		if err != nil {
-			h.serverError(w, r, "Require password change error:", err)
-			return
-		}
-		if d == nil {
-			d = externalPassword(r, user)
-		}
-		if d != nil {
-			last.Error = d.text
-			continue
-		}
-		if policies[user.ID.V].MustChangePassword == required {
-			last.Outcome = "unchanged"
-			continue
-		}
-		if err := h.d.Authn.SetMustChangePassword(ctx, user.ID.V, required); err != nil {
-			h.serverError(w, r, "Require password change error:", err)
-			return
-		}
-		action, details := "password_change_required", "Required a new password at the next sign-in of user: "
-		if !required {
-			action, details = "password_change_requirement_removed", "No longer requires a new password of user: "
-		}
-		if err := h.d.LogAccountAction(r, user.ID.V, action, details+user.username()); err != nil {
-			h.serverError(w, r, "Require password change error:", err)
-			return
-		}
-		last.Outcome = "changed"
-	}
-	answer(w, r, http.StatusOK, struct {
-		Success bool `json:"success"`
-		Data    any  `json:"data"`
-	}{true, map[string]any{"results": results}})
+	var policies map[int64]authn.AccountPolicy
+	h.runBulk(w, r, bulkAction{
+		what:       "Require password change",
+		ownChecked: true,
+		prepare: func(r *http.Request) error {
+			var err error
+			policies, err = h.d.Authn.AccountPolicies(r.Context())
+			return err
+		},
+		check: func(r *http.Request, user *account, _ *bulkRun) (bool, error) {
+			if err := h.securityRefusal(r, user, false); err != nil {
+				return false, err
+			}
+			if d := externalPassword(r, user); d != nil {
+				return false, d.err()
+			}
+			return policies[user.ID.V].MustChangePassword != required, nil
+		},
+		apply: func(r *http.Request, user *account, _ *bulkRun) error {
+			if err := h.d.Authn.SetMustChangePassword(r.Context(), user.ID.V, required); err != nil {
+				return err
+			}
+			action, details := "password_change_required", "Required a new password at the next sign-in of user: "
+			if !required {
+				action, details = "password_change_requirement_removed", "No longer requires a new password of user: "
+			}
+			return h.d.LogAccountAction(r, user.ID.V, action, details+user.username())
+		},
+	})
 }
 
 // ---- Unlock ----
@@ -374,23 +306,37 @@ func (h *handlers) setTwoFactorRequired(w http.ResponseWriter, r *http.Request) 
 		fail(w, r, http.StatusBadRequest, "Invalid value for required")
 		return
 	}
-	if !isLocalAccount(user) {
-		fail(w, r, http.StatusBadRequest, kit.T(r, "users.external_two_factor", kit.Vars("provider", providerName(r, user))))
+	if err := externalTwoFactor(r, user); err != nil {
+		sent(w, r, err)
 		return
 	}
-	if err := h.d.Authn.SetTwoFactorRequiredFor(r.Context(), user.ID.V, required); err != nil {
+	if err := h.applyTwoFactorRequired(r, user, required); err != nil {
 		h.serverError(w, r, "Two-factor requirement error:", err)
 		return
+	}
+	answer(w, r, http.StatusOK, done{Success: true})
+}
+
+// externalTwoFactor refuses a two-factor rule for an account that signs
+// in with a directory or single sign-on, naming it; nil for a local one.
+func externalTwoFactor(r *http.Request, user *account) error {
+	if isLocalAccount(user) {
+		return nil
+	}
+	return say(http.StatusBadRequest, kit.T(r, "users.external_two_factor", kit.Vars("provider", providerName(r, user))))
+}
+
+// applyTwoFactorRequired sets the account's own two-factor rule and notes
+// it in the audit log about the account.
+func (h *handlers) applyTwoFactorRequired(r *http.Request, user *account, required bool) error {
+	if err := h.d.Authn.SetTwoFactorRequiredFor(r.Context(), user.ID.V, required); err != nil {
+		return err
 	}
 	action, details := "two_factor_required", "Requires two-factor sign-in of user: "
 	if !required {
 		action, details = "two_factor_requirement_removed", "No longer requires two-factor sign-in of user: "
 	}
-	if err := h.d.LogAccountAction(r, user.ID.V, action, details+user.username()); err != nil {
-		h.serverError(w, r, "Two-factor requirement error:", err)
-		return
-	}
-	answer(w, r, http.StatusOK, done{Success: true})
+	return h.d.LogAccountAction(r, user.ID.V, action, details+user.username())
 }
 
 // resetTwoFactor answers POST /api/users/{id}/two-factor/reset: the
