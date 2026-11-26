@@ -14,6 +14,7 @@ vi.mock('$app/paths', () => ({ resolve: (p: string) => p || '/', asset: (p: stri
 vi.mock('$app/navigation', () => ({ goto: vi.fn(), beforeNavigate: vi.fn(), replaceState: vi.fn() }));
 
 import SettingsFixture from './fixtures/SettingsFixture.svelte';
+import SettingsTabFixture from './fixtures/SettingsTabFixture.svelte';
 import ListEditor from '../../../src/lib/ui/settings/ListEditor.svelte';
 import KeepCount from '../../../src/lib/ui/settings/KeepCount.svelte';
 import InheritedValue from '../../../src/lib/ui/settings/InheritedValue.svelte';
@@ -61,6 +62,31 @@ describe('a setting row', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'Turn it on' }));
 		expect(screen.getByRole('checkbox', { name: 'View devices' })).toBeChecked();
 		expect(screen.queryByText('Needs View devices.')).toBeNull();
+	});
+});
+
+describe('a tab of Settings', () => {
+	test('gets the save-model line, filter, section links and a named side column without a second title', () => {
+		render(SettingsTabFixture);
+		expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+		expect(screen.getByText(/Changes are saved when you press Save/)).toBeInTheDocument();
+		expect(screen.getByRole('searchbox', { name: 'Filter settings' })).toBeInTheDocument();
+		expect(screen.getByRole('link', { name: 'Look' })).toHaveAttribute('href', '#g-look');
+		expect(screen.getByRole('complementary', { name: 'Preview' })).toHaveTextContent('The preview');
+	});
+
+	test('a row of choices names its group with the setting name and help', () => {
+		render(SettingsTabFixture);
+		const group = screen.getByRole('radiogroup', { name: 'Default theme' });
+		expect(group).toHaveAccessibleDescription('What everyone sees.');
+	});
+
+	test('a refused value is said at its row and marks the control', () => {
+		render(SettingsTabFixture, { error: 'Use a colour like #1f6feb.' });
+		const input = screen.getByRole('textbox', { name: 'Accent' });
+		expect(input).toHaveAttribute('aria-invalid', 'true');
+		expect(input).toHaveAccessibleDescription(/Buttons and links\..*Use a colour like #1f6feb\./);
+		expect(document.getElementById('r-color-error')).toHaveTextContent('Use a colour like #1f6feb.');
 	});
 });
 

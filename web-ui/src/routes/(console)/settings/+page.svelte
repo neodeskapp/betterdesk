@@ -380,7 +380,18 @@
 	/* A setting reached from the search or a link: outlined for a moment (reveal.ts).
 	   No background, so text and borders keep the contrast they have at rest. */
 	.settings-page
-		:global(:is(.form-group, .check-field, .choice, .facts, .settings-subgroup, .section, .danger-zone)) {
+		:global(
+			:is(
+				.setting-row,
+				.form-group,
+				.check-field,
+				.choice,
+				.facts,
+				.settings-subgroup,
+				.section,
+				.danger-zone
+			)
+		) {
 		outline: 2px solid transparent;
 		outline-offset: 4px;
 		transition: outline-color var(--motion);

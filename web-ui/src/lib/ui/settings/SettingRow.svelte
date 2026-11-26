@@ -15,6 +15,14 @@
         {#snippet control(f)}<Input {...f} type="number" ... />{/snippet}
     </SettingRow>
 
+  A row of choices (radios, a set of buttons) passes `group`: the name is
+  then no <label> but the name of the group, which the control snippet
+  gets as `labelledby` (role="radiogroup" aria-labelledby={f.labelledby}).
+
+  `error` says why the value is refused ("Use a colour like #1f6feb.") at
+  the row, marks the row and tells the control (`invalid`), and describes
+  it (the message has the id <id>-error).
+
   The filter of the page (filter.svelte.ts) hides rows that don't match
   their name, help, key or `terms`.
 -->
@@ -41,6 +49,10 @@
 	export interface RowControl {
 		id: string;
 		describedby: string | undefined;
+		/** The name's id: for a group of choices (`group`), which a <label> cannot name */
+		labelledby: string;
+		/** The value is refused (`error`) */
+		invalid: boolean;
 	}
 </script>
 
@@ -73,6 +85,10 @@
 		noEffect?: string;
 		/** The internal name (permission key, environment variable) */
 		keyName?: string;
+		/** The control is a group of choices: the name labels it through `labelledby` */
+		group?: boolean;
+		/** Why the value is refused */
+		error?: string;
 		/** More words the filter finds the row by */
 		terms?: readonly string[];
 		/** Anything under the row (an inherited value, a list) */
@@ -96,6 +112,8 @@
 		noEffect,
 		keyName,
 		terms = [],
+		group = false,
+		error = '',
 		children,
 		class: cls = ''
 	}: Props = $props();
@@ -103,27 +121,37 @@
 	const controlId = $derived(`${id}-control`);
 	const helpId = $derived(`${id}-help`);
 	const metaId = $derived(`${id}-meta`);
+	const nameId = $derived(`${id}-name`);
+	const errorId = $derived(`${id}-error`);
 	const isSwitch = $derived(checked !== undefined);
 	const hasMeta = $derived(!!source || !!noEffect || needs.length > 0);
-	const describedby = $derived([help && helpId, hasMeta && metaId].filter(Boolean).join(' ') || undefined);
+	const describedby = $derived(
+		[help && helpId, error && errorId, hasMeta && metaId].filter(Boolean).join(' ') || undefined
+	);
 
 	const filter = useFilter();
-	const group = useGroup();
+	const groupRows = useGroup();
 	const shown = $derived(!filter || filter.matches([label, help, keyName, ...terms]));
 
 	$effect(() => {
 		const visible = shown;
 		filter?.shown.set(id, visible);
-		group?.rows.set(id, visible);
+		groupRows?.rows.set(id, visible);
 	});
 	$effect(() => () => {
 		filter?.shown.delete(id);
-		group?.rows.delete(id);
+		groupRows?.rows.delete(id);
 	});
 </script>
 
 <div
-	class={['setting-row', isSwitch ? 'is-switch' : 'is-field', changed && 'is-changed', cls]}
+	class={[
+		'setting-row',
+		isSwitch ? 'is-switch' : 'is-field',
+		changed && 'is-changed',
+		error && 'is-refused',
+		cls
+	]}
 	{id}
 	hidden={!shown}
 	data-setting={keyName ?? id}
@@ -140,10 +168,17 @@
 		/>
 	{:else}
 		<div class="setting-text">
-			<label class="setting-name" for={controlId}>{label}</label>
+			{#if group}
+				<span class="setting-name" id={nameId}>{label}</span>
+			{:else}
+				<label class="setting-name" for={controlId} id={nameId}>{label}</label>
+			{/if}
 			{#if help}<p class="setting-help" id={helpId}>{help}</p>{/if}
 		</div>
-		{#if control}<div class="setting-control">{@render control({ id: controlId, describedby })}</div>{/if}
+		{#if control}<div class="setting-control">
+				{@render control({ id: controlId, describedby, labelledby: nameId, invalid: !!error })}
+			</div>{/if}
+		{#if error}<p class="setting-error" id={errorId}>{error}</p>{/if}
 	{/if}
 
 	{#if hasMeta || changed || keyName || (onreset && resetLabel)}
@@ -229,6 +264,16 @@
 		max-width: var(--measure);
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+	}
+	.setting-row.is-refused {
+		border-inline-start-color: var(--danger);
+	}
+	.setting-error {
+		margin: 0;
+		max-width: var(--measure);
+		color: var(--danger);
+		font-size: var(--text-sm);
+		font-weight: 600;
 	}
 	.setting-control {
 		max-width: var(--measure);

@@ -22,7 +22,9 @@ import { tf } from '#lib/i18n/i18n.svelte.ts';
 import Notice from '#lib/ui/Notice.svelte';
 
 const FOUND_MS = 2400;
-const BLOCK = '.form-group, .check-field, .choice, .facts, .settings-subgroup, .section, .danger-zone';
+/** The block a target is outlined as: a setting row of the settings pattern, or the older blocks */
+const BLOCK =
+	'.setting-row, .form-group, .check-field, .choice, .facts, .settings-subgroup, .section, .danger-zone';
 
 interface Revealed {
 	note: ReturnType<typeof mount>;

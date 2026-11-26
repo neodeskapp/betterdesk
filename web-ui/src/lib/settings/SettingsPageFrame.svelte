@@ -155,7 +155,18 @@
 	/* A setting reached from the search or a link: outlined for a moment (reveal.ts),
 	   as on the Settings page */
 	.settings-page
-		:global(:is(.form-group, .check-field, .choice, .facts, .settings-subgroup, .section, .danger-zone)) {
+		:global(
+			:is(
+				.setting-row,
+				.form-group,
+				.check-field,
+				.choice,
+				.facts,
+				.settings-subgroup,
+				.section,
+				.danger-zone
+			)
+		) {
 		outline: 2px solid transparent;
 		outline-offset: 4px;
 		transition: outline-color var(--motion);

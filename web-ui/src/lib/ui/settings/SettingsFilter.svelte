@@ -21,7 +21,8 @@
 	const none = $derived(filter.active && filter.shown.size > 0 && filter.shownCount === 0);
 </script>
 
-<div class="settings-filter">
+<!-- Not a setting: the check that every field has a row in the settings list skips it -->
+<div class="settings-filter" data-search-skip>
 	<SearchField
 		label={label ?? tf('settings_ui.filter', 'Filter settings')}
 		placeholder={label ?? tf('settings_ui.filter', 'Filter settings')}
