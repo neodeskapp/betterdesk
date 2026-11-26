@@ -21,8 +21,13 @@
 	const none = $derived(filter.active && filter.shown.size > 0 && filter.shownCount === 0);
 </script>
 
-<!-- Not a setting: the check that every field has a row in the settings list skips it -->
-<div class="settings-filter" data-search-skip>
+<!-- A search landmark: it narrows the page and is no setting itself (e2e/settings-index.spec.ts skips it) -->
+<div
+	class="settings-filter"
+	role="search"
+	aria-label={label ?? tf('settings_ui.filter', 'Filter settings')}
+	data-search-skip
+>
 	<SearchField
 		label={label ?? tf('settings_ui.filter', 'Filter settings')}
 		placeholder={label ?? tf('settings_ui.filter', 'Filter settings')}
