@@ -187,7 +187,7 @@ test('each step leads to its place and back, and the server ticks it', async ({ 
 	});
 
 	await viaStep(page, 'address', /\/settings\?guide=address/, async () => {
-		await page.fill('#public-server-id', 'desk.example.com');
+		await page.fill('#public-server-id-control', 'desk.example.com');
 		await page.getByRole('button', { name: 'Save changes' }).click();
 		const saved = page.waitForResponse(
 			(r) => r.request().method() !== 'GET' && /public-endpoints/.test(r.url())
