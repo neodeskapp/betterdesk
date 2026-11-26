@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import ts from 'typescript-eslint';
+import namedIconControl from './eslint-rules/named-icon-control.ts';
 import noLiteralUiText from './eslint-rules/no-literal-ui-text.ts';
 
 export default ts.config(
@@ -44,8 +45,10 @@ export default ts.config(
 	},
 	{
 		files: ['src/**/*.svelte'],
-		plugins: { local: { rules: { 'no-literal-ui-text': noLiteralUiText } } },
-		rules: { 'local/no-literal-ui-text': 'error' }
+		plugins: {
+			local: { rules: { 'no-literal-ui-text': noLiteralUiText, 'named-icon-control': namedIconControl } }
+		},
+		rules: { 'local/no-literal-ui-text': 'error', 'local/named-icon-control': 'error' }
 	},
 	{
 		files: ['tests/**', 'e2e/**'],

@@ -38,7 +38,7 @@
        text colour, so it shows on --bg, --bg-subtle, a hovered row and in
        dialogs alike. Text on it is --text. */
 	--tag-bg: color-mix(in srgb, var(--text) 9%, transparent);
-	--success: var(--accent-green, #1c7a3b);
+	--success: var(--accent-green, #1c793b);
 	--danger: var(--accent-red, #b3261e);
 	--danger-hover: var(--accent-red-hover, #8c1d17);
 	--warning: var(--accent-yellow, #875b00);
@@ -50,14 +50,13 @@
        Plex Mono (dotted zero) is only for values people copy: IDs, keys, addresses. */
 	--font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
 	--mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, 'Liberation Mono', monospace;
-	/* --font-scale follows the accessibility panel's text size */
-	--font-scale: 1;
-	--text-xs: calc(0.75rem * var(--font-scale)); /* 12px */
-	--text-sm: calc(0.8125rem * var(--font-scale)); /* 13px */
-	--text-base: calc(0.875rem * var(--font-scale)); /* 14px */
-	--text-md: calc(1rem * var(--font-scale)); /* 16px */
-	--text-lg: calc(1.25rem * var(--font-scale)); /* 20px */
-	--text-xl: calc(1.5rem * var(--font-scale)); /* 24px, page titles */
+	/* In rem: text sizes follow the root font size */
+	--text-xs: 0.75rem; /* 12px */
+	--text-sm: 0.8125rem; /* 13px */
+	--text-base: 0.875rem; /* 14px */
+	--text-md: 1rem; /* 16px */
+	--text-lg: 1.25rem; /* 20px */
+	--text-xl: 1.5rem; /* 24px, page titles */
 	--leading: 1.45;
 
 	/* Space (4px steps) */
@@ -87,7 +86,6 @@
 	--layer-dialog: 1000; /* dialogs and side sheets, the accessibility panel */
 	--layer-search: 1050;
 	--layer-toast: 1100;
-	--layer-reading: 1200; /* reading guide and mask from the accessibility panel */
 
 	/* Controls: one set for buttons, fields, selects, search fields, menu
        buttons and segmented filters. Two sizes: default, and small for dense
@@ -138,8 +136,9 @@
 	--os-apple: #68717a;
 	--os-chrome: #c5221f;
 
-	/* Away status dot (.presence.is-away): a yellow that still reaches 3:1 on white */
-	--presence-away: #b88a00;
+	/* Away status dot (.presence.is-away): a yellow that still reaches 3:1 on
+	   every surface, hovered rows included (tests/unit/contrast.test.ts) */
+	--presence-away: #aa8000;
 
 	/* Avatar initials (components.css .avatar.is-c1..6): one colour per name,
        the initials in it on a 16 % tint of it. 4.5:1 on the tint, checked by
@@ -155,6 +154,10 @@
 	/* Layout */
 	--sidebar-w: 232px;
 	--topbar-h: 48px;
+	/* Sticky bars at the bottom: the save bar of a changed form, and the
+	   navigation bar on phones (base.css keeps focus clear of them) */
+	--save-bar-h: 64px;
+	--bottom-nav-h: 56px;
 	--page-pad: var(--space-5);
 	--measure: 640px;
 	--content-max: 1600px;
@@ -169,9 +172,7 @@
 	--shadow-float: 0 8px 28px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-:root[data-theme='dark'],
-html[data-a11y-contrast='high-dark'],
-html[data-a11y-contrast='yellow-black'] {
+:root[data-theme='dark'] {
 	--logo-square: #58a6ff;
 	--logo-circle: #a3e635;
 	--logo-overlap: #3fd0c4;
@@ -189,30 +190,6 @@ html[data-a11y-contrast='yellow-black'] {
 	--avatar-6: #a9bcc4;
 }
 
-html[data-a11y-contrast='high-light'] {
-	--logo-square: #1f6feb;
-	--logo-circle: #4d8f06;
-	--logo-overlap: #0f9e96;
-}
-
-/* Accessibility panel (accessibility.js sets these attributes). Its
-   contrast modes replace the palette variables, so only the colour on
-   top of the accent needs help here. */
-html[data-a11y-font-scaled='true'] {
-	--font-scale: var(--bd-a11y-font-scale, 1);
-}
-
-/* :root[...] so a contrast mode wins over :root[data-theme="dark"] above
-   (high-light on a dark theme otherwise kept the dark text colour) */
-:root[data-a11y-contrast='high-dark'],
-:root[data-a11y-contrast='yellow-black'] {
-	--on-accent: #000000;
-}
-
-:root[data-a11y-contrast='high-light'] {
-	--on-accent: #ffffff;
-}
-
 @media (pointer: coarse) {
 	:root {
 		--control-h: 44px;
@@ -228,8 +205,10 @@ html[data-a11y-font-scaled='true'] {
 	}
 }
 
+/* Less motion when the system asks for it, unless Reduce motion is Off in
+   the accessibility settings (styles/a11y.css has the rest) */
 @media (prefers-reduced-motion: reduce) {
-	:root {
+	:root:not([data-a11y-reduce-motion='false']) {
 		--motion: 0ms;
 	}
 }

@@ -29,10 +29,11 @@
 	import ConsoleViewer from '#lib/remote/viewer/ConsoleViewer.svelte';
 	import SessionStrip from '#lib/remote/viewer/SessionStrip.svelte';
 	import GuideReturn from '#lib/guide/GuideReturn.svelte';
-	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { appPath } from '#lib/nav.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
 	import DialogHost from '#lib/ui/DialogHost.svelte';
+	import SkipLink from '#lib/ui/SkipLink.svelte';
 	import ToastHost from '#lib/ui/ToastHost.svelte';
 	import { closeDialogs } from '#lib/ui/dialogs.svelte.ts';
 	import { focusables, trapTab } from '#lib/ui/focus.ts';
@@ -40,14 +41,12 @@
 	import { closePopups } from '#lib/ui/popups.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { lazy } from '#lib/util/lazy.ts';
-	import A11yPanel from './A11yPanel.svelte';
 	import BottomNav from './BottomNav.svelte';
 	import HelpPanel from './HelpPanel.svelte';
 	import IdleWarning from './IdleWarning.svelte';
 	import SearchDialog from './SearchDialog.svelte';
 	import Sidebar from './Sidebar.svelte';
 	import Topbar from './Topbar.svelte';
-	import { a11y } from './a11y.svelte.ts';
 	import { brandingExtras } from './api.ts';
 	import { onPanelEvents, startLiveEvents, stopLiveEvents } from './live-events.svelte.ts';
 	import { bottomItems, breadcrumb, buildNavModel, pageKey } from './nav-model.ts';
@@ -55,6 +54,8 @@
 	import { embedded, pageInfo } from './page.svelte.ts';
 	import { isSearchShortcut } from './search.ts';
 	import { startGuard, stopGuard } from './session-guard.svelte.ts';
+	import { liveUpdates } from '#lib/state/live-updates.svelte.ts';
+	import LiveStatus from '#lib/ui/LiveStatus.svelte';
 	import ViewingAsBanner from './ViewingAsBanner.svelte';
 	import { viewedName, viewingTitle } from './viewing-as.ts';
 	import { onImpersonationChange } from '#lib/api/impersonation.ts';
@@ -163,11 +164,6 @@
 		});
 	});
 
-	function skipToMain(e: MouseEvent) {
-		e.preventDefault();
-		main?.focus();
-	}
-
 	/* ── Start: real-time data, session watch ── */
 
 	onMount(() => {
@@ -245,9 +241,7 @@
 		{@render children()}
 	</main>
 {:else}
-	<a class="skip-link" href="#main-content" onclick={skipToMain}
-		>{tf('shell.skip_to_content', 'Skip to main content')}</a
-	>
+	<SkipLink />
 	{#if session.emergencyMode}
 		<div class="emergency-banner" role="alert">{t('auth.emergency_mode_banner')}</div>
 	{/if}
@@ -295,6 +289,10 @@
 					tabindex="-1"
 				>
 					<GuideReturn />
+					<!-- Live updates paused on a page without its own "Last updated" line: Refresh here -->
+					{#if liveUpdates.paused && liveUpdates.active > 0 && liveUpdates.lines === 0}<LiveStatus
+							fallback
+						/>{/if}
 					{#if cs.count}<ConsoleViewer />{/if}
 					{@render children()}
 				</main>
@@ -304,7 +302,6 @@
 		{#if !sessionPage}<BottomNav items={bottom} drawerId={sidebarId} {drawerOpen} onmore={openDrawer} />{/if}
 	</div>
 	<SearchDialog bind:open={searchOpen} />
-	<A11yPanel bind:open={a11y.open} />
 {/if}
 <IdleWarning />
 <DialogHost />
@@ -318,24 +315,6 @@
 <ChatHost />
 
 <style>
-	/* Above the screen until it has focus; its shadow only then, since the
-	   shadow of the hidden link would still reach into the top edge */
-	.skip-link {
-		position: fixed;
-		top: var(--space-2);
-		inset-inline-start: var(--space-2);
-		z-index: calc(var(--layer-toast) + 1);
-		padding: var(--space-2) var(--space-3);
-		border-radius: var(--radius);
-		background: var(--bg-float);
-		color: var(--accent);
-		transform: translateY(calc(-100% - var(--space-4)));
-	}
-	.skip-link:focus-visible,
-	.skip-link:focus {
-		box-shadow: var(--shadow-float);
-		transform: none;
-	}
 	.emergency-banner {
 		padding: var(--space-2) var(--space-4);
 		background: var(--danger);

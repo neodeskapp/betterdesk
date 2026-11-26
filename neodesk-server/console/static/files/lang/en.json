@@ -40,7 +40,9 @@
         "copy_value": "Copy {value}",
         "copy_failed": "Could not copy. Select the text and copy it yourself.",
         "read_only_page": "You can view this page but not change it.",
-        "opens_in_new_tab": "opens in a new tab"
+        "opens_in_new_tab": "opens in a new tab",
+        "required_mark": "(required)",
+        "ok": "OK"
     },
     "nav": {
         "main": "Main",
@@ -111,7 +113,8 @@
         "server_backups": "Backups",
         "server_config_files": "Configuration files",
         "meshcentral": "MeshCentral",
-        "devices_add": "Add computers"
+        "devices_add": "Add computers",
+        "registrations_waiting": "{count} waiting"
     },
     "mobile_nav": {
         "label": "Main navigation",
@@ -197,7 +200,14 @@
         "password_same": "Choose a password other than the one you signed in with.",
         "change_required_title": "Choose a new password",
         "change_required": "Your administrator asks you to choose a new password before you go on.",
-        "change_required_save": "Save and sign in"
+        "change_required_save": "Save and sign in",
+        "session_seconds_left": "{seconds} seconds left",
+        "session_end_warning_title": "Your session ends soon",
+        "session_end_warning_body": "Your session ends at {time}. Save your work now, then sign in again.",
+        "enter_username": "Enter your username.",
+        "enter_password": "Enter your password.",
+        "hide_password": "Hide password",
+        "totp_sixth_digit": "Signs in as soon as you type the sixth digit."
     },
     "dashboard": {
         "title": "Dashboard",
@@ -5197,6 +5207,10 @@
         "mark_all_read": "Mark all read",
         "see_all": "See all help requests",
         "help_request": "Help request",
+        "mail_alert_heading": "Alert: {rule}",
+        "mail_help_heading": "Help request from {device}",
+        "mail_help_lead": "A new help request was submitted.",
+        "mail_help_button": "Open help requests in {app}",
         "just_now": "just now",
         "kind_registration": "New device asks to join",
         "unread": "Unread",
@@ -6189,6 +6203,7 @@
         "mail_heading": "{name} is waiting for an answer",
         "mail_waited": "Someone at {name} (ID {id}) has waited {minutes} minutes for an answer in the chat.",
         "mail_quote": "They wrote: {quote}",
+        "mail_quote_label": "They wrote:",
         "mail_open": "Open the conversation: {link}",
         "mail_button": "Open the conversation in {app}",
         "old_messages": "Old messages",
@@ -6220,7 +6235,8 @@
         "team_groups_line": "User groups: {names}",
         "delete_team": "Delete team",
         "delete_team_title": "Delete {name}?",
-        "delete_team_message": "The team and all its messages are deleted for everyone in it."
+        "delete_team_message": "The team and all its messages are deleted for everyone in it.",
+        "said": "{name}: {text}"
     },
     "toast": {
         "device_connected": "Device connected",
@@ -7934,72 +7950,26 @@
     },
     "accessibility": {
         "title": "Accessibility",
-        "subtitle": "Changes to text, color and motion apply right away and are saved in this browser.",
-        "close": "Close accessibility settings",
-        "profiles": "Quick profiles",
-        "profile_low_vision": "Low vision",
-        "profile_low_vision_hint": "Larger text, high contrast, a strong focus ring and a large pointer.",
-        "profile_dyslexia": "Reading comfort",
-        "profile_dyslexia_hint": "Readable font, larger text and wider spacing.",
-        "profile_motion_safe": "Less motion",
-        "profile_motion_safe_hint": "Stops animations and adds a reading guide and a strong focus ring.",
-        "profile_color_assist": "Color support",
-        "profile_color_assist_hint": "Color filter, stronger colors, underlined links and marked headings.",
-        "reading": "Reading",
-        "font_size": "Font size",
-        "line_height": "Line height",
-        "letter_spacing": "Letter spacing",
-        "word_spacing": "Word spacing",
         "readable_font": "Readable font",
-        "readable_font_hint": "Uses a wide, plain font such as Verdana.",
-        "dyslexia_spacing": "Dyslexia spacing",
-        "dyslexia_spacing_hint": "Adds space between letters and words.",
-        "visual": "Visual",
-        "contrast": "Contrast",
-        "contrast_normal": "Normal",
-        "contrast_high_dark": "High contrast dark",
-        "contrast_high_light": "High contrast light",
-        "contrast_yellow_black": "Yellow on black",
-        "color_filter": "Color vision filter",
-        "filter_none": "None",
-        "filter_protanopia": "Protanopia (red-blind)",
-        "filter_deuteranopia": "Deuteranopia (green-blind)",
-        "filter_tritanopia": "Tritanopia (blue-blind)",
-        "filter_achromatopsia": "Grayscale",
-        "saturation": "Color saturation",
+        "readable_font_hint": "A plain font with a little more space between letters and words.",
         "underline_links": "Underline links",
         "underline_links_hint": "Makes links visible without relying on color.",
-        "highlight_links": "Highlight actions",
-        "highlight_links_hint": "Outlines links and buttons.",
-        "highlight_headings": "Highlight headings",
-        "highlight_headings_hint": "Marks section titles with a color bar.",
-        "hide_media": "Dim media",
-        "hide_media_hint": "Fades out images, videos and charts.",
-        "interaction": "Interaction",
-        "strong_focus": "Strong focus",
-        "strong_focus_hint": "Shows a large keyboard focus ring.",
-        "large_cursor": "Large cursor",
-        "large_cursor_hint": "Uses a larger high-contrast pointer.",
         "reduce_motion": "Reduce motion",
-        "reduce_motion_hint": "Turns off transitions and smooth scrolling.",
-        "pause_animations": "Pause animations",
-        "pause_animations_hint": "Freezes animations such as loading spinners.",
-        "reading_guide": "Reading guide",
-        "reading_guide_hint": "A line follows the pointer to help you keep your place.",
-        "reading_mask": "Reading mask",
-        "reading_mask_hint": "Dims content above and below the pointer.",
-        "preview": "Preview",
-        "preview_title": "Operator workspace preview",
-        "preview_text": "Check whether text, links, controls and status labels are comfortable to read before closing this menu.",
-        "preview_link": "Device details link",
-        "preview_status": "Online",
-        "preview_button": "Primary action",
-        "preview_secondary": "Secondary",
-        "reset": "Reset",
+        "reduce_motion_hint": "Turns off transitions, animations and moving slides.",
         "done": "Done",
-        "profiles_note": "Each profile changes several settings below at once. Choose it again to go back to the defaults.",
-        "spacing_normal": "Normal",
-        "reset_defaults": "Reset to defaults"
+        "subtitle_account": "By default the console follows your system settings. Each change is saved for your account right away.",
+        "subtitle_browser": "By default the console follows your system settings. Each change is saved in this browser right away.",
+        "more_contrast": "More contrast",
+        "more_contrast_hint": "Stronger colors for text, lines and controls. A Windows contrast theme always wins.",
+        "follow_system": "Follow system",
+        "choice_on": "On",
+        "choice_off": "Off",
+        "single_key_shortcuts": "Turn off single-key shortcuts",
+        "single_key_shortcuts_hint": "The / key no longer opens search. Ctrl+K still does.",
+        "pause_live_updates": "Pause live updates",
+        "pause_live_updates_hint": "Lists and pages don't load new data by themselves. Refresh loads it when you want.",
+        "saved": "Saved",
+        "save_failed": "The setting could not be saved. Try again."
     },
     "server_mgmt": {
         "title": "Server management",
@@ -8727,7 +8697,8 @@
             "close": "Close",
             "link_docs": "Documentation",
             "console": "In the console",
-            "shortcuts": "Keyboard shortcuts"
+            "shortcuts": "Keyboard shortcuts",
+            "link_accessibility": "Accessibility statement"
         },
         "shortcuts": {
             "search": "Open the search",
@@ -8850,7 +8821,9 @@
         "next": "Next slide",
         "carousel": "carousel",
         "slide": "slide",
-        "slide_n": "Slide {n} of {count}"
+        "slide_n": "Slide {n} of {count}",
+        "stop": "Stop slides",
+        "start": "Start slides"
     },
     "agents": {
         "title": "NeoDesk Agents",
@@ -8943,7 +8916,7 @@
             "invite_steps": "Open this link on the computer you want to set up:",
             "invite_button": "Set up this computer",
             "invite_expires": "It works until {expires}.",
-            "invite_code": "Already have NeoDesk? Open Settings, Server, Join a server, and enter the code {code}.",
+            "invite_code": "Already have NeoDesk? Open Settings, Server, Join a server, and enter this code:",
             "support_subject": "{sender} from {server} wants to help you",
             "support_heading": "Your support session is ready",
             "support_intro": "{sender} from {server} wants to help you.",
@@ -9297,7 +9270,7 @@
         "try_generic": "Reconnect. If it keeps failing, copy the details below and send them to your administrator.",
         "fail_insecure": "The connection to {name} was stopped because it could not be secured.",
         "try_insecure": "No password was sent. Someone between this browser and the device may be listening in, or the server key is not set up. Ask an administrator to check the server.",
-        "screen_keys": "Keys go to the device, Tab too. Press F8 to leave the screen.",
+        "screen_keys": "Keys go to the device, Tab too. Press F8 or Ctrl+Alt+Shift+G to leave the screen.",
         "displays": "Displays",
         "layout": "Layout",
         "layout_single": "One at a time",
@@ -9338,7 +9311,9 @@
         "phone_turn": "Or turn the phone sideways: in landscape the session opens here in the browser.",
         "no_open_sessions": "No session is open. Connect by ID, or pick a device below.",
         "fail_signin_closed": "{name} closed the connection when this browser signed in.",
-        "try_signin_closed": "The device refused the sign-in. Reconnect and sign in again. If it keeps happening, ask an administrator to look at the log of NeoDesk on the device."
+        "try_signin_closed": "The device refused the sign-in. Reconnect and sign in again. If it keeps happening, ask an administrator to look at the log of NeoDesk on the device.",
+        "screen_role": "remote screen",
+        "tab_close_hint": "Press Delete to close this session."
     },
     "diagram": {
         "your_computer": "Your computer",
@@ -9386,7 +9361,12 @@
     "table": {
         "select_all": "Select all",
         "select_row": "Select {name}",
-        "columns": "Columns"
+        "columns": "Columns",
+        "rows_one": "{count} row",
+        "rows_other": "{count} rows",
+        "sorted": "Sorted by {column}, {direction}",
+        "ascending": "ascending",
+        "descending": "descending"
     },
     "pagination": {
         "showing": "Showing {start}–{end} of {total}",
@@ -9394,11 +9374,14 @@
         "label": "Pages",
         "previous": "Previous page",
         "next": "Next page",
-        "page": "Page {page}"
+        "page": "Page {page}",
+        "page_of": "Page {page} of {pages}",
+        "pages_of": "Pages of {name}"
     },
     "shell": {
         "skip_to_content": "Skip to main content",
-        "start_failed": "The console could not start."
+        "start_failed": "The console could not start.",
+        "loading_console": "Loading the console"
     },
     "ux36": {
         "beta_badge": "BETA",
@@ -9462,8 +9445,8 @@
         "theme": "Theme for this browser",
         "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
         "language_note": "The language of the console for your account, on every device.",
-        "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-        "accessibility_on": "Some accessibility settings are on in this browser.",
+        "accessibility_note": "Motion, contrast, links, font, shortcuts and live updates. Saved for your account.",
+        "accessibility_on": "Some accessibility settings are on for your account.",
         "accessibility_open": "Accessibility settings",
         "email_title": "Email address",
         "email_none": "No email address yet.",
@@ -9641,5 +9624,18 @@
         "tab_title": "Viewing as {username}",
         "ended": "You are no longer viewing NeoDesk as another account. The page loads again as you.",
         "read_only_hint": "You are viewing NeoDesk as {username}. Nothing can be changed here."
+    },
+    "canvas": {
+        "move_node": "Move {name}",
+        "move_left": "Move left",
+        "move_up": "Move up",
+        "move_down": "Move down",
+        "move_right": "Move right"
+    },
+    "live": {
+        "last_updated": "Last updated {time}",
+        "paused": "Live updates are paused.",
+        "new_entries": "New entries, show them",
+        "new_entries_waiting": "New entries came in while live updates are paused."
     }
 }

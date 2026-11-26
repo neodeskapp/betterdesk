@@ -68,4 +68,14 @@
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 	}
+	/* Windows contrast themes drop backgrounds: the fill keeps its own colour */
+	@media (forced-colors: active) {
+		.meter-bar {
+			border: 1px solid CanvasText;
+		}
+		.meter-fill {
+			background: CanvasText;
+			forced-color-adjust: none;
+		}
+	}
 </style>

@@ -81,6 +81,22 @@ describe('promo slides', () => {
 		expect(visible()).toEqual(['Title a']);
 	});
 
+	test('a Stop button comes first in the carousel; it stops the slides until Start', async () => {
+		render(PromoPanel, { mode: 'slides', slides: [slide('a'), slide('b')] });
+		const aside = document.querySelector('.login-promo')!;
+		const stop = screen.getByRole('button', { name: 'Stop slides' });
+		expect(aside.querySelector('button')).toBe(stop);
+		await fireEvent.click(stop);
+		// The pointer left and focus moved on: still stopped
+		await fireEvent.focusOut(stop);
+		await vi.advanceTimersByTimeAsync(20000);
+		expect(visible()).toEqual(['Title a']);
+		const start = screen.getByRole('button', { name: 'Start slides' });
+		await fireEvent.click(start);
+		await vi.advanceTimersByTimeAsync(7000);
+		expect(visible()).toEqual(['Title b']);
+	});
+
 	test('one slide: no controls; "single": an empty panel the branding stylesheet paints', () => {
 		const { unmount } = render(PromoPanel, { mode: 'slides', slides: [slide('a')] });
 		expect(screen.queryByRole('button')).toBeNull();

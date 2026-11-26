@@ -35,7 +35,7 @@
     "kind": "bytes",
     "type": "text/css",
     "length": 4118,
-    "sha256": "f84158589030ebb59da612414d7e18519a791c06d4c8f242a3de1bac5fbea4cd",
+    "sha256": "cb49ce9dd7dfcd008b04bad9c41bc8df6c08a8a950f8377e766963d45980d74b",
     "head": ":root {\n    --bg-primary: #ffffff;\n    --bg-secondary: #f3f4f4;\n    --bg-tertiary: #e8ebeb;\n    --bg-elevated: #ffffff;\n    --text-primary: #1b1e1f;\n    --text-secondary: #566064;\n    --accent-blue: #1b62cf;\n    --accent-blue-hover: #1854b3;\n    --accent-blue-muted: rgba(27, 98, 207, 0.15);\n    --ac"
    }
   },
@@ -72,7 +72,7 @@
     "kind": "bytes",
     "type": "text/css",
     "length": 4118,
-    "sha256": "f84158589030ebb59da612414d7e18519a791c06d4c8f242a3de1bac5fbea4cd",
+    "sha256": "cb49ce9dd7dfcd008b04bad9c41bc8df6c08a8a950f8377e766963d45980d74b",
     "head": ":root {\n    --bg-primary: #ffffff;\n    --bg-secondary: #f3f4f4;\n    --bg-tertiary: #e8ebeb;\n    --bg-elevated: #ffffff;\n    --text-primary: #1b1e1f;\n    --text-secondary: #566064;\n    --accent-blue: #1b62cf;\n    --accent-blue-hover: #1854b3;\n    --accent-blue-muted: rgba(27, 98, 207, 0.15);\n    --ac"
    }
   }

@@ -77,15 +77,19 @@ describe('Menu', () => {
 		expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: /edit/i }));
 	});
 
-	test('arrow keys move, skip disabled items and wrap; Home and End jump', async () => {
+	test('arrow keys move, reach disabled items and wrap; Home and End jump', async () => {
 		const { trigger, user } = setup();
 		trigger.focus();
 		await user.keyboard('{Enter}');
 		const name = () => document.activeElement?.querySelector('.menu-item-label')?.textContent;
 		await user.keyboard('{ArrowDown}');
 		expect(name()).toBe('Tags');
+		// A disabled item stays reachable (APG), so people learn it exists
 		await user.keyboard('{ArrowDown}');
-		expect(name()).toBe('Move to folder'); // Archive is disabled
+		expect(name()).toBe('Archive');
+		expect(document.activeElement).toHaveAttribute('aria-disabled', 'true');
+		await user.keyboard('{ArrowDown}');
+		expect(name()).toBe('Move to folder');
 		await user.keyboard('{End}');
 		expect(name()).toBe('Delete…');
 		await user.keyboard('{ArrowDown}');
@@ -171,9 +175,12 @@ describe('Menu', () => {
 		const { trigger, user, onselect } = setup();
 		await user.click(trigger);
 		const archive = screen.getByRole('menuitem', { name: /archive/i });
-		expect(archive).toBeDisabled();
+		expect(archive).toHaveAttribute('aria-disabled', 'true');
 		await user.click(archive);
+		archive.focus();
+		await user.keyboard('{Enter}');
 		expect(onselect).not.toHaveBeenCalled();
+		expect(screen.getByRole('menu')).toBeInTheDocument();
 	});
 
 	test('a checkbox item toggles and leaves the menu open', async () => {
@@ -429,20 +436,17 @@ describe('Sheet', () => {
 });
 
 describe('toasts', () => {
-	test('messages are text, in a polite region; errors in an assertive one', () => {
+	test('messages are text, in their type; screen readers hear them through the announcer (announce.test.ts)', () => {
 		render(ToastHost);
 		toast.success('<img src=x onerror=alert(1)>');
 		toast.error('Could not save.');
 		flushSync();
 		expect(document.querySelector('img')).toBeNull();
-		const polite = screen.getByRole('status');
-		expect(polite).toHaveAttribute('aria-live', 'polite');
-		expect(within(polite).getByText('<img src=x onerror=alert(1)>').closest('.toast')).toHaveClass('success');
-		const alert = screen.getByRole('alert');
-		expect(within(alert).getByText('Could not save.')).toBeInTheDocument();
+		expect(screen.getByText('<img src=x onerror=alert(1)>').closest('.toast')).toHaveClass('success');
+		expect(screen.getByText('Could not save.').closest('.toast')).toHaveClass('error');
 	});
 
-	test('go away by themselves, errors later; the close button closes one', async () => {
+	test('go away by themselves, errors only when closed; the close button closes one', async () => {
 		vi.useFakeTimers();
 		render(ToastHost);
 		toast.info('Saved.');
@@ -452,7 +456,9 @@ describe('toasts', () => {
 		flushSync();
 		expect(screen.queryByText('Saved.')).toBeNull();
 		expect(screen.getByText('Failed.')).toBeInTheDocument();
-		vi.advanceTimersByTime(3000);
+		vi.advanceTimersByTime(60000);
+		flushSync();
+		screen.getByRole('button', { name: 'Close: Failed.' }).click();
 		flushSync();
 		expect(screen.queryByText('Failed.')).toBeNull();
 
@@ -460,7 +466,7 @@ describe('toasts', () => {
 		flushSync();
 		vi.advanceTimersByTime(60000);
 		flushSync();
-		screen.getByRole('button', { name: 'Close' }).click();
+		screen.getByRole('button', { name: 'Close: Stays.' }).click();
 		flushSync();
 		expect(screen.queryByText('Stays.')).toBeNull();
 	});
@@ -521,7 +527,7 @@ describe('Pagination', () => {
 		render(Pagination, { page: 1, total: 312, pageSize: 25, onchange });
 		expect(screen.getByText('Showing 1–25 of 312')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Page 1' })).toHaveAttribute('aria-current', 'page');
-		expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();
+		expect(screen.getByRole('button', { name: 'Previous page' })).toHaveAttribute('aria-disabled', 'true');
 		expect(screen.getByRole('button', { name: 'Page 13' })).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: 'Page 5' })).toBeNull();
 		await user.click(screen.getByRole('button', { name: 'Next page' }));
@@ -563,7 +569,8 @@ describe('Disclosure, Notice, States', () => {
 	test('an error state has a retry button; a table state is a spanning cell', async () => {
 		const onretry = vi.fn();
 		render(States, { kind: 'error', message: 'Could not load devices.', onretry });
-		expect(screen.getByRole('alert')).toHaveTextContent('Could not load devices.');
+		// Announced through the announcer (announce.test.ts)
+		expect(screen.getByText('Could not load devices.').closest('.state')).toHaveClass('is-error');
 		await userEvent.click(screen.getByRole('button', { name: /retry/i }));
 		expect(onretry).toHaveBeenCalled();
 		cleanup();

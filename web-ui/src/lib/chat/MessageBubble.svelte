@@ -161,7 +161,7 @@
 				{/if}
 			</div>
 			{#if !msg.deleted && !msg.pending}
-				<div class="chat-actions" role="toolbar" aria-label={t('chat.message_actions')}>
+				<div class="chat-actions" role="group" aria-label={t('chat.message_actions')}>
 					<IconButton
 						bind:element={pickerBtn}
 						icon="add_reaction"

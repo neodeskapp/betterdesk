@@ -40,7 +40,9 @@
     "copy_value": "{value} kopieren",
     "copy_failed": "Kopieren nicht möglich. Bitte markiere den Text und kopiere ihn selbst.",
     "read_only_page": "Du kannst diese Seite ansehen, aber nicht ändern.",
-    "opens_in_new_tab": "öffnet sich in einem neuen Tab"
+    "opens_in_new_tab": "öffnet sich in einem neuen Tab",
+    "required_mark": "(Pflichtfeld)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Hauptmenü",
@@ -111,7 +113,8 @@
     "server_backups": "Sicherungen",
     "server_config_files": "Konfigurationsdateien",
     "meshcentral": "MeshCentral",
-    "devices_add": "Computer hinzufügen"
+    "devices_add": "Computer hinzufügen",
+    "registrations_waiting": "{count} warten"
   },
   "auth": {
     "login": "Anmelden",
@@ -189,7 +192,14 @@
     "password_same": "Wähle ein anderes Passwort als das, mit dem du dich angemeldet hast.",
     "change_required_title": "Neues Passwort wählen",
     "change_required": "Dein Administrator bittet dich, ein neues Passwort zu wählen, bevor es weitergeht.",
-    "change_required_save": "Speichern und anmelden"
+    "change_required_save": "Speichern und anmelden",
+    "session_seconds_left": "Noch {seconds} Sekunden",
+    "session_end_warning_title": "Deine Sitzung endet bald",
+    "session_end_warning_body": "Deine Sitzung endet um {time}. Speichere jetzt deine Arbeit und melde dich danach neu an.",
+    "enter_username": "Gib deinen Benutzernamen ein.",
+    "enter_password": "Gib dein Passwort ein.",
+    "hide_password": "Passwort verbergen",
+    "totp_sixth_digit": "Die Anmeldung startet, sobald du die sechste Ziffer eingibst."
   },
   "dashboard": {
     "title": "Übersicht",
@@ -5985,6 +5995,7 @@
     "mail_heading": "{name} wartet auf eine Antwort",
     "mail_waited": "Jemand an {name} (ID {id}) wartet seit {minutes} Minuten im Chat auf eine Antwort.",
     "mail_quote": "Nachricht: {quote}",
+    "mail_quote_label": "Nachricht:",
     "mail_open": "Unterhaltung öffnen: {link}",
     "mail_button": "Unterhaltung in {app} öffnen",
     "old_messages": "Alte Nachrichten",
@@ -6016,7 +6027,8 @@
     "team_groups_line": "Benutzergruppen: {names}",
     "delete_team": "Team löschen",
     "delete_team_title": "{name} löschen?",
-    "delete_team_message": "Das Team und alle seine Nachrichten werden für alle Mitglieder gelöscht."
+    "delete_team_message": "Das Team und alle seine Nachrichten werden für alle Mitglieder gelöscht.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Gerät verbunden",
@@ -7833,6 +7845,10 @@
     "mark_all_read": "Alle als gelesen markieren",
     "see_all": "Alle Hilfeanfragen anzeigen",
     "help_request": "Hilfeanfrage",
+    "mail_alert_heading": "Alarm: {rule}",
+    "mail_help_heading": "Hilfeanfrage von {device}",
+    "mail_help_lead": "Eine neue Hilfeanfrage ist eingegangen.",
+    "mail_help_button": "Hilfeanfragen in {app} öffnen",
     "just_now": "just now",
     "kind_registration": "Neues Gerät möchte beitreten",
     "unread": "Ungelesen",
@@ -7842,72 +7858,26 @@
   },
   "accessibility": {
     "title": "Barrierefreiheit",
-    "subtitle": "Änderungen an Text, Farbe und Bewegung gelten sofort und werden in diesem Browser gespeichert.",
-    "close": "Einstellungen zur Barrierefreiheit schließen",
-    "profiles": "Schnellprofile",
-    "profile_low_vision": "Sehschwäche",
-    "profile_low_vision_hint": "Größerer Text, hoher Kontrast, deutlicher Fokusrahmen und großer Mauszeiger.",
-    "profile_dyslexia": "Lesekomfort",
-    "profile_dyslexia_hint": "Lesbare Schrift, größerer Text und mehr Abstand.",
-    "profile_motion_safe": "Weniger Bewegung",
-    "profile_motion_safe_hint": "Stoppt Animationen und fügt eine Lesehilfe und einen deutlichen Fokusrahmen hinzu.",
-    "profile_color_assist": "Farbunterstützung",
-    "profile_color_assist_hint": "Farbfilter, kräftigere Farben, unterstrichene Links und markierte Überschriften.",
-    "reading": "Lesen",
-    "font_size": "Schriftgröße",
-    "line_height": "Zeilenhöhe",
-    "letter_spacing": "Buchstabenabstand",
-    "word_spacing": "Wortabstand",
     "readable_font": "Lesbare Schrift",
-    "readable_font_hint": "Verwendet eine breite, schlichte Schrift wie Verdana.",
-    "dyslexia_spacing": "Abstand für Dyslexie",
-    "dyslexia_spacing_hint": "Vergrößert den Abstand zwischen Buchstaben und Wörtern.",
-    "visual": "Visuell",
-    "contrast": "Kontrast",
-    "contrast_normal": "Normal",
-    "contrast_high_dark": "Hoher Kontrast dunkel",
-    "contrast_high_light": "Hoher Kontrast hell",
-    "contrast_yellow_black": "Gelb auf Schwarz",
-    "color_filter": "Farbsehfilter",
-    "filter_none": "Keiner",
-    "filter_protanopia": "Protanopie (Rotblindheit)",
-    "filter_deuteranopia": "Deuteranopie (Grünblindheit)",
-    "filter_tritanopia": "Tritanopie (Blaublindheit)",
-    "filter_achromatopsia": "Graustufen",
-    "saturation": "Farbsättigung",
+    "readable_font_hint": "Eine schlichte Schrift mit etwas mehr Abstand zwischen Buchstaben und Wörtern.",
     "underline_links": "Links unterstreichen",
     "underline_links_hint": "Macht Links sichtbar, ohne sich auf Farbe zu verlassen.",
-    "highlight_links": "Aktionen hervorheben",
-    "highlight_links_hint": "Zeichnet eine Kontur um Links und Schaltflächen.",
-    "highlight_headings": "Überschriften hervorheben",
-    "highlight_headings_hint": "Markiert Abschnittsüberschriften mit einer Farbleiste.",
-    "hide_media": "Medien abdunkeln",
-    "hide_media_hint": "Blendet Bilder, Videos und Diagramme fast aus.",
-    "interaction": "Interaktion",
-    "strong_focus": "Starker Fokus",
-    "strong_focus_hint": "Zeigt eine breite Tastaturfokus-Kontur.",
-    "large_cursor": "Großer Cursor",
-    "large_cursor_hint": "Verwendet einen größeren Zeiger mit hohem Kontrast.",
     "reduce_motion": "Bewegung reduzieren",
-    "reduce_motion_hint": "Schaltet Übergänge und weiches Scrollen aus.",
-    "pause_animations": "Animationen pausieren",
-    "pause_animations_hint": "Hält Animationen an, etwa Ladekreise.",
-    "reading_guide": "Lesehilfe",
-    "reading_guide_hint": "Eine Linie folgt dem Mauszeiger, damit du beim Lesen die Zeile hältst.",
-    "reading_mask": "Lesemaske",
-    "reading_mask_hint": "Verdunkelt Inhalte oberhalb und unterhalb des Zeigers.",
-    "preview": "Vorschau",
-    "preview_title": "Vorschau des Operator-Arbeitsbereichs",
-    "preview_text": "Prüfe, ob Text, Links, Steuerelemente und Statusbeschriftungen gut lesbar sind, bevor du dieses Menü schließt.",
-    "preview_link": "Link zu Gerätedetails",
-    "preview_status": "Online",
-    "preview_button": "Hauptaktion",
-    "preview_secondary": "Secondary",
-    "reset": "Zurücksetzen",
+    "reduce_motion_hint": "Schaltet Übergänge, Animationen und wechselnde Folien aus.",
     "done": "Fertig",
-    "profiles_note": "Jedes Profil ändert mehrere der folgenden Einstellungen auf einmal. Wähle es erneut, um zu den Standardwerten zurückzukehren.",
-    "spacing_normal": "Normal",
-    "reset_defaults": "Auf Standard zurücksetzen"
+    "subtitle_account": "Standardmäßig folgt die Konsole den Einstellungen deines Systems. Jede Änderung wird sofort für dein Konto gespeichert.",
+    "subtitle_browser": "Standardmäßig folgt die Konsole den Einstellungen deines Systems. Jede Änderung wird sofort in diesem Browser gespeichert.",
+    "more_contrast": "Mehr Kontrast",
+    "more_contrast_hint": "Kräftigere Farben für Text, Linien und Bedienelemente. Ein Kontrastdesign von Windows hat immer Vorrang.",
+    "follow_system": "Wie im System",
+    "choice_on": "An",
+    "choice_off": "Aus",
+    "single_key_shortcuts": "Kurzbefehle mit einer Taste ausschalten",
+    "single_key_shortcuts_hint": "Die Taste / öffnet die Suche dann nicht mehr. Strg+K funktioniert weiter.",
+    "pause_live_updates": "Live-Aktualisierung anhalten",
+    "pause_live_updates_hint": "Listen und Seiten laden neue Daten nicht mehr von selbst. Mit Aktualisieren lädst du sie, wann du willst.",
+    "saved": "Gespeichert",
+    "save_failed": "Die Einstellung konnte nicht gespeichert werden. Versuch es noch einmal."
   },
   "server_mgmt": {
     "title": "Serververwaltung",
@@ -8727,7 +8697,8 @@
       "close": "Schließen",
       "link_docs": "Dokumentation",
       "console": "In der Konsole",
-      "shortcuts": "Tastenkürzel"
+      "shortcuts": "Tastenkürzel",
+      "link_accessibility": "Erklärung zur Barrierefreiheit"
     },
     "shortcuts": {
       "search": "Suche öffnen",
@@ -8850,7 +8821,9 @@
     "next": "Nächste Folie",
     "carousel": "Karussell",
     "slide": "Folie",
-    "slide_n": "Folie {n} von {count}"
+    "slide_n": "Folie {n} von {count}",
+    "stop": "Folien anhalten",
+    "start": "Folien starten"
   },
   "agents": {
     "title": "NeoDesk-Agenten",
@@ -8943,7 +8916,7 @@
       "invite_steps": "Öffne diesen Link auf dem Computer, den du einrichten möchtest:",
       "invite_button": "Diesen Computer einrichten",
       "invite_expires": "Er gilt bis {expires}.",
-      "invite_code": "Hast du NeoDesk schon? Öffne Einstellungen, Server, Server beitreten, und gib den Code {code} ein.",
+      "invite_code": "Hast du NeoDesk schon? Öffne Einstellungen, Server, Server beitreten, und gib diesen Code ein:",
       "support_subject": "{sender} von {server} möchte dir helfen",
       "support_heading": "Deine Hilfesitzung ist bereit",
       "support_intro": "{sender} von {server} möchte dir helfen.",
@@ -9297,7 +9270,7 @@
     "try_generic": "Verbinde dich erneut. Wenn es weiter fehlschlägt, kopiere die Details unten und sende sie an deinen Administrator.",
     "fail_insecure": "Die Verbindung zu {name} wurde abgebrochen, weil sie nicht abgesichert werden konnte.",
     "try_insecure": "Es wurde kein Passwort gesendet. Jemand zwischen diesem Browser und dem Gerät hört möglicherweise mit, oder der Serverschlüssel ist nicht eingerichtet. Bitte einen Administrator, den Server zu prüfen.",
-    "screen_keys": "Tasten gehen an das Gerät, auch Tab. Mit F8 verlässt du den Bildschirm.",
+    "screen_keys": "Tasten gehen an das Gerät, auch Tab. Mit F8 oder Strg+Alt+Umschalt+G verlässt du den Bildschirm.",
     "displays": "Bildschirme",
     "layout": "Anordnung",
     "layout_single": "Einzeln",
@@ -9338,7 +9311,9 @@
     "phone_turn": "Oder dreh das Telefon quer: Im Querformat öffnet sich die Sitzung hier im Browser.",
     "no_open_sessions": "Keine Sitzung ist offen. Verbinde dich per ID oder wähle unten ein Gerät.",
     "fail_signin_closed": "{name} hat die Verbindung bei der Anmeldung dieses Browsers beendet.",
-    "try_signin_closed": "Das Gerät hat die Anmeldung abgelehnt. Verbinde dich neu und melde dich noch einmal an. Wenn das immer wieder passiert, bitte einen Administrator, das Protokoll von NeoDesk auf dem Gerät anzusehen."
+    "try_signin_closed": "Das Gerät hat die Anmeldung abgelehnt. Verbinde dich neu und melde dich noch einmal an. Wenn das immer wieder passiert, bitte einen Administrator, das Protokoll von NeoDesk auf dem Gerät anzusehen.",
+    "screen_role": "entfernter Bildschirm",
+    "tab_close_hint": "Mit Entf schließt du diese Sitzung."
   },
   "diagram": {
     "your_computer": "Dein Computer",
@@ -9386,7 +9361,12 @@
   "table": {
     "select_all": "Alle auswählen",
     "select_row": "{name} auswählen",
-    "columns": "Spalten"
+    "columns": "Spalten",
+    "rows_one": "{count} Zeile",
+    "rows_other": "{count} Zeilen",
+    "sorted": "Sortiert nach {column}, {direction}",
+    "ascending": "aufsteigend",
+    "descending": "absteigend"
   },
   "pagination": {
     "showing": "{start}–{end} von {total}",
@@ -9394,11 +9374,14 @@
     "label": "Seiten",
     "previous": "Vorherige Seite",
     "next": "Nächste Seite",
-    "page": "Seite {page}"
+    "page": "Seite {page}",
+    "page_of": "Seite {page} von {pages}",
+    "pages_of": "Seiten von {name}"
   },
   "shell": {
     "skip_to_content": "Zum Hauptinhalt springen",
-    "start_failed": "Die Konsole konnte nicht starten."
+    "start_failed": "Die Konsole konnte nicht starten.",
+    "loading_console": "Die Konsole wird geladen"
   },
   "ux36": {
     "beta_badge": "BETA",
@@ -9462,8 +9445,8 @@
     "theme": "Design für diesen Browser",
     "theme_note": "Standard der Konsole folgt dem Design unter Einstellungen › Darstellung. Hell und Dunkel gelten nur für diesen Browser.",
     "language_note": "Die Sprache der Konsole für dein Konto, auf jedem Gerät.",
-    "accessibility_note": "Kontrast, Textgröße, Bewegung und Farbfilter für diesen Browser.",
-    "accessibility_on": "In diesem Browser sind Einstellungen zur Barrierefreiheit an.",
+    "accessibility_note": "Bewegung, Kontrast, Links, Schrift, Kurzbefehle und Live-Aktualisierung. Für dein Konto gespeichert.",
+    "accessibility_on": "Einige Einstellungen zur Barrierefreiheit sind für dein Konto an.",
     "accessibility_open": "Barrierefreiheit einstellen",
     "email_title": "E-Mail-Adresse",
     "email_none": "Noch keine E-Mail-Adresse.",
@@ -9641,5 +9624,18 @@
     "tab_title": "Ansicht als {username}",
     "ended": "Du siehst NeoDesk nicht mehr mit einem anderen Konto. Die Seite lädt wieder als du.",
     "read_only_hint": "Du siehst NeoDesk als {username}. Hier lässt sich nichts ändern."
+  },
+  "canvas": {
+    "move_node": "{name} verschieben",
+    "move_left": "Nach links",
+    "move_up": "Nach oben",
+    "move_down": "Nach unten",
+    "move_right": "Nach rechts"
+  },
+  "live": {
+    "last_updated": "Zuletzt aktualisiert {time}",
+    "paused": "Die Live-Aktualisierung ist angehalten.",
+    "new_entries": "Neue Einträge, zeig sie an",
+    "new_entries_waiting": "Neue Einträge sind eingegangen, während die Live-Aktualisierung angehalten ist."
   }
 }

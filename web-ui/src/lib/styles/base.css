@@ -162,9 +162,27 @@
 }
 
 html {
-	font-size: 16px;
+	/* The browser's font size setting (16px unless the person changed it);
+	   every type token is in rem, so all text follows it */
+	font-size: 100%;
 	-webkit-text-size-adjust: 100%;
 	text-size-adjust: 100%;
+	/* A control that gets focus scrolls clear of the sticky top bar, and of
+	   the save bar and the bottom navigation below (WCAG 2.4.11) */
+	scroll-padding-block-start: calc(var(--topbar-h) + var(--space-3));
+}
+html:has(.save-bar.is-dirty) {
+	scroll-padding-block-end: calc(var(--save-bar-h) + var(--space-3));
+}
+@media (max-width: 767px) {
+	html {
+		scroll-padding-block-end: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + var(--space-3));
+	}
+	html:has(.save-bar.is-dirty) {
+		scroll-padding-block-end: calc(
+			var(--bottom-nav-h) + var(--save-bar-h) + env(safe-area-inset-bottom, 0px) + var(--space-3)
+		);
+	}
 }
 
 /* Native parts (checkboxes, radios, number spinners, select lists, scrollbars,
@@ -176,16 +194,6 @@ html {
 }
 
 :root[data-theme='dark'] {
-	color-scheme: dark;
-}
-
-/* The accessibility panel's contrast modes choose their own background */
-:root[data-a11y-contrast='high-light'] {
-	color-scheme: light;
-}
-
-:root[data-a11y-contrast='high-dark'],
-:root[data-a11y-contrast='yellow-black'] {
 	color-scheme: dark;
 }
 
@@ -272,10 +280,6 @@ hr {
 :focus-visible {
 	outline: var(--focus-ring);
 	outline-offset: var(--focus-offset);
-}
-
-html[data-a11y-strong-focus='true'] :focus-visible {
-	outline-width: 3px;
 }
 
 /* Hidden wins over any component display rule. The :not(#id) adds an id
@@ -412,6 +416,12 @@ input[type='radio'] {
 	margin-top: calc(-1 * var(--space-1));
 	padding-inline-end: max(0px, calc(100% - var(--measure)));
 	color: var(--text-muted);
+}
+
+/* "Last updated" and Refresh (ui/LiveStatus.svelte): a line of its own under the title */
+.page-head .live-status {
+	order: 2;
+	flex: 0 0 100%;
 }
 
 .page-actions {

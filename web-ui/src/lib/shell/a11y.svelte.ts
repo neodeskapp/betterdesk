@@ -1,263 +1,237 @@
 /**
- * Accessibility panel settings (public/js/accessibility.js): same storage
- * key, defaults, limits and profiles, so the old pages and the new console
- * share them. /console-boot.js applies the stored settings before first
- * paint with the same rules; this module keeps <html> in step afterwards.
- * The effects themselves are in styles/a11y.css (data-a11y-* attributes
- * and --bd-a11y-* variables on <html>); A11yEffects.svelte draws the
- * colour filters and the reading guide.
+ * Accessibility settings: six options, the same as the server keeps per
+ * account (neodesk-server/console/accessibility).
+ *
+ * - Reduce motion and More contrast follow the system by default
+ *   (prefers-reduced-motion, prefers-contrast: more); "on" and "off"
+ *   override it.
+ * - Underline links, Readable font, Turn off single-key shortcuts and
+ *   Pause live updates are off by default.
+ *
+ * The browser keeps a copy (neodesk_accessibility_v2) for the pages before
+ * sign-in and for the first paint: /console-boot.js applies it before the
+ * page draws, with the same rules as applyToRoot. After sign-in the
+ * account's settings (in the bootstrap) win and replace the copy. Each
+ * change is saved right away (for the account when signed in) and
+ * announced; a change the server refuses goes back.
+ *
+ * On <html>: data-a11y-reduce-motion and data-a11y-more-contrast say
+ * whether the option applies now ("true" or "false", the system's setting
+ * already worked in), data-a11y-underline-links and
+ * data-a11y-readable-font the two switches. styles/a11y.css does the rest.
  */
 
+import { saveAccessibility } from '#lib/api/accessibility.ts';
+import { t } from '#lib/i18n/i18n.svelte.ts';
+import { setLivePaused } from '#lib/state/live-updates.svelte.ts';
+import { announce } from '#lib/ui/announce.svelte.ts';
+import { toast } from '#lib/ui/toasts.svelte.ts';
 import { PREF, readPref, writePref } from '#lib/util/storage.ts';
 
 export const STORAGE_KEY = PREF.a11y;
+/** The panel of earlier versions kept its 20 settings here */
+export const V1_KEY = 'neodesk_accessibility_v1';
 
-export const CONTRASTS = ['normal', 'high-dark', 'high-light', 'yellow-black'] as const;
-export const FILTERS = ['none', 'protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia'] as const;
-export const PROFILES = ['lowVision', 'dyslexia', 'motionSafe', 'colorAssist'] as const;
-
-export type Contrast = (typeof CONTRASTS)[number];
-export type ColorFilter = (typeof FILTERS)[number];
-export type Profile = (typeof PROFILES)[number];
+export const FOLLOW = ['system', 'on', 'off'] as const;
+export type Follow = (typeof FOLLOW)[number];
 
 export interface A11ySettings {
-	fontScale: number;
-	lineHeight: number;
-	letterSpacing: number;
-	wordSpacing: number;
-	saturation: number;
-	contrast: Contrast;
-	colorFilter: ColorFilter;
-	activeProfile: Profile | '';
-	readableFont: boolean;
-	dyslexiaFont: boolean;
+	reduceMotion: Follow;
+	moreContrast: Follow;
 	underlineLinks: boolean;
-	highlightLinks: boolean;
-	highlightHeadings: boolean;
-	strongFocus: boolean;
-	largeCursor: boolean;
-	reduceMotion: boolean;
-	pauseAnimations: boolean;
-	readingGuide: boolean;
-	readingMask: boolean;
-	hideMedia: boolean;
+	readableFont: boolean;
+	noSingleKeyShortcuts: boolean;
+	pauseLiveUpdates: boolean;
 }
 
-export type RangeKey = 'fontScale' | 'lineHeight' | 'letterSpacing' | 'wordSpacing' | 'saturation';
-export type FlagKey = {
-	[K in keyof A11ySettings]: A11ySettings[K] extends boolean ? K : never;
-}[keyof A11ySettings];
+export type FollowKey = 'reduceMotion' | 'moreContrast';
+export type FlagKey = Exclude<keyof A11ySettings, FollowKey>;
 
 export const DEFAULTS: Readonly<A11ySettings> = Object.freeze({
-	fontScale: 100,
-	lineHeight: 1.5,
-	letterSpacing: 0,
-	wordSpacing: 0,
-	saturation: 100,
-	contrast: 'normal',
-	colorFilter: 'none',
-	activeProfile: '',
-	readableFont: false,
-	dyslexiaFont: false,
+	reduceMotion: 'system',
+	moreContrast: 'system',
 	underlineLinks: false,
-	highlightLinks: false,
-	highlightHeadings: false,
-	strongFocus: false,
-	largeCursor: false,
-	reduceMotion: false,
-	pauseAnimations: false,
-	readingGuide: false,
-	readingMask: false,
-	hideMedia: false
+	readableFont: false,
+	noSingleKeyShortcuts: false,
+	pauseLiveUpdates: false
 });
 
-/** Slider limits and steps (min, max, step), as in the old panel */
-export const RANGES: Readonly<Record<RangeKey, readonly [number, number, number]>> = {
-	fontScale: [90, 160, 5],
-	lineHeight: [1.2, 2.1, 0.05],
-	letterSpacing: [0, 0.14, 0.005],
-	wordSpacing: [0, 0.22, 0.01],
-	saturation: [0, 180, 5]
-};
-
 export const FLAG_KEYS: readonly FlagKey[] = [
-	'readableFont',
-	'dyslexiaFont',
 	'underlineLinks',
-	'highlightLinks',
-	'highlightHeadings',
-	'strongFocus',
-	'largeCursor',
-	'reduceMotion',
-	'pauseAnimations',
-	'readingGuide',
-	'readingMask',
-	'hideMedia'
+	'readableFont',
+	'noSingleKeyShortcuts',
+	'pauseLiveUpdates'
 ];
 
-/** data-a11y-* attribute (camel case for dataset) for each flag */
-const FLAG_ATTR: Readonly<Record<FlagKey, string>> = {
-	readableFont: 'a11yReadableFont',
-	dyslexiaFont: 'a11yDyslexia',
-	underlineLinks: 'a11yUnderlineLinks',
-	highlightLinks: 'a11yHighlightLinks',
-	highlightHeadings: 'a11yHighlightHeadings',
-	strongFocus: 'a11yStrongFocus',
-	largeCursor: 'a11yLargeCursor',
-	reduceMotion: 'a11yReduceMotion',
-	pauseAnimations: 'a11yPauseAnimations',
-	readingGuide: 'a11yReadingGuide',
-	readingMask: 'a11yReadingMask',
-	hideMedia: 'a11yHideMedia'
+/** The system setting each choice follows */
+const SYSTEM_QUERY: Readonly<Record<FollowKey, string>> = {
+	reduceMotion: '(prefers-reduced-motion: reduce)',
+	moreContrast: '(prefers-contrast: more)'
 };
 
-/** Number(value) clamped, the default when it is not a finite number (null counts as 0, as in accessibility.js) */
-function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
-	const n = Number(value);
-	if (!Number.isFinite(n)) return fallback;
-	return Math.min(max, Math.max(min, n));
+function follow(value: unknown): Follow {
+	return (FOLLOW as readonly unknown[]).includes(value) ? (value as Follow) : 'system';
 }
 
-function pick<T extends string>(list: readonly T[], value: unknown, fallback: T): T {
-	return (list as readonly unknown[]).includes(value) ? (value as T) : fallback;
-}
-
-/** Clean settings from storage or a control: numbers clamped, unknown values back to the default */
+/** Clean settings from storage, the server or a control: unknown values back to the default */
 export function sanitize(candidate: unknown): A11ySettings {
 	const src = candidate && typeof candidate === 'object' ? (candidate as Record<string, unknown>) : {};
 	const clean: A11ySettings = { ...DEFAULTS };
-	for (const key of Object.keys(RANGES) as RangeKey[]) {
-		const [min, max] = RANGES[key];
-		clean[key] = clampNumber(src[key], min, max, DEFAULTS[key]);
-	}
-	clean.contrast = pick(CONTRASTS, src.contrast, DEFAULTS.contrast);
-	clean.colorFilter = pick(FILTERS, src.colorFilter, DEFAULTS.colorFilter);
-	clean.activeProfile = pick<Profile | ''>(PROFILES, src.activeProfile, '');
+	clean.reduceMotion = follow(src.reduceMotion);
+	clean.moreContrast = follow(src.moreContrast);
 	for (const key of FLAG_KEYS) clean[key] = src[key] === true;
 	return clean;
+}
+
+/**
+ * The settings of the old panel that still exist: Reduce motion (or Pause
+ * animations), Underline links, Readable font (or Dyslexia spacing) and any
+ * contrast mode as More contrast. What was off now follows the system.
+ */
+export function fromV1(candidate: unknown): A11ySettings {
+	const old = candidate && typeof candidate === 'object' ? (candidate as Record<string, unknown>) : {};
+	const contrast = old.contrast;
+	return {
+		...DEFAULTS,
+		reduceMotion: old.reduceMotion === true || old.pauseAnimations === true ? 'on' : 'system',
+		moreContrast: typeof contrast === 'string' && contrast !== 'normal' && contrast !== '' ? 'on' : 'system',
+		underlineLinks: old.underlineLinks === true,
+		readableFont: old.readableFont === true || old.dyslexiaFont === true
+	};
 }
 
 export function isDefault(s: A11ySettings): boolean {
 	return (Object.keys(DEFAULTS) as (keyof A11ySettings)[]).every((k) => s[k] === DEFAULTS[k]);
 }
 
-/** What a profile turns on (choosing the active one again resets everything) */
-export function profileSettings(current: A11ySettings, profile: Profile): A11ySettings {
-	const next: A11ySettings = { ...current, activeProfile: profile };
-	switch (profile) {
-		case 'lowVision':
-			return {
-				...next,
-				fontScale: 130,
-				lineHeight: 1.75,
-				contrast: 'high-dark',
-				underlineLinks: true,
-				highlightLinks: true,
-				strongFocus: true,
-				largeCursor: true
-			};
-		case 'dyslexia':
-			return {
-				...next,
-				fontScale: 112,
-				lineHeight: 1.85,
-				letterSpacing: 0.045,
-				wordSpacing: 0.09,
-				readableFont: true,
-				dyslexiaFont: true,
-				underlineLinks: true
-			};
-		case 'motionSafe':
-			return { ...next, reduceMotion: true, pauseAnimations: true, readingGuide: true, strongFocus: true };
-		case 'colorAssist':
-			return {
-				...next,
-				colorFilter: 'deuteranopia',
-				saturation: 125,
-				underlineLinks: true,
-				highlightLinks: true,
-				highlightHeadings: true
-			};
-	}
-}
-
-/** CSS filter for the colour vision filter and saturation, or '' for none */
-export function visualFilter(s: A11ySettings): string {
-	const filters: string[] = [];
-	if (s.colorFilter !== 'none') filters.push(`url(#bd-a11y-${s.colorFilter})`);
-	if (s.saturation !== 100) filters.push(`saturate(${s.saturation}%)`);
-	return filters.join(' ');
-}
-
-/** Put the settings on <html>, as accessibility.js applySettings() does */
-export function applyToRoot(s: A11ySettings, root: HTMLElement = document.documentElement): void {
-	root.style.setProperty('--bd-a11y-font-scale', String(s.fontScale / 100));
-	root.style.setProperty('--bd-a11y-line-height', String(s.lineHeight));
-	root.style.setProperty('--bd-a11y-letter-spacing', `${s.letterSpacing}em`);
-	root.style.setProperty('--bd-a11y-word-spacing', `${s.wordSpacing}em`);
-	root.dataset.a11yActive = String(!isDefault(s));
-	root.dataset.a11yFontScaled = String(s.fontScale !== DEFAULTS.fontScale);
-	root.dataset.a11yContrast = s.contrast;
-	for (const key of FLAG_KEYS) root.dataset[FLAG_ATTR[key]] = String(s[key]);
-	const filter = visualFilter(s);
-	root.dataset.a11yFiltered = String(filter !== '');
-	root.style.setProperty('--bd-a11y-visual-filter', filter || 'none');
-}
-
-export function load(): A11ySettings {
+function systemPrefers(query: string): boolean {
 	try {
-		return sanitize(JSON.parse(readPref(STORAGE_KEY) ?? '{}'));
+		return window.matchMedia?.(query).matches ?? false;
 	} catch {
-		return { ...DEFAULTS };
+		return false;
 	}
+}
+
+/** Whether a choice applies now: on, off, or what the system says */
+export function applies(s: A11ySettings, key: FollowKey): boolean {
+	const choice = s[key];
+	if (choice === 'system') return systemPrefers(SYSTEM_QUERY[key]);
+	return choice === 'on';
+}
+
+/** Put the settings on <html> (the boot script does the same before first paint) */
+export function applyToRoot(s: A11ySettings, root: HTMLElement = document.documentElement): void {
+	root.dataset.a11yReduceMotion = String(applies(s, 'reduceMotion'));
+	root.dataset.a11yMoreContrast = String(applies(s, 'moreContrast'));
+	root.dataset.a11yUnderlineLinks = String(s.underlineLinks);
+	root.dataset.a11yReadableFont = String(s.readableFont);
+	setLivePaused(s.pauseLiveUpdates);
+}
+
+/** The browser's copy; the old panel's settings once, then its key goes */
+export function load(): A11ySettings {
+	const raw = readPref(STORAGE_KEY);
+	if (raw !== null) {
+		try {
+			return sanitize(JSON.parse(raw));
+		} catch {
+			return { ...DEFAULTS };
+		}
+	}
+	const old = readPref(V1_KEY);
+	if (old === null) return { ...DEFAULTS };
+	let migrated: A11ySettings;
+	try {
+		migrated = fromV1(JSON.parse(old));
+	} catch {
+		migrated = { ...DEFAULTS };
+	}
+	writePref(STORAGE_KEY, JSON.stringify(migrated));
+	writePref(V1_KEY, null);
+	return migrated;
 }
 
 class A11yState {
 	settings = $state<A11ySettings>({ ...DEFAULTS });
 	/** The panel is open */
 	open = $state(false);
+	/** Signed in: changes are saved for the account */
+	account = $state(false);
 }
 
 export const a11y = new A11yState();
 
+function keep(s: A11ySettings): void {
+	a11y.settings = s;
+	writePref(STORAGE_KEY, JSON.stringify(s));
+	applyToRoot(s);
+}
+
 let started = false;
 
-/** Read the stored settings and apply them (once, at start) */
+/** Read the browser's copy and apply it, and follow the system and other tabs */
 export function initA11y(): void {
 	a11y.settings = load();
 	applyToRoot(a11y.settings);
 	if (started) return;
 	started = true;
-	// Another tab changed them
 	window.addEventListener('storage', (e) => {
 		if (e.key !== STORAGE_KEY) return;
 		a11y.settings = load();
 		applyToRoot(a11y.settings);
 	});
+	for (const query of Object.values(SYSTEM_QUERY)) {
+		try {
+			window.matchMedia?.(query).addEventListener('change', () => applyToRoot(a11y.settings));
+		} catch {
+			/* no media queries: the choices stay as they are */
+		}
+	}
 }
 
-/** Change settings (a control or a profile): clean, save, apply right away */
-export function saveA11y(next: unknown): A11ySettings {
-	const clean = sanitize(next);
-	a11y.settings = clean;
-	writePref(STORAGE_KEY, JSON.stringify(clean));
-	applyToRoot(clean);
-	return clean;
+/**
+ * The signed-in account's settings from the bootstrap. They replace the
+ * browser's copy; an account that never saved any (null) keeps the copy.
+ */
+export function applyAccountA11y(saved: unknown): void {
+	a11y.account = true;
+	if (saved === null || saved === undefined) return;
+	keep(sanitize(saved));
 }
 
-/** One control changed: the profile no longer describes the settings */
-export function setA11y<K extends keyof A11ySettings>(key: K, value: A11ySettings[K]): void {
-	saveA11y({ ...a11y.settings, activeProfile: '', [key]: value });
+/** Signed out: changes stay in this browser */
+export function leaveAccountA11y(): void {
+	a11y.account = false;
 }
 
-/** Choose a profile; choosing the active one again goes back to the defaults */
-export function chooseProfile(profile: Profile): void {
-	if (a11y.settings.activeProfile === profile) resetA11y();
-	else saveA11y(profileSettings(a11y.settings, profile));
-}
+let queue: Promise<unknown> = Promise.resolve();
+/** Counts the changes, so a refused one goes back only when no later one came */
+let changes = 0;
 
-export function resetA11y(): void {
-	a11y.settings = { ...DEFAULTS };
-	writePref(STORAGE_KEY, null);
-	applyToRoot(a11y.settings);
+/**
+ * Change one setting: it applies at once, is saved (for the account when
+ * signed in) and announced. When the server refuses, the old value comes
+ * back and an error toast says so. Resolves to whether it was saved.
+ */
+export function setA11y<K extends keyof A11ySettings>(key: K, value: A11ySettings[K]): Promise<boolean> {
+	const before = $state.snapshot(a11y.settings);
+	const next = sanitize({ ...before, [key]: value });
+	const mine = ++changes;
+	keep(next);
+	const run = async (): Promise<boolean> => {
+		if (a11y.account) {
+			try {
+				await saveAccessibility(next);
+			} catch {
+				if (changes === mine) keep(before);
+				toast.error(t('accessibility.save_failed'));
+				return false;
+			}
+		}
+		announce(t('accessibility.saved'));
+		return true;
+	};
+	const result = queue.then(run, run);
+	queue = result;
+	return result;
 }

@@ -5,6 +5,7 @@
  */
 
 import type { Snippet } from 'svelte';
+import { tf } from '#lib/i18n/i18n.svelte.ts';
 
 export type SortDir = 'asc' | 'desc';
 
@@ -59,12 +60,21 @@ export function nextSort(current: SortState | null | undefined, column: string):
 	return { column, dir: 'asc' };
 }
 
+/** aria-sort for a header: only the sorted column has one (APG sortable table) */
 export function ariaSort(
 	current: SortState | null | undefined,
 	column: string
-): 'ascending' | 'descending' | 'none' {
-	if (current?.column !== column) return 'none';
+): 'ascending' | 'descending' | undefined {
+	if (current?.column !== column) return undefined;
 	return current.dir === 'asc' ? 'ascending' : 'descending';
+}
+
+/** "Sorted by Name, ascending", announced after a header click */
+export function sortMessage(column: string, dir: SortDir): string {
+	return tf('table.sorted', 'Sorted by {column}, {direction}', {
+		column,
+		direction: dir === 'asc' ? tf('table.ascending', 'ascending') : tf('table.descending', 'descending')
+	});
 }
 
 /* ── Sorting ───────────────────────────────────────────────────────── */

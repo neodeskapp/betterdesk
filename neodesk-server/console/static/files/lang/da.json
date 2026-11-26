@@ -46,7 +46,9 @@
     "copy_value": "Kopiér {value}",
     "copy_failed": "Kunne ikke kopiere. Markér teksten, og kopiér den selv.",
     "read_only_page": "Du kan se denne side, men ikke ændre den.",
-    "opens_in_new_tab": "åbner i en ny fane"
+    "opens_in_new_tab": "åbner i en ny fane",
+    "required_mark": "(påkrævet)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Hoved",
@@ -117,7 +119,8 @@
     "server_backups": "Sikkerhedskopier",
     "server_config_files": "Konfigurationsfiler",
     "meshcentral": "MeshCentral",
-    "devices_add": "Tilføj computere"
+    "devices_add": "Tilføj computere",
+    "registrations_waiting": "{count} venter"
   },
   "auth": {
     "login": "Log ind",
@@ -195,7 +198,14 @@
     "password_same": "Choose a password other than the one you signed in with.",
     "change_required_title": "Choose a new password",
     "change_required": "Your administrator asks you to choose a new password before you go on.",
-    "change_required_save": "Save and sign in"
+    "change_required_save": "Save and sign in",
+    "session_seconds_left": "{seconds} sekunder tilbage",
+    "session_end_warning_title": "Din session slutter snart",
+    "session_end_warning_body": "Din session slutter kl. {time}. Gem dit arbejde nu, og log derefter ind igen.",
+    "enter_username": "Angiv dit brugernavn.",
+    "enter_password": "Angiv din adgangskode.",
+    "hide_password": "Skjul adgangskode",
+    "totp_sixth_digit": "Du logges ind, så snart du skriver det sjette ciffer."
   },
   "dashboard": {
     "title": "Oversigt",
@@ -5991,6 +6001,7 @@
     "mail_heading": "{name} venter på et svar",
     "mail_waited": "En person ved {name} (ID {id}) har ventet {minutes} minutter på et svar i chatten.",
     "mail_quote": "Beskeden: {quote}",
+    "mail_quote_label": "Beskeden:",
     "mail_open": "Åbn samtalen: {link}",
     "mail_button": "Åbn samtalen i {app}",
     "old_messages": "Gamle beskeder",
@@ -6022,7 +6033,8 @@
     "team_groups_line": "Brugergrupper: {names}",
     "delete_team": "Slet team",
     "delete_team_title": "Slet {name}?",
-    "delete_team_message": "Teamet og alle dets beskeder slettes for alle medlemmer."
+    "delete_team_message": "Teamet og alle dets beskeder slettes for alle medlemmer.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Enhed tilsluttet",
@@ -7839,6 +7851,10 @@
     "mark_all_read": "Marker alt som læst",
     "see_all": "Se alle anmodninger om hjælp",
     "help_request": "Anmodning om hjælp",
+    "mail_alert_heading": "Alarm: {rule}",
+    "mail_help_heading": "Anmodning om hjælp fra {device}",
+    "mail_help_lead": "Der er kommet en ny anmodning om hjælp.",
+    "mail_help_button": "Åbn anmodninger om hjælp i {app}",
     "just_now": "just now",
     "kind_registration": "Ny enhed beder om at blive tilføjet",
     "unread": "Ulæst",
@@ -7848,72 +7864,26 @@
   },
   "accessibility": {
     "title": "Tilgængelighed",
-    "subtitle": "Ændringer af tekst, farver og bevægelse gælder med det samme og gemmes i denne browser.",
-    "close": "Luk indstillinger for tilgængelighed",
-    "profiles": "Hurtige profiler",
-    "profile_low_vision": "Nedsat syn",
-    "profile_low_vision_hint": "Større tekst, høj kontrast, tydelig fokusramme og stor markør.",
-    "profile_dyslexia": "Læsekomfort",
-    "profile_dyslexia_hint": "Læsevenlig skrift, større tekst og mere luft.",
-    "profile_motion_safe": "Mindre bevægelse",
-    "profile_motion_safe_hint": "Stopper animationer og tilføjer en læselinje og en tydelig fokusramme.",
-    "profile_color_assist": "Farvestøtte",
-    "profile_color_assist_hint": "Farvefilter, kraftigere farver, understregede links og markerede overskrifter.",
-    "reading": "Læsning",
-    "font_size": "Skriftstørrelse",
-    "line_height": "Linjeafstand",
-    "letter_spacing": "Bogstavafstand",
-    "word_spacing": "Ordafstand",
     "readable_font": "Læsbar skrifttype",
-    "readable_font_hint": "Bruger en bred, enkel skrift som Verdana.",
-    "dyslexia_spacing": "Ordblindhedsafstand",
-    "dyslexia_spacing_hint": "Giver mere plads mellem bogstaver og ord.",
-    "visual": "Visuelt",
-    "contrast": "Kontrast",
-    "contrast_normal": "Normal",
-    "contrast_high_dark": "Høj kontrast mørk",
-    "contrast_high_light": "Lys med høj kontrast",
-    "contrast_yellow_black": "Gul på sort",
-    "color_filter": "Farvesynsfilter",
-    "filter_none": "Ingen",
-    "filter_protanopia": "Protanopi (rødblindhed)",
-    "filter_deuteranopia": "Deuteranopi (grønblindhed)",
-    "filter_tritanopia": "Tritanopi (blåblindhed)",
-    "filter_achromatopsia": "Gråtoner",
-    "saturation": "Farvemætning",
+    "readable_font_hint": "En enkel skrifttype med lidt mere luft mellem bogstaver og ord.",
     "underline_links": "Understreg links",
     "underline_links_hint": "Gør links synlige uden at være afhængig af farve.",
-    "highlight_links": "Fremhæv handlinger",
-    "highlight_links_hint": "Skitserer links og knapper.",
-    "highlight_headings": "Fremhæv overskrifter",
-    "highlight_headings_hint": "Markerer afsnitstitler med en farvebjælke.",
-    "hide_media": "Dæmp medier",
-    "hide_media_hint": "Toner billeder, videoer og diagrammer ned.",
-    "interaction": "Betjening",
-    "strong_focus": "Stærkt fokus",
-    "strong_focus_hint": "Viser en stor tastaturfokusring.",
-    "large_cursor": "Stor markør",
-    "large_cursor_hint": "Bruger en større højkontrastmarkør.",
     "reduce_motion": "Reducer bevægelse",
-    "reduce_motion_hint": "Slår overgange og blød rulning fra.",
-    "pause_animations": "Sæt animationer på pause",
-    "pause_animations_hint": "Fryser animationer som indlæsningshjul.",
-    "reading_guide": "Læsevejledning",
-    "reading_guide_hint": "En linje følger markøren, så du holder styr på, hvor du er.",
-    "reading_mask": "Læsemaske",
-    "reading_mask_hint": "Dæmper indholdet over og under markøren.",
-    "preview": "Preview",
-    "preview_title": "Forhåndsvisning af operatørens arbejdsområde",
-    "preview_text": "Tjek, om tekst, links, kontroller og statusetiketter er behagelige at læse, før du lukker denne menu.",
-    "preview_link": "Link til enhedsdetaljer",
-    "preview_status": "Online",
-    "preview_button": "Primær handling",
-    "preview_secondary": "Secondary",
-    "reset": "Reset",
+    "reduce_motion_hint": "Slår overgange, animationer og skiftende dias fra.",
     "done": "Færdig",
-    "profiles_note": "Hver profil ændrer flere af indstillingerne nedenfor på én gang. Vælg den igen for at gå tilbage til standardindstillingerne.",
-    "spacing_normal": "Normal",
-    "reset_defaults": "Nulstil til standard"
+    "subtitle_account": "Som standard følger konsollen dit systems indstillinger. Hver ændring gemmes med det samme på din konto.",
+    "subtitle_browser": "Som standard følger konsollen dit systems indstillinger. Hver ændring gemmes med det samme i denne browser.",
+    "more_contrast": "Mere kontrast",
+    "more_contrast_hint": "Kraftigere farver til tekst, linjer og kontroller. Et kontrasttema i Windows har altid forrang.",
+    "follow_system": "Følg systemet",
+    "choice_on": "Til",
+    "choice_off": "Fra",
+    "single_key_shortcuts": "Slå genveje med én tast fra",
+    "single_key_shortcuts_hint": "Tasten / åbner ikke længere søgning. Ctrl+K gør det stadig.",
+    "pause_live_updates": "Sæt liveopdateringer på pause",
+    "pause_live_updates_hint": "Lister og sider henter ikke nye data af sig selv. Opdater henter dem, når du vil.",
+    "saved": "Gemt",
+    "save_failed": "Indstillingen kunne ikke gemmes. Prøv igen."
   },
   "server_mgmt": {
     "title": "Serveradministration",
@@ -8733,7 +8703,8 @@
       "close": "Luk",
       "link_docs": "Dokumentation",
       "console": "In the console",
-      "shortcuts": "Tastaturgenveje"
+      "shortcuts": "Tastaturgenveje",
+      "link_accessibility": "Tilgængelighedserklæring"
     },
     "shortcuts": {
       "search": "Open the search",
@@ -8856,7 +8827,9 @@
     "next": "Næste dias",
     "carousel": "karrusel",
     "slide": "dias",
-    "slide_n": "Dias {n} af {count}"
+    "slide_n": "Dias {n} af {count}",
+    "stop": "Stop dias",
+    "start": "Start dias"
   },
   "agents": {
     "title": "NeoDesk-agenter",
@@ -8948,15 +8921,15 @@
       "invite_intro": "{sender} from {server} invites you to set up NeoDesk on your computer. {server} can then help you on it.",
       "invite_steps": "Open this link on the computer you want to set up:",
       "invite_button": "Set up this computer",
-      "invite_expires": "It works until {expires}.",
-      "invite_code": "Already have NeoDesk? Open Settings, Server, Join a server, and enter the code {code}.",
-      "support_subject": "{sender} from {server} wants to help you",
-      "support_heading": "Your support session is ready",
-      "support_intro": "{sender} from {server} wants to help you.",
-      "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
-      "support_button": "Start the support session",
-      "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "invite_expires": "Det virker indtil {expires}.",
+      "invite_code": "Har du allerede NeoDesk? Åbn Indstillinger, Server, Tilslut en server, og indtast denne kode:",
+      "support_subject": "{sender} fra {server} vil gerne hjælpe dig",
+      "support_heading": "Din supportsession er klar",
+      "support_intro": "{sender} fra {server} vil gerne hjælpe dig.",
+      "support_steps": "Åbn dette link på den computer, du har brug for hjælp med. Hent den lille app, åbn den og klik på Tillad. Intet bliver installeret.",
+      "support_button": "Start supportsessionen",
+      "support_expires": "Linket virker én gang, indtil {expires}.",
+      "footer": "Sendt af {host} for {server}. Hvis du ikke ventede denne e-mail, kan du se bort fra den.",
       "welcome_subject": "{sender} har inviteret dig til {server}",
       "welcome_lead": "Konfigurer NeoDesk på din computer. Det tager et par minutter.",
       "welcome_button": "Konfigurer NeoDesk",
@@ -9303,7 +9276,7 @@
     "try_generic": "Forbind igen. Hvis det bliver ved med at mislykkes, så kopiér detaljerne nedenfor, og send dem til din administrator.",
     "fail_insecure": "Forbindelsen til {name} blev stoppet, fordi den ikke kunne sikres.",
     "try_insecure": "Der blev ikke sendt nogen adgangskode. Nogen mellem denne browser og enheden lytter muligvis med, eller servernøglen er ikke sat op. Bed en administrator om at kontrollere serveren.",
-    "screen_keys": "Tasterne går til enheden, også Tab. Tryk på F8 for at forlade skærmen.",
+    "screen_keys": "Tasterne går til enheden, også Tab. Tryk på F8 eller Ctrl+Alt+Shift+G for at forlade skærmen.",
     "displays": "Skærme",
     "layout": "Layout",
     "layout_single": "Én ad gangen",
@@ -9344,7 +9317,9 @@
     "phone_turn": "Eller vend telefonen på tværs: i liggende format åbner sessionen her i browseren.",
     "no_open_sessions": "Ingen session er åben. Forbind med ID, eller vælg en enhed nedenfor.",
     "fail_signin_closed": "{name} lukkede forbindelsen, da denne browser loggede ind.",
-    "try_signin_closed": "Enheden afviste login. Opret forbindelse igen, og log ind igen. Hvis det bliver ved, så bed en administrator om at se i NeoDesk-loggen på enheden."
+    "try_signin_closed": "Enheden afviste login. Opret forbindelse igen, og log ind igen. Hvis det bliver ved, så bed en administrator om at se i NeoDesk-loggen på enheden.",
+    "screen_role": "fjernskærm",
+    "tab_close_hint": "Tryk på Delete for at lukke denne session."
   },
   "diagram": {
     "your_computer": "Din computer",
@@ -9392,7 +9367,12 @@
   "table": {
     "select_all": "Vælg alle",
     "select_row": "Vælg {name}",
-    "columns": "Kolonner"
+    "columns": "Kolonner",
+    "rows_one": "{count} række",
+    "rows_other": "{count} rækker",
+    "sorted": "Sorteret efter {column}, {direction}",
+    "ascending": "stigende",
+    "descending": "faldende"
   },
   "pagination": {
     "showing": "Viser {start}–{end} af {total}",
@@ -9400,11 +9380,14 @@
     "label": "Sider",
     "previous": "Forrige side",
     "next": "Næste side",
-    "page": "Side {page}"
+    "page": "Side {page}",
+    "page_of": "Side {page} af {pages}",
+    "pages_of": "Sider i {name}"
   },
   "shell": {
     "skip_to_content": "Gå til hovedindholdet",
-    "start_failed": "Konsollen kunne ikke starte."
+    "start_failed": "Konsollen kunne ikke starte.",
+    "loading_console": "Indlæser konsollen"
   },
   "ux36": {
     "beta_badge": "BETA",
@@ -9468,8 +9451,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Bevægelse, kontrast, links, skrifttype, genveje og liveopdateringer. Gemmes på din konto.",
+    "accessibility_on": "Nogle tilgængelighedsindstillinger er slået til for din konto.",
     "accessibility_open": "Accessibility settings",
     "email_title": "Email address",
     "email_none": "No email address yet.",
@@ -9647,5 +9630,18 @@
     "tab_title": "Viewing as {username}",
     "ended": "You are no longer viewing NeoDesk as another account. The page loads again as you.",
     "read_only_hint": "You are viewing NeoDesk as {username}. Nothing can be changed here."
+  },
+  "canvas": {
+    "move_node": "Flyt {name}",
+    "move_left": "Flyt til venstre",
+    "move_up": "Flyt op",
+    "move_down": "Flyt ned",
+    "move_right": "Flyt til højre"
+  },
+  "live": {
+    "last_updated": "Senest opdateret {time}",
+    "paused": "Liveopdateringer er sat på pause.",
+    "new_entries": "Nye poster, vis dem",
+    "new_entries_waiting": "Der er kommet nye poster, mens liveopdateringer er sat på pause."
   }
 }

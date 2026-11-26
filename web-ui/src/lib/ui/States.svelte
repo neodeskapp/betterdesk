@@ -4,11 +4,15 @@
   button when `onretry` is given. `message` defaults to "Loading..." for
   loading. With `colspan` it is a table row (td.state-cell spanning the
   columns) to put in a tbody.
-  Loading is announced politely (role status), an error right away (role alert).
+  Loading is announced politely, an error right away, through the
+  announcer (announce.svelte.ts): a live region that arrives together with
+  its text is often not read, and this block comes and goes with the
+  state. An empty state is not announced; the page's own result does that.
 -->
 <script lang="ts">
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from './Button.svelte';
+	import { announce } from './announce.svelte.ts';
 
 	interface Props {
 		kind?: 'loading' | 'empty' | 'error';
@@ -22,11 +26,15 @@
 	let { kind = 'empty', message, colspan, retryLabel, onretry, class: cls = '' }: Props = $props();
 
 	const text = $derived(message ?? (kind === 'loading' ? t('common.loading') : ''));
-	const role = $derived(kind === 'error' ? 'alert' : kind === 'loading' ? 'status' : undefined);
+
+	$effect(() => {
+		if (kind === 'empty' || !text) return;
+		announce(text, { assertive: kind === 'error' });
+	});
 </script>
 
 {#snippet content()}
-	<span {role}>{text}</span>
+	<span>{text}</span>
 	{#if kind === 'error' && onretry}
 		<Button size="sm" icon="retry" onclick={onretry}>{retryLabel ?? tf('actions.retry', 'Retry')}</Button>
 	{/if}

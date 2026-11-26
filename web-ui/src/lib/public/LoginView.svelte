@@ -39,6 +39,7 @@
 	import PasswordField from '#lib/people/PasswordField.svelte';
 	import { passwordProblem } from '#lib/people/users.ts';
 	import LanguageMenu from '#lib/shell/LanguageMenu.svelte';
+	import { a11y } from '#lib/shell/a11y.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Field from '#lib/ui/Field.svelte';
@@ -164,7 +165,11 @@
 		const name = username.trim();
 		missing = !name ? 'username' : !password ? 'password' : null;
 		if (missing) {
-			error = compact ? t('desktop_login.fill_all_fields') : t('auth.fill_all_fields');
+			// Name the field that is empty (WCAG 3.3.3)
+			error =
+				missing === 'username'
+					? tf('auth.enter_username', 'Enter your username.')
+					: tf('auth.enter_password', 'Enter your password.');
 			(missing === 'username' ? usernameInput : passwordInput)?.focus();
 			return;
 		}
@@ -351,7 +356,9 @@
 		}
 	}
 
-	// Digits only; the sixth one sends the code (typed or pasted)
+	/* Digits only; the sixth one sends the code (typed or pasted). No
+	   maxlength: a pasted "123 456" would lose its last digit to it before
+	   the space is dropped (WCAG 3.3.8). */
 	function oncodeinput(e: Event) {
 		const digits = codeDigits((e.currentTarget as HTMLInputElement).value);
 		if (digits !== code) code = digits;
@@ -446,8 +453,7 @@
 									class="password-toggle"
 									size="sm"
 									variant="ghost"
-									aria-pressed={shown}
-									aria-label={t('auth.show_password')}
+									aria-label={shown ? tf('auth.hide_password', 'Hide password') : t('auth.show_password')}
 									aria-controls="password"
 									onclick={() => (shown = !shown)}
 									>{shown ? t('actions.hide_value') : t('actions.show_value')}</Button
@@ -515,7 +521,10 @@
 				<form class="login-form" novalidate onsubmit={submitSetup}>
 					<div class="totp-header">
 						<h2 class="totp-title">{t('auth.totp_setup_required_title')}</h2>
-						<p class="totp-subtitle" id="{uid}-setup-sub">{t('auth.totp_setup_required')}</p>
+						<p class="totp-subtitle" id="{uid}-setup-sub">
+							{t('auth.totp_setup_required')}
+							{tf('auth.totp_sixth_digit', 'Signs in as soon as you type the sixth digit.')}
+						</p>
 					</div>
 					{#if qrSrc}<img
 							src={qrSrc}
@@ -539,8 +548,6 @@
 								class="totp-input"
 								inputmode="numeric"
 								autocomplete="one-time-code"
-								pattern="[0-9]{6}"
-								maxlength={6}
 								bind:value={code}
 								bind:element={codeInput}
 								oninput={oncodeinput}
@@ -568,7 +575,10 @@
 				<form class="login-form" novalidate onsubmit={submitTotp}>
 					<div class="totp-header">
 						<h2 class="totp-title">{t('auth.totp_title')}</h2>
-						<p class="totp-subtitle" id="{uid}-totp-sub">{t('auth.totp_subtitle')}</p>
+						<p class="totp-subtitle" id="{uid}-totp-sub">
+							{t('auth.totp_subtitle')}
+							{tf('auth.totp_sixth_digit', 'Signs in as soon as you type the sixth digit.')}
+						</p>
 					</div>
 					{#if useRecovery}
 						<Field label={t('auth.totp_recovery_code')} id="recovery-code">
@@ -596,8 +606,6 @@
 									class="totp-input"
 									inputmode="numeric"
 									autocomplete="one-time-code"
-									pattern="[0-9]{6}"
-									maxlength={6}
 									bind:value={code}
 									bind:element={codeInput}
 									oninput={oncodeinput}
@@ -626,7 +634,17 @@
 		<footer class="login-footer">
 			<div class="login-footer-row">
 				<!-- The top bar's language menu, opening above when there is no room below -->
-				<LanguageMenu trigger="label" align="start" onchoose={changeLanguage} />
+				<div class="login-footer-tools">
+					<LanguageMenu trigger="label" align="start" onchoose={changeLanguage} />
+					<!-- The accessibility panel, before sign-in too -->
+					<Button
+						variant="ghost"
+						size="sm"
+						icon="accessibility_new"
+						aria-haspopup="dialog"
+						onclick={() => (a11y.open = true)}>{t('accessibility.title')}</Button
+					>
+				</div>
 				{#if page.branding.showPoweredBy}
 					<p class="login-version">
 						{t('branding.powered_by')} <span translate="no">NeoDesk</span>
@@ -795,6 +813,12 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-2) var(--space-4);
+	}
+	.login-footer-tools {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2);
 	}
 	.login-footer p {
 		margin: 0;

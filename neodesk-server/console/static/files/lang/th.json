@@ -46,7 +46,9 @@
     "copy_value": "คัดลอก {value}",
     "copy_failed": "คัดลอกไม่ได้ เลือกข้อความแล้วคัดลอกด้วยตนเอง",
     "read_only_page": "คุณดูหน้านี้ได้ แต่เปลี่ยนแปลงไม่ได้",
-    "opens_in_new_tab": "เปิดในแท็บใหม่"
+    "opens_in_new_tab": "เปิดในแท็บใหม่",
+    "required_mark": "(จำเป็น)",
+    "ok": "ตกลง"
   },
   "nav": {
     "main": "หลัก",
@@ -117,7 +119,8 @@
     "server_backups": "ข้อมูลสำรอง",
     "server_config_files": "ไฟล์การกำหนดค่า",
     "meshcentral": "MeshCentral",
-    "devices_add": "Add computers"
+    "devices_add": "Add computers",
+    "registrations_waiting": "รอ {count} รายการ"
   },
   "auth": {
     "login": "ลงชื่อเข้าใช้",
@@ -195,7 +198,14 @@
     "password_same": "Choose a password other than the one you signed in with.",
     "change_required_title": "Choose a new password",
     "change_required": "Your administrator asks you to choose a new password before you go on.",
-    "change_required_save": "Save and sign in"
+    "change_required_save": "Save and sign in",
+    "session_seconds_left": "เหลือ {seconds} วินาที",
+    "session_end_warning_title": "เซสชันของคุณจะสิ้นสุดเร็ว ๆ นี้",
+    "session_end_warning_body": "เซสชันของคุณจะสิ้นสุดเวลา {time} บันทึกงานของคุณตอนนี้ แล้วลงชื่อเข้าใช้อีกครั้ง",
+    "enter_username": "ป้อนชื่อผู้ใช้ของคุณ",
+    "enter_password": "ป้อนรหัสผ่านของคุณ",
+    "hide_password": "ซ่อนรหัสผ่าน",
+    "totp_sixth_digit": "ลงชื่อเข้าใช้ทันทีที่คุณพิมพ์ตัวเลขหลักที่หก"
   },
   "dashboard": {
     "title": "แดชบอร์ด",
@@ -5991,6 +6001,7 @@
     "mail_heading": "{name} กำลังรอคำตอบ",
     "mail_waited": "มีคนที่ {name} (ID {id}) รอคำตอบในแชทมา {minutes} นาทีแล้ว",
     "mail_quote": "ข้อความ: {quote}",
+    "mail_quote_label": "ข้อความ:",
     "mail_open": "เปิดการสนทนา: {link}",
     "mail_button": "เปิดการสนทนาใน {app}",
     "old_messages": "ข้อความเก่า",
@@ -6022,7 +6033,8 @@
     "team_groups_line": "กลุ่มผู้ใช้: {names}",
     "delete_team": "ลบทีม",
     "delete_team_title": "ลบ {name} หรือไม่",
-    "delete_team_message": "ทีมและข้อความทั้งหมดจะถูกลบสำหรับสมาชิกทุกคน"
+    "delete_team_message": "ทีมและข้อความทั้งหมดจะถูกลบสำหรับสมาชิกทุกคน",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "เชื่อมต่ออุปกรณ์แล้ว",
@@ -7839,6 +7851,10 @@
     "mark_all_read": "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด",
     "see_all": "ดูคำขอความช่วยเหลือทั้งหมด",
     "help_request": "คำขอความช่วยเหลือ",
+    "mail_alert_heading": "การแจ้งเตือน: {rule}",
+    "mail_help_heading": "คำขอความช่วยเหลือจาก {device}",
+    "mail_help_lead": "มีคำขอความช่วยเหลือใหม่เข้ามา",
+    "mail_help_button": "เปิดคำขอความช่วยเหลือใน {app}",
     "just_now": "just now",
     "kind_registration": "อุปกรณ์ใหม่ขอเข้าร่วม",
     "unread": "ยังไม่ได้อ่าน",
@@ -7848,72 +7864,26 @@
   },
   "accessibility": {
     "title": "การช่วยการเข้าถึง",
-    "subtitle": "การเปลี่ยนข้อความ สี และการเคลื่อนไหวมีผลทันทีและบันทึกไว้ในเบราว์เซอร์นี้",
-    "close": "ปิดการตั้งค่าการช่วยการเข้าถึง",
-    "profiles": "โปรไฟล์ด่วน",
-    "profile_low_vision": "สายตาเลือนราง",
-    "profile_low_vision_hint": "ข้อความใหญ่ขึ้น คอนทราสต์สูง กรอบโฟกัสชัดเจน และตัวชี้ขนาดใหญ่",
-    "profile_dyslexia": "ความสะดวกสบายในการอ่าน",
-    "profile_dyslexia_hint": "ฟอนต์อ่านง่าย ข้อความใหญ่ขึ้น และระยะห่างกว้างขึ้น",
-    "profile_motion_safe": "ลดการเคลื่อนไหว",
-    "profile_motion_safe_hint": "หยุดภาพเคลื่อนไหว และเพิ่มเส้นนำสายตาและกรอบโฟกัสที่ชัดเจน",
-    "profile_color_assist": "รองรับสี",
-    "profile_color_assist_hint": "ฟิลเตอร์สี สีเข้มขึ้น ลิงก์ขีดเส้นใต้ และหัวข้อที่ทำเครื่องหมาย",
-    "reading": "การอ่าน",
-    "font_size": "ขนาดตัวอักษร",
-    "line_height": "ระยะห่างบรรทัด",
-    "letter_spacing": "ระยะห่างระหว่างตัวอักษร",
-    "word_spacing": "ระยะห่างระหว่างคำ",
     "readable_font": "แบบอักษรที่อ่านได้",
-    "readable_font_hint": "ใช้ฟอนต์กว้างและเรียบ เช่น Verdana",
-    "dyslexia_spacing": "ระยะห่างดิสเล็กเซีย",
-    "dyslexia_spacing_hint": "เพิ่มระยะห่างระหว่างตัวอักษรและคำ",
-    "visual": "การแสดงผล",
-    "contrast": "คอนทราสต์",
-    "contrast_normal": "ปกติ",
-    "contrast_high_dark": "คอนทราสต์สูงมืด",
-    "contrast_high_light": "แสงคอนทราสต์สูง",
-    "contrast_yellow_black": "สีเหลืองบนพื้นสีดำ",
-    "color_filter": "ตัวกรองการมองเห็นสี",
-    "filter_none": "ไม่มี",
-    "filter_protanopia": "ตาบอดสีแดง (Protanopia)",
-    "filter_deuteranopia": "ตาบอดสีเขียว (Deuteranopia)",
-    "filter_tritanopia": "ตาบอดสีน้ำเงิน (Tritanopia)",
-    "filter_achromatopsia": "ระดับสีเทา",
-    "saturation": "ความอิ่มตัวของสี",
+    "readable_font_hint": "แบบอักษรเรียบง่าย เว้นระยะระหว่างตัวอักษรและคำมากขึ้นเล็กน้อย",
     "underline_links": "ขีดเส้นใต้ลิงก์",
     "underline_links_hint": "ทำให้มองเห็นลิงก์ได้โดยไม่ต้องพึ่งสี",
-    "highlight_links": "เน้นการดำเนินการ",
-    "highlight_links_hint": "โครงร่างลิงก์และปุ่มต่างๆ",
-    "highlight_headings": "เน้นส่วนหัว",
-    "highlight_headings_hint": "ทำเครื่องหมายชื่อส่วนด้วยแถบสี",
-    "hide_media": "หรี่สื่อ",
-    "hide_media_hint": "ทำให้รูปภาพ วิดีโอ และแผนภูมิจางลง",
-    "interaction": "การโต้ตอบ",
-    "strong_focus": "โฟกัสที่แข็งแกร่ง",
-    "strong_focus_hint": "แสดงวงแหวนปรับโฟกัสของแป้นพิมพ์ขนาดใหญ่",
-    "large_cursor": "เคอร์เซอร์ขนาดใหญ่",
-    "large_cursor_hint": "ใช้ตัวชี้คอนทราสต์สูงที่ใหญ่กว่า",
     "reduce_motion": "ลดการเคลื่อนไหว",
-    "reduce_motion_hint": "ปิดเอฟเฟกต์การเปลี่ยนและการเลื่อนแบบนุ่มนวล",
-    "pause_animations": "หยุดภาพเคลื่อนไหวชั่วคราว",
-    "pause_animations_hint": "หยุดภาพเคลื่อนไหว เช่น ไอคอนกำลังโหลด",
-    "reading_guide": "คู่มือการอ่าน",
-    "reading_guide_hint": "มีเส้นตามตัวชี้เพื่อช่วยไม่ให้หลงบรรทัด",
-    "reading_mask": "หน้ากากอ่านหนังสือ",
-    "reading_mask_hint": "หรี่เนื้อหาด้านบนและด้านล่างของตัวชี้",
-    "preview": "Preview",
-    "preview_title": "การแสดงตัวอย่างพื้นที่ทำงานของผู้ปฏิบัติงาน",
-    "preview_text": "ตรวจสอบว่าข้อความ ลิงก์ ตัวควบคุม และป้ายกำกับสถานะอ่านได้ง่ายหรือไม่ก่อนปิดเมนูนี้",
-    "preview_link": "ลิงค์รายละเอียดอุปกรณ์",
-    "preview_status": "Online",
-    "preview_button": "การกระทำหลัก",
-    "preview_secondary": "Secondary",
-    "reset": "Reset",
+    "reduce_motion_hint": "ปิดการเปลี่ยนภาพ ภาพเคลื่อนไหว และสไลด์ที่เลื่อนเอง",
     "done": "เสร็จสิ้น",
-    "profiles_note": "แต่ละโปรไฟล์จะเปลี่ยนการตั้งค่าด้านล่างหลายรายการพร้อมกัน เลือกอีกครั้งเพื่อกลับไปใช้ค่าเริ่มต้น",
-    "spacing_normal": "ปกติ",
-    "reset_defaults": "รีเซ็ตเป็นค่าเริ่มต้น"
+    "subtitle_account": "โดยค่าเริ่มต้น คอนโซลจะใช้การตั้งค่าของระบบของคุณ ทุกการเปลี่ยนแปลงจะบันทึกลงในบัญชีของคุณทันที",
+    "subtitle_browser": "โดยค่าเริ่มต้น คอนโซลจะใช้การตั้งค่าของระบบของคุณ ทุกการเปลี่ยนแปลงจะบันทึกในเบราว์เซอร์นี้ทันที",
+    "more_contrast": "เพิ่มคอนทราสต์",
+    "more_contrast_hint": "สีที่เข้มขึ้นสำหรับข้อความ เส้น และตัวควบคุม ธีมคอนทราสต์ของ Windows จะมีผลก่อนเสมอ",
+    "follow_system": "ตามระบบ",
+    "choice_on": "เปิด",
+    "choice_off": "ปิด",
+    "single_key_shortcuts": "ปิดทางลัดแบบปุ่มเดียว",
+    "single_key_shortcuts_hint": "ปุ่ม / จะไม่เปิดการค้นหาอีกต่อไป แต่ Ctrl+K ยังเปิดได้",
+    "pause_live_updates": "หยุดการอัปเดตแบบสดชั่วคราว",
+    "pause_live_updates_hint": "รายการและหน้าต่าง ๆ จะไม่โหลดข้อมูลใหม่เอง ใช้รีเฟรชเพื่อโหลดเมื่อต้องการ",
+    "saved": "บันทึกแล้ว",
+    "save_failed": "บันทึกการตั้งค่าไม่ได้ ลองอีกครั้ง"
   },
   "server_mgmt": {
     "title": "จัดการเซิร์ฟเวอร์",
@@ -8733,7 +8703,8 @@
       "close": "ปิด",
       "link_docs": "เอกสาร",
       "console": "In the console",
-      "shortcuts": "Keyboard shortcuts"
+      "shortcuts": "Keyboard shortcuts",
+      "link_accessibility": "แถลงการณ์การเข้าถึง"
     },
     "shortcuts": {
       "search": "Open the search",
@@ -8856,7 +8827,9 @@
     "next": "สไลด์ถัดไป",
     "carousel": "ภาพหมุนเวียน",
     "slide": "สไลด์",
-    "slide_n": "สไลด์ {n} จาก {count}"
+    "slide_n": "สไลด์ {n} จาก {count}",
+    "stop": "หยุดสไลด์",
+    "start": "เริ่มสไลด์"
   },
   "agents": {
     "title": "เอเจนต์ NeoDesk",
@@ -8948,15 +8921,15 @@
       "invite_intro": "{sender} from {server} invites you to set up NeoDesk on your computer. {server} can then help you on it.",
       "invite_steps": "Open this link on the computer you want to set up:",
       "invite_button": "Set up this computer",
-      "invite_expires": "It works until {expires}.",
-      "invite_code": "Already have NeoDesk? Open Settings, Server, Join a server, and enter the code {code}.",
-      "support_subject": "{sender} from {server} wants to help you",
-      "support_heading": "Your support session is ready",
-      "support_intro": "{sender} from {server} wants to help you.",
-      "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
-      "support_button": "Start the support session",
-      "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "invite_expires": "ใช้ได้ถึง {expires}",
+      "invite_code": "มี NeoDesk อยู่แล้วใช่ไหม เปิด การตั้งค่า, เซิร์ฟเวอร์, เข้าร่วมเซิร์ฟเวอร์ แล้วป้อนรหัสนี้:",
+      "support_subject": "{sender} จาก {server} ต้องการช่วยเหลือคุณ",
+      "support_heading": "เซสชันการช่วยเหลือของคุณพร้อมแล้ว",
+      "support_intro": "{sender} จาก {server} ต้องการช่วยเหลือคุณ",
+      "support_steps": "เปิดลิงก์นี้บนคอมพิวเตอร์ที่คุณต้องการความช่วยเหลือ ดาวน์โหลดแอปขนาดเล็ก เปิดแอป แล้วคลิก อนุญาต ไม่มีการติดตั้งสิ่งใด",
+      "support_button": "เริ่มเซสชันการช่วยเหลือ",
+      "support_expires": "ลิงก์ใช้ได้ครั้งเดียว ถึง {expires}",
+      "footer": "ส่งโดย {host} ในนามของ {server} หากคุณไม่ได้คาดว่าจะได้รับอีเมลนี้ คุณไม่ต้องสนใจได้",
       "welcome_subject": "{sender} เชิญคุณเข้าร่วม {server}",
       "welcome_lead": "ตั้งค่า NeoDesk บนคอมพิวเตอร์ของคุณ ใช้เวลาเพียงไม่กี่นาที",
       "welcome_button": "ตั้งค่า NeoDesk",
@@ -9303,7 +9276,7 @@
     "try_generic": "โปรดเชื่อมต่อใหม่ หากยังล้มเหลว ให้คัดลอกรายละเอียดด้านล่างแล้วส่งให้ผู้ดูแลระบบ",
     "fail_insecure": "การเชื่อมต่อกับ {name} ถูกหยุดเนื่องจากไม่สามารถทำให้ปลอดภัยได้",
     "try_insecure": "ไม่ได้ส่งรหัสผ่านออกไป อาจมีผู้ดักฟังระหว่างเบราว์เซอร์นี้กับอุปกรณ์ หรือยังไม่ได้ตั้งค่าคีย์ของเซิร์ฟเวอร์ โปรดให้ผู้ดูแลระบบตรวจสอบเซิร์ฟเวอร์",
-    "screen_keys": "ปุ่มที่กดจะส่งไปยังอุปกรณ์ รวมถึง Tab กด F8 เพื่อออกจากหน้าจอ",
+    "screen_keys": "ปุ่มที่กดจะส่งไปยังอุปกรณ์ รวมถึง Tab กด F8 หรือ Ctrl+Alt+Shift+G เพื่อออกจากหน้าจอ",
     "displays": "จอแสดงผล",
     "layout": "เค้าโครง",
     "layout_single": "ทีละจอ",
@@ -9344,7 +9317,9 @@
     "phone_turn": "หรือหมุนโทรศัพท์เป็นแนวนอน: ในแนวนอนเซสชันจะเปิดที่นี่ในเบราว์เซอร์",
     "no_open_sessions": "ไม่มีเซสชันที่เปิดอยู่ เชื่อมต่อด้วย ID หรือเลือกอุปกรณ์ด้านล่าง",
     "fail_signin_closed": "{name} ปิดการเชื่อมต่อเมื่อเบราว์เซอร์นี้ลงชื่อเข้าใช้",
-    "try_signin_closed": "อุปกรณ์ปฏิเสธการลงชื่อเข้าใช้ เชื่อมต่อใหม่และลงชื่อเข้าใช้อีกครั้ง หากยังเกิดขึ้นอีก ให้ผู้ดูแลระบบตรวจสอบบันทึกของ NeoDesk บนอุปกรณ์"
+    "try_signin_closed": "อุปกรณ์ปฏิเสธการลงชื่อเข้าใช้ เชื่อมต่อใหม่และลงชื่อเข้าใช้อีกครั้ง หากยังเกิดขึ้นอีก ให้ผู้ดูแลระบบตรวจสอบบันทึกของ NeoDesk บนอุปกรณ์",
+    "screen_role": "หน้าจอระยะไกล",
+    "tab_close_hint": "กด Delete เพื่อปิดเซสชันนี้"
   },
   "diagram": {
     "your_computer": "คอมพิวเตอร์ของคุณ",
@@ -9392,7 +9367,12 @@
   "table": {
     "select_all": "เลือกทั้งหมด",
     "select_row": "เลือก {name}",
-    "columns": "คอลัมน์"
+    "columns": "คอลัมน์",
+    "rows_one": "{count} แถว",
+    "rows_other": "{count} แถว",
+    "sorted": "เรียงตาม {column}, {direction}",
+    "ascending": "จากน้อยไปมาก",
+    "descending": "จากมากไปน้อย"
   },
   "pagination": {
     "showing": "แสดง {start}–{end} จาก {total}",
@@ -9400,11 +9380,14 @@
     "label": "หน้า",
     "previous": "หน้าก่อนหน้า",
     "next": "หน้าถัดไป",
-    "page": "หน้า {page}"
+    "page": "หน้า {page}",
+    "page_of": "หน้า {page} จาก {pages}",
+    "pages_of": "หน้าของ {name}"
   },
   "shell": {
     "skip_to_content": "ข้ามไปยังเนื้อหาหลัก",
-    "start_failed": "ไม่สามารถเริ่มคอนโซลได้"
+    "start_failed": "ไม่สามารถเริ่มคอนโซลได้",
+    "loading_console": "กำลังโหลดคอนโซล"
   },
   "ux36": {
     "beta_badge": "BETA",
@@ -9468,8 +9451,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "การเคลื่อนไหว คอนทราสต์ ลิงก์ แบบอักษร ทางลัด และการอัปเดตแบบสด บันทึกไว้ในบัญชีของคุณ",
+    "accessibility_on": "การตั้งค่าการช่วยการเข้าถึงบางรายการเปิดอยู่สำหรับบัญชีของคุณ",
     "accessibility_open": "Accessibility settings",
     "email_title": "Email address",
     "email_none": "No email address yet.",
@@ -9647,5 +9630,18 @@
     "tab_title": "Viewing as {username}",
     "ended": "You are no longer viewing NeoDesk as another account. The page loads again as you.",
     "read_only_hint": "You are viewing NeoDesk as {username}. Nothing can be changed here."
+  },
+  "canvas": {
+    "move_node": "ย้าย {name}",
+    "move_left": "ย้ายไปทางซ้าย",
+    "move_up": "ย้ายขึ้น",
+    "move_down": "ย้ายลง",
+    "move_right": "ย้ายไปทางขวา"
+  },
+  "live": {
+    "last_updated": "อัปเดตล่าสุด {time}",
+    "paused": "การอัปเดตแบบสดหยุดชั่วคราวอยู่",
+    "new_entries": "รายการใหม่ แสดงเลย",
+    "new_entries_waiting": "มีรายการใหม่เข้ามาขณะที่หยุดการอัปเดตสดชั่วคราว"
   }
 }

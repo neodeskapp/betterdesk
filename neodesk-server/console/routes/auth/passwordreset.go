@@ -154,12 +154,12 @@ func (h *handlers) sendResets(ctx context.Context, job resetJob) error {
 		translate := securitymail.Translator(h.d, securitymail.Language(ctx, h.d, t.id))
 		m := passwordlinks.BuildMail(translate, passwordlinks.MailFacts{
 			Purpose: passwordlinks.PurposeReset, Self: true, Link: passwordlinks.SetPasswordLink(job.base, token),
-			Username: t.username, Host: host, Expires: expires.UTC().Format("2006-01-02 15:04") + " UTC", Branding: brand,
+			Username: t.username, Host: host, Expires: brandmail.When(expires), Branding: brand,
 		})
 		if err := h.d.Audit.WriteAbout(ctx, t.id, t.id, "password_reset_link_sent", "Asked for a password reset link on the sign-in page", job.ip); err != nil {
 			return err
 		}
-		if _, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{t.email}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline}); err != nil {
+		if _, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{t.email}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline, Lang: m.Lang}); err != nil {
 			return err
 		}
 	}

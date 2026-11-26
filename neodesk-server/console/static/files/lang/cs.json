@@ -40,7 +40,9 @@
     "copy_value": "Kopírovat {value}",
     "copy_failed": "Kopírování se nezdařilo. Označte text a zkopírujte ho ručně.",
     "read_only_page": "Tuto stránku můžete zobrazit, ale ne měnit.",
-    "opens_in_new_tab": "otevře se na nové kartě"
+    "opens_in_new_tab": "otevře se na nové kartě",
+    "required_mark": "(povinné)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Hlavní",
@@ -111,7 +113,8 @@
     "server_backups": "Zálohy",
     "server_config_files": "Konfigurační soubory",
     "meshcentral": "MeshCentral",
-    "devices_add": "Přidat počítače"
+    "devices_add": "Přidat počítače",
+    "registrations_waiting": "Čeká: {count}"
   },
   "auth": {
     "login": "Přihlášení",
@@ -189,7 +192,14 @@
     "password_same": "Choose a password other than the one you signed in with.",
     "change_required_title": "Choose a new password",
     "change_required": "Your administrator asks you to choose a new password before you go on.",
-    "change_required_save": "Save and sign in"
+    "change_required_save": "Save and sign in",
+    "session_seconds_left": "Zbývá {seconds} s",
+    "session_end_warning_title": "Vaše relace brzy skončí",
+    "session_end_warning_body": "Vaše relace skončí v {time}. Uložte si teď práci a pak se znovu přihlaste.",
+    "enter_username": "Zadejte uživatelské jméno.",
+    "enter_password": "Zadejte heslo.",
+    "hide_password": "Skrýt heslo",
+    "totp_sixth_digit": "Přihlášení proběhne hned po zadání šesté číslice."
   },
   "dashboard": {
     "title": "Nástěnka",
@@ -5985,6 +5995,7 @@
     "mail_heading": "{name} čeká na odpověď",
     "mail_waited": "Někdo u {name} (ID {id}) čeká v chatu na odpověď už {minutes} min.",
     "mail_quote": "Napsal(a): {quote}",
+    "mail_quote_label": "Napsal(a):",
     "mail_open": "Otevřít konverzaci: {link}",
     "mail_button": "Otevřít konverzaci v {app}",
     "old_messages": "Staré zprávy",
@@ -6016,7 +6027,8 @@
     "team_groups_line": "Skupiny uživatelů: {names}",
     "delete_team": "Smazat tým",
     "delete_team_title": "Smazat {name}?",
-    "delete_team_message": "Tým a všechny jeho zprávy budou smazány pro všechny členy."
+    "delete_team_message": "Tým a všechny jeho zprávy budou smazány pro všechny členy.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Zařízení připojeno",
@@ -7833,6 +7845,10 @@
     "mark_all_read": "Označit vše jako přečtené",
     "see_all": "Zobrazit všechny žádosti o pomoc",
     "help_request": "Žádost o pomoc",
+    "mail_alert_heading": "Výstraha: {rule}",
+    "mail_help_heading": "Žádost o pomoc z {device}",
+    "mail_help_lead": "Přišla nová žádost o pomoc.",
+    "mail_help_button": "Otevřít žádosti o pomoc v {app}",
     "just_now": "právě teď",
     "kind_registration": "Nové zařízení žádá o připojení",
     "unread": "Nepřečteno",
@@ -7842,72 +7858,26 @@
   },
   "accessibility": {
     "title": "Usnadnění",
-    "subtitle": "Změny textu, barev a pohybu platí okamžitě a uloží se v tomto prohlížeči.",
-    "close": "Zavřít nastavení přístupnosti",
-    "profiles": "Rychlé profily",
-    "profile_low_vision": "Slabé vidění",
-    "profile_low_vision_hint": "Větší text, vysoký kontrast, výrazné zvýraznění fokusu a velký kurzor.",
-    "profile_dyslexia": "Pohodlné čtení",
-    "profile_dyslexia_hint": "Čitelné písmo, větší text a větší rozestupy.",
-    "profile_motion_safe": "Méně pohybu",
-    "profile_motion_safe_hint": "Zastaví animace a přidá čtecí linku a výrazné zvýraznění fokusu.",
-    "profile_color_assist": "Podpora barev",
-    "profile_color_assist_hint": "Barevný filtr, sytější barvy, podtržené odkazy a zvýrazněné nadpisy.",
-    "reading": "Čtení",
-    "font_size": "Velikost písma",
-    "line_height": "Výška řádku",
-    "letter_spacing": "Prokládání znaků",
-    "word_spacing": "Mezery mezi slovy",
     "readable_font": "Čitelné písmo",
-    "readable_font_hint": "Použije široké, jednoduché písmo, například Verdana.",
-    "dyslexia_spacing": "Dyslektické rozestupy",
-    "dyslexia_spacing_hint": "Zvětší mezery mezi písmeny a slovy.",
-    "visual": "Vizuální",
-    "contrast": "Kontrast",
-    "contrast_normal": "Normální",
-    "contrast_high_dark": "Vysoký kontrast (tmavý)",
-    "contrast_high_light": "Vysoký kontrast (světlý)",
-    "contrast_yellow_black": "Žlutá na černé",
-    "color_filter": "Filtr barevného vidění",
-    "filter_none": "Žádný",
-    "filter_protanopia": "Protanopie (slepota na červenou)",
-    "filter_deuteranopia": "Deuteranopie (slepota na zelenou)",
-    "filter_tritanopia": "Tritanopie (slepota na modrou)",
-    "filter_achromatopsia": "Odstíny šedi",
-    "saturation": "Sytost barev",
+    "readable_font_hint": "Jednoduché písmo s trochu větší mezerou mezi písmeny a slovy.",
     "underline_links": "Podtrhnout odkazy",
     "underline_links_hint": "Zviditelní odkazy bez závislosti na barvě.",
-    "highlight_links": "Zvýraznit akce",
-    "highlight_links_hint": "Ohraničí odkazy a tlačítka.",
-    "highlight_headings": "Zvýraznit nadpisy",
-    "highlight_headings_hint": "Označí nadpisy sekcí barevným pruhem.",
-    "hide_media": "Ztlumit média",
-    "hide_media_hint": "Ztlumí obrázky, videa a grafy.",
-    "interaction": "Interakce",
-    "strong_focus": "Výrazné zaměření",
-    "strong_focus_hint": "Zobrazuje velký rámeček kolem aktivního prvku.",
-    "large_cursor": "Velký kurzor",
-    "large_cursor_hint": "Používá větší, vysoce kontrastní ukazatel.",
     "reduce_motion": "Omezit pohyb",
-    "reduce_motion_hint": "Vypne přechody a plynulé posouvání.",
-    "pause_animations": "Pozastavit animace",
-    "pause_animations_hint": "Zastaví animace, například ukazatele načítání.",
-    "reading_guide": "Vodítko pro čtení",
-    "reading_guide_hint": "Linka sleduje kurzor a pomáhá neztratit místo v textu.",
-    "reading_mask": "Maska pro čtení",
-    "reading_mask_hint": "Ztmaví obsah nad a pod ukazatelem.",
-    "preview": "Náhled",
-    "preview_title": "Náhled pracovního prostoru",
-    "preview_text": "Zkontrolujte, zda jsou text, odkazy, ovládací prvky a štítky dobře čitelné, než toto menu zavřete.",
-    "preview_link": "Odkaz na detaily zařízení",
-    "preview_status": "Online",
-    "preview_button": "Primární akce",
-    "preview_secondary": "Sekundární",
-    "reset": "Obnovit",
+    "reduce_motion_hint": "Vypne přechody, animace a pohyblivé snímky.",
     "done": "Hotovo",
-    "profiles_note": "Každý profil změní najednou několik nastavení níže. Dalším výběrem se vrátíte k výchozím hodnotám.",
-    "spacing_normal": "Normální",
-    "reset_defaults": "Obnovit výchozí"
+    "subtitle_account": "Ve výchozím stavu se konzole řídí nastavením vašeho systému. Každá změna se hned uloží k vašemu účtu.",
+    "subtitle_browser": "Ve výchozím stavu se konzole řídí nastavením vašeho systému. Každá změna se hned uloží v tomto prohlížeči.",
+    "more_contrast": "Vyšší kontrast",
+    "more_contrast_hint": "Výraznější barvy textu, čar a ovládacích prvků. Kontrastní motiv systému Windows má vždy přednost.",
+    "follow_system": "Podle systému",
+    "choice_on": "Zapnuto",
+    "choice_off": "Vypnuto",
+    "single_key_shortcuts": "Vypnout zkratky jedné klávesy",
+    "single_key_shortcuts_hint": "Klávesa / už neotevře hledání. Ctrl+K funguje dál.",
+    "pause_live_updates": "Pozastavit živé aktualizace",
+    "pause_live_updates_hint": "Seznamy a stránky nenačítají nová data samy. Obnovit je načte, kdy chcete.",
+    "saved": "Uloženo",
+    "save_failed": "Nastavení se nepodařilo uložit. Zkuste to znovu."
   },
   "server_mgmt": {
     "title": "Správa serveru",
@@ -8727,7 +8697,8 @@
       "close": "Zavřít",
       "link_docs": "Dokumentace",
       "console": "In the console",
-      "shortcuts": "Klávesové zkratky"
+      "shortcuts": "Klávesové zkratky",
+      "link_accessibility": "Prohlášení o přístupnosti"
     },
     "shortcuts": {
       "search": "Open the search",
@@ -8850,7 +8821,9 @@
     "next": "Další snímek",
     "carousel": "karusel",
     "slide": "snímek",
-    "slide_n": "Snímek {n} z {count}"
+    "slide_n": "Snímek {n} z {count}",
+    "stop": "Zastavit snímky",
+    "start": "Spustit snímky"
   },
   "agents": {
     "title": "Agenti NeoDesk",
@@ -8942,15 +8915,15 @@
       "invite_intro": "{sender} from {server} invites you to set up NeoDesk on your computer. {server} can then help you on it.",
       "invite_steps": "Open this link on the computer you want to set up:",
       "invite_button": "Set up this computer",
-      "invite_expires": "It works until {expires}.",
-      "invite_code": "Already have NeoDesk? Open Settings, Server, Join a server, and enter the code {code}.",
-      "support_subject": "{sender} from {server} wants to help you",
-      "support_heading": "Your support session is ready",
-      "support_intro": "{sender} from {server} wants to help you.",
-      "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
-      "support_button": "Start the support session",
-      "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "invite_expires": "Funguje do {expires}.",
+      "invite_code": "Už máte NeoDesk? Otevřete Nastavení, Server, Připojit k serveru a zadejte tento kód:",
+      "support_subject": "{sender} ze {server} vám chce pomoci",
+      "support_heading": "Vaše relace podpory je připravena",
+      "support_intro": "{sender} ze {server} vám chce pomoci.",
+      "support_steps": "Otevřete tento odkaz na počítači, se kterým potřebujete pomoct. Stáhněte malou aplikaci, otevřete ji a klikněte na Povolit. Nic se neinstaluje.",
+      "support_button": "Zahájit relaci podpory",
+      "support_expires": "Odkaz funguje jednou, do {expires}.",
+      "footer": "Odesláno z {host} pro {server}. Pokud jste tento e-mail nečekali, můžete ho ignorovat.",
       "welcome_subject": "{sender} vás zve na {server}",
       "welcome_lead": "Nastavte si NeoDesk na svém počítači. Zabere to pár minut.",
       "welcome_button": "Nastavit NeoDesk",
@@ -9297,7 +9270,7 @@
     "try_generic": "Připojte se znovu. Pokud to stále nejde, zkopírujte níže uvedené podrobnosti a pošlete je správci.",
     "fail_insecure": "Připojení k {name} bylo zastaveno, protože ho nebylo možné zabezpečit.",
     "try_insecure": "Žádné heslo nebylo odesláno. Mezi tímto prohlížečem a zařízením může někdo odposlouchávat, nebo není nastaven klíč serveru. Požádejte správce o kontrolu serveru.",
-    "screen_keys": "Klávesy se posílají do zařízení, včetně Tab. Obrazovku opustíte klávesou F8.",
+    "screen_keys": "Klávesy se posílají do zařízení, včetně Tab. Obrazovku opustíte klávesou F8 nebo Ctrl+Alt+Shift+G.",
     "displays": "Obrazovky",
     "layout": "Rozložení",
     "layout_single": "Jedna po druhé",
@@ -9338,7 +9311,9 @@
     "phone_turn": "Nebo otočte telefon na šířku: na šířku se relace otevře zde v prohlížeči.",
     "no_open_sessions": "Žádná relace není otevřená. Připojte se podle ID, nebo vyberte zařízení níže.",
     "fail_signin_closed": "{name} ukončil připojení, když se tento prohlížeč přihlašoval.",
-    "try_signin_closed": "Zařízení přihlášení odmítlo. Připojte se znovu a znovu se přihlaste. Pokud se to opakuje, požádejte správce, aby se podíval do protokolu NeoDesk na zařízení."
+    "try_signin_closed": "Zařízení přihlášení odmítlo. Připojte se znovu a znovu se přihlaste. Pokud se to opakuje, požádejte správce, aby se podíval do protokolu NeoDesk na zařízení.",
+    "screen_role": "vzdálená obrazovka",
+    "tab_close_hint": "Stisknutím Delete tuto relaci zavřete."
   },
   "diagram": {
     "your_computer": "Váš počítač",
@@ -9386,7 +9361,12 @@
   "table": {
     "select_all": "Vybrat vše",
     "select_row": "Vybrat {name}",
-    "columns": "Sloupce"
+    "columns": "Sloupce",
+    "rows_one": "{count} řádek",
+    "rows_other": "{count} řádků",
+    "sorted": "Seřazeno podle {column}, {direction}",
+    "ascending": "vzestupně",
+    "descending": "sestupně"
   },
   "pagination": {
     "showing": "Zobrazeno {start}–{end} z {total}",
@@ -9394,11 +9374,14 @@
     "label": "Stránky",
     "previous": "Předchozí stránka",
     "next": "Další stránka",
-    "page": "Stránka {page}"
+    "page": "Stránka {page}",
+    "page_of": "Stránka {page} z {pages}",
+    "pages_of": "Stránky: {name}"
   },
   "shell": {
     "skip_to_content": "Přejít na hlavní obsah",
-    "start_failed": "Konzoli se nepodařilo spustit."
+    "start_failed": "Konzoli se nepodařilo spustit.",
+    "loading_console": "Načítání konzole"
   },
   "ux36": {
     "beta_badge": "BETA",
@@ -9462,8 +9445,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Pohyb, kontrast, odkazy, písmo, zkratky a živé aktualizace. Ukládá se k vašemu účtu.",
+    "accessibility_on": "Některá nastavení usnadnění jsou pro váš účet zapnutá.",
     "accessibility_open": "Accessibility settings",
     "email_title": "Email address",
     "email_none": "No email address yet.",
@@ -9641,5 +9624,18 @@
     "tab_title": "Viewing as {username}",
     "ended": "You are no longer viewing NeoDesk as another account. The page loads again as you.",
     "read_only_hint": "You are viewing NeoDesk as {username}. Nothing can be changed here."
+  },
+  "canvas": {
+    "move_node": "Přesunout {name}",
+    "move_left": "Posunout doleva",
+    "move_up": "Posunout nahoru",
+    "move_down": "Posunout dolů",
+    "move_right": "Posunout doprava"
+  },
+  "live": {
+    "last_updated": "Naposledy aktualizováno {time}",
+    "paused": "Živé aktualizace jsou pozastavené.",
+    "new_entries": "Nové položky, zobrazit je",
+    "new_entries_waiting": "Přišly nové položky, zatímco jsou živé aktualizace pozastaveny."
   }
 }

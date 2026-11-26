@@ -86,6 +86,10 @@
 	import AccessRules from './AccessRules.svelte';
 	import ScopeList, { type DropTarget } from './ScopeList.svelte';
 	import TagFilter from './TagFilter.svelte';
+	import LiveStatus from '#lib/ui/LiveStatus.svelte';
+	import NewEntries from '#lib/ui/NewEntries.svelte';
+	import { HeldPushes } from '#lib/state/held-pushes.svelte.ts';
+	import { liveUpdates } from '#lib/state/live-updates.svelte.ts';
 
 	/** Same storage keys as the old page, so switching back and forth keeps the choices */
 	const PREF_COLUMNS = 'devices-visible-columns';
@@ -124,6 +128,7 @@
 		inflight?.abort();
 		const ctrl = new AbortController();
 		inflight = ctrl;
+		const from = held.begin();
 		try {
 			const list = await first('devices', () => listDevices({ includeDeleted: showDeleted }, ctrl.signal));
 			if (inflight !== ctrl) return;
@@ -131,6 +136,7 @@
 			devices = list;
 			loadError = null;
 			loaded = true;
+			held.loaded(from);
 		} catch (err) {
 			if (err instanceof DOMException && err.name === 'AbortError') return;
 			if (inflight !== ctrl) return;
@@ -141,6 +147,9 @@
 	}
 
 	const quiet = (p: Promise<unknown>) => p.catch(() => undefined);
+	/** Pushes held while live updates are paused: the list stays as it is until shown */
+	const held = new HeldPushes(loadDevices);
+	let listEl = $state<HTMLElement | null>(null);
 	const loadFolders = () => quiet(first('folders', () => listFolders()).then((f) => (folders = f)));
 	const loadGroups = () => quiet(first('groups', () => listDeviceGroups()).then((g) => (groups = g)));
 	const loadTags = () => quiet(first('tags', () => listTags()).then((x) => (knownTags = x)));
@@ -185,6 +194,12 @@
 			onmessage: (data) => {
 				const m = parseLiveMessage(data);
 				if (!m) return;
+				// Live updates paused: the list keeps what it shows until Refresh
+				if (liveUpdates.paused) {
+					if (m.kind === 'id-changed' && devicePanel.id === m.oldId) openDevice(m.newId);
+					held.push();
+					return;
+				}
 				if (m.kind === 'status') {
 					pending.set(m.id, m.status);
 					timer ??= setTimeout(flush, 250);
@@ -678,6 +693,7 @@
 				<CountLine text={t('devices.summary')} values={{ count: liveCount, online: counts.online }} />
 			{/if}
 		</div>
+		<LiveStatus />
 		<div class="page-actions">
 			{#if can('enrollment.approve')}
 				<Button
@@ -813,9 +829,11 @@
 				</div>
 			{/if}
 
+			<NewEntries {held} focus={() => listEl} />
 			<!-- Mouse conveniences (drag, right-click); keyboard users have the row menu and the panel -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
+				bind:this={listEl}
 				class={['devices-table', long && 'is-long', shown('tags') && 'has-tags']}
 				onpointerover={onPointerOver}
 				ondragstart={onDragStart}
@@ -923,7 +941,8 @@
 
 	.devices-layout {
 		display: grid;
-		grid-template-columns: 200px minmax(0, 1fr);
+		/* In rem, so the folder and group names grow with the browser's font size */
+		grid-template-columns: 12.5rem minmax(0, 1fr);
 		grid-template-areas:
 			'. toolbar'
 			'filters list';
@@ -969,6 +988,10 @@
 		max-height: calc(100vh - var(--topbar-h, 56px) - var(--space-6));
 		overflow-y: auto;
 		min-width: 0;
+		/* The scroll box cuts what sticks out of it: room for the focus ring
+		   (2px and 2px off) of the buttons on its edges, the layout unchanged */
+		padding: var(--space-1);
+		margin: calc(-1 * var(--space-1));
 	}
 	.devices-list {
 		grid-area: list;
@@ -1147,6 +1170,27 @@
 			height: 1px;
 			overflow: hidden;
 			clip-path: inset(50%);
+		}
+		/* Its controls (Select all, the sort buttons) still take focus:
+		   the header shows as one wrapping line while one of them has it */
+		.devices-table :global(thead:focus-within) {
+			position: static;
+			display: block;
+			width: auto;
+			height: auto;
+			overflow: visible;
+			clip-path: none;
+		}
+		.devices-table :global(thead:focus-within tr) {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0 var(--space-2);
+		}
+		.devices-table :global(thead:focus-within th) {
+			position: static;
+			width: auto;
+			border: 0;
 		}
 		.devices-table :global(table),
 		.devices-table :global(tbody) {

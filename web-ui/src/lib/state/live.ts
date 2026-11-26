@@ -8,7 +8,14 @@
  * A hidden tab makes no requests: the poller stops and runs once when the
  * tab is shown again; a socket closes after a grace period and reopens on
  * show. Errors back off exponentially (capped) and reset on success.
+ *
+ * Pause live updates (accessibility settings, live-updates.svelte.ts): a
+ * poller still loads once at its start, then only on Refresh, until the
+ * pause ends. A poller marked essential keeps its timer: the session
+ * check, a dialog waiting for a computer, a job someone started.
  */
+
+import { liveUpdates, markUpdated, registerPoller } from './live-updates.svelte.ts';
 
 type Visibility = { hidden: boolean; on(fn: () => void): () => void };
 
@@ -29,6 +36,8 @@ export interface PollOptions {
 	maxBackoff?: number;
 	/** Run once right away (default true) */
 	immediate?: boolean;
+	/** Keeps running while live updates are paused (not content people read) */
+	essential?: boolean;
 }
 
 /** Call `fn` every `every` ms while the tab is visible. Returns stop(). */
@@ -38,26 +47,33 @@ export function poll(fn: () => Promise<unknown>, opts: PollOptions): () => void 
 	let stopped = false;
 	let running = false;
 	let failures = 0;
+	const pausable = !opts.essential;
+	const paused = () => pausable && liveUpdates.paused;
 
 	const schedule = (ms: number) => {
 		if (timer) clearTimeout(timer);
 		timer = null;
-		if (stopped || visibility.hidden) return;
+		if (stopped || visibility.hidden || paused()) return;
 		timer = setTimeout(run, ms);
 	};
 
-	async function run() {
-		timer = null;
-		if (stopped || visibility.hidden || running) return;
+	async function load(): Promise<void> {
 		running = true;
 		try {
 			await fn();
 			failures = 0;
+			if (pausable) markUpdated();
 		} catch {
 			failures++;
 		} finally {
 			running = false;
 		}
+	}
+
+	async function run() {
+		timer = null;
+		if (stopped || visibility.hidden || running) return;
+		await load();
 		schedule(failures ? Math.min(opts.every * 2 ** failures, maxBackoff) : opts.every);
 	}
 
@@ -65,10 +81,22 @@ export function poll(fn: () => Promise<unknown>, opts: PollOptions): () => void 
 		if (visibility.hidden) {
 			if (timer) clearTimeout(timer);
 			timer = null;
-		} else if (!timer && !running) {
+		} else if (!timer && !running && !paused()) {
 			void run();
 		}
 	});
+
+	const unregister = pausable
+		? registerPoller({
+				refresh: async () => {
+					if (stopped || running) return;
+					await load();
+				},
+				resume: () => {
+					if (!stopped && !timer && !running) void run();
+				}
+			})
+		: () => {};
 
 	if (opts.immediate === false) schedule(opts.every);
 	else void run();
@@ -77,6 +105,7 @@ export function poll(fn: () => Promise<unknown>, opts: PollOptions): () => void 
 		stopped = true;
 		if (timer) clearTimeout(timer);
 		off();
+		unregister();
 	};
 }
 

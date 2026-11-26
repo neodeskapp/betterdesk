@@ -20,3 +20,11 @@ test('Community on Discord sits next to the documentation and opens in a new tab
 	expect(discord.getAttribute('rel')).toMatch(/\bnoopener\b/);
 	expect(links.indexOf(discord)).toBe(links.indexOf(docs) + 1);
 });
+
+test('Help links the accessibility statement', async () => {
+	const HelpContent = (await import('../../../src/lib/shell/HelpContent.svelte')).default;
+	render(HelpContent);
+	const statement = screen.getByRole('link', { name: 'help.panel.link_accessibility' });
+	expect(statement).toHaveAttribute('href', `${DOCS_URL}/project/accessibility`);
+	expect(statement).toHaveAttribute('target', '_blank');
+});

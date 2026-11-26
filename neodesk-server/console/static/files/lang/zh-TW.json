@@ -44,7 +44,9 @@
     "copy_value": "複製 {value}",
     "copy_failed": "無法複製。請選取文字後自行複製。",
     "read_only_page": "您可以檢視此頁面，但無法變更。",
-    "opens_in_new_tab": "在新分頁中開啟"
+    "opens_in_new_tab": "在新分頁中開啟",
+    "required_mark": "（必填）",
+    "ok": "確定"
   },
   "nav": {
     "main": "主要",
@@ -115,7 +117,8 @@
     "server_backups": "備份",
     "server_config_files": "設定檔",
     "meshcentral": "MeshCentral",
-    "devices_add": "新增電腦"
+    "devices_add": "新增電腦",
+    "registrations_waiting": "{count} 個待處理"
   },
   "auth": {
     "login": "登錄",
@@ -193,7 +196,14 @@
     "password_same": "Choose a password other than the one you signed in with.",
     "change_required_title": "Choose a new password",
     "change_required": "Your administrator asks you to choose a new password before you go on.",
-    "change_required_save": "Save and sign in"
+    "change_required_save": "Save and sign in",
+    "session_seconds_left": "還剩 {seconds} 秒",
+    "session_end_warning_title": "工作階段即將結束",
+    "session_end_warning_body": "工作階段將於 {time} 結束。請立即儲存你的工作，然後重新登入。",
+    "enter_username": "請輸入使用者名稱。",
+    "enter_password": "請輸入密碼。",
+    "hide_password": "隱藏密碼",
+    "totp_sixth_digit": "輸入第六位數字後會立即登入。"
   },
   "dashboard": {
     "title": "儀表板",
@@ -5139,6 +5149,10 @@
     "mark_all_read": "全部標記爲已讀",
     "see_all": "查看所有求助請求",
     "help_request": "求助請求",
+    "mail_alert_heading": "警示:{rule}",
+    "mail_help_heading": "來自 {device} 的求助請求",
+    "mail_help_lead": "收到一個新的求助請求。",
+    "mail_help_button": "在 {app} 中開啟求助請求",
     "just_now": "剛剛",
     "kind_registration": "新裝置請求加入",
     "unread": "未讀",
@@ -6131,6 +6145,7 @@
     "mail_heading": "{name} 正在等待回覆",
     "mail_waited": "{name}（ID {id}）上的使用者已在聊天中等待回覆 {minutes} 分鐘。",
     "mail_quote": "訊息：{quote}",
+    "mail_quote_label": "訊息：",
     "mail_open": "開啟對話：{link}",
     "mail_button": "在 {app} 中開啟對話",
     "old_messages": "舊訊息",
@@ -6162,7 +6177,8 @@
     "team_groups_line": "用戶組：{names}",
     "delete_team": "刪除團隊",
     "delete_team_title": "刪除 {name}？",
-    "delete_team_message": "團隊及其所有訊息將對所有成員刪除。"
+    "delete_team_message": "團隊及其所有訊息將對所有成員刪除。",
+    "said": "{name}：{text}"
   },
   "toast": {
     "device_connected": "設備已連接",
@@ -7864,72 +7880,26 @@
   },
   "accessibility": {
     "title": "無障礙",
-    "subtitle": "文字、色彩與動態的變更會立即套用，並儲存在此瀏覽器中。",
-    "close": "關閉無障礙設定",
-    "profiles": "快速配置",
-    "profile_low_vision": "低視能",
-    "profile_low_vision_hint": "較大的文字、高對比、明顯的焦點框與大型指標。",
-    "profile_dyslexia": "閱讀舒適",
-    "profile_dyslexia_hint": "易讀字型、較大文字與較寬間距。",
-    "profile_motion_safe": "減少動態",
-    "profile_motion_safe_hint": "停止動畫，並加上閱讀輔助線與明顯的焦點框。",
-    "profile_color_assist": "顏色輔助",
-    "profile_color_assist_hint": "色彩濾鏡、更鮮明的色彩、加底線的連結與標示的標題。",
-    "reading": "閱讀",
-    "font_size": "字體大小",
-    "line_height": "行高",
-    "letter_spacing": "字母間距",
-    "word_spacing": "單詞間距",
     "readable_font": "易讀字體",
-    "readable_font_hint": "使用 Verdana 等寬大、簡潔的字型。",
-    "dyslexia_spacing": "閱讀障礙間距",
-    "dyslexia_spacing_hint": "加大字母與單字之間的間距。",
-    "visual": "視覺",
-    "contrast": "對比度",
-    "contrast_normal": "標準",
-    "contrast_high_dark": "高對比度深色",
-    "contrast_high_light": "高對比度淺色",
-    "contrast_yellow_black": "黑底黃字",
-    "color_filter": "色覺濾鏡",
-    "filter_none": "無",
-    "filter_protanopia": "紅色盲（第一型）",
-    "filter_deuteranopia": "綠色盲（第二型）",
-    "filter_tritanopia": "藍色盲（第三型）",
-    "filter_achromatopsia": "灰階",
-    "saturation": "顏色飽和度",
+    "readable_font_hint": "使用簡潔的字體，字母和字詞之間的間距稍大。",
     "underline_links": "爲鏈接添加下劃線",
     "underline_links_hint": "無需依賴顏色也能看清鏈接。",
-    "highlight_links": "突出顯示操作",
-    "highlight_links_hint": "爲鏈接和按鈕添加輪廓。",
-    "highlight_headings": "突出顯示標題",
-    "highlight_headings_hint": "用彩色條標記章節標題。",
-    "hide_media": "淡化媒體",
-    "hide_media_hint": "淡化圖片、影片與圖表。",
-    "interaction": "交互",
-    "strong_focus": "強焦點",
-    "strong_focus_hint": "顯示較大的鍵盤焦點環。",
-    "large_cursor": "大光標",
-    "large_cursor_hint": "使用更大的高對比度指針。",
     "reduce_motion": "減少動態效果",
-    "reduce_motion_hint": "關閉轉場效果與平滑捲動。",
-    "pause_animations": "暫停動畫",
-    "pause_animations_hint": "凍結動畫，例如載入中的轉圈圖示。",
-    "reading_guide": "閱讀引導線",
-    "reading_guide_hint": "一條線會跟著指標移動，幫您找到閱讀位置。",
-    "reading_mask": "閱讀遮罩",
-    "reading_mask_hint": "淡化指針上方和下方的內容。",
-    "preview": "預覽",
-    "preview_title": "操作員工作區預覽",
-    "preview_text": "關閉此菜單前，檢查文本、鏈接、控件和狀態標籤是否易於閱讀。",
-    "preview_link": "設備詳情鏈接",
-    "preview_status": "Online",
-    "preview_button": "主要操作",
-    "preview_secondary": "Secondary",
-    "reset": "重置",
+    "reduce_motion_hint": "關閉轉場、動畫和自動切換的投影片。",
     "done": "完成",
-    "profiles_note": "每個設定檔會一次變更下方的多項設定。再選一次即可回到預設值。",
-    "spacing_normal": "標準",
-    "reset_defaults": "重設為預設值"
+    "subtitle_account": "主控台預設遵循您的系統設定。每項變更都會立即儲存到您的帳戶。",
+    "subtitle_browser": "主控台預設遵循您的系統設定。每項變更都會立即儲存在此瀏覽器中。",
+    "more_contrast": "提高對比度",
+    "more_contrast_hint": "讓文字、線條和控制項的顏色更鮮明。Windows 對比佈景主題一律優先。",
+    "follow_system": "跟隨系統",
+    "choice_on": "開啟",
+    "choice_off": "關閉",
+    "single_key_shortcuts": "關閉單鍵快速鍵",
+    "single_key_shortcuts_hint": "按 / 鍵不再開啟搜尋。Ctrl+K 仍可開啟。",
+    "pause_live_updates": "暫停即時更新",
+    "pause_live_updates_hint": "清單和頁面不會自行載入新資料。需要時按「重新整理」載入。",
+    "saved": "已儲存",
+    "save_failed": "無法儲存設定。請再試一次。"
   },
   "server_mgmt": {
     "title": "服務器管理",
@@ -8731,7 +8701,8 @@
       "close": "關閉",
       "link_docs": "說明文件",
       "console": "In the console",
-      "shortcuts": "鍵盤快速鍵"
+      "shortcuts": "鍵盤快速鍵",
+      "link_accessibility": "無障礙聲明"
     },
     "shortcuts": {
       "search": "Open the search",
@@ -8854,7 +8825,9 @@
     "next": "下一張投影片",
     "carousel": "輪播",
     "slide": "投影片",
-    "slide_n": "第 {n} 張投影片，共 {count} 張"
+    "slide_n": "第 {n} 張投影片，共 {count} 張",
+    "stop": "停止投影片",
+    "start": "開始投影片"
   },
   "agents": {
     "title": "NeoDesk 代理",
@@ -8946,15 +8919,15 @@
       "invite_intro": "{sender} from {server} invites you to set up NeoDesk on your computer. {server} can then help you on it.",
       "invite_steps": "Open this link on the computer you want to set up:",
       "invite_button": "Set up this computer",
-      "invite_expires": "It works until {expires}.",
-      "invite_code": "Already have NeoDesk? Open Settings, Server, Join a server, and enter the code {code}.",
-      "support_subject": "{sender} from {server} wants to help you",
-      "support_heading": "Your support session is ready",
-      "support_intro": "{sender} from {server} wants to help you.",
-      "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
-      "support_button": "Start the support session",
-      "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "invite_expires": "有效期限至 {expires}。",
+      "invite_code": "已經有 NeoDesk 了嗎?開啟「設定」、「伺服器」、「加入伺服器」,然後輸入這組代碼:",
+      "support_subject": "{server} 的 {sender} 想協助你",
+      "support_heading": "你的支援工作階段已準備就緒",
+      "support_intro": "{server} 的 {sender} 想協助你。",
+      "support_steps": "在需要協助的電腦上開啟這個連結。下載這個小程式,開啟後點選「允許」。不會安裝任何東西。",
+      "support_button": "開始支援工作階段",
+      "support_expires": "連結只能使用一次,有效期限至 {expires}。",
+      "footer": "由 {host} 代表 {server} 寄出。如果你沒有預期收到這封郵件,可以忽略它。",
       "welcome_subject": "{sender} 邀請您加入 {server}",
       "welcome_lead": "在您的電腦上設定 NeoDesk。只需幾分鐘。",
       "welcome_button": "設定 NeoDesk",
@@ -9301,7 +9274,7 @@
     "try_generic": "請重新連線。如果仍然失敗，請複製下方的詳細資料並傳送給管理員。",
     "fail_insecure": "無法保護與 {name} 的連線，連線已停止。",
     "try_insecure": "未傳送任何密碼。可能有人在此瀏覽器與裝置之間竊聽，或伺服器金鑰未設定。請管理員檢查伺服器。",
-    "screen_keys": "按鍵會傳送到裝置，包括 Tab。按 F8 離開畫面。",
+    "screen_keys": "按鍵會傳送到裝置，包括 Tab。按 F8 或 Ctrl+Alt+Shift+G 離開畫面。",
     "displays": "顯示器",
     "layout": "版面配置",
     "layout_single": "一次一個",
@@ -9342,7 +9315,9 @@
     "phone_turn": "或者把手機轉成橫向：橫向時工作階段會在這個瀏覽器中開啟。",
     "no_open_sessions": "沒有開啟的工作階段。依 ID 連線，或在下方選擇裝置。",
     "fail_signin_closed": "此瀏覽器登入時，{name} 關閉了連線。",
-    "try_signin_closed": "裝置拒絕了登入。請重新連線並再次登入。如果一再發生，請管理員查看裝置上 NeoDesk 的記錄。"
+    "try_signin_closed": "裝置拒絕了登入。請重新連線並再次登入。如果一再發生，請管理員查看裝置上 NeoDesk 的記錄。",
+    "screen_role": "遠端畫面",
+    "tab_close_hint": "按 Delete 關閉此工作階段。"
   },
   "diagram": {
     "your_computer": "您的電腦",
@@ -9390,7 +9365,12 @@
   "table": {
     "select_all": "全選",
     "select_row": "選取 {name}",
-    "columns": "欄"
+    "columns": "欄",
+    "rows_one": "{count} 列",
+    "rows_other": "{count} 列",
+    "sorted": "依 {column} 排序，{direction}",
+    "ascending": "遞增",
+    "descending": "遞減"
   },
   "pagination": {
     "showing": "第 {start}–{end} 筆，共 {total} 筆",
@@ -9398,11 +9378,14 @@
     "label": "頁面",
     "previous": "上一頁",
     "next": "下一頁",
-    "page": "第 {page} 頁"
+    "page": "第 {page} 頁",
+    "page_of": "第 {page} 頁，共 {pages} 頁",
+    "pages_of": "{name}的頁面"
   },
   "shell": {
     "skip_to_content": "跳至主要內容",
-    "start_failed": "主控台無法啟動。"
+    "start_failed": "主控台無法啟動。",
+    "loading_console": "正在載入主控台"
   },
   "ux36": {
     "beta_badge": "BETA",
@@ -9466,8 +9449,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "動態效果、對比度、連結、字體、快速鍵和即時更新。儲存在您的帳戶中。",
+    "accessibility_on": "您的帳戶已開啟部分無障礙設定。",
     "accessibility_open": "Accessibility settings",
     "email_title": "Email address",
     "email_none": "No email address yet.",
@@ -9645,5 +9628,18 @@
     "tab_title": "Viewing as {username}",
     "ended": "You are no longer viewing NeoDesk as another account. The page loads again as you.",
     "read_only_hint": "You are viewing NeoDesk as {username}. Nothing can be changed here."
+  },
+  "canvas": {
+    "move_node": "移動 {name}",
+    "move_left": "向左移動",
+    "move_up": "向上移動",
+    "move_down": "向下移動",
+    "move_right": "向右移動"
+  },
+  "live": {
+    "last_updated": "上次更新 {time}",
+    "paused": "即時更新已暫停。",
+    "new_entries": "有新項目，顯示",
+    "new_entries_waiting": "即時更新暫停期間收到了新項目。"
   }
 }

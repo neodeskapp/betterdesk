@@ -11,6 +11,7 @@
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import Shell from '#lib/shell/Shell.svelte';
+	import { setPageTitle } from '#lib/shell/page.svelte.ts';
 	import { session, startSession } from '#lib/state/session.svelte.ts';
 	import { initTheme } from '#lib/state/theme.svelte.ts';
 	import { dropEarlySession, publicPage, startPublic } from './boot.svelte.ts';
@@ -52,19 +53,25 @@
 	});
 
 	const user = $derived(session.user ? { username: session.user.username, role: session.user.role } : null);
+	const errorTitle = $derived(
+		t(
+			status === 403
+				? 'errors.forbidden_title'
+				: status === 404
+					? 'errors.not_found_title'
+					: 'errors.server_error_title'
+		)
+	);
+
+	// Inside the console the shell writes the document title: it names the error too
+	$effect(() => {
+		if (phase === 'console') setPageTitle(errorTitle);
+	});
 </script>
 
 <svelte:head>
 	{#if phase !== 'starting'}
-		<title
-			>{t(
-				status === 403
-					? 'errors.forbidden_title'
-					: status === 404
-						? 'errors.not_found_title'
-						: 'errors.server_error_title'
-			)}{appName || session.appName ? ` - ${appName || session.appName}` : ''}</title
-		>
+		<title>{errorTitle}{appName || session.appName ? ` - ${appName || session.appName}` : ''}</title>
 	{/if}
 </svelte:head>
 

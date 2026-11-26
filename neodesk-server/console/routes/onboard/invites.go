@@ -406,7 +406,7 @@ func (h *handlers) sendCodeMail(r *http.Request, code onboard.Code, text, to str
 	c := h.consoleOf(r)
 	expires := code.ExpiresAt
 	if t, err := time.Parse(time.RFC3339, code.ExpiresAt); err == nil {
-		expires = t.UTC().Format("2006-01-02 15:04") + " UTC"
+		expires = brandmail.When(t)
 	}
 	accent, logo := h.mailBranding(c)
 	m := onboard.BuildMail(func(key string, vars map[string]any) string {
@@ -416,7 +416,7 @@ func (h *handlers) sendCodeMail(r *http.Request, code onboard.Code, text, to str
 		Server: h.serverName(), Sender: h.personName(r.Context(), kit.UserID(r), code.CreatedBy), Host: c.Host, Expires: expires,
 		Company: h.serverName(), Accent: accent, Logo: logo,
 	})
-	sent, err := h.d.Mail.SendEmail(r.Context(), consolemail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline})
+	sent, err := h.d.Mail.SendEmail(r.Context(), consolemail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline, Lang: m.Lang})
 	if err != nil || !sent {
 		return false, "mail_failed"
 	}

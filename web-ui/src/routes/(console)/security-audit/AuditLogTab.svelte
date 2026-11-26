@@ -8,7 +8,7 @@
 	import { untrack } from 'svelte';
 	import { reloadWhileShown } from '#lib/state/live.ts';
 	import { listAuditLog, listAvatarVersions } from '#lib/api/audit.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import DetailsText from '#lib/people/DetailsText.svelte';
 	import {
 		AUDIT_FILTERS,
@@ -190,7 +190,7 @@
 		<Pagination
 			page={Math.min(pageNo, pageCount)}
 			{pageCount}
-			label={t('security_audit.pages')}
+			label={tf('pagination.pages_of', 'Pages of {name}', { name: t('security_audit.tab_audit_log') })}
 			onchange={(p) => (pageNo = p)}
 		/>
 	{/if}

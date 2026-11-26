@@ -27,7 +27,7 @@ describe('font picker', () => {
 	test('a Google font that could not be downloaded is not used, and the field says why', async () => {
 		render(FontPicker, { slot: 'heading', value: 'Inter', source: 'google', category: '', canEdit: true });
 		await fireEvent.focus(screen.getByRole('combobox'));
-		await fireEvent.click(await screen.findByRole('button', { name: /Lora/ }));
+		await fireEvent.click(await screen.findByRole('option', { name: /Lora/ }));
 		await vi.waitFor(() => expect(settingsApi.downloadFont).toHaveBeenCalledWith('Lora'));
 		await vi.waitFor(() =>
 			expect(document.getElementById('font-heading-problem')?.textContent).toContain(
@@ -43,7 +43,7 @@ describe('font picker', () => {
 		const input = screen.getByRole('combobox');
 		await fireEvent.input(input, { target: { value: 'audit' } });
 		await fireEvent.focus(input);
-		await fireEvent.click(await screen.findByRole('button', { name: /Audit Sans/ }));
+		await fireEvent.click(await screen.findByRole('option', { name: /Audit Sans/ }));
 		await vi.waitFor(() =>
 			expect(document.getElementById('font-body-current')?.textContent).toBe('Audit Sans')
 		);

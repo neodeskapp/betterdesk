@@ -71,6 +71,8 @@
 	import Status from '#lib/ui/Status.svelte';
 	import Steps from '#lib/ui/Steps.svelte';
 	import Table from '#lib/ui/Table.svelte';
+	import NewEntries from '#lib/ui/NewEntries.svelte';
+	import { HeldPushes } from '#lib/state/held-pushes.svelte.ts';
 	import Tag from '#lib/ui/Tag.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import Toolbar from '#lib/ui/Toolbar.svelte';
@@ -119,6 +121,7 @@
 			return;
 		}
 		loading = true;
+		const from = held.begin();
 		try {
 			const [lan, pending, history] = await Promise.allSettled([
 				listLanRegistrations(),
@@ -136,6 +139,7 @@
 			if (history.status === 'fulfilled') list.push(...history.value.map(fromHistory));
 			rows = mergeRows(list);
 			loadError = null;
+			held.loaded(from);
 		} finally {
 			loaded = true;
 			loading = false;
@@ -145,6 +149,10 @@
 			}
 		}
 	}
+
+	/** Pushes held while live updates are paused: the list stays as it is until shown */
+	const held = new HeldPushes(load);
+	let listEl = $state<HTMLElement | null>(null);
 
 	async function loadMode(): Promise<void> {
 		if (!allowed) return;
@@ -171,7 +179,7 @@
 	// A request arrived or was decided elsewhere
 	$effect(() =>
 		onPanelEvents((p) => {
-			if (p.type === 'registration_pending' || p.type === 'registration_changed') void load();
+			if (p.type === 'registration_pending' || p.type === 'registration_changed') held.push();
 		})
 	);
 
@@ -519,7 +527,8 @@
 					</Toolbar>
 					<p class="count-line" aria-live="polite">{countText}</p>
 
-					<div class="registrations-table">
+					<NewEntries {held} focus={() => listEl} />
+					<div class="registrations-table" bind:this={listEl}>
 						<Table
 							rows={shown}
 							{columns}

@@ -34,7 +34,8 @@
 	const links = [
 		{ href: DOCS_URL, icon: 'menu_book', key: 'help.panel.link_docs' },
 		{ href: DISCORD_URL, icon: 'chat', key: 'help.panel.link_discord' },
-		{ href: REPO_URL, icon: 'code', key: 'help.panel.link_repo' }
+		{ href: REPO_URL, icon: 'code', key: 'help.panel.link_repo' },
+		{ href: `${DOCS_URL}/project/accessibility`, icon: 'fact_check', key: 'help.panel.link_accessibility' }
 	];
 </script>
 

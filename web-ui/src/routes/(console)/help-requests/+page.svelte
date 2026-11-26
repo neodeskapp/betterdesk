@@ -52,6 +52,9 @@
 	import ShareFilter, { type ShareFilterPart } from '#lib/support/ShareFilter.svelte';
 	import { openQuickSupport } from '#lib/onboard/open.svelte.ts';
 	import QuickSupportSessions from '#lib/onboard/QuickSupportSessions.svelte';
+	import LiveStatus from '#lib/ui/LiveStatus.svelte';
+	import NewEntries from '#lib/ui/NewEntries.svelte';
+	import { HeldPushes } from '#lib/state/held-pushes.svelte.ts';
 	import {
 		countWaiting,
 		mergeFresh,
@@ -92,6 +95,7 @@
 		inflight?.abort();
 		const ctrl = new AbortController();
 		inflight = ctrl;
+		const from = held.begin();
 		try {
 			const fresh = await listHelpRequests(ctrl.signal);
 			if (inflight !== ctrl) return;
@@ -100,6 +104,7 @@
 			requests = mergeFresh(requests, fresh);
 			loaded = true;
 			loadError = null;
+			held.loaded(from);
 			if (!first && countWaiting(fresh) > before) chime();
 		} catch (err) {
 			if (err instanceof DOMException && err.name === 'AbortError') return;
@@ -110,6 +115,10 @@
 		}
 	}
 
+	/** Pushes held while live updates are paused: the list stays as it is until shown */
+	const held = new HeldPushes(load);
+	let listEl = $state<HTMLElement | null>(null);
+
 	$effect(() => {
 		if (!allowed) return;
 		return poll(load, { every: POLL_MS });
@@ -119,7 +128,7 @@
 		const quiet = () => void load().catch(() => undefined);
 		const offRefresh = onRefresh(quiet);
 		const offEvents = onPanelEvents((p) => {
-			if (p.type === 'help_request') quiet();
+			if (p.type === 'help_request') held.push();
 		});
 		return () => {
 			offRefresh();
@@ -398,6 +407,7 @@
 <div class="page page-wide help-requests-page">
 	<div class="page-head">
 		<h1>{t('nav.help_requests')}</h1>
+		<LiveStatus />
 		<p class="page-description">
 			{t('help_request.page_description')}
 			{#each t('help_request.page_related').split(/(\{tickets\}|\{chat\})/) as part, i (i)}{#if part === '{tickets}'}<a
@@ -449,7 +459,8 @@
 					</div>
 					{#if loaded && !loadError}<p class="count-line">{countText}</p>{/if}
 					<p class="sr-only" aria-live="polite">{live}</p>
-					<div class="hr-table">
+					<NewEntries {held} focus={() => listEl} />
+					<div class="hr-table" bind:this={listEl}>
 						<Table
 							rows={loaded ? rows : []}
 							{columns}

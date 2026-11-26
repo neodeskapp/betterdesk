@@ -34,19 +34,19 @@ func carried(t *testing.T, p Page) {
 }
 
 // A server named NeoDesk without a logo image gets NeoDesk's full logo,
-// one for light and one for dark mode, carried in the mail; another name
-// gets the mark and the name; a logo image of its own goes in by its
-// address and nothing is carried.
+// one for light mode (on its plate, see TestLogoPlate) and one for dark
+// mode, carried in the mail; another name gets the mark and the name; a
+// logo image of its own goes in by its address and nothing is carried.
 func TestLogo(t *testing.T) {
 	own := Page{Branding: Branding{Server: "NeoDesk"}, Heading: "Hi"}
 	carried(t, own)
 	html := HTML(own)
-	if !strings.Contains(html, `class="nd-light" src="cid:logo-light@neodesk" alt="NeoDesk" width="136" height="32"`) ||
+	if !strings.Contains(html, `class="nd-light" src="cid:logo-light@neodesk" alt="NeoDesk" width="152" height="48"`) ||
 		!strings.Contains(html, `<!--[if !mso]><!--><img class="nd-dark nd-dark-logo" src="cid:logo-dark@neodesk"`) {
 		t.Errorf("no full logo for light and dark:\n%s", html)
 	}
-	if !bytes.Equal(Inline(own)[0].Data, mustRead(t, "logo/logo-on-light-64h.png")) || !bytes.Equal(Inline(own)[1].Data, mustRead(t, "logo/logo-on-dark-64h.png")) {
-		t.Error("the full logo isn't the brand's light and dark PNG")
+	if !bytes.Equal(Inline(own)[1].Data, mustRead(t, "logo/logo-on-dark-64h.png")) {
+		t.Error("the dark logo isn't the brand's dark PNG")
 	}
 
 	named := Page{Branding: Branding{Server: "Acme Desk"}, Heading: "Hi"}

@@ -165,6 +165,12 @@ On SQLite the files hold the statement text byte for byte as Node ran it,
 because SQLite keeps that text in `sqlite_master`. A Go-made SQLite file
 therefore has the same `.schema` output as a Node-made one.
 
+`user_preferences` is not in Node. Its step `create user_preferences` is the
+last one in both orders. A row holds what an account chose for itself and
+keeps on every browser: `accessibility` is the JSON of the accessibility
+settings (package `console/accessibility`). The row goes with its account
+(`ON DELETE CASCADE`).
+
 On PostgreSQL five groups of indexes are created apart from their tables, at
 the place Node created them:
 
@@ -359,7 +365,8 @@ PostgreSQL; `users.totp_secret` is `NOT NULL` in Go's PostgreSQL shape.
   Migrate logs a warning for them.
 - Node logged only some added columns. Migrate logs every change.
 - `access_tokens.token_kind` is not in Node (BUGS RV1), nor are `users.disabled`
-  (L107) and `audit_log.target_user_id` with its index.
+  (L107), `audit_log.target_user_id` with its index, and the table
+  `user_preferences`.
 - Access tokens are kept as their hash only: Migrate rewrites `token` of
   every row that holds the token itself (BUGS RV128).
 - The scheduled backup's network share login (`scheduled_backup_smb` in

@@ -11,11 +11,13 @@ import (
 )
 
 // allowedWrites are the only writes an impersonation may make: its own
-// end and its one extension. Signing out is tested on its own (it ends the
+// end and its one extension, and the admin's own accessibility settings
+// (TestViewingAsKeepsTheAdminsOwnAccessibilitySettings). Signing out is tested on its own (it ends the
 // impersonation and signs the admin out).
 var allowedWrites = map[string]bool{
 	"POST /api/impersonation/stop":   true,
 	"POST /api/impersonation/extend": true,
+	"PUT /api/accessibility":         true,
 	"POST /api/auth/logout":          true,
 	"POST /logout":                   true,
 }

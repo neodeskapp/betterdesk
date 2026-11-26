@@ -8,6 +8,7 @@
  */
 
 import type { SearchPage } from './nav-model.ts';
+import { a11y } from './a11y.svelte.ts';
 
 export const MAX_PAGES = 6;
 export const MAX_ACTIONS = 4;
@@ -249,12 +250,17 @@ export function groupResults(
 	return groups;
 }
 
-/** Ctrl+K / Cmd+K anywhere; "/" when focus is not in a field and no modifier is held */
+/**
+ * Ctrl+K / Cmd+K anywhere; "/" when focus is not in a field and no
+ * modifier is held, unless Turn off single-key shortcuts is on in the
+ * accessibility settings (WCAG 2.1.4: speech input can type a "/")
+ */
 export function isSearchShortcut(
-	e: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'target'>
+	e: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'target'>,
+	singleKey: boolean = !a11y.settings.noSingleKeyShortcuts
 ): boolean {
 	if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) return true;
-	if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return false;
+	if (!singleKey || e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return false;
 	const el = e.target instanceof Element ? e.target : null;
 	return !el?.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]');
 }

@@ -9,11 +9,18 @@
   page-size select (bindable `pageSize`, `onpagesize(size)`).
   `summary` is the text at the start ("Showing 1–25 of 312"); without it
   and with `total`, it is built from pagination.showing. `label` names the
-  page navigation.
+  page navigation; pass one per pager ("Pages of devices"), so two pagers
+  on a page are told apart.
+
+  Previous and Next stay focusable at the ends (aria-disabled, not
+  disabled), so the focus doesn't drop to the page when the last step
+  reaches the end. A page change is announced with the new summary, or
+  "Page 2 of 4" without one.
 -->
 <script lang="ts">
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import { formatNumber } from '#lib/i18n/format.ts';
+	import { announce } from './announce.svelte.ts';
 	import Icon from './Icon.svelte';
 	import Select from './Select.svelte';
 
@@ -80,6 +87,16 @@
 		if (p < 1 || p > pages || p === current) return;
 		page = p;
 		onchange?.(p);
+		// The summary follows the new page once the props settle
+		queueMicrotask(() =>
+			announce(
+				text ||
+					tf('pagination.page_of', 'Page {page} of {pages}', {
+						page: formatNumber(current),
+						pages: formatNumber(pages)
+					})
+			)
+		);
 	}
 
 	function setSize(size: number | undefined) {
@@ -102,7 +119,7 @@
 			<button
 				type="button"
 				class="pagination-btn"
-				disabled={current <= 1}
+				aria-disabled={current <= 1 ? 'true' : undefined}
 				aria-label={tf('pagination.previous', 'Previous page')}
 				onclick={() => go(current - 1)}
 			>
@@ -126,7 +143,7 @@
 			<button
 				type="button"
 				class="pagination-btn"
-				disabled={current >= pages}
+				aria-disabled={current >= pages ? 'true' : undefined}
 				aria-label={tf('pagination.next', 'Next page')}
 				onclick={() => go(current + 1)}
 			>
@@ -183,14 +200,14 @@
 		line-height: var(--control-leading);
 		cursor: pointer;
 	}
-	.pagination-btn:hover:not(:disabled) {
+	.pagination-btn:hover:not([aria-disabled='true']) {
 		background: var(--hover);
 	}
 	.pagination-btn[aria-current='page'] {
 		border-color: var(--accent);
 		background: var(--accent-tint);
 	}
-	.pagination-btn:disabled {
+	.pagination-btn[aria-disabled='true'] {
 		color: var(--text-muted);
 		cursor: default;
 	}
@@ -205,5 +222,15 @@
 	.pagination-ellipsis {
 		padding: 0 var(--space-1);
 		color: var(--text-muted);
+	}
+	/* Windows contrast themes drop the tint: the current page takes the
+	   system's selection colours instead */
+	@media (forced-colors: active) {
+		.pagination-btn[aria-current='page'] {
+			border-color: Highlight;
+			background: Highlight;
+			color: HighlightText;
+			forced-color-adjust: none;
+		}
 	}
 </style>

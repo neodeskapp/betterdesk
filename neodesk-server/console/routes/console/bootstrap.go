@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/accessibility"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -58,6 +59,9 @@ type bootstrapUser struct {
 	PreferredLanguage *string `json:"preferredLanguage"`
 	// AvatarVersion is null without a picture: the app shows initials.
 	AvatarVersion store.NullString `json:"avatarVersion"`
+	// Accessibility is the account's own accessibility settings, null
+	// when it never saved any: the browser's copy stays then.
+	Accessibility *accessibility.Settings `json:"accessibility"`
 	// DisplayName is first and last name, else the username: the name
 	// the account menu shows.
 	DisplayName string `json:"displayName"`
@@ -121,6 +125,15 @@ func (h *handlers) bootstrap(w http.ResponseWriter, r *http.Request) {
 	}
 	if user.PreferredLanguage != "" {
 		answer.User.PreferredLanguage = &user.PreferredLanguage
+	}
+	// The settings only change how the app looks: a failed read leaves the
+	// browser's copy and must not keep the account out
+	// While an admin views the console as another account the console
+	// keeps the admin's own settings (ActorID)
+	if a11y, found, err := accessibility.Load(ctx, h.d.Store, kit.ActorID(r)); err != nil {
+		h.d.Log.Child("BOOTSTRAP").Warn("Accessibility settings:", err)
+	} else if found {
+		answer.User.Accessibility = &a11y
 	}
 	if imp := kit.Impersonation(r); imp != nil {
 		answer.Impersonation = &bootstrapImpersonation{AdminUsername: imp.AdminUsername, Reason: imp.Reason,

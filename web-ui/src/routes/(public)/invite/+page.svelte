@@ -15,9 +15,13 @@
 
   Data: GET /api/auth/login-page (CSRF token, the console's name), POST
   /api/invitations/lookup, POST /api/invitations/redeem.
+
+  Screen readers: when the step changes, focus goes to the heading, so the
+  new step is read from its start. Only the closing sentence is live, not
+  the whole form.
 -->
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { ApiError, setCsrfToken } from '#lib/api/client.ts';
 	import {
 		lookupInvitation,
@@ -45,6 +49,14 @@
 
 	type Phase = 'loading' | 'ask' | 'form' | 'invalid' | 'failed' | 'done';
 	let phase = $state<Phase>('loading');
+	let heading = $state<HTMLElement | null>(null);
+
+	/* A new step: focus on its heading, so screen readers read it from the start */
+	$effect(() => {
+		const p = phase;
+		if (p === 'loading') return;
+		untrack(() => void tick().then(() => heading?.focus()));
+	});
 	let code = '';
 	let invitation = $state.raw<InvitationLookup | null>(null);
 	let redeemed = $state.raw<Redeemed | null>(null);
@@ -147,10 +159,12 @@
 
 <DownloadFrame>
 	<header class="invite-head">
-		<h1>{phase === 'done' ? t('organizations.invite_done_title') : t('organizations.invite_title')}</h1>
+		<h1 bind:this={heading} tabindex="-1">
+			{phase === 'done' ? t('organizations.invite_done_title') : t('organizations.invite_title')}
+		</h1>
 	</header>
 
-	<div class="invite-body" aria-live="polite">
+	<div class="invite-body">
 		{#if phase === 'loading'}
 			<States kind="loading" />
 		{:else if phase === 'failed'}
@@ -230,7 +244,7 @@
 				</div>
 			</form>
 		{:else if phase === 'done' && redeemed}
-			<p class="invite-done">
+			<p class="invite-done" role="status">
 				{t('organizations.invite_done_text', {
 					slug: redeemed.organization.slug,
 					username: redeemed.username
@@ -243,6 +257,10 @@
 <style>
 	.invite-head h1 {
 		margin: 0;
+	}
+	/* Focus lands here on a new step to read it, not to act on it */
+	.invite-head h1:focus {
+		outline: none;
 	}
 	.invite-body {
 		display: flex;

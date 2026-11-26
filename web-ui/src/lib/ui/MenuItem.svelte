@@ -2,7 +2,8 @@
   One entry in a Menu (components.css "Menus"). `icon`: a meaning from
   ICONS before the label (muted, so the label leads). `danger`: a
   destructive action (end its label with "…" when it asks first).
-  `disabled` items are skipped by the keyboard and can't be chosen.
+  `disabled` items can't be chosen, but arrow keys still reach them (APG),
+  so people learn they exist: aria-disabled, not the disabled attribute.
 
   Choosing an item closes the menu and puts focus back on the menu button
   before `onselect` runs, so a dialog it opens returns focus there.
@@ -95,7 +96,7 @@
 		aria-checked={type === 'item' ? undefined : checked}
 		aria-haspopup={haspopup}
 		tabindex="-1"
-		{disabled}
+		aria-disabled={disabled || undefined}
 		{lang}
 		onclick={choose}
 	>
@@ -147,6 +148,10 @@
 		color: var(--text-muted);
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+	/* Arrow keys reach a disabled item: its focus ring keeps full strength */
+	.menu-item[aria-disabled='true']:focus-visible {
+		opacity: 1;
 	}
 	.menu-item > :global(.material-icons) {
 		flex-shrink: 0;

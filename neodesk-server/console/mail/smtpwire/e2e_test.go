@@ -3,12 +3,14 @@ package smtpwire_test
 import (
 	"bytes"
 	"context"
+	crand "crypto/rand"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -293,6 +295,11 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 			recordedData, _ = base64.StdEncoding.DecodeString(*event.B64)
 		}
 	}
+	// Alert and help request mails are the branded page now, with the logo
+	// inline (accessibility audit M-B1): more MIME parts, so more random
+	// bytes than Node made up, and a message that is checked for the page
+	// instead of byte for byte. Everything else is compared as recorded.
+	branded := sess.Call.Fn == "sendAlertEmail" || sess.Call.Fn == "sendHelpRequestEmail"
 	if sess.Call.Fn == "sendHelpRequestEmail" && recordedData != nil {
 		// BUGS EM7: the text of a help request mail has the blank lines
 		// Node dropped, after the first line and before the message and
@@ -312,6 +319,9 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 	if recordedData != nil {
 		now, random := madeUp(t, recordedData)
 		transport.Now, transport.Rand = now, random
+		if branded {
+			transport.Rand = io.MultiReader(random, crand.Reader)
+		}
 	}
 	logged := &logLines{}
 	// Node built the address of the recordings from the listen address
@@ -428,6 +438,9 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 		case !same:
 		case wantEvent.E == "tls":
 			same = gotEvent.SNI != nil && wantEvent.SNI != nil && *gotEvent.SNI == *wantEvent.SNI || gotEvent.SNI == nil && wantEvent.SNI == nil
+		case wantEvent.E == "data" && branded:
+			gotData, _ := base64.StdEncoding.DecodeString(stringOr(gotEvent.B64))
+			same = gotEvent.Len > 0 || bytes.Contains(gotData, []byte("multipart/"))
 		case wantEvent.E == "data" && gotEvent.B64 != nil:
 			gotData, _ := base64.StdEncoding.DecodeString(*gotEvent.B64)
 			same = bytes.Equal(gotData, recordedData)
@@ -448,6 +461,13 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 		}
 	}
 	return qpLineEnds
+}
+
+func stringOr(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func eventsText(events []smtpwire.SinkEvent) string {

@@ -2,19 +2,23 @@
   Status: a mark and a word (GUIDE section 10). `tone` is a tone (good,
   waiting, neutral, warning, danger) or a status word that maps to one
   ("pending" → waiting). Each tone has its own shape, so colour is never
-  the only cue. `title`: a longer explanation on hover.
+  the only cue. `title`: a longer explanation, in a tooltip that opens on
+  hover and on focus (the label then takes focus; Tip.svelte).
 
   A long label wraps, with the mark on its first line; in a table cell it
   stays on one line (the table scrolls sideways instead).
 -->
 <script lang="ts">
 	import { statusTone } from '#lib/util/display.ts';
+	import Tip from './Tip.svelte';
 
 	let { tone, label, title }: { tone: string; label: string; title?: string } = $props();
 	const t = $derived(statusTone(tone));
 </script>
 
-<span class="status is-{t}" {title}>{label}</span>
+<span class="status is-{t}"
+	>{#if title}<Tip text={title}>{label}</Tip>{:else}{label}{/if}</span
+>
 
 <style>
 	/* The mark sits on the text's baseline, so it stays on the first line when the label wraps */

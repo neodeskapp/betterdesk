@@ -38,6 +38,7 @@
 	import Status from '#lib/ui/Status.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import Version from '#lib/ui/Version.svelte';
+	import LiveStatus from '#lib/ui/LiveStatus.svelte';
 
 	const TICK_MS = 2000;
 	/** Ticks between server status checks (10 s) */
@@ -172,6 +173,7 @@
 
 <div class="page-cols">
 	<div class="page-main">
+		<LiveStatus />
 		<!-- The first reading has the chart's samples and the machine's numbers: both
 		     sections are drawn with it, so the chart doesn't push the numbers down -->
 		{#if !snap && !failed}
