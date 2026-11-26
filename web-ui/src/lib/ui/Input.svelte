@@ -52,6 +52,8 @@
 		color: var(--text);
 		font: inherit;
 		line-height: var(--control-leading);
+		/* A placeholder or value longer than the field ends in an ellipsis */
+		text-overflow: ellipsis;
 	}
 	.form-input.is-small {
 		min-height: var(--control-h-sm);

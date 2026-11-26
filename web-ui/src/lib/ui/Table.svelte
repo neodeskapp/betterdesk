@@ -643,8 +643,14 @@
 	th.sort-desc .sort-btn::after {
 		content: '↓' / '';
 	}
+	/* Number columns: the arrow's place before the label, so the label ends
+	   on the same line as the numbers under it */
 	th.is-num .sort-btn {
-		justify-content: flex-end;
+		flex-direction: row-reverse;
+		justify-content: flex-start;
+	}
+	th.is-num .sort-btn::after {
+		margin-inline: 0 var(--space-1);
 	}
 	/* On touch a sortable header is a 44px target */
 	@media (pointer: coarse) {
