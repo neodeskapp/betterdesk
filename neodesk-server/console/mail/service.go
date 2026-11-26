@@ -59,6 +59,9 @@ type Outgoing struct {
 	HTML *string
 	// Inline are the images the HTML shows by Content-ID.
 	Inline []Inline
+	// Lang is the language the mail is written in, for its
+	// Content-Language header; "" leaves the header out.
+	Lang string
 }
 
 // Transport does what nodemailer did: Send delivers one message over a

@@ -31,6 +31,9 @@ type Email struct {
 	// Inline are the images the HTML shows by Content-ID (the logo of
 	// brandmail).
 	Inline []Inline
+	// Lang is the language the mail is written in ("de"), which goes into
+	// its Content-Language header; "" leaves the header out.
+	Lang string
 }
 
 // Inline is an image a mail's HTML shows by its Content-ID.
@@ -144,6 +147,7 @@ func (s *Service) send(ctx context.Context, t *transporter, m Email) error {
 		Text:    m.Text,
 		HTML:    m.HTML,
 		Inline:  m.Inline,
+		Lang:    m.Lang,
 	})
 }
 
