@@ -70,6 +70,7 @@ func TestRoutesThatDeclareTheirSection(t *testing.T) {
 		"POST /api/chat/team/teams -> team-chat",
 		"POST /api/chat/upload -> no section",
 		"POST /api/network/targets/{id}/check -> toolkit",
+		"POST /api/users/{id}/impersonate -> users at read",
 		"PUT /api/chat/me -> no section",
 		"PUT /api/chat/settings -> no section",
 	}
