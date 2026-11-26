@@ -5637,7 +5637,14 @@
     "computers": "Chat med datamaskiner",
     "computers_hint": "Av: NeoDesk-appen på datamaskiner kan ikke åpne chatten, og konsollen kan ikke nå personene ved dem med chat. Chat mellom kolleger fungerer fortsatt.",
     "computers_off": "Chat med datamaskiner er slått av: NeoDesk-appen på datamaskiner kan ikke åpne chatten. En administrator kan slå den på i chattens meny under Chatinnstillinger for denne serveren.",
-    "mail_footer": "Du får denne e-posten fordi du svarer i chatten i {app}. Slå av disse e-postene i chattens meny under Chatvarsler."
+    "mail_footer": "Du får denne e-posten fordi du svarer i chatten i {app}. Slå av disse e-postene i chattens meny under Chatvarsler.",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "Enhet tilkoblet",
@@ -8117,7 +8124,13 @@
       "fallback_alert_email": "Bruk e-postadressen for varsler når det ikke finnes noen operatøradresse",
       "include_folder_in_subject": "Ta med mappenavnet i emnefeltet i e-posten",
       "save": "Lagre varslingsinnstillinger",
-      "saved": "Varslingsinnstillingene er lagret"
+      "saved": "Varslingsinnstillingene er lagret",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "Organisasjon",

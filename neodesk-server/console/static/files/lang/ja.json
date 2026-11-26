@@ -5631,7 +5631,14 @@
     "computers": "コンピューターとのチャット",
     "computers_hint": "オフ: コンピューター上の NeoDesk アプリはチャットを開けず、コンソールからもチャットでその利用者に連絡できません。同僚間のチャットは引き続き使えます。",
     "computers_off": "コンピューターとのチャットはオフです: コンピューター上の NeoDesk アプリはチャットを開けません。管理者はチャットのメニューの「このサーバーのチャット設定」でオンにできます。",
-    "mail_footer": "{app} のチャットで応対しているため、このメールが届いています。チャットのメニューの「チャットの通知」でオフにできます。"
+    "mail_footer": "{app} のチャットで応対しているため、このメールが届いています。チャットのメニューの「チャットの通知」でオフにできます。",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "接続されたデバイス",
@@ -8111,7 +8118,13 @@
       "fallback_alert_email": "オペレーターのアドレスがない場合はアラート用のメールアドレスを使う",
       "include_folder_in_subject": "メールの件名にフォルダー名を含める",
       "save": "通知設定を保存",
-      "saved": "通知設定を保存しました"
+      "saved": "通知設定を保存しました",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "組織",

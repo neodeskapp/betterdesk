@@ -5637,7 +5637,14 @@
     "computers": "แชทกับคอมพิวเตอร์",
     "computers_hint": "ปิด: แอป NeoDesk บนคอมพิวเตอร์จะเปิดแชทไม่ได้ และคอนโซลจะติดต่อผู้ใช้เครื่องเหล่านั้นทางแชทไม่ได้ แชทระหว่างเพื่อนร่วมงานยังใช้งานได้",
     "computers_off": "แชทกับคอมพิวเตอร์ปิดอยู่: แอป NeoDesk บนคอมพิวเตอร์เปิดแชทไม่ได้ ผู้ดูแลระบบเปิดได้ที่เมนูของแชท ในการตั้งค่าแชทของเซิร์ฟเวอร์นี้",
-    "mail_footer": "คุณได้รับอีเมลนี้เพราะคุณตอบแชทใน {app} ปิดอีเมลเหล่านี้ได้ที่เมนูของแชท ในการแจ้งเตือนแชท"
+    "mail_footer": "คุณได้รับอีเมลนี้เพราะคุณตอบแชทใน {app} ปิดอีเมลเหล่านี้ได้ที่เมนูของแชท ในการแจ้งเตือนแชท",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "เชื่อมต่ออุปกรณ์แล้ว",
@@ -8117,7 +8124,13 @@
       "fallback_alert_email": "ใช้อีเมลสำหรับการแจ้งเตือนเมื่อไม่มีที่อยู่อีเมลของผู้ปฏิบัติการ",
       "include_folder_in_subject": "ใส่ชื่อโฟลเดอร์ในหัวเรื่องอีเมล",
       "save": "บันทึกการตั้งค่าการแจ้งเตือน",
-      "saved": "บันทึกการตั้งค่าการแจ้งเตือนแล้ว"
+      "saved": "บันทึกการตั้งค่าการแจ้งเตือนแล้ว",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "องค์กร",

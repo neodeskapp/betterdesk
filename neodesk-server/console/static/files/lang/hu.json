@@ -5637,7 +5637,14 @@
     "computers": "Csevegés a számítógépekkel",
     "computers_hint": "Ki: a számítógépeken futó NeoDesk alkalmazás nem nyithatja meg a csevegést, és a konzol nem éri el csevegésen a gépeknél ülőket. A kollégák közötti csevegés továbbra is működik.",
     "computers_off": "A csevegés a számítógépekkel ki van kapcsolva: a számítógépeken futó NeoDesk alkalmazás nem nyithatja meg a csevegést. Egy rendszergazda a csevegés menüjében, A kiszolgáló csevegési beállításai alatt kapcsolhatja be.",
-    "mail_footer": "Ezt a levelet azért kapja, mert a(z) {app} csevegésében válaszol. A leveleket a csevegés menüjében, a Csevegési értesítések alatt kapcsolhatja ki."
+    "mail_footer": "Ezt a levelet azért kapja, mert a(z) {app} csevegésében válaszol. A leveleket a csevegés menüjében, a Csevegési értesítések alatt kapcsolhatja ki.",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "Eszköz csatlakoztatva",
@@ -8117,7 +8124,13 @@
       "fallback_alert_email": "Riasztási e-mail-cím használata, ha nincs operátorcím",
       "include_folder_in_subject": "A mappa nevének feltüntetése az e-mail tárgyában",
       "save": "Értesítési beállítások mentése",
-      "saved": "Értesítési beállítások mentve"
+      "saved": "Értesítési beállítások mentve",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "Szervezet",

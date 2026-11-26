@@ -5637,7 +5637,14 @@
     "computers": "Bilgisayarlarla sohbet",
     "computers_hint": "Kapalı: bilgisayarlardaki NeoDesk uygulaması sohbeti açamaz ve konsol başlarındaki kişilere sohbetle ulaşamaz. Çalışma arkadaşları arasındaki sohbet çalışmaya devam eder.",
     "computers_off": "Bilgisayarlarla sohbet kapalı: bilgisayarlardaki NeoDesk uygulaması sohbeti açamaz. Bir yönetici bunu sohbet menüsünde Bu sunucunun sohbet ayarları altından açabilir.",
-    "mail_footer": "Bu e-postayı {app} sohbetinde yanıt verdiğiniz için alıyorsunuz. Bu e-postaları sohbet menüsünde Sohbet bildirimleri altından kapatın."
+    "mail_footer": "Bu e-postayı {app} sohbetinde yanıt verdiğiniz için alıyorsunuz. Bu e-postaları sohbet menüsünde Sohbet bildirimleri altından kapatın.",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "Cihaz bağlandı",
@@ -8117,7 +8124,13 @@
       "fallback_alert_email": "Operatör adresi yoksa uyarı e-posta adresini kullan",
       "include_folder_in_subject": "Klasör adını e-posta konusuna ekle",
       "save": "Bildirim ayarlarını kaydet",
-      "saved": "Bildirim ayarları kaydedildi"
+      "saved": "Bildirim ayarları kaydedildi",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "Kuruluş",

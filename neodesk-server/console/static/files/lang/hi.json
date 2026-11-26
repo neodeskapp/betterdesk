@@ -5637,7 +5637,14 @@
     "computers": "कंप्यूटरों के साथ चैट",
     "computers_hint": "बंद: कंप्यूटरों पर NeoDesk ऐप चैट नहीं खोल सकता, और कंसोल वहाँ के लोगों तक चैट से नहीं पहुँच सकता। सहकर्मियों के बीच चैट चलती रहती है।",
     "computers_off": "कंप्यूटरों के साथ चैट बंद है: कंप्यूटरों पर NeoDesk ऐप चैट नहीं खोल सकता। व्यवस्थापक इसे चैट के मेनू में इस सर्वर की चैट सेटिंग से चालू कर सकता है।",
-    "mail_footer": "आपको यह मेल इसलिए मिला क्योंकि आप {app} की चैट में जवाब देते हैं। इन मेल को चैट के मेनू में चैट सूचनाएं के अंतर्गत बंद करें।"
+    "mail_footer": "आपको यह मेल इसलिए मिला क्योंकि आप {app} की चैट में जवाब देते हैं। इन मेल को चैट के मेनू में चैट सूचनाएं के अंतर्गत बंद करें।",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "डिवाइस कनेक्ट किया गया",
@@ -8117,7 +8124,13 @@
       "fallback_alert_email": "ऑपरेटर का पता न होने पर अलर्ट ईमेल का उपयोग करें",
       "include_folder_in_subject": "ईमेल के विषय में फ़ोल्डर का नाम शामिल करें",
       "save": "सूचना सेटिंग्स सहेजें",
-      "saved": "सूचना सेटिंग्स सहेजी गईं"
+      "saved": "सूचना सेटिंग्स सहेजी गईं",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "संगठन",

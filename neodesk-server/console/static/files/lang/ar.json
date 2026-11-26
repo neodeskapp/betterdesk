@@ -5638,7 +5638,14 @@
     "computers": "المحادثة مع الأجهزة",
     "computers_hint": "عند الإيقاف: لا يستطيع تطبيق NeoDesk على الأجهزة فتح المحادثة، ولا تستطيع وحدة التحكم الوصول إلى الأشخاص عليها عبر المحادثة. تبقى المحادثة بين الزملاء تعمل.",
     "computers_off": "المحادثة مع الأجهزة متوقفة: لا يستطيع تطبيق NeoDesk على الأجهزة فتح المحادثة. يمكن للمسؤول تشغيلها من قائمة المحادثة ضمن إعدادات المحادثة لهذا الخادم.",
-    "mail_footer": "تصلك هذه الرسالة لأنك ترد في محادثة {app}. أوقف هذه الرسائل من قائمة المحادثة ضمن إشعارات الدردشة."
+    "mail_footer": "تصلك هذه الرسالة لأنك ترد في محادثة {app}. أوقف هذه الرسائل من قائمة المحادثة ضمن إشعارات الدردشة.",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "الجهاز متصل",
@@ -8118,7 +8125,13 @@
       "fallback_alert_email": "استخدام بريد التنبيهات عند عدم توفر عنوان للمشغّل",
       "include_folder_in_subject": "تضمين اسم المجلد في موضوع البريد الإلكتروني",
       "save": "حفظ إعدادات الإشعارات",
-      "saved": "تم حفظ إعدادات الإشعارات"
+      "saved": "تم حفظ إعدادات الإشعارات",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "المنظمة",

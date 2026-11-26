@@ -5968,7 +5968,14 @@
         "computers": "Chat with computers",
         "computers_hint": "Off: the NeoDesk app on computers can't open the chat, and the console can't reach the people at them by chat. Chat between colleagues keeps working.",
         "computers_off": "Chat with computers is off: the NeoDesk app on computers can't open the chat. An admin can turn it on in the chat's menu under Chat settings for this server.",
-        "mail_footer": "You get this mail because you answer the chat in {app}. Turn these mails off in the chat's menu under Chat notifications."
+        "mail_footer": "You get this mail because you answer the chat in {app}. Turn these mails off in the chat's menu under Chat notifications.",
+        "mail_waiting": "Mail when a person waits for an answer",
+        "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+        "mail_minutes": "Minutes to wait",
+        "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+        "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+        "mail_preview_no_effect": "Has no effect while no mail is sent.",
+        "server_settings_effect": "These apply to everyone on this server, from the next message."
     },
     "toast": {
         "device_connected": "Device connected",
@@ -8227,7 +8234,13 @@
             "fallback_alert_email": "Use alert email when no operator address is available",
             "include_folder_in_subject": "Include folder name in the email subject",
             "save": "Save notification settings",
-            "saved": "Notification settings saved"
+            "saved": "Notification settings saved",
+            "help_requests_hint": "A mail goes out when a device asks for help.",
+            "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+            "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+            "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+            "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+            "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
         },
         "ui": {
             "sessions_description": "Remote sessions that count against a support package, with the work report the operator wrote afterwards. Billing is an early feature and may still change.",

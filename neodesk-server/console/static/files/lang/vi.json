@@ -5637,7 +5637,14 @@
     "computers": "Trò chuyện với máy tính",
     "computers_hint": "Tắt: ứng dụng NeoDesk trên máy tính không mở được trò chuyện, và bảng điều khiển không liên hệ được người dùng ở đó qua trò chuyện. Trò chuyện giữa đồng nghiệp vẫn hoạt động.",
     "computers_off": "Trò chuyện với máy tính đang tắt: ứng dụng NeoDesk trên máy tính không mở được trò chuyện. Quản trị viên có thể bật lại trong menu trò chuyện, mục Cài đặt trò chuyện của máy chủ này.",
-    "mail_footer": "Bạn nhận email này vì bạn trả lời trò chuyện trong {app}. Tắt các email này trong menu trò chuyện, mục Thông báo trò chuyện."
+    "mail_footer": "Bạn nhận email này vì bạn trả lời trò chuyện trong {app}. Tắt các email này trong menu trò chuyện, mục Thông báo trò chuyện.",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "Đã kết nối thiết bị",
@@ -8117,7 +8124,13 @@
       "fallback_alert_email": "Dùng email cảnh báo khi không có địa chỉ của người vận hành",
       "include_folder_in_subject": "Thêm tên thư mục vào tiêu đề email",
       "save": "Lưu cài đặt thông báo",
-      "saved": "Đã lưu cài đặt thông báo"
+      "saved": "Đã lưu cài đặt thông báo",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "Tổ chức",
