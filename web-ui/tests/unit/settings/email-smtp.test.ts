@@ -184,3 +184,28 @@ describe('the mail server rows', () => {
 		});
 	});
 });
+
+describe('a mail server that is not set up', () => {
+	test('says nothing is wrong until a change or a save', async () => {
+		vi.mocked(api.getSmtp).mockResolvedValueOnce({
+			configured: false,
+			host: '',
+			port: 587,
+			secure: false,
+			user: '',
+			pass: '',
+			from: '',
+			alert_email: ''
+		});
+		const user = userEvent.setup();
+		render(EmailTab);
+		await screen.findByLabelText('settings.email.host_label');
+		expect(document.getElementById('email-smtp-host-error')).toBeNull();
+		await user.type(screen.getByLabelText('settings.email.smtp_from'), 'ops@example.com');
+		await user.click(screen.getByRole('button', { name: 'Save changes' }));
+		expect(document.getElementById('email-smtp-host-error')).toHaveTextContent(
+			'Enter the address of the mail server.'
+		);
+		expect(api.saveSmtp).not.toHaveBeenCalled();
+	});
+});

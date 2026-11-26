@@ -80,7 +80,10 @@
 
 	const v = $derived(draft.values);
 	const problems = $derived<Partial<Record<string, string>>>(smtpProblems(v));
-	const errorOf = (f: string) => problems[f] ?? refused[f] ?? '';
+	/** A save was tried: from then on every problem shows, not only those of changed fields */
+	let tried = $state(false);
+	// A server that is not set up has no host: that is said once a change or a save asks for one
+	const errorOf = (f: string) => ((tried || draft.isChanged(f)) && problems[f]) || refused[f] || '';
 
 	/** The fields a refusal of the server can name */
 	const FIELDS: readonly string[] = ['host', 'port', 'pass', 'from', 'alert_email'];
@@ -96,6 +99,7 @@
 			config = c;
 			draft.load(toValues(c));
 			refused = {};
+			tried = false;
 			loadError = '';
 			loaded = true;
 		} catch (err) {
@@ -119,6 +123,7 @@
 	async function save() {
 		if (draft.busy) return;
 		const wrong = Object.keys(problems);
+		tried = true;
 		if (wrong.length) {
 			draft.error = tf(
 				'settings_ui.fix_marked',
@@ -234,42 +239,49 @@
 {/snippet}
 
 {#snippet side()}
-	<section class="section" aria-labelledby="email-side-title">
-		<h2 id="email-side-title">{t('settings.side.state_title')}</h2>
-		{#if loadError}
-			<States kind="error" message={loadError} onretry={() => void load()} />
-		{:else if !config}
-			<States kind="loading" />
-		{:else if !configured}
-			<p><Status tone="neutral" label={t('settings.side.email_off')} /></p>
-		{:else}
-			<p><Status tone="good" label={t('settings.side.email_on')} /></p>
-			<Facts items={facts} />
-			<div class="settings-inline-controls">
-				<Button id="email-smtp-test-btn" busy={testing} onclick={test}>{t('settings.email.smtp_test')}</Button
-				>
-				<span role="status">
-					{#if testResult}
-						<Status tone={testResult.ok ? 'good' : 'danger'} label={testResult.message} />
-					{/if}
-				</span>
-			</div>
-			<p class="hint">{t('settings.email.test_hint')}</p>
-		{/if}
-	</section>
-	<section class="section" aria-labelledby="email-uses-title">
-		<h2 id="email-uses-title">{t('settings.email.uses_title')}</h2>
-		<RowList>
-			<ListRow title={t('nav.automation')} sub={t('settings.email.uses_alerts')} href={link('/automation')} />
-			{#if can('billing.view')}
-				<ListRow
-					title={t('nav.help_requests')}
-					sub={t('settings.email.uses_help')}
-					href={link('/billing?settings=1#billing-settings-panel')}
-				/>
+	<div class="summary-stack">
+		<section class="section" aria-labelledby="email-side-title">
+			<h2 id="email-side-title">{t('settings.side.state_title')}</h2>
+			{#if loadError}
+				<States kind="error" message={loadError} onretry={() => void load()} />
+			{:else if !config}
+				<States kind="loading" />
+			{:else if !configured}
+				<p><Status tone="neutral" label={t('settings.side.email_off')} /></p>
+			{:else}
+				<p><Status tone="good" label={t('settings.side.email_on')} /></p>
+				<Facts items={facts} />
+				<div class="settings-inline-controls">
+					<Button id="email-smtp-test-btn" busy={testing} onclick={test}
+						>{t('settings.email.smtp_test')}</Button
+					>
+					<span role="status">
+						{#if testResult}
+							<Status tone={testResult.ok ? 'good' : 'danger'} label={testResult.message} />
+						{/if}
+					</span>
+				</div>
+				<p class="hint">{t('settings.email.test_hint')}</p>
 			{/if}
-		</RowList>
-	</section>
+		</section>
+		<section class="section" aria-labelledby="email-uses-title">
+			<h2 id="email-uses-title">{t('settings.email.uses_title')}</h2>
+			<RowList>
+				<ListRow
+					title={t('nav.automation')}
+					sub={t('settings.email.uses_alerts')}
+					href={link('/automation')}
+				/>
+				{#if can('billing.view')}
+					<ListRow
+						title={t('nav.help_requests')}
+						sub={t('settings.email.uses_help')}
+						href={link('/billing?settings=1#billing-settings-panel')}
+					/>
+				{/if}
+			</RowList>
+		</section>
+	</div>
 {/snippet}
 
 {#snippet bar()}<ChangesBar {draft} onsave={save} />{/snippet}
@@ -393,6 +405,19 @@
 {/if}
 
 <style>
+	/* The summary column is narrow: sections apart, labels take what they need and values the rest */
+	.summary-stack {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-6);
+		min-width: 0;
+	}
+	.summary-stack :global(.facts) {
+		grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+	}
+	.summary-stack :global(.facts > dt) {
+		max-width: 160px;
+	}
 	.hint {
 		color: var(--text-muted);
 		font-size: var(--text-sm);
