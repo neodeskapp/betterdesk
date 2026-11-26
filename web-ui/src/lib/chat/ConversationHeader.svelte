@@ -4,9 +4,10 @@
   system, who has the conversation, and the actions: take it, hand it to
   a colleague who sees the computer, close it with a note (and resolve
   the computer's help request), open it again, connect, open the device,
-  a ticket. Team: the colleague with role and status, or the group with
-  its members and a way to change them. On a phone a back button returns
-  to the list.
+  a ticket. Team: the colleague with role and status, the group with its
+  members and a way to change them, or the team with its members and
+  user groups (changed by people with Manage teams). On a phone a back
+  button returns to the list.
 -->
 <script lang="ts">
 	import { link } from '#lib/nav.ts';
@@ -39,9 +40,11 @@
 		compact?: boolean;
 		onchanged: (c: Conversation) => void;
 		ongroup?: () => void;
+		/** Change the team (Manage teams) */
+		onteam?: () => void;
 	}
 
-	let { conv, detail, onback, compact = false, onchanged, ongroup }: Props = $props();
+	let { conv, detail, onback, compact = false, onchanged, ongroup, onteam }: Props = $props();
 
 	const c = $derived(detail?.conversation);
 	const device = $derived<Device | undefined>(detail?.device);
@@ -198,11 +201,16 @@
 				presence={status(other)}
 			/>
 		{:else}
-			<span class="conv-icon" aria-hidden="true"><Icon name={c.kind === 'old' ? 'history' : 'group'} /></span>
+			<span class="conv-icon" aria-hidden="true"
+				><Icon name={c.kind === 'old' ? 'history' : c.kind === 'team' ? 'workspaces' : 'group'} /></span
+			>
 		{/if}
 		<div class="conv-who">
 			<h2 class="conv-name">
-				{other ? other.name : c.title || t(c.kind === 'old' ? 'chat.old_messages' : 'chat.group')}
+				{other
+					? other.name
+					: c.title ||
+						t(c.kind === 'old' ? 'chat.old_messages' : c.kind === 'team' ? 'chat.team' : 'chat.group')}
 			</h2>
 			<p class="conv-sub">
 				{#if other}
@@ -212,12 +220,19 @@
 					<span>{t('chat.old_messages_hint')}</span>
 				{:else}
 					<span>{people.map((p) => p.name).join(', ')}</span>
+					{#if detail?.groups?.length}<span
+							>{t('chat.team_groups_line', { names: detail.groups.join(', ') })}</span
+						>{/if}
 				{/if}
 			</p>
 		</div>
 		{#if c.kind === 'group' && ongroup}
 			<div class="conv-actions">
 				<Button size="sm" icon="group_add" onclick={ongroup}>{t('chat.edit_group')}</Button>
+			</div>
+		{:else if c.kind === 'team' && onteam && can('chat.teams_manage')}
+			<div class="conv-actions">
+				<Button size="sm" icon="edit" onclick={onteam}>{t('chat.edit_team')}</Button>
 			</div>
 		{/if}
 	{/if}

@@ -18,6 +18,7 @@
 	import ConversationList from './ConversationList.svelte';
 	import NewConversation from './NewConversation.svelte';
 	import { sectionOf } from './panel.svelte.ts';
+	import TeamDialog from './TeamDialog.svelte';
 	import Thread from './Thread.svelte';
 	import type { Conversation, InboxFilter, Person, Section } from './types.ts';
 
@@ -46,6 +47,15 @@
 	let lastRow: HTMLElement | null = null;
 	/** A found message to show when its conversation opens */
 	let focus = $state<{ conv: string; message: string } | null>(null);
+
+	// A team that is deleted, or one this account left, closes
+	$effect(() => {
+		const c = conv;
+		if (!c) return;
+		return chat.onRemoved((id) => {
+			if (id === c) onchange({ conv: null });
+		});
+	});
 
 	// The open conversation's facts, and again when the server says it changed
 	$effect(() => {
@@ -111,6 +121,8 @@
 	let creating = $state(false);
 	let editingGroup = $state(false);
 	let managing = $state(false);
+	/** The team in TeamDialog: its id, '' for a new one */
+	let editingTeam = $state<string | null>(null);
 
 	const target = $derived.by(() => {
 		if (!detail) return conv ?? '';
@@ -163,6 +175,7 @@
 							onback={back}
 							onchanged={changed}
 							ongroup={() => (editingGroup = true)}
+							onteam={() => (editingTeam = conv)}
 						/>
 					{/snippet}
 					{#snippet empty()}
@@ -190,6 +203,7 @@
 {#if creating}
 	<NewConversation
 		{section}
+		onteam={can('chat.teams_manage') ? () => (editingTeam = '') : undefined}
 		onclose={() => (creating = false)}
 		onopen={(c) => {
 			chat.listVersion++;
@@ -214,6 +228,21 @@
 {/if}
 {#if managing}
 	<CannedReplies onclose={() => (managing = false)} />
+{/if}
+{#if editingTeam !== null}
+	<TeamDialog
+		id={editingTeam || null}
+		onclose={() => (editingTeam = null)}
+		onsaved={(c) => {
+			chat.listVersion++;
+			if (c === conv) void reload(c);
+			else onchange({ section: 'team', conv: c });
+		}}
+		ondeleted={(c) => {
+			chat.listVersion++;
+			if (c === conv) onchange({ conv: null });
+		}}
+	/>
 {/if}
 
 <style>

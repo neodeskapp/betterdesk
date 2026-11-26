@@ -19,7 +19,9 @@ import type {
 	Person,
 	ServerSettings,
 	Summary,
-	TeamItem
+	TeamItem,
+	TeamSetup,
+	UserGroupOption
 } from './types.ts';
 
 type Raw = Record<string, unknown>;
@@ -60,6 +62,8 @@ export interface ConversationDetail {
 	people?: Person[];
 	/** Who a support conversation can be handed to */
 	assignable?: Person[];
+	/** The names of a team's user groups */
+	groups?: string[];
 }
 
 export async function loadConversation(id: string): Promise<ConversationDetail> {
@@ -68,7 +72,8 @@ export async function loadConversation(id: string): Promise<ConversationDetail> 
 		conversation: data.conversation as Conversation,
 		device: data.device as Device | undefined,
 		people: data.people as Person[] | undefined,
-		assignable: data.assignable as Person[] | undefined
+		assignable: data.assignable as Person[] | undefined,
+		groups: data.groups as string[] | undefined
 	};
 }
 
@@ -161,6 +166,42 @@ export async function openDirect(accountId: number): Promise<Conversation> {
 export async function newGroup(title: string, members: number[]): Promise<Conversation> {
 	const data = obj(await request('/api/chat/team/groups', { method: 'POST', body: { title, members } }));
 	return data.conversation as Conversation;
+}
+
+/** Every team, the user groups a team can include and who can be in one (Manage teams) */
+export async function loadTeams(): Promise<{
+	teams: TeamSetup[];
+	userGroups: UserGroupOption[];
+	people: Person[];
+}> {
+	const data = obj(await request('/api/chat/team/teams'));
+	return {
+		teams: list<TeamSetup>(data.teams),
+		userGroups: list<UserGroupOption>(data.user_groups),
+		people: list<Person>(data.people)
+	};
+}
+
+export interface TeamChange {
+	title: string;
+	people: number[];
+	groups: string[];
+}
+
+export async function newTeam(team: TeamChange): Promise<Conversation> {
+	const data = obj(await request('/api/chat/team/teams', { method: 'POST', body: team }));
+	return data.conversation as Conversation;
+}
+
+export async function editTeam(id: string, team: TeamChange): Promise<Conversation> {
+	const data = obj(
+		await request(`/api/chat/team/teams/${encodeURIComponent(id)}`, { method: 'PATCH', body: team })
+	);
+	return data.conversation as Conversation;
+}
+
+export async function deleteTeam(id: string): Promise<void> {
+	await request(`/api/chat/team/teams/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 export async function editGroup(id: string, title: string, members?: number[]): Promise<Conversation> {

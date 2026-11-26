@@ -169,7 +169,7 @@ name), `system` the console itself.
 | Field | Meaning |
 |---|---|
 | `id` | the stored id; ids grow with time, so a higher id is newer |
-| `conversation_id` | a device id (a computer's conversation), `dm:<lower account id>:<higher>` (two colleagues), `group:<8 hex>` (a group of colleagues) or `old:<id of version 1>` (console only, see below) |
+| `conversation_id` | a device id (a computer's conversation), `dm:<lower account id>:<higher>` (two colleagues), `group:<8 hex>` (a group of colleagues), `team:<8 hex>` (a team, see section 12) or `old:<id of version 1>` (console only, see below) |
 | `text` | plain text, at most 4096 characters; `""` for a message of files only and for a deleted one |
 | `reply_to` | the message this one answers, or `null`; `preview` is the first 140 characters of its text, or the first file's name for a message of files only |
 | `attachments` | files, at most 10; `width` and `height` only for pictures; `url` is for console sessions (a computer uses section 8) |
@@ -372,6 +372,7 @@ the conversation; the person's next message opens it again.
 | `device` | `{"type":"device","device_id":"900100001","chat_connected":true}`: a chat window of version 2 opened or closed |
 | `conversation.updated` | `{"type":"conversation.updated","conversation":{"id":"900100001","kind":"support","state":"open","assignee_id":7,"assignee_name":"Anna Weber","last_message_id":"412","last_message_at":1795563496110,"waiting_since":1795563400000,"help_request_id":12}}` |
 | `notice` | `{"type":"notice","code":"taken_over","conversation_id":"900100001","by":"Ben Kraus"}` |
+| `conversation.removed` | `{"type":"conversation.removed","conversation_id":"team:1a2b3c4d"}`: a team was deleted or the account is no longer in it; drop it |
 
 ## 5. Errors
 
@@ -552,6 +553,13 @@ see lines of the system and never see the console's other conversations.
 
 All under `/api/chat`, answering JSON with `success`:
 
+A team is a standing conversation that people with Manage teams
+(`chat.teams_manage`) set up: a name, people picked by hand and user
+groups. Members of a user group are in its teams while they are in the
+group, so a change in People takes effect at once. Every member with
+Team chat reads and writes in it; only Manage teams changes or deletes
+it, and its list shows the teams one is no member of too.
+
 | Route | Permission | What |
 |---|---|---|
 | `GET /inbox?filter=open\|mine\|closed&q=` | chat.support | support conversations with their computer, newest message, unread count; `counts` |
@@ -560,8 +568,10 @@ All under `/api/chat`, answering JSON with `success`:
 | `POST /conversations/{id}/assign {account_id}` | chat.support and chat.assign | 0 gives it back to the inbox |
 | `POST /conversations/{id}/close {note, resolve_help_request}` | chat.support; the assignee or chat.assign | |
 | `POST /conversations/{id}/reopen`, `/link {ticket_id, help_request_id}` | chat.support | a computer's open help request is linked by itself when the computer writes |
-| `GET /team` | chat.team | direct and group conversations, the colleagues one may write to, and for admins `old` |
+| `GET /team` | chat.team | direct, group and team conversations, the colleagues one may write to, and for admins `old` |
 | `POST /team/direct {account_id}`, `POST /team/groups {title, members}`, `PATCH /team/groups/{id}` | chat.team | |
+| `GET /team/teams` | chat.team and chat.teams_manage | every team with its `people` (picked by hand) and `groups` (user group guids), the `user_groups` with their members, and the `people` a team can name |
+| `POST /team/teams {title, people, groups}`, `PATCH /team/teams/{id}`, `DELETE /team/teams/{id}` | chat.team and chat.teams_manage | a list left out of a PATCH stays; DELETE removes the team with its messages |
 | `GET /summary` | either | unread counts for the badges |
 | `GET /search?q=&section=support\|team&conversation_id=` | either | up to 50 messages with the text (2 characters at least, case-insensitive for Latin letters), newest first, in the conversations the account reads, and `conversations` naming them by id |
 | `GET/POST /canned`, `PATCH/DELETE /canned/{id}` | either; shared replies need chat.canned_manage | |

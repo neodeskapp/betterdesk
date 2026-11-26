@@ -1,7 +1,8 @@
 <!--
   Start a conversation (A242). Support: find a computer by name, ID, host
   name, owner or folder and open its conversation. Team: pick a colleague
-  for a direct conversation, or several and a name for a group. Editing a
+  for a direct conversation, or several and a name for a group; people
+  with Manage teams can set up a team from here (TeamDialog). Editing a
   group uses the same dialog with its name and members filled in.
 -->
 <script lang="ts">
@@ -24,9 +25,11 @@
 		group?: { id: string; title: string; members: number[] } | null;
 		onclose: () => void;
 		onopen: (conv: string) => void;
+		/** Set up a team instead (Manage teams) */
+		onteam?: () => void;
 	}
 
-	let { section, group = null, onclose, onopen }: Props = $props();
+	let { section, group = null, onclose, onopen, onteam }: Props = $props();
 
 	let q = $state('');
 	let devices = $state.raw<Device[] | null>(null);
@@ -160,6 +163,16 @@
 		{/if}
 	{/if}
 	{#snippet footer()}
+		{#if section === 'team' && !group && onteam}
+			<Button
+				class="modal-footer-start"
+				icon="workspaces"
+				onclick={() => {
+					onclose();
+					onteam();
+				}}>{t('chat.new_team_title')}</Button
+			>
+		{/if}
 		<Button onclick={onclose}>{t('actions.cancel')}</Button>
 		{#if section === 'team'}
 			<Button variant="primary" {busy} disabled={!picked.length || needsTitle} onclick={() => void start()}

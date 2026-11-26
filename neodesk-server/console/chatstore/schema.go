@@ -1,9 +1,9 @@
 // Package chatstore keeps the console's chat: the messages (the table
 // chat_messages the API server made and still writes for agents), and
 // what the chat of version 2 adds to them: conversations with a state and
-// an assignee, the members of direct messages and groups, read marks per
-// account, the trail of edits and deletions, reactions, canned replies
-// and the chat's settings.
+// an assignee, the members of direct messages, groups and teams (and the
+// user groups a team includes), read marks per account, the trail of
+// edits and deletions, reactions, canned replies and the chat's settings.
 //
 // The console and the API server share one database, so the store works
 // on the console's handle (store.DB). It only adds: new tables, and new
@@ -93,6 +93,17 @@ var tables = []struct{ name, sqlite, postgres string }{
 			account_id BIGINT NOT NULL,
 			PRIMARY KEY (conversation_id, account_id)
 		)`},
+	{"chat_team_groups",
+		`CREATE TABLE IF NOT EXISTS chat_team_groups (
+			conversation_id TEXT NOT NULL,
+			group_guid TEXT NOT NULL,
+			PRIMARY KEY (conversation_id, group_guid)
+		)`,
+		`CREATE TABLE IF NOT EXISTS chat_team_groups (
+			conversation_id TEXT NOT NULL,
+			group_guid TEXT NOT NULL,
+			PRIMARY KEY (conversation_id, group_guid)
+		)`},
 	{"chat_reads",
 		`CREATE TABLE IF NOT EXISTS chat_reads (
 			conversation_id TEXT NOT NULL,
@@ -176,7 +187,7 @@ var tables = []struct{ name, sqlite, postgres string }{
 
 // Tables are the names of the chat's tables, chat_messages and
 // chat_groups (the API server's) not among them: the backup's list.
-var Tables = []string{"chat_conversations", "chat_members", "chat_reads", "chat_message_edits", "chat_reactions", "chat_canned", "chat_settings"}
+var Tables = []string{"chat_conversations", "chat_members", "chat_team_groups", "chat_reads", "chat_message_edits", "chat_reactions", "chat_canned", "chat_settings"}
 
 // messageColumns are the columns version 2 adds to chat_messages.
 var messageColumns = []struct{ name, sqlite, postgres string }{

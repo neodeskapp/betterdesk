@@ -5,7 +5,8 @@
   rows. Support has the inbox's three filters: Open (nobody's first),
   Mine, Closed. A computer's row says its name, folder, whether it is
   online, who has it and its newest line; a colleague's row the name,
-  role, status and newest line. Team also lists the colleagues one has no
+  role, status and newest line. Team lists the teams one is in first,
+  then the direct and group conversations, then the colleagues one has no
   conversation with yet, so it is plain who can be written to.
 -->
 <script lang="ts">
@@ -126,7 +127,7 @@
 	});
 
 	const tq = $derived(q.trim().toLowerCase());
-	const teamShown = $derived(
+	const matching = $derived(
 		(team ?? []).filter(
 			(c) =>
 				!tq ||
@@ -134,6 +135,8 @@
 				c.people.some((p) => p.name.toLowerCase().includes(tq) || p.username.toLowerCase().includes(tq))
 		)
 	);
+	const teamsShown = $derived(matching.filter((c) => c.kind === 'team'));
+	const teamShown = $derived(matching.filter((c) => c.kind !== 'team'));
 	const others = $derived.by(() => {
 		const withDirect = new Set(
 			(team ?? []).filter((c) => c.kind === 'dm').flatMap((c) => c.people.map((p) => p.id))
@@ -151,6 +154,7 @@
 
 	function teamName(c: TeamItem): string {
 		if (c.kind === 'group') return c.title || t('chat.group');
+		if (c.kind === 'team') return c.title || t('chat.team');
 		return c.people[0]?.name ?? t('chat.unknown_person');
 	}
 
@@ -332,9 +336,9 @@
 		{:else if team === null}
 			<p class="chat-list-state">{t('common.loading')}</p>
 		{:else}
-			{#if teamShown.length}
-				<ul class="rows" aria-label={t('chat.conversations')}>
-					{#each teamShown as c (c.id)}
+			{#snippet convRows(rows: TeamItem[], label: string)}
+				<ul class="rows" aria-label={label}>
+					{#each rows as c (c.id)}
 						{@const unread = c.unread}
 						{@const person = c.kind === 'dm' ? c.people[0] : undefined}
 						<li>
@@ -352,7 +356,9 @@
 											presence={status(person)}
 										/>
 									{:else}
-										<span class="row-icon" aria-hidden="true"><Icon name="group" /></span>
+										<span class="row-icon" aria-hidden="true"
+											><Icon name={c.kind === 'team' ? 'workspaces' : 'group'} /></span
+										>
 									{/if}
 								</span>
 								<span class="row-main">
@@ -378,6 +384,14 @@
 						</li>
 					{/each}
 				</ul>
+			{/snippet}
+			{#if teamsShown.length}
+				<h3 class="rows-title">{t('chat.teams')}</h3>
+				{@render convRows(teamsShown, t('chat.teams'))}
+			{/if}
+			{#if teamShown.length}
+				{#if teamsShown.length}<h3 class="rows-title">{t('chat.conversations')}</h3>{/if}
+				{@render convRows(teamShown, t('chat.conversations'))}
 			{/if}
 			{#if others.length}
 				<h3 class="rows-title">{t('chat.colleagues')}</h3>
@@ -432,7 +446,7 @@
 				</ul>
 			{/if}
 			{@render foundRows()}
-			{#if !teamShown.length && !others.length && !oldShown.length && !found.length}
+			{#if !teamsShown.length && !teamShown.length && !others.length && !oldShown.length && !found.length}
 				<div class="chat-list-empty">
 					<Icon name="group" />
 					<p>{q.trim() ? t('chat.no_match') : t('chat.empty_team')}</p>

@@ -27,7 +27,7 @@ var consoleRoleMap = map[string][]string{
 		"guest.create", "device.ban", "device.change_id", "device.connection_mode", "audit.view", "metrics.view",
 		"cdap.view", "cdap.command", "cdap.terminal", "cdap.files", "mesh.terminal", "mesh.files", "mesh.power",
 		"agent.terminal", "agent.files",
-		"chat.support", "chat.team", "chat.assign", "chat.canned_manage", "enrollment.manage", "enrollment.approve", "branding.edit",
+		"chat.support", "chat.team", "chat.assign", "chat.canned_manage", "chat.teams_manage", "enrollment.manage", "enrollment.approve", "branding.edit",
 		"billing.view", "billing.manage", "billing.reports", "billing.export",
 	},
 	"operator": {
@@ -46,9 +46,9 @@ var consoleRoleMap = map[string][]string{
 func TestRoleHasPermissionForEveryRoleAndPermission(t *testing.T) {
 	// 43 of the Node console, the NeoDesk agent's terminal and files (L388),
 	// the two of saved sign-in, which no role but the super admins has
-	// (L469), and chat.access as four chat permissions (A242)
-	if len(auth.AllPermissions) != 50 {
-		t.Fatalf("the server knows %d permissions, the console's contract was written for 50", len(auth.AllPermissions))
+	// (L469), chat.access as four chat permissions (A242) and Manage teams
+	if len(auth.AllPermissions) != 51 {
+		t.Fatalf("the server knows %d permissions, the console's contract was written for 51", len(auth.AllPermissions))
 	}
 	for role, granted := range consoleRoleMap {
 		want := newPermissionSet(granted)
