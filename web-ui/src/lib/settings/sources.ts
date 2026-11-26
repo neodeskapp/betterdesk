@@ -89,12 +89,20 @@ export function sourceRow<T extends Values>(
 	toForm: (value: unknown) => unknown = (v) => v
 ): SourceRow {
 	const locked = info.lockedBy !== '';
+	const changed = draft.isChanged(field);
+	// While the built-in default is in force, the value as loaded is the
+	// default as the form holds it (an empty From address the server fills
+	// in): no Reset then, and Reset after a change goes back to it
+	const fromDefault = info.source?.kind === 'default';
 	const def = info.hasDefault ? toForm(info.default) : undefined;
-	const resettable = info.hasDefault && !locked && !same(draft.values[field], def);
+	const resettable = fromDefault
+		? info.hasDefault && !locked && changed
+		: info.hasDefault && !locked && !same(draft.values[field], def);
+	const reset = fromDefault ? () => draft.reset(field) : () => draft.set(field, def as T[typeof field]);
 	return {
-		changed: draft.isChanged(field),
+		changed,
 		source: info.source,
-		onreset: resettable ? () => draft.set(field, def as T[typeof field]) : undefined,
+		onreset: resettable ? reset : undefined,
 		resetLabel: tf('settings_ui.reset_default', 'Reset to default')
 	};
 }

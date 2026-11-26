@@ -82,6 +82,18 @@ describe('a row with its source', () => {
 		expect(d.values.servers).toEqual(['pool.ntp.org', 'time.google.com']);
 	});
 
+	test('a value the built-in default decides has no Reset; changed, Reset brings back what was loaded', () => {
+		// Email, From address with nothing saved: the field is empty and the
+		// server sends from its default, so the empty field is the default
+		const d = new SettingsDraft({ from: '' });
+		const info = sourceInfo({ value_source: 'default', locked: false, default: 'neodesk@localhost' });
+		expect(sourceRow(d, 'from', info).onreset).toBeUndefined();
+		d.set('from', 'help@example.org');
+		sourceRow(d, 'from', info).onreset?.();
+		expect(d.values.from).toBe('');
+		expect(d.isChanged('from')).toBe(false);
+	});
+
 	test('the row says it is changed while the draft holds another value', () => {
 		const d = draft();
 		d.set('days', 3);
