@@ -208,11 +208,13 @@ describe('policies page', () => {
 		const network = group('policies.network_title');
 		expect(within(network).queryByText(notice)).toBeNull();
 		expect(within(network).getByText('policies.effect_server')).toBeInTheDocument();
-		expect(
-			within(group('policies.update_title')).getByText(
-				'Devices get this when they next ask for their policy.'
-			)
-		).toBeInTheDocument();
+		// "Devices get this" would contradict the notice: no app gets it yet
+		for (const g of ['connection', 'features', 'security', 'update'])
+			expect(
+				within(group(`policies.${g}_title`)).queryByText(
+					'Devices get this when they next ask for their policy.'
+				)
+			).toBeNull();
 		// Sound: the place that turns it off today
 		expect(
 			within(group('policies.features_title')).getByRole('link', { name: 'Open access rules' })
@@ -311,6 +313,10 @@ describe('policies page', () => {
 		expect(
 			screen.getByRole('button', { name: 'Remove all rules of this group: policies.update_title' })
 		).toBeDisabled();
+		// A button with its outline, not text beside the group's status
+		expect(
+			screen.getByRole('button', { name: 'Remove all rules of this group: policies.security_title' })
+		).not.toHaveClass('btn-ghost');
 		await user.click(
 			screen.getByRole('button', { name: 'Remove all rules of this group: policies.security_title' })
 		);

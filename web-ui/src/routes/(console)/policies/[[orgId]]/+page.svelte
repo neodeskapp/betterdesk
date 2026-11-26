@@ -544,13 +544,16 @@
 	const groupStatus = (g: Section) =>
 		resolved?.[g]?.set ? t('policies.configured') : tf('policies.no_rule_here', 'No rule here');
 
+	const deviceOnly = (g: Section) =>
+		resolved?.[g]?.applied_by === 'device' && !resolved?.[g]?.device_app_applies;
+
+	/** When a change takes effect; nothing while no app applies the group (its notice says so) */
 	const groupTiming = (g: Section) =>
 		resolved?.[g]?.timing === 'server_minute'
 			? t('policies.effect_server')
-			: tf('policies.effect_device_next', 'Devices get this when they next ask for their policy.');
-
-	const deviceOnly = (g: Section) =>
-		resolved?.[g]?.applied_by === 'device' && !resolved?.[g]?.device_app_applies;
+			: deviceOnly(g)
+				? undefined
+				: tf('policies.effect_device_next', 'Devices get this when they next ask for their policy.');
 
 	/* ── Options ── */
 
@@ -839,7 +842,6 @@
 					{#if canEdit}
 						<Button
 							size="sm"
-							variant="ghost"
 							disabled={!resolved?.[g]?.set}
 							aria-label={`${tf('policies.remove_group', 'Remove all rules of this group')}: ${t(SECTION_TITLE[g])}`}
 							onclick={() => void removeGroup(g)}
