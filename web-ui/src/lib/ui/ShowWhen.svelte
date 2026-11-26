@@ -57,7 +57,8 @@
 		min-width: 0;
 		margin-bottom: var(--space-4);
 	}
-	.show-when:last-child {
+	/* No space after the last block that shows (hidden ones after it don't count) */
+	.show-when:not(:has(~ :global(:not([hidden])))) {
 		margin-bottom: 0;
 	}
 	.show-when > :global(.form-group) {

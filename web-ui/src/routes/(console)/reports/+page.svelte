@@ -383,6 +383,27 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
+	/* Phone: From and To one under the other, their fields on one start edge */
+	@media (max-width: 640px) {
+		.period {
+			display: grid;
+			grid-template-columns: max-content minmax(0, 1fr);
+			gap: var(--space-2) var(--space-3);
+		}
+		.period legend {
+			float: none;
+			grid-column: 1 / -1;
+		}
+		.date {
+			display: contents;
+		}
+		.date > span {
+			align-self: center;
+		}
+		.hint {
+			grid-column: 1 / -1;
+		}
+	}
 	.preview:focus {
 		outline: none;
 	}

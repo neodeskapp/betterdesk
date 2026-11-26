@@ -662,6 +662,19 @@
 		justify-content: flex-end;
 		font-variant-numeric: tabular-nums;
 	}
+	/* Phones too: label and count stay on one row (the global phone rule
+	   puts the label over its value and takes its rule away) */
+	@media (max-width: 640px) {
+		.reg-sources :global(.facts > dt) {
+			min-height: var(--row-h);
+			padding-bottom: var(--row-pad-y);
+			border-bottom: 1px solid var(--rule);
+			font-size: inherit;
+		}
+		.reg-sources :global(.facts > dd) {
+			padding-top: var(--row-pad-y);
+		}
+	}
 
 	/* With the side column beside the table, the address and the queue name
 	   leave the row (both are in the request's sheet, and the side column

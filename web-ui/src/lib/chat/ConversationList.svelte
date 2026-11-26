@@ -257,7 +257,7 @@
 				autocomplete="off"
 				bind:value={q}
 			/>
-			<Button icon="edit_square" size="sm" onclick={onnew}>{t('chat.new')}</Button>
+			<Button icon="edit_square" onclick={onnew}>{t('chat.new')}</Button>
 		</div>
 		{#if section === 'support'}
 			<SegmentedFilter

@@ -230,11 +230,11 @@
 						<legend class="sr-only">{t('activity.date_range')}</legend>
 						<label class="date">
 							<span>{t('activity.filter_from')}</span>
-							<Input type="date" small bind:value={from} max={to || undefined} />
+							<Input type="date" bind:value={from} max={to || undefined} />
 						</label>
 						<label class="date">
 							<span>{t('activity.filter_to')}</span>
-							<Input type="date" small bind:value={to} min={from || undefined} />
+							<Input type="date" bind:value={to} min={from || undefined} />
 						</label>
 					</fieldset>
 					<SegmentedFilter
@@ -370,8 +370,10 @@
 	.count {
 		min-height: 1.5em;
 	}
+	/* A host name keeps its line; it doesn't break at its hyphens */
 	.device-name {
 		font-weight: 600;
+		white-space: nowrap;
 	}
 	.reports :global(.cell-sub) {
 		display: block;
@@ -408,8 +410,14 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
+	/* The bar over the row's full width, the time under it, so every bar ends on one line */
 	.apps :global(.meter) {
+		flex-wrap: wrap;
+		gap: var(--space-1);
 		margin-top: var(--space-1);
+	}
+	.apps :global(.meter-bar) {
+		flex-basis: 100%;
 	}
 	/* Touch: the name that opens the row gets a 44 px hit area (as on the device list) */
 	@media (pointer: coarse) {

@@ -29,7 +29,11 @@ export const test = base.extend<{ problems: Problems; role: Role; allowProblems:
 				});
 			});
 			page.on('console', (m) => {
-				if (m.type() === 'error') problems.list.push('console: ' + m.text());
+				if (m.type() !== 'error') return;
+				// Firefox also logs a font download that a navigation away aborted
+				// (status NS_BINDING_ABORTED); like the aborted request below, no failure
+				if (/downloadable font: download failed .*status=2152398850\b/.test(m.text())) return;
+				problems.list.push('console: ' + m.text());
 			});
 			page.on('pageerror', (e) => problems.list.push('pageerror: ' + e.message));
 			page.on('requestfailed', (r) => {

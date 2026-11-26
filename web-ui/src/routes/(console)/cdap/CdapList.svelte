@@ -279,7 +279,7 @@
 						</div>
 						<SegmentedFilter label={t('cdap.filter_type')} options={typeOptions} bind:value={type} />
 					</div>
-					<p class="count-line" aria-live="polite">
+					<p class={['count-line', loaded && !rows.length && 'is-empty']} aria-live="polite">
 						{#if rows.length}
 							{#if shown.length !== rows.length}
 								<CountLine
@@ -367,13 +367,13 @@
 		min-width: 0;
 		max-width: 380px;
 	}
-	.toolbar :global(.segmented) {
-		max-width: 100%;
-		overflow-x: auto;
-	}
 	.count-line {
 		min-height: 1.5em;
 		margin: 0;
+	}
+	/* No devices: the table says so, and the line keeps no empty band above it */
+	.count-line.is-empty {
+		min-height: 0;
 	}
 	.cdap-disabled {
 		display: flex;

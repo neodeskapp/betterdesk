@@ -72,3 +72,10 @@
 	{/if}
 	<SaveBar {form} label={t('actions.save')} />
 </form>
+
+<style>
+	/* The width of the other forms of the tab */
+	.form-column {
+		max-width: var(--measure);
+	}
+</style>

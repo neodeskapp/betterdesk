@@ -43,11 +43,18 @@
 </div>
 
 <style>
+	/* One line; where it doesn't fit, it scrolls sideways (a wrapped second
+	   line would lose the shared borders and the rounded ends). The padding
+	   keeps the focus ring inside the scrolling box, the margin takes it back. */
 	.segmented {
 		display: inline-flex;
-		flex-wrap: wrap;
-		max-width: 100%;
+		max-width: calc(100% + 2 * var(--seg-ring));
+		margin: calc(-1 * var(--seg-ring));
+		padding: var(--seg-ring);
+		overflow-x: auto;
+		scrollbar-width: none;
 		vertical-align: middle;
+		--seg-ring: 4px;
 	}
 	.filter-btn {
 		position: relative;
