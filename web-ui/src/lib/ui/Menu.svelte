@@ -10,7 +10,9 @@
   Placement: fixed to the viewport at coordinates measured on open, below
   `anchor` with its start edge on the anchor's start edge (`align="start"`)
   or its end edge on the anchor's end edge (`align="end"`, row menus, so
-  the menu opens towards the start of the row). It flips above when there
+  the menu opens towards the start of the row). With `at` (a right-click)
+  it opens from that viewport point instead, start edge at the pointer.
+  It flips above when there
   is not enough room below and stays inside the viewport, also in RTL. The
   menu stays in the DOM right after its button rather than in <body>: Tab
   order and the reading order follow the button, and a menu inside a sheet
@@ -30,6 +32,8 @@
 		/** The element the menu opens from; clicks on it don't count as outside */
 		anchor: HTMLElement | null;
 		align?: 'start' | 'end';
+		/** A viewport point to open from instead of the anchor's box (a right-click) */
+		at?: { x: number; y: number } | null;
 		/** Where focus goes on open; "checked": the checked item of a choice (the first without one) */
 		initialFocus?: 'first' | 'last' | 'menu' | 'checked';
 		id?: string;
@@ -45,6 +49,7 @@
 		open = $bindable(false),
 		anchor,
 		align = 'start',
+		at = null,
 		initialFocus = 'first',
 		id,
 		labelledby,
@@ -72,24 +77,26 @@
 	function place(el: HTMLElement) {
 		if (!anchor) return;
 		el.style.maxHeight = '';
-		const a = anchor.getBoundingClientRect();
+		const a = at ? { left: at.x, right: at.x, top: at.y, bottom: at.y } : anchor.getBoundingClientRect();
+		const gap = at ? 0 : GAP;
+		const edge = at ? 'start' : align;
 		const vw = document.documentElement.clientWidth || window.innerWidth;
 		const vh = window.innerHeight;
 		const w = el.offsetWidth;
 		let h = el.offsetHeight;
 		const rtl = getComputedStyle(anchor).direction === 'rtl';
 		// The anchor's left edge is its start edge in LTR and its end edge in RTL
-		let left = (align === 'start') !== rtl ? a.left : a.right - w;
+		let left = (edge === 'start') !== rtl ? a.left : a.right - w;
 		left = Math.max(EDGE, Math.min(left, vw - w - EDGE));
-		const below = vh - a.bottom - GAP - EDGE;
-		const above = a.top - GAP - EDGE;
+		const below = vh - a.bottom - gap - EDGE;
+		const above = a.top - gap - EDGE;
 		const flip = h > below && above > below;
 		const room = flip ? above : below;
 		if (h > room) {
 			h = Math.max(room, 0);
 			el.style.maxHeight = `${h}px`;
 		}
-		const top = flip ? a.top - GAP - h : a.bottom + GAP;
+		const top = flip ? a.top - gap - h : a.bottom + gap;
 		el.style.left = `${left}px`;
 		el.style.top = `${top}px`;
 		up = flip;
@@ -156,6 +163,13 @@
 		return undefined;
 	}
 
+	// Another right-click while open moves the menu to the new point
+	$effect(() => {
+		void at;
+		const el = menu;
+		if (open && el) untrack(() => place(el));
+	});
+
 	$effect(() => {
 		const el = menu;
 		if (!open || !el) return;
@@ -206,7 +220,7 @@
 	<div
 		bind:this={menu}
 		{id}
-		class={['menu', align === 'end' && 'menu-end', up && 'menu-up', cls]}
+		class={['menu', !at && align === 'end' && 'menu-end', up && 'menu-up', cls]}
 		role="menu"
 		aria-labelledby={labelledby}
 		aria-label={label}
