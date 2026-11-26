@@ -389,7 +389,7 @@
 		color: var(--text);
 	}
 	/* The token's start and its note, side by side */
-	.token-sub {
+	.cell-sub.token-sub {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0 var(--space-2);

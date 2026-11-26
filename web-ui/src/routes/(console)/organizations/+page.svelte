@@ -150,7 +150,8 @@
 			id: 'created',
 			label: t('organizations.created'),
 			cell: createdCell,
-			sortValue: (o) => o.created_at ?? ''
+			sortValue: (o) => o.created_at ?? '',
+			class: 'col-created'
 		},
 		...(canEdit || canDelete
 			? [
@@ -267,13 +268,24 @@
 	.org-name:hover {
 		text-decoration: underline;
 	}
+	/* The slug keeps its line; it doesn't break at its hyphens */
 	.org-table :global(.cell-sub) {
 		display: block;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+		white-space: nowrap;
+	}
+	.org-table {
+		container: orgtable / inline-size;
 	}
 	.org-table :global(td.col-name) {
 		min-width: 16ch;
+	}
+	/* Narrow: the name keeps its room; the date is on the organization's page */
+	@container orgtable (max-width: 560px) {
+		.org-table :global(:is(th, td).col-created) {
+			display: none;
+		}
 	}
 	.org-table :global(tbody tr) {
 		cursor: pointer;
