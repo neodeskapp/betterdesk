@@ -482,6 +482,29 @@ func (s *Sessions) TakePasswordForDevice(ctx context.Context, deviceID string, u
 	return "", ErrNoPassword
 }
 
+// OpenOnDevice returns the newest session of the account on a device that
+// still asks or was allowed.
+func (s *Sessions) OpenOnDevice(ctx context.Context, deviceID string, userID int64) (Session, bool) {
+	if err := s.load(ctx); err != nil {
+		return Session{}, false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var found *Session
+	for _, sess := range s.byID {
+		if sess.DeviceID != deviceID || sess.CreatedByID != userID || (sess.Status != StatusAsking && sess.Status != StatusAllowed) {
+			continue
+		}
+		if found == nil || sess.CreatedAt > found.CreatedAt {
+			found = sess
+		}
+	}
+	if found == nil {
+		return Session{}, false
+	}
+	return *found, true
+}
+
 // End ends an open session; by says who. The token stops working and the
 // password is forgotten.
 func (s *Sessions) End(ctx context.Context, id, by string) (Session, error) {

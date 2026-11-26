@@ -461,6 +461,30 @@ func TestQuickSupportOfARevokedID(t *testing.T) {
 	}
 }
 
+// TestDevicePasswordNamesTheQuickSupportSession: when the server holds no
+// session password (it keeps it in memory only, a restart loses it, and it
+// hands it out once), the viewer still learns that the device runs this
+// account's quick support session and whom it waits for, so it asks the
+// person to accept instead of asking for a password (L551).
+func TestDevicePasswordNamesTheQuickSupportSession(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t))
+	operator := w.browser("operator")
+	made := operator.do(http.MethodPost, "/api/support/sessions", `{"name":"Ana"}`).json(t)
+	app := w.app()
+	token := str(app.do(http.MethodPost, "/api/support/redeem", `{"code":"`+str(made, "code")+`"}`).json(t), "session_token")
+	bearer := []string{"Authorization", "Bearer " + token}
+	app.do(http.MethodPost, "/api/support/session/device", `{"device_id":"423456780","hostname":"ana-laptop"}`, bearer...)
+	app.do(http.MethodPost, "/api/support/session/consent", `{"allowed":true}`, bearer...)
+
+	res := operator.do(http.MethodPost, "/api/support/devices/423456780/password", `{}`)
+	if res.status != http.StatusOK || res.body != `{"success":true,"password":"","session":{"name":"Ana","status":"allowed"}}` {
+		t.Fatalf("the session without its password: %d %s", res.status, res.body)
+	}
+	if res := w.browser("admin").do(http.MethodPost, "/api/support/devices/423456780/password", `{}`); res.body != `{"success":true,"password":""}` {
+		t.Fatalf("another account sees the session: %d %s", res.status, res.body)
+	}
+}
+
 // TestDevicePasswordWithoutAHandedPasswordIsEmpty: the browser viewer asks
 // for a handed quick support password whenever a device asks for its
 // password; a device without one is the usual case, answered with an empty
