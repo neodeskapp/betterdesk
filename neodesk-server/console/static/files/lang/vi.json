@@ -5519,9 +5519,6 @@
     "billing_package": "Gói thanh toán",
     "max_session_invalid": "Nhập số phút là số nguyên, từ 0 trở lên.",
     "policy_none": "No rule: each device keeps its own setting.",
-    "policy_set_one": "Set for this organization: 1 value.",
-    "policy_set_n": "Set for this organization: {count} values.",
-    "stored_value": "Stored value",
     "settings_tab_note": "What applies to this organization now. Each value is changed where it is set: policies on the Policies page, the shared address book on the Address book tab.",
     "policies_group_desc": "How remote sessions work on this organization’s devices.",
     "policies_group_effect": "Devices get a change the next time they ask the server for their policy.",
@@ -5536,7 +5533,8 @@
     "other_values_desc": "Values saved for this organization that have no place of their own in the console.",
     "danger_zone": "Danger zone",
     "name_hint": "Shown on this organization’s page, in lists and to its members.",
-    "slug_changed": "Sign-ins that name the organization by its short name need the new one after you save."
+    "slug_changed": "Sign-ins that name the organization by its short name need the new one after you save.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Mã hóa đầu cuối",

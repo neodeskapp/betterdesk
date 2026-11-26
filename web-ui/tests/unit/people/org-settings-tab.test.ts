@@ -52,10 +52,18 @@ afterEach(() => {
 });
 
 describe('stored values in words', () => {
-	test('a saved policy group says so and how many values it holds; an unsaved one says no rule applies', async () => {
+	test('a saved policy group names each value in words; an unsaved one says no rule applies', async () => {
 		render(SettingsTab, { org, canPolicies: true });
 		const connection = await row('policy_connection');
-		expect(connection.textContent).toContain('Set for this organization: 4 values.');
+		expect(connection.textContent).toContain('Set for this organization.');
+		expect(connection.textContent).not.toContain('4 values');
+		// In the Policies page's order, with its names and words for the values
+		expect([...connection.querySelectorAll('li')].map((li) => li.textContent?.trim())).toEqual([
+			'policies.connection_mode: policies.mode_unattended',
+			'policies.max_session: 480',
+			'policies.idle_lock: 30',
+			'policies.wallpaper_policy: policies.wallpaper_show'
+		]);
 		const features = await row('policy_features');
 		expect(features.textContent).toContain('No rule: each device keeps its own setting.');
 	});
@@ -82,13 +90,19 @@ describe('stored values in words', () => {
 		).toBe('#address-book');
 	});
 
-	test('the stored JSON is behind Details, not in the row', async () => {
+	test('no stored JSON in the row; a value the console has no name for keeps its key', async () => {
+		stored.rows = [
+			{ key: 'policy_features', value: '{"allow_audio":false,"allow_clipboard":true,"future_switch":1}' }
+		];
 		render(SettingsTab, { org, canPolicies: true });
-		const connection = await row('policy_connection');
-		const details = connection.querySelector('details')!;
-		expect(details).not.toBeNull();
-		expect(details.open).toBe(false);
-		expect(details.textContent).toContain('"mode":"unattended"');
+		const features = await row('policy_features');
+		expect(features.querySelector('details')).toBeNull();
+		expect(features.textContent).not.toContain('Stored value');
+		expect([...features.querySelectorAll('li')].map((li) => li.textContent?.trim())).toEqual([
+			'policies.allow_clipboard: On',
+			'policies.allow_audio: Off',
+			'future_switch: 1'
+		]);
 	});
 
 	test('other stored values stay listed with their key and value', async () => {

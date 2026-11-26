@@ -68,6 +68,13 @@
 		type PolicyDraft,
 		type Section
 	} from '#lib/rules/policies.ts';
+	import {
+		choiceLabel,
+		fieldLabel,
+		offWord as policyOff,
+		onWord as policyOn,
+		valueWords
+	} from '#lib/rules/policy-words.ts';
 	import { onRefresh } from '#lib/shell/page.svelte.ts';
 	import { can, canWrite, session } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
@@ -130,27 +137,6 @@
 	const notFound = $derived(orgsState === 'ready' && !!urlOrg && !org);
 
 	/* ── Names and words of the settings ── */
-
-	const LABEL: Readonly<Record<string, string>> = {
-		'connection.mode': 'policies.connection_mode',
-		'connection.max_session_duration': 'policies.max_session',
-		'connection.idle_lock_timeout': 'policies.idle_lock',
-		'connection.wallpaper': 'policies.wallpaper_policy',
-		'features.allow_file_transfer': 'policies.allow_file_transfer',
-		'features.allow_clipboard': 'policies.allow_clipboard',
-		'features.allow_audio': 'policies.allow_audio',
-		'features.allow_recording': 'policies.allow_recording',
-		'security.require_2fa': 'policies.require_2fa',
-		'security.password_min_length': 'policies.password_min_length',
-		'security.password_require_special': 'policies.password_require_special',
-		'security.password_max_age_days': 'policies.password_max_age',
-		'security.allowed_operators': 'policies.allowed_operators',
-		'network.block_direct_p2p': 'policies.block_direct_p2p',
-		'network.allowed_relay_servers': 'policies.allowed_relays',
-		'network.ip_allowlist': 'policies.ip_allowlist',
-		'update.auto_update': 'policies.auto_update',
-		'update.channel': 'policies.update_channel'
-	};
 
 	/** One sentence per setting: what it does; examples go here, never into a placeholder */
 	const help = (field: string): string => {
@@ -229,42 +215,20 @@
 		}
 	};
 
-	const CHOICE_LABEL: Readonly<Record<string, string>> = {
-		attended: 'policies.mode_attended',
-		unattended: 'policies.mode_unattended',
-		ask_always: 'policies.mode_ask',
-		show: 'policies.wallpaper_show',
-		hide_during_session: 'policies.wallpaper_hide_session',
-		hide_always: 'policies.wallpaper_hide_always',
-		stable: 'policies.channel_stable',
-		beta: 'policies.channel_beta',
-		dev: 'policies.channel_dev'
-	};
-
-	const choiceLabel = (v: string) => {
-		const key = CHOICE_LABEL[v];
-		return key ? t(key) : v;
-	};
-
-	const onWord = $derived(tf('policies.switch_on', 'On'));
-	const offWord = $derived(tf('policies.switch_off', 'Off'));
+	const onWord = $derived(policyOn());
+	const offWord = $derived(policyOff());
 	const noRuleWord = $derived(tf('policies.no_rule_word', 'no rule'));
 
 	/** A value in words, for the list of changes and the toast */
 	function words(field: string, value: unknown): string {
-		if (value === null || value === undefined) return noRuleWord;
-		const kind = kindOf(field);
-		if (kind?.kind === 'switch') return value ? onWord : offWord;
-		if (kind?.kind === 'choice') return choiceLabel(String(value));
-		if (Array.isArray(value)) return value.length ? value.join(', ') : tf('settings_ui.none', 'none');
-		return String(value);
+		return value === null || value === undefined ? noRuleWord : valueWords(field, value);
 	}
 
 	const draft = new SettingsDraft<PolicyDraft>(valuesFromResolved(null));
 	$effect(() => {
 		draft.describe(
 			Object.fromEntries(
-				FIELD_IDS.map((f) => [f, { label: t(LABEL[f] ?? f), format: (v: unknown) => words(f, v) }])
+				FIELD_IDS.map((f) => [f, { label: fieldLabel(f), format: (v: unknown) => words(f, v) }])
 			)
 		);
 	});
@@ -418,7 +382,7 @@
 	function problemText(field: string, entry: string): string {
 		const kind = kindOf(field);
 		if (kind?.kind === 'whole')
-			return t('policies.invalid_number', { field: t(LABEL[field] ?? field), min: kind.min, max: kind.max });
+			return t('policies.invalid_number', { field: fieldLabel(field), min: kind.min, max: kind.max });
 		if (kind?.kind === 'list' && kind.entry === 'relay') return t('policies.invalid_relay', { entry });
 		if (kind?.kind === 'list' && kind.entry === 'range') return t('policies.invalid_ip_range', { entry });
 		return '';
@@ -679,7 +643,7 @@
 	{:else if kind?.kind === 'list' && kind.entry === 'name' && roleOpts}
 		<RecordPicker
 			id={f.id}
-			legend={t(LABEL[field] ?? field)}
+			legend={fieldLabel(field)}
 			describedby={f.describedby}
 			disabled={!canEdit}
 			options={roleOpts}
@@ -720,7 +684,7 @@
 {/snippet}
 
 {#snippet row(field: string)}
-	{@const label = t(LABEL[field] ?? field)}
+	{@const label = fieldLabel(field)}
 	{@const from = inherited(field)}
 	<SettingRow
 		id={rowId(field)}
