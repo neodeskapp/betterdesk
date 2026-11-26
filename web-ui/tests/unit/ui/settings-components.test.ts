@@ -78,6 +78,12 @@ describe('the filter', () => {
 		await userEvent.type(field, 'xyz');
 		expect(screen.getByText(/Nothing matches/)).toBeInTheDocument();
 	});
+
+	test('the filter field is a search landmark, not a setting', () => {
+		render(SettingsFixture);
+		const region = screen.getByRole('search', { name: 'Filter permissions' });
+		expect(within(region).getByRole('searchbox')).toBeInTheDocument();
+	});
 });
 
 describe('the changes bar', () => {

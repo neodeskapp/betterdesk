@@ -21,7 +21,8 @@
 	const none = $derived(filter.active && filter.shown.size > 0 && filter.shownCount === 0);
 </script>
 
-<div class="settings-filter">
+<!-- A search landmark: it narrows the page and is no setting itself (e2e/settings-index.spec.ts skips it) -->
+<div class="settings-filter" role="search" aria-label={label ?? tf('settings_ui.filter', 'Filter settings')}>
 	<SearchField
 		label={label ?? tf('settings_ui.filter', 'Filter settings')}
 		placeholder={label ?? tf('settings_ui.filter', 'Filter settings')}
