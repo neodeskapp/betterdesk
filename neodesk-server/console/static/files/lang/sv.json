@@ -47,7 +47,8 @@
     "copy_failed": "Det gick inte att kopiera. Markera texten och kopiera den själv.",
     "read_only_page": "Du kan visa den här sidan men inte ändra den.",
     "opens_in_new_tab": "öppnas i en ny flik",
-    "required_mark": "(obligatoriskt)"
+    "required_mark": "(obligatoriskt)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Huvud",
@@ -193,7 +194,10 @@
     "forgot_field": "Användarnamn eller e-post",
     "forgot_send": "Skicka länk",
     "forgot_sent": "Om kontot finns och har en e-postadress är en länk på väg. Den fungerar i 1 timme.",
-    "forgot_back": "Tillbaka till inloggning"
+    "forgot_back": "Tillbaka till inloggning",
+    "session_seconds_left": "{seconds} sekunder kvar",
+    "session_end_warning_title": "Din session tar snart slut",
+    "session_end_warning_body": "Din session tar slut kl. {time}. Spara ditt arbete nu och logga sedan in igen."
   },
   "dashboard": {
     "title": "Instrumentbräda",

@@ -45,7 +45,8 @@
     "copy_failed": "無法複製。請選取文字後自行複製。",
     "read_only_page": "您可以檢視此頁面，但無法變更。",
     "opens_in_new_tab": "在新分頁中開啟",
-    "required_mark": "（必填）"
+    "required_mark": "（必填）",
+    "ok": "確定"
   },
   "nav": {
     "main": "主要",
@@ -191,7 +192,10 @@
     "forgot_field": "用戶名或電子郵件",
     "forgot_send": "寄送連結",
     "forgot_sent": "如果該帳戶存在且有電子郵件地址，連結正在寄送中。連結 1 小時內有效。",
-    "forgot_back": "返回登入"
+    "forgot_back": "返回登入",
+    "session_seconds_left": "還剩 {seconds} 秒",
+    "session_end_warning_title": "工作階段即將結束",
+    "session_end_warning_body": "工作階段將於 {time} 結束。請立即儲存你的工作，然後重新登入。"
   },
   "dashboard": {
     "title": "儀表板",

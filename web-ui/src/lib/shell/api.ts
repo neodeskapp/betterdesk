@@ -122,7 +122,9 @@ export const SessionInfo = v.looseObject({
 			lastActivityAt: OptionalNum,
 			idleTimeoutMs: OptionalNum,
 			maxAgeMs: OptionalNum,
-			warnBeforeMs: OptionalNum
+			warnBeforeMs: OptionalNum,
+			absoluteExpiresAt: OptionalNum,
+			serverNow: OptionalNum
 		})
 	)
 });

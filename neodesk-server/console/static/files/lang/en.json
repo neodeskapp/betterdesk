@@ -41,7 +41,8 @@
         "copy_failed": "Could not copy. Select the text and copy it yourself.",
         "read_only_page": "You can view this page but not change it.",
         "opens_in_new_tab": "opens in a new tab",
-        "required_mark": "(required)"
+        "required_mark": "(required)",
+        "ok": "OK"
     },
     "nav": {
         "main": "Main",
@@ -195,7 +196,10 @@
         "forgot_field": "Username or email",
         "forgot_send": "Send link",
         "forgot_sent": "If the account exists and has an email address, a link is on its way. It works for 1 hour.",
-        "forgot_back": "Back to sign-in"
+        "forgot_back": "Back to sign-in",
+        "session_seconds_left": "{seconds} seconds left",
+        "session_end_warning_title": "Your session ends soon",
+        "session_end_warning_body": "Your session ends at {time}. Save your work now, then sign in again."
     },
     "dashboard": {
         "title": "Dashboard",

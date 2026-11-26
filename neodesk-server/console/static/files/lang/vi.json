@@ -47,7 +47,8 @@
     "copy_failed": "Không sao chép được. Hãy chọn văn bản và tự sao chép.",
     "read_only_page": "Bạn có thể xem trang này nhưng không thể thay đổi.",
     "opens_in_new_tab": "mở trong thẻ mới",
-    "required_mark": "(bắt buộc)"
+    "required_mark": "(bắt buộc)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Chính",
@@ -193,7 +194,10 @@
     "forgot_field": "Tên người dùng hoặc email",
     "forgot_send": "Gửi liên kết",
     "forgot_sent": "Nếu tài khoản tồn tại và có địa chỉ email, liên kết đang được gửi đến. Liên kết dùng được trong 1 giờ.",
-    "forgot_back": "Quay lại đăng nhập"
+    "forgot_back": "Quay lại đăng nhập",
+    "session_seconds_left": "Còn {seconds} giây",
+    "session_end_warning_title": "Phiên của bạn sắp kết thúc",
+    "session_end_warning_body": "Phiên của bạn kết thúc lúc {time}. Hãy lưu công việc ngay, sau đó đăng nhập lại."
   },
   "dashboard": {
     "title": "Trang tổng quan",

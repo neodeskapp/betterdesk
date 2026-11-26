@@ -41,7 +41,8 @@
     "copy_failed": "コピーできませんでした。テキストを選択して手動でコピーしてください。",
     "read_only_page": "このページは表示できますが、変更はできません。",
     "opens_in_new_tab": "新しいタブで開きます",
-    "required_mark": "(必須)"
+    "required_mark": "(必須)",
+    "ok": "OK"
   },
   "nav": {
     "main": "メイン",
@@ -187,7 +188,10 @@
     "forgot_field": "ユーザー名またはメールアドレス",
     "forgot_send": "リンクを送る",
     "forgot_sent": "アカウントが存在し、メールアドレスがある場合は、リンクを送信しました。リンクは 1 時間有効です。",
-    "forgot_back": "サインインに戻る"
+    "forgot_back": "サインインに戻る",
+    "session_seconds_left": "残り {seconds} 秒",
+    "session_end_warning_title": "まもなくセッションが終了します",
+    "session_end_warning_body": "セッションは {time} に終了します。今のうちに作業を保存し、その後もう一度サインインしてください。"
   },
   "dashboard": {
     "title": "ダッシュボード",

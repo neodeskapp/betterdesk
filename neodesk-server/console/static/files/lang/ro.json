@@ -47,7 +47,8 @@
     "copy_failed": "Nu s-a putut copia. Selectați textul și copiați-l manual.",
     "read_only_page": "Puteți vedea această pagină, dar nu o puteți modifica.",
     "opens_in_new_tab": "se deschide într-o filă nouă",
-    "required_mark": "(obligatoriu)"
+    "required_mark": "(obligatoriu)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Principal",
@@ -193,7 +194,10 @@
     "forgot_field": "Nume de utilizator sau e-mail",
     "forgot_send": "Trimiteți linkul",
     "forgot_sent": "Dacă contul există și are o adresă de e-mail, un link este pe drum. Funcționează 1 oră.",
-    "forgot_back": "Înapoi la autentificare"
+    "forgot_back": "Înapoi la autentificare",
+    "session_seconds_left": "Mai sunt {seconds} secunde",
+    "session_end_warning_title": "Sesiunea se încheie în curând",
+    "session_end_warning_body": "Sesiunea se încheie la {time}. Salvează-ți acum munca, apoi conectează-te din nou."
   },
   "dashboard": {
     "title": "Tabloul de bord",

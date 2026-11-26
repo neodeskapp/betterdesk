@@ -41,7 +41,8 @@
     "copy_failed": "Kopieren nicht möglich. Bitte markiere den Text und kopiere ihn selbst.",
     "read_only_page": "Du kannst diese Seite ansehen, aber nicht ändern.",
     "opens_in_new_tab": "öffnet sich in einem neuen Tab",
-    "required_mark": "(Pflichtfeld)"
+    "required_mark": "(Pflichtfeld)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Hauptmenü",
@@ -187,7 +188,10 @@
     "forgot_field": "Benutzername oder E-Mail",
     "forgot_send": "Link senden",
     "forgot_sent": "Wenn das Konto existiert und eine E-Mail-Adresse hat, ist ein Link unterwegs. Er gilt 1 Stunde.",
-    "forgot_back": "Zurück zur Anmeldung"
+    "forgot_back": "Zurück zur Anmeldung",
+    "session_seconds_left": "Noch {seconds} Sekunden",
+    "session_end_warning_title": "Deine Sitzung endet bald",
+    "session_end_warning_body": "Deine Sitzung endet um {time}. Speichere jetzt deine Arbeit und melde dich danach neu an."
   },
   "dashboard": {
     "title": "Übersicht",

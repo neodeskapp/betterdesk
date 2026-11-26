@@ -41,7 +41,8 @@
     "copy_failed": "Nie udało się skopiować. Zaznacz tekst i skopiuj go samodzielnie.",
     "read_only_page": "Możesz wyświetlić tę stronę, ale nie możesz jej zmienić.",
     "opens_in_new_tab": "otwiera się w nowej karcie",
-    "required_mark": "(wymagane)"
+    "required_mark": "(wymagane)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Główne",
@@ -187,7 +188,10 @@
     "forgot_field": "Nazwa użytkownika lub e-mail",
     "forgot_send": "Wyślij link",
     "forgot_sent": "Jeśli konto istnieje i ma adres e-mail, link jest w drodze. Działa przez 1 godzinę.",
-    "forgot_back": "Powrót do logowania"
+    "forgot_back": "Powrót do logowania",
+    "session_seconds_left": "Pozostało {seconds} s",
+    "session_end_warning_title": "Sesja wkrótce się zakończy",
+    "session_end_warning_body": "Sesja zakończy się o {time}. Zapisz teraz swoją pracę, a potem zaloguj się ponownie."
   },
   "dashboard": {
     "title": "Panel",

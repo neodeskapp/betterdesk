@@ -47,7 +47,8 @@
     "copy_failed": "Kunne ikke kopiere. Markér teksten, og kopiér den selv.",
     "read_only_page": "Du kan se denne side, men ikke ændre den.",
     "opens_in_new_tab": "åbner i en ny fane",
-    "required_mark": "(påkrævet)"
+    "required_mark": "(påkrævet)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Hoved",
@@ -193,7 +194,10 @@
     "forgot_field": "Brugernavn eller e-mail",
     "forgot_send": "Send link",
     "forgot_sent": "Hvis kontoen findes og har en e-mailadresse, er et link på vej. Det virker i 1 time.",
-    "forgot_back": "Tilbage til login"
+    "forgot_back": "Tilbage til login",
+    "session_seconds_left": "{seconds} sekunder tilbage",
+    "session_end_warning_title": "Din session slutter snart",
+    "session_end_warning_body": "Din session slutter kl. {time}. Gem dit arbejde nu, og log derefter ind igen."
   },
   "dashboard": {
     "title": "Oversigt",

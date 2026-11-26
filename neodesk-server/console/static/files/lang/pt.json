@@ -41,7 +41,8 @@
     "copy_failed": "Não foi possível copiar. Selecione o texto e copie-o manualmente.",
     "read_only_page": "Pode ver esta página, mas não a pode alterar.",
     "opens_in_new_tab": "abre num novo separador",
-    "required_mark": "(obrigatório)"
+    "required_mark": "(obrigatório)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Principal",
@@ -187,7 +188,10 @@
     "forgot_field": "Nome de utilizador ou e-mail",
     "forgot_send": "Enviar link",
     "forgot_sent": "Se a conta existir e tiver um endereço de e-mail, um link está a caminho. Funciona durante 1 hora.",
-    "forgot_back": "Voltar ao início de sessão"
+    "forgot_back": "Voltar ao início de sessão",
+    "session_seconds_left": "Faltam {seconds} segundos",
+    "session_end_warning_title": "A sua sessão termina em breve",
+    "session_end_warning_body": "A sua sessão termina às {time}. Guarde o seu trabalho agora e depois inicie sessão novamente."
   },
   "dashboard": {
     "title": "Painel",

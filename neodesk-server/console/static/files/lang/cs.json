@@ -41,7 +41,8 @@
     "copy_failed": "Kopírování se nezdařilo. Označte text a zkopírujte ho ručně.",
     "read_only_page": "Tuto stránku můžete zobrazit, ale ne měnit.",
     "opens_in_new_tab": "otevře se na nové kartě",
-    "required_mark": "(povinné)"
+    "required_mark": "(povinné)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Hlavní",
@@ -187,7 +188,10 @@
     "forgot_field": "Uživatelské jméno nebo e-mail",
     "forgot_send": "Poslat odkaz",
     "forgot_sent": "Pokud účet existuje a má e-mailovou adresu, odkaz je na cestě. Platí 1 hodinu.",
-    "forgot_back": "Zpět na přihlášení"
+    "forgot_back": "Zpět na přihlášení",
+    "session_seconds_left": "Zbývá {seconds} s",
+    "session_end_warning_title": "Vaše relace brzy skončí",
+    "session_end_warning_body": "Vaše relace skončí v {time}. Uložte si teď práci a pak se znovu přihlaste."
   },
   "dashboard": {
     "title": "Nástěnka",

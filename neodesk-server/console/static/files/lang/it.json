@@ -41,7 +41,8 @@
     "copy_failed": "Impossibile copiare. Selezioni il testo e lo copi manualmente.",
     "read_only_page": "Può vedere questa pagina, ma non modificarla.",
     "opens_in_new_tab": "si apre in una nuova scheda",
-    "required_mark": "(obbligatorio)"
+    "required_mark": "(obbligatorio)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Principale",
@@ -187,7 +188,10 @@
     "forgot_field": "Nome utente o email",
     "forgot_send": "Invia link",
     "forgot_sent": "Se l'account esiste e ha un indirizzo email, il link è in arrivo. Vale 1 ora.",
-    "forgot_back": "Torna all'accesso"
+    "forgot_back": "Torna all'accesso",
+    "session_seconds_left": "Ancora {seconds} secondi",
+    "session_end_warning_title": "La sessione sta per scadere",
+    "session_end_warning_body": "La sessione scade alle {time}. Salva ora il tuo lavoro, poi accedi di nuovo."
   },
   "dashboard": {
     "title": "Panoramica",

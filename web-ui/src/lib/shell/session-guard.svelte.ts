@@ -11,6 +11,11 @@
  *   end the session is checked: a 401 is sign-in; a session another tab
  *   kept alive hides the warning and the idle clock follows the server; a
  *   check that failed otherwise (network, 502, 429) runs again later.
+ * - Absolute end: a session ends `maxAgeMs` after sign-in whatever
+ *   happens. When that is under 20 hours (WCAG 2.2.1 lets 20 hours and
+ *   more pass), `guard.ending` is set END_WARN_MS before the end, so the
+ *   page can say so while there is time to save. The end comes from the
+ *   server's absoluteExpiresAt, moved to this clock by its serverNow.
  * - Every 5 minutes (while the tab is visible) GET /api/auth/verify brings
  *   the policy and the server's last activity.
  * - The server counts writes and page loads as activity, not reads or polls
@@ -31,16 +36,27 @@ export const SYNC_MS = 5 * 60_000;
 export const RECHECK_MS = 30_000;
 const ACTIVITY = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'] as const;
 
+/** How long before a fixed session end the page warns */
+export const END_WARN_MS = 5 * 60_000;
+/** Sessions that last this long or longer get no warning before their fixed end */
+export const LONG_SESSION_MS = 20 * 3_600_000;
+
 export interface Policy {
 	idleTimeoutMs: number;
 	warnBeforeMs: number;
+	/** 0: not known */
+	maxAgeMs: number;
 }
 
-const DEFAULT_POLICY: Policy = { idleTimeoutMs: 30 * 60_000, warnBeforeMs: 60_000 };
+const DEFAULT_POLICY: Policy = { idleTimeoutMs: 30 * 60_000, warnBeforeMs: 60_000, maxAgeMs: 0 };
 
 class Guard {
 	/** Seconds left when the warning was shown, or null while it is hidden */
 	warning = $state<number | null>(null);
+	/** When the idle sign-out happens (ms, this clock), while the warning shows */
+	deadline = $state<number | null>(null);
+	/** When the session ends for good (ms, this clock), once that is close; null otherwise */
+	ending = $state<number | null>(null);
 }
 
 export const guard = new Guard();
@@ -53,6 +69,9 @@ let lastPing = 0;
 let pingTimer: ReturnType<typeof setTimeout> | null = null;
 let warnTimer: ReturnType<typeof setTimeout> | null = null;
 let expireTimer: ReturnType<typeof setTimeout> | null = null;
+let endTimer: ReturnType<typeof setTimeout> | null = null;
+/** The fixed end on this clock, once the server said it */
+let absoluteEnd: number | null = null;
 let stopSync: (() => void) | null = null;
 let started = false;
 let leaving = false;
@@ -104,6 +123,7 @@ function schedule(): void {
 	const idle = policy.idleTimeoutMs;
 	const untilWarn = Math.max(0, lastActivity + idle - policy.warnBeforeMs - Date.now());
 	warnTimer = setTimeout(() => {
+		guard.deadline = lastActivity + idle;
 		guard.warning = Math.max(1, Math.ceil((lastActivity + idle - Date.now()) / 1000));
 	}, untilWarn);
 	expireTimer = setTimeout(checkExpiry, Math.max(0, lastActivity + idle - Date.now()) + 500);
@@ -153,6 +173,7 @@ export function markActivity(): void {
 	lastMark = now;
 	lastActivity = now;
 	guard.warning = null;
+	guard.deadline = null;
 	schedule();
 	reportActivity();
 }
@@ -164,26 +185,55 @@ export function staySignedIn(): void {
 	markActivity();
 }
 
+/** Warn END_WARN_MS before the fixed end of a session shorter than 20 hours */
+function scheduleEnd(): void {
+	if (endTimer) clearTimeout(endTimer);
+	endTimer = null;
+	const end = absoluteEnd;
+	if (end === null || !policy.maxAgeMs || policy.maxAgeMs >= LONG_SESSION_MS) return;
+	endTimer = setTimeout(
+		() => {
+			guard.ending = end;
+		},
+		Math.max(0, end - END_WARN_MS - Date.now())
+	);
+}
+
 function applyPolicy(info: SessionInfo): void {
 	const s = info.session;
 	if (!s) return;
 	policy = {
 		idleTimeoutMs: s.idleTimeoutMs && s.idleTimeoutMs > 0 ? s.idleTimeoutMs : policy.idleTimeoutMs,
-		warnBeforeMs: s.warnBeforeMs && s.warnBeforeMs > 0 ? s.warnBeforeMs : policy.warnBeforeMs
+		warnBeforeMs: s.warnBeforeMs && s.warnBeforeMs > 0 ? s.warnBeforeMs : policy.warnBeforeMs,
+		maxAgeMs: s.maxAgeMs && s.maxAgeMs > 0 ? s.maxAgeMs : policy.maxAgeMs
 	};
 	if (s.lastActivityAt) lastActivity = Math.max(lastActivity, s.lastActivityAt);
 	// Activity in another tab moved the end: the warning goes until it is due again
-	if (guard.warning !== null && lastActivity + policy.idleTimeoutMs - policy.warnBeforeMs > Date.now())
+	if (guard.warning !== null && lastActivity + policy.idleTimeoutMs - policy.warnBeforeMs > Date.now()) {
 		guard.warning = null;
+		guard.deadline = null;
+	}
+	if (s.absoluteExpiresAt) {
+		// The server's clock may differ from this one
+		const skew = s.serverNow ? Date.now() - s.serverNow : 0;
+		const end = s.absoluteExpiresAt + skew;
+		// Request time moves the guess by a little each time; only a real change reschedules
+		if (absoluteEnd === null || Math.abs(end - absoluteEnd) > 5000) {
+			absoluteEnd = end;
+			scheduleEnd();
+		}
+	}
 	schedule();
 }
 
 function readPolicy(raw: Record<string, unknown> | null | undefined): Policy {
 	const idle = Number(raw?.idleTimeoutMs);
 	const warn = Number(raw?.warnBeforeMs);
+	const max = Number(raw?.maxAgeMs);
 	return {
 		idleTimeoutMs: Number.isFinite(idle) && idle > 0 ? idle : DEFAULT_POLICY.idleTimeoutMs,
-		warnBeforeMs: Number.isFinite(warn) && warn > 0 ? warn : DEFAULT_POLICY.warnBeforeMs
+		warnBeforeMs: Number.isFinite(warn) && warn > 0 ? warn : DEFAULT_POLICY.warnBeforeMs,
+		maxAgeMs: Number.isFinite(max) && max > 0 ? max : DEFAULT_POLICY.maxAgeMs
 	};
 }
 
@@ -233,7 +283,15 @@ export function startGuard(sessionPolicy: Record<string, unknown> | null | undef
 	window.addEventListener('storage', onStorage);
 	for (const evt of ACTIVITY) document.addEventListener(evt, onActivity, { passive: true });
 	schedule();
-	stopSync = poll(() => verifySession().then(applyPolicy), { every: SYNC_MS, immediate: false });
+	absoluteEnd = null;
+	// A session with a fixed end under 20 hours: ask now when it ends, not in 5 minutes
+	const short = policy.maxAgeMs > 0 && policy.maxAgeMs < LONG_SESSION_MS;
+	stopSync = poll(() => verifySession().then(applyPolicy), { every: SYNC_MS, immediate: short });
+}
+
+/** The person saw the warning about the session's end */
+export function dismissEnding(): void {
+	guard.ending = null;
 }
 
 export function stopGuard(): void {
@@ -242,6 +300,9 @@ export function stopGuard(): void {
 	clearTimers();
 	if (pingTimer) clearTimeout(pingTimer);
 	pingTimer = null;
+	if (endTimer) clearTimeout(endTimer);
+	endTimer = null;
+	absoluteEnd = null;
 	stopSync?.();
 	stopSync = null;
 	channel?.close();
@@ -249,4 +310,6 @@ export function stopGuard(): void {
 	window.removeEventListener('storage', onStorage);
 	for (const evt of ACTIVITY) document.removeEventListener(evt, onActivity);
 	guard.warning = null;
+	guard.deadline = null;
+	guard.ending = null;
 }

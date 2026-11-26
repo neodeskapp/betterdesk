@@ -47,7 +47,8 @@
     "copy_failed": "Tidak dapat menyalin. Pilih teksnya dan salin sendiri.",
     "read_only_page": "Anda dapat melihat halaman ini, tetapi tidak dapat mengubahnya.",
     "opens_in_new_tab": "terbuka di tab baru",
-    "required_mark": "(wajib)"
+    "required_mark": "(wajib)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Utama",
@@ -193,7 +194,10 @@
     "forgot_field": "Nama pengguna atau email",
     "forgot_send": "Kirim tautan",
     "forgot_sent": "Jika akun ada dan punya alamat email, tautan sedang dikirim. Tautan berlaku 1 jam.",
-    "forgot_back": "Kembali ke halaman masuk"
+    "forgot_back": "Kembali ke halaman masuk",
+    "session_seconds_left": "Tersisa {seconds} detik",
+    "session_end_warning_title": "Sesi Anda segera berakhir",
+    "session_end_warning_body": "Sesi Anda berakhir pukul {time}. Simpan pekerjaan Anda sekarang, lalu masuk lagi."
   },
   "dashboard": {
     "title": "Dasbor",

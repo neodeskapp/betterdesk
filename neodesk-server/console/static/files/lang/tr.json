@@ -47,7 +47,8 @@
     "copy_failed": "Kopyalanamadı. Metni seçip kendiniz kopyalayın.",
     "read_only_page": "Bu sayfayı görüntüleyebilirsiniz ama değiştiremezsiniz.",
     "opens_in_new_tab": "yeni sekmede açılır",
-    "required_mark": "(zorunlu)"
+    "required_mark": "(zorunlu)",
+    "ok": "Tamam"
   },
   "nav": {
     "main": "Ana menü",
@@ -193,7 +194,10 @@
     "forgot_field": "Kullanıcı adı veya e-posta",
     "forgot_send": "Bağlantı gönder",
     "forgot_sent": "Hesap varsa ve bir e-posta adresi varsa, bağlantı yolda. 1 saat geçerlidir.",
-    "forgot_back": "Oturum açmaya dön"
+    "forgot_back": "Oturum açmaya dön",
+    "session_seconds_left": "{seconds} saniye kaldı",
+    "session_end_warning_title": "Oturumunuz yakında sona erecek",
+    "session_end_warning_body": "Oturumunuz {time} saatinde sona erecek. Çalışmanızı şimdi kaydedin, sonra yeniden oturum açın."
   },
   "dashboard": {
     "title": "Kontrol Paneli",

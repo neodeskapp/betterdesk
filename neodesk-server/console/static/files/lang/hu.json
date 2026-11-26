@@ -47,7 +47,8 @@
     "copy_failed": "A másolás nem sikerült. Jelölje ki a szöveget, és másolja ki kézzel.",
     "read_only_page": "Ezt az oldalt megtekintheti, de nem módosíthatja.",
     "opens_in_new_tab": "új lapon nyílik meg",
-    "required_mark": "(kötelező)"
+    "required_mark": "(kötelező)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Fő",
@@ -193,7 +194,10 @@
     "forgot_field": "Felhasználónév vagy e-mail",
     "forgot_send": "Link küldése",
     "forgot_sent": "Ha a fiók létezik, és van e-mail-címe, a link úton van. 1 óráig működik.",
-    "forgot_back": "Vissza a bejelentkezéshez"
+    "forgot_back": "Vissza a bejelentkezéshez",
+    "session_seconds_left": "Még {seconds} másodperc",
+    "session_end_warning_title": "A munkamenet hamarosan lejár",
+    "session_end_warning_body": "A munkamenet {time}-kor lejár. Most mentse a munkáját, majd jelentkezzen be újra."
   },
   "dashboard": {
     "title": "Irányítópult",

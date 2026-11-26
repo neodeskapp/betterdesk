@@ -41,7 +41,8 @@
     "copy_failed": "복사하지 못했습니다. 텍스트를 선택해 직접 복사하세요.",
     "read_only_page": "이 페이지를 볼 수는 있지만 변경할 수는 없습니다.",
     "opens_in_new_tab": "새 탭에서 열립니다",
-    "required_mark": "(필수)"
+    "required_mark": "(필수)",
+    "ok": "확인"
   },
   "nav": {
     "main": "메인",
@@ -187,7 +188,10 @@
     "forgot_field": "사용자 이름 또는 이메일",
     "forgot_send": "링크 보내기",
     "forgot_sent": "계정이 있고 이메일 주소가 등록되어 있으면 링크가 전송됩니다. 링크는 1시간 동안 유효합니다.",
-    "forgot_back": "로그인으로 돌아가기"
+    "forgot_back": "로그인으로 돌아가기",
+    "session_seconds_left": "{seconds}초 남음",
+    "session_end_warning_title": "곧 세션이 종료됩니다",
+    "session_end_warning_body": "세션이 {time}에 종료됩니다. 지금 작업을 저장한 다음 다시 로그인하세요."
   },
   "dashboard": {
     "title": "대시보드",

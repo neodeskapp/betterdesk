@@ -45,7 +45,8 @@
     "copy_failed": "Impossible de copier. Sélectionnez le texte et copiez-le vous-même.",
     "read_only_page": "Vous pouvez consulter cette page, mais pas la modifier.",
     "opens_in_new_tab": "s'ouvre dans un nouvel onglet",
-    "required_mark": "(obligatoire)"
+    "required_mark": "(obligatoire)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Principal",
@@ -191,7 +192,10 @@
     "forgot_field": "Nom d'utilisateur ou e-mail",
     "forgot_send": "Envoyer le lien",
     "forgot_sent": "Si le compte existe et a une adresse e-mail, un lien est en route. Il fonctionne 1 heure.",
-    "forgot_back": "Retour à la connexion"
+    "forgot_back": "Retour à la connexion",
+    "session_seconds_left": "Encore {seconds} secondes",
+    "session_end_warning_title": "Votre session se termine bientôt",
+    "session_end_warning_body": "Votre session se termine à {time}. Enregistrez votre travail maintenant, puis reconnectez-vous."
   },
   "dashboard": {
     "title": "Tableau de bord",

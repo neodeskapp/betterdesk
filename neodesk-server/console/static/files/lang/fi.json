@@ -47,7 +47,8 @@
     "copy_failed": "Kopiointi epäonnistui. Valitse teksti ja kopioi se itse.",
     "read_only_page": "Voit katsoa tätä sivua, mutta et muuttaa sitä.",
     "opens_in_new_tab": "avautuu uuteen välilehteen",
-    "required_mark": "(pakollinen)"
+    "required_mark": "(pakollinen)",
+    "ok": "OK"
   },
   "nav": {
     "main": "Pää",
@@ -193,7 +194,10 @@
     "forgot_field": "Käyttäjätunnus tai sähköposti",
     "forgot_send": "Lähetä linkki",
     "forgot_sent": "Jos tili on olemassa ja sillä on sähköpostiosoite, linkki on matkalla. Se toimii 1 tunnin.",
-    "forgot_back": "Takaisin kirjautumiseen"
+    "forgot_back": "Takaisin kirjautumiseen",
+    "session_seconds_left": "{seconds} sekuntia jäljellä",
+    "session_end_warning_title": "Istuntosi päättyy pian",
+    "session_end_warning_body": "Istuntosi päättyy klo {time}. Tallenna työsi nyt ja kirjaudu sitten uudelleen."
   },
   "dashboard": {
     "title": "Kojelauta",
