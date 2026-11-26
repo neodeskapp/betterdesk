@@ -105,6 +105,19 @@ describe('jumping there', () => {
 		vi.useRealTimers();
 	});
 
+	test('a setting row of the settings pattern is the block: it is outlined, not its whole group', () => {
+		page(
+			`<section class="section settings-group" id="g"><div class="setting-row" id="r"><label for="r-control">R</label><input id="r-control"></div></section>`
+		);
+		Element.prototype.scrollIntoView = vi.fn();
+		const input = document.getElementById('r-control')!;
+		input.getClientRects = () => [new DOMRect(0, 0, 10, 10)] as unknown as DOMRectList;
+		highlight(document.getElementById('r')!);
+		expect(document.getElementById('r')!.classList.contains('is-found')).toBe(true);
+		expect(document.getElementById('g')!.classList.contains('is-found')).toBe(false);
+		expect(document.activeElement?.id).toBe('r-control');
+	});
+
 	test('waits for a tab to draw the element, and gives up when told to', async () => {
 		page('');
 		const ctrl = new AbortController();
