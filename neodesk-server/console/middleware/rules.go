@@ -20,6 +20,21 @@ var multipartPaths = map[string]bool{
 	"/api/generator/module/install-local": true,
 }
 
+// picturePaths are the API routes that take a picture file as the body
+// itself, by exact path. They pass with the type of a picture
+// (image/...) or application/octet-stream, which a form on another site
+// cannot send either.
+var picturePaths = map[string]bool{
+	"/api/users/me/avatar": true,
+}
+
+// pictureBody reports whether the request announces a picture file.
+func pictureBody(r *http.Request) bool {
+	media, _, _ := strings.Cut(r.Header.Get("Content-Type"), ";")
+	media = strings.ToLower(strings.TrimSpace(media))
+	return strings.HasPrefix(media, "image/") && len(media) > len("image/") || media == "application/octet-stream"
+}
+
 type jsonOnlyAnswer struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error"`
@@ -27,8 +42,9 @@ type jsonOnlyAnswer struct {
 
 // RequireJSON makes POST, PUT and PATCH requests to /api/ send JSON, which
 // a form on another site cannot. It passes GET, DELETE, OPTIONS and HEAD,
-// paths outside /api/, paths with /upload or /import in them, and the two
-// multipart routes. Everything else needs a body announced by its headers
+// paths outside /api/, paths with /upload or /import in them, the two
+// multipart routes, and a picture sent to a route of picturePaths.
+// Everything else needs a body announced by its headers
 // and the type application/json, or it gets
 //
 //	415 {"success":false,"error":"Content-Type must be application/json"}
@@ -44,7 +60,7 @@ func RequireJSON() func(http.Handler) http.Handler {
 				return
 			}
 			p := strings.ToLower(httpx.RawPath(r))
-			if !strings.HasPrefix(p, "/api/") || strings.Contains(p, "/upload") || strings.Contains(p, "/import") || multipartPaths[p] || IsJSON(r) {
+			if !strings.HasPrefix(p, "/api/") || strings.Contains(p, "/upload") || strings.Contains(p, "/import") || multipartPaths[p] || picturePaths[p] && pictureBody(r) || IsJSON(r) {
 				next.ServeHTTP(w, r)
 				return
 			}
