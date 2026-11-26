@@ -82,6 +82,8 @@ describe('chat thread for screen readers', () => {
 	test('while the conversation loads, the loading line is not in the log and the log is busy', async () => {
 		setThread([], false, false);
 		await show();
+		// The line shows once loading takes a while
+		await vi.advanceTimersByTimeAsync(500);
 		const loading = screen.getByText('common.loading');
 		expect(log()).not.toContainElement(loading);
 		expect(log()).toHaveAttribute('aria-busy', 'true');
