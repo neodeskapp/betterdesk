@@ -206,4 +206,14 @@
 		padding: 0 var(--space-1);
 		color: var(--text-muted);
 	}
+	/* Windows contrast themes drop the tint: the current page takes the
+	   system's selection colours instead */
+	@media (forced-colors: active) {
+		.pagination-btn[aria-current='page'] {
+			border-color: Highlight;
+			background: Highlight;
+			color: HighlightText;
+			forced-color-adjust: none;
+		}
+	}
 </style>

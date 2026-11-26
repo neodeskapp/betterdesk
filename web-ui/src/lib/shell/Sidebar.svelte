@@ -706,4 +706,15 @@
 			min-height: 44px;
 		}
 	}
+	/* Windows contrast themes make the transparent start rule of every item
+	   visible: only the current item keeps it, in the system's selection
+	   colour */
+	@media (forced-colors: active) {
+		.nav-item {
+			border-inline-start-color: Canvas;
+		}
+		.nav-item.active {
+			border-inline-start-color: Highlight;
+		}
+	}
 </style>
