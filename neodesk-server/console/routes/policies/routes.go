@@ -12,11 +12,13 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 type handlers struct {
-	api *goapi.Client
-	log *kit.Logger
+	api  *goapi.Client
+	log  *kit.Logger
+	info *serverinfo.Service
 }
 
 // categories are the policies an organization has, each with its own
@@ -25,15 +27,18 @@ var categories = []string{"connection", "features", "security", "network", "upda
 
 // Register adds the group's routes. Reads and writes are for the admin
 // roles and need a session; a write of an organization's policies also
-// needs org.edit, as the API server asks for the same write.
+// needs org.edit, as the API server asks for the same write. Clearing a
+// group (DELETE) is that write with an empty group.
 func Register(d *kit.Deps) {
-	h := &handlers{api: d.GoAPI, log: d.Log.Child("Policies")}
+	h := &handlers{api: d.GoAPI, log: d.Log.Child("Policies"), info: d.ServerInfo}
 	r := d.Router
 
 	r.Get("/api/panel/policies/{orgId}", h.read(""), d.RequireAuth, d.RequireAdmin)
 	for _, category := range categories {
 		r.Put("/api/panel/policies/{orgId}/"+category, h.write("/"+category), d.RequireAuth, d.RequireAdmin, d.RequirePermission("org.edit"))
+		r.Delete("/api/panel/policies/{orgId}/"+category, h.clear("/"+category), d.RequireAuth, d.RequireAdmin, d.RequirePermission("org.edit"))
 	}
+	r.Get("/api/panel/policies/{orgId}/resolved", h.resolved, d.RequireAuth, d.RequireAdmin)
 	r.Get("/api/panel/policies/{orgId}/effective/{deviceId}", h.effective, d.RequireAuth, d.RequireAdmin)
 	r.Get("/api/panel/policies/{orgId}/audit", h.read("/audit"), d.RequireAuth, d.RequireAdmin)
 
