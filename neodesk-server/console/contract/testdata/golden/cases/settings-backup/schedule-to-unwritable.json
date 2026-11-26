@@ -4,11 +4,11 @@
   "method": "PUT",
   "path": "/api/settings/backup/schedule",
   "body": {
-   "destinationPath": "/proc/bk-contract",
+   "destinationPath": "/etc/hostname/bk-contract",
    "destinationType": "path"
   }
  },
- "recordings": 3,
+ "recordings": 2,
  "answers": [
   {
    "roles": [

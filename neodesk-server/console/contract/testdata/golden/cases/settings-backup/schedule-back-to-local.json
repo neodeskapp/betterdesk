@@ -5,7 +5,7 @@
   "path": "/api/settings/backup/schedule",
   "body": {}
  },
- "recordings": 3,
+ "recordings": 2,
  "answers": [
   {
    "roles": [

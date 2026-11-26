@@ -4,10 +4,10 @@
   "method": "POST",
   "path": "/api/settings/restore",
   "notes": [
-   "multipart form: backup (file backup.json, 57 bytes)"
+   "multipart form: backup (file backup.json, 54 bytes)"
   ]
  },
- "recordings": 3,
+ "recordings": 2,
  "answers": [
   {
    "roles": [
