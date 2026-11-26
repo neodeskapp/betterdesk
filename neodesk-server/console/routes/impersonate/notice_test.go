@@ -62,11 +62,12 @@ func textOf(s *string) string {
 	return *s
 }
 
-// The person's own sign-in history shows the impersonation with who and
-// why; the admin's own history doesn't. The user page reads anyone's with
-// user.view.
+// The person's own sign-in history shows the impersonation with who (by
+// first and last name, as the activity list names people) and why; the
+// admin's own history doesn't. The user page reads anyone's with user.view.
 func TestSecurityEvents(t *testing.T) {
 	w, _ := newWorld(t, options{})
+	exec(t, w, `UPDATE users SET first_name = 'Sam', last_name = 'Super' WHERE id = ?`, idSuper)
 	operator := w.As("operator")
 	exec(t, w, `INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, 'login', 'User logged in', '203.0.113.7')`, idOperator)
 	a := start(t, w, "super_admin", idOperator)
@@ -103,7 +104,7 @@ func TestSecurityEvents(t *testing.T) {
 		return out.Data.Events
 	}
 	mine := read("/api/users/me/security-events", "")
-	if len(mine) != 2 || mine[0] != (event{"impersonation_started", "e2e_super_admin", "Reproduce the ticket 4711", ""}) ||
+	if len(mine) != 2 || mine[0] != (event{"impersonation_started", "Sam Super", "Reproduce the ticket 4711", ""}) ||
 		mine[1] != (event{"login", "", "", "203.0.113.7"}) {
 		t.Errorf("the operator's history: %+v", mine)
 	}

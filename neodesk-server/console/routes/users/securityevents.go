@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -124,7 +125,7 @@ func (h *handlers) securityEventsOf(ctx context.Context, id int64, limit int) ([
 	args = append(args, limit)
 	rows, err := store.Select(ctx, h.d.Store,
 		`SELECT a.id, a.action, a.created_at, COALESCE(a.ip_address, ''), COALESCE(a.details, ''),
-		        COALESCE(a.user_id, 0), COALESCE(u.username, '')
+		        COALESCE(a.user_id, 0), COALESCE(u.username, ''), `+people.FullNameSQL("u")+`
 		 FROM audit_log a LEFT JOIN users u ON u.id = a.user_id
 		 WHERE a.action IN (`+strings.Join(all, ", ")+`)
 		   AND (a.target_user_id = ? OR (a.target_user_id IS NULL AND a.user_id = ? AND a.action IN (`+strings.Join(own, ", ")+`)))
@@ -137,13 +138,13 @@ func (h *handlers) securityEventsOf(ctx context.Context, id int64, limit int) ([
 	out := []securityEvent{}
 	for rows.Next() {
 		var e securityEvent
-		var details, actor string
+		var details, actor, actorName string
 		var actorID sql.NullInt64
-		if err := rows.Scan(&e.ID, &e.Action, &e.At, &e.IP, &details, &actorID, &actor); err != nil {
+		if err := rows.Scan(&e.ID, &e.Action, &e.At, &e.IP, &details, &actorID, &actor, &actorName); err != nil {
 			return nil, err
 		}
 		if actorID.Int64 != id {
-			e.Actor, e.IP = actor, ""
+			e.Actor, e.IP = people.Name(actorName, "", actor), ""
 		}
 		if e.Action == "impersonation_started" {
 			if _, reason, found := strings.Cut(details, " for: "); found {
