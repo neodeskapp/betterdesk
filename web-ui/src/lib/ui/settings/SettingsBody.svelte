@@ -13,7 +13,7 @@
 
   `top` holds what comes before the filter and the groups (a read-only
   note, a warning about the current values). The summary is a side column
-  from 1200 px, sticky while the groups scroll; `summaryLabel` names it.
+  from 1200 px, sticky while the groups scroll on a window at least 1000 px tall; `summaryLabel` names it.
   Below 1200 px it comes first, or after the groups with `summaryLast`.
 -->
 <script lang="ts">
@@ -170,12 +170,15 @@
 		}
 		.has-summary .settings-summary {
 			grid-area: summary;
+		}
+	}
+	/* Sticky only on a window tall enough for the whole column: a sticky
+	   column taller than the window would hold its last links out of view
+	   when they get focus (WCAG 2.4.11) */
+	@media (min-width: 1200px) and (min-height: 1000px) {
+		.has-summary .settings-summary {
 			position: sticky;
 			top: var(--space-5);
-			/* A column taller than the window scrolls on its own, so a link at
-			   its end that gets focus comes into view (WCAG 2.4.11) */
-			max-height: calc(100vh - var(--topbar-h) - 2 * var(--space-5));
-			overflow-y: auto;
 		}
 	}
 </style>
