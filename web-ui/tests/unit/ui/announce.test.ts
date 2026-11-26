@@ -12,6 +12,7 @@ import ToastHost from '../../../src/lib/ui/ToastHost.svelte';
 import States from '../../../src/lib/ui/States.svelte';
 import Table from '../../../src/lib/ui/Table.svelte';
 import { announce, resetAnnouncer } from '../../../src/lib/ui/announce.svelte.ts';
+import type { Column } from '../../../src/lib/ui/table.ts';
 import { toast, dismissAll } from '../../../src/lib/ui/toasts.svelte.ts';
 
 beforeEach(() => vi.useFakeTimers());
@@ -104,18 +105,19 @@ describe('loading and error states', () => {
 	});
 });
 
-const nameCell = createRawSnippet<[{ name: string }]>((d) => ({ render: () => `<span>${d().name}</span>` }));
+type Row = { name: string };
+const nameCell = createRawSnippet<[Row]>((d) => ({ render: () => `<span>${d().name}</span>` }));
 
 describe('tables', () => {
 	test('the end of loading is announced with the number of rows', async () => {
 		render(Announcer);
-		const columns = [{ id: 'name', label: 'Name', primary: true, cell: nameCell }];
-		const { rerender } = render(Table, {
+		const columns: Column<Row>[] = [{ id: 'name', label: 'Name', primary: true, cell: nameCell }];
+		const { rerender } = render(Table<Row>, {
 			label: 'Devices',
 			columns,
 			rows: [],
 			loading: true,
-			key: (r: { name: string }) => r.name
+			key: (r: Row) => r.name
 		});
 		await settle();
 		await rerender({
@@ -123,7 +125,7 @@ describe('tables', () => {
 			columns,
 			rows: [{ name: 'a' }, { name: 'b' }, { name: 'c' }],
 			loading: false,
-			key: (r: { name: string }) => r.name
+			key: (r: Row) => r.name
 		});
 		await tick();
 		await settle();
@@ -132,13 +134,13 @@ describe('tables', () => {
 
 	test('an empty result says the empty sentence', async () => {
 		render(Announcer);
-		const columns = [{ id: 'name', label: 'Name', primary: true, cell: nameCell }];
-		const { rerender } = render(Table, {
+		const columns: Column<Row>[] = [{ id: 'name', label: 'Name', primary: true, cell: nameCell }];
+		const { rerender } = render(Table<Row>, {
 			label: 'Devices',
 			columns,
 			rows: [],
 			loading: true,
-			key: (r: { name: string }) => r.name,
+			key: (r: Row) => r.name,
 			emptyText: 'No devices match the search.'
 		});
 		await settle();
@@ -147,7 +149,7 @@ describe('tables', () => {
 			columns,
 			rows: [],
 			loading: false,
-			key: (r: { name: string }) => r.name,
+			key: (r: Row) => r.name,
 			emptyText: 'No devices match the search.'
 		});
 		await settle();

@@ -12,7 +12,8 @@ import { compile } from 'svelte/compiler';
 import { afterAll, describe, expect, it, test } from 'vitest';
 import rule from '../../eslint-rules/named-icon-control.ts';
 
-RuleTester.afterAll = afterAll;
+// Not in the type definitions, but read by RuleTester
+(RuleTester as unknown as { afterAll: typeof afterAll }).afterAll = afterAll;
 RuleTester.describe = describe;
 RuleTester.it = it;
 RuleTester.itOnly = it.only;
