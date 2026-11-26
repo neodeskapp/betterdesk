@@ -32,7 +32,7 @@
 		<RowList label={listLabel}>
 			{#each model.list.sessions as d (d.id)}
 				{#snippet sub()}
-					<span class="facts">
+					<span class="session-facts">
 						<span>{t('sessions.address')}: {d.ipAddress || '-'}</span>
 						<span title={formatDate(d.createdAt)}
 							>{t('sessions.signed_in')}: {formatRelative(d.createdAt)}</span
@@ -68,7 +68,7 @@
 {/if}
 
 <style>
-	.facts {
+	.session-facts {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0 var(--space-3);
