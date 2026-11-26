@@ -8864,7 +8864,8 @@
     "no_open_sessions": "Er is geen sessie open. Verbind met een ID of kies hieronder een apparaat.",
     "fail_signin_closed": "{name} sloot de verbinding toen deze browser aanmeldde.",
     "try_signin_closed": "Het apparaat weigerde de aanmelding. Maak opnieuw verbinding en meld je opnieuw aan. Blijft het gebeuren, vraag dan een beheerder het logboek van NeoDesk op het apparaat te bekijken.",
-    "screen_role": "extern scherm"
+    "screen_role": "extern scherm",
+    "tab_close_hint": "Druk op Delete om deze sessie te sluiten."
   },
   "diagram": {
     "your_computer": "Uw computer",

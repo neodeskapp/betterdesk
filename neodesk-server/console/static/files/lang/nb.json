@@ -8870,7 +8870,8 @@
     "no_open_sessions": "Ingen økt er åpen. Koble til med ID, eller velg en enhet nedenfor.",
     "fail_signin_closed": "{name} lukket tilkoblingen da denne nettleseren logget på.",
     "try_signin_closed": "Enheten avviste påloggingen. Koble til på nytt og logg på igjen. Hvis det fortsetter, be en administrator se i NeoDesk-loggen på enheten.",
-    "screen_role": "ekstern skjerm"
+    "screen_role": "ekstern skjerm",
+    "tab_close_hint": "Trykk på Delete for å lukke denne økten."
   },
   "diagram": {
     "your_computer": "Din datamaskin",

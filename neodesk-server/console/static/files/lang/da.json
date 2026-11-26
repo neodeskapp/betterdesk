@@ -8870,7 +8870,8 @@
     "no_open_sessions": "Ingen session er åben. Forbind med ID, eller vælg en enhed nedenfor.",
     "fail_signin_closed": "{name} lukkede forbindelsen, da denne browser loggede ind.",
     "try_signin_closed": "Enheden afviste login. Opret forbindelse igen, og log ind igen. Hvis det bliver ved, så bed en administrator om at se i NeoDesk-loggen på enheden.",
-    "screen_role": "fjernskærm"
+    "screen_role": "fjernskærm",
+    "tab_close_hint": "Tryk på Delete for at lukke denne session."
   },
   "diagram": {
     "your_computer": "Din computer",

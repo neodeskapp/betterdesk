@@ -8870,7 +8870,8 @@
     "no_open_sessions": "Yhtään istuntoa ei ole auki. Yhdistä tunnuksella tai valitse laite alta.",
     "fail_signin_closed": "{name} sulki yhteyden, kun tämä selain kirjautui.",
     "try_signin_closed": "Laite hylkäsi kirjautumisen. Yhdistä uudelleen ja kirjaudu uudelleen. Jos näin käy jatkuvasti, pyydä ylläpitäjää katsomaan laitteen NeoDesk-lokia.",
-    "screen_role": "etänäyttö"
+    "screen_role": "etänäyttö",
+    "tab_close_hint": "Sulje tämä istunto painamalla Delete."
   },
   "diagram": {
     "your_computer": "Tietokoneesi",

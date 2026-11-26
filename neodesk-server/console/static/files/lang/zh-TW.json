@@ -8868,7 +8868,8 @@
     "no_open_sessions": "沒有開啟的工作階段。依 ID 連線，或在下方選擇裝置。",
     "fail_signin_closed": "此瀏覽器登入時，{name} 關閉了連線。",
     "try_signin_closed": "裝置拒絕了登入。請重新連線並再次登入。如果一再發生，請管理員查看裝置上 NeoDesk 的記錄。",
-    "screen_role": "遠端畫面"
+    "screen_role": "遠端畫面",
+    "tab_close_hint": "按 Delete 關閉此工作階段。"
   },
   "diagram": {
     "your_computer": "您的電腦",

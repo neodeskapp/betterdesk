@@ -525,6 +525,7 @@
 						aria-selected={isActive}
 						aria-controls="rd-panel-{s.deviceId}"
 						tabindex={isActive ? 0 : -1}
+						aria-describedby="rd-tab-close-hint"
 						title="{s.label}{s.label !== s.deviceId ? ` (${s.deviceId})` : ''}, {st.label}"
 						onclick={() => viewer.switchTo(s.deviceId)}
 						onkeydown={(e) => onTabKeydown(e, i)}
@@ -533,7 +534,9 @@
 						<span class="tab-label">{s.label}</span>
 						<span class="sr-only">, {st.label}</span>
 					</button>
-					<!-- Pointer users close with the ×; keyboard users press Delete on the tab -->
+					<!-- Pointer users close with the ×; keyboard, screen reader and voice control users
+					     press Delete on the tab, which its description says. A button inside a tablist
+					     is not allowed, so the × stays out of the accessibility tree. -->
 					<button
 						type="button"
 						class="tab-close"
@@ -548,6 +551,9 @@
 				</div>
 			{/each}
 		</div>
+		<span id="rd-tab-close-hint" hidden
+			>{tf('remote_viewer.tab_close_hint', 'Press Delete to close this session.')}</span
+		>
 		{#if !viewer.guest}
 			<Button
 				icon="add"

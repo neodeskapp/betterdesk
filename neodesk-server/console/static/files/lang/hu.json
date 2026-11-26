@@ -8870,7 +8870,8 @@
     "no_open_sessions": "Nincs nyitott munkamenet. Csatlakozzon azonosítóval, vagy válasszon lent egy eszközt.",
     "fail_signin_closed": "{name} lezárta a kapcsolatot, amikor ez a böngésző bejelentkezett.",
     "try_signin_closed": "Az eszköz elutasította a bejelentkezést. Csatlakozzon újra, és jelentkezzen be ismét. Ha ez ismétlődik, kérje meg a rendszergazdát, hogy nézze meg az eszközön a NeoDesk naplóját.",
-    "screen_role": "távoli képernyő"
+    "screen_role": "távoli képernyő",
+    "tab_close_hint": "A munkamenet bezárásához nyomja meg a Delete billentyűt."
   },
   "diagram": {
     "your_computer": "Az Ön gépe",

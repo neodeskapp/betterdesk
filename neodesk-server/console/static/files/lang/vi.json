@@ -8870,7 +8870,8 @@
     "no_open_sessions": "Chưa có phiên nào mở. Kết nối bằng ID, hoặc chọn một thiết bị bên dưới.",
     "fail_signin_closed": "{name} đã đóng kết nối khi trình duyệt này đăng nhập.",
     "try_signin_closed": "Thiết bị đã từ chối đăng nhập. Hãy kết nối lại và đăng nhập lần nữa. Nếu vẫn xảy ra, hãy nhờ quản trị viên xem nhật ký NeoDesk trên thiết bị.",
-    "screen_role": "màn hình từ xa"
+    "screen_role": "màn hình từ xa",
+    "tab_close_hint": "Nhấn Delete để đóng phiên này."
   },
   "diagram": {
     "your_computer": "Máy tính của bạn",

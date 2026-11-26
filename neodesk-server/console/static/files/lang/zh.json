@@ -8864,7 +8864,8 @@
     "no_open_sessions": "没有打开的会话。按 ID 连接，或在下方选择设备。",
     "fail_signin_closed": "此浏览器登录时，{name} 关闭了连接。",
     "try_signin_closed": "设备拒绝了登录。请重新连接并再次登录。如果反复出现，请让管理员查看设备上 NeoDesk 的日志。",
-    "screen_role": "远程屏幕"
+    "screen_role": "远程屏幕",
+    "tab_close_hint": "按 Delete 关闭此会话。"
   },
   "diagram": {
     "your_computer": "您的电脑",

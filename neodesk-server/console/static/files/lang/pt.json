@@ -8864,7 +8864,8 @@
     "no_open_sessions": "Não há nenhuma sessão aberta. Ligue-se por ID ou escolha um dispositivo abaixo.",
     "fail_signin_closed": "{name} fechou a conexão quando este navegador entrou.",
     "try_signin_closed": "O dispositivo recusou a entrada. Conecte-se de novo e entre outra vez. Se continuar acontecendo, peça a um administrador para ver o registro do NeoDesk no dispositivo.",
-    "screen_role": "ecrã remoto"
+    "screen_role": "ecrã remoto",
+    "tab_close_hint": "Prima Delete para fechar esta sessão."
   },
   "diagram": {
     "your_computer": "O seu computador",

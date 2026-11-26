@@ -8864,7 +8864,8 @@
     "no_open_sessions": "Žádná relace není otevřená. Připojte se podle ID, nebo vyberte zařízení níže.",
     "fail_signin_closed": "{name} ukončil připojení, když se tento prohlížeč přihlašoval.",
     "try_signin_closed": "Zařízení přihlášení odmítlo. Připojte se znovu a znovu se přihlaste. Pokud se to opakuje, požádejte správce, aby se podíval do protokolu NeoDesk na zařízení.",
-    "screen_role": "vzdálená obrazovka"
+    "screen_role": "vzdálená obrazovka",
+    "tab_close_hint": "Stisknutím Delete tuto relaci zavřete."
   },
   "diagram": {
     "your_computer": "Váš počítač",

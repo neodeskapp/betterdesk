@@ -8870,7 +8870,8 @@
     "no_open_sessions": "Açık oturum yok. Kimlikle bağlanın ya da aşağıdan bir cihaz seçin.",
     "fail_signin_closed": "Bu tarayıcı oturum açarken {name} bağlantıyı kapattı.",
     "try_signin_closed": "Cihaz oturum açmayı reddetti. Yeniden bağlanın ve tekrar oturum açın. Bu tekrarlanırsa bir yöneticiden cihazdaki NeoDesk günlüğüne bakmasını isteyin.",
-    "screen_role": "uzak ekran"
+    "screen_role": "uzak ekran",
+    "tab_close_hint": "Bu oturumu kapatmak için Delete tuşuna basın."
   },
   "diagram": {
     "your_computer": "Bilgisayarınız",

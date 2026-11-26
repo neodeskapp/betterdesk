@@ -8870,7 +8870,8 @@
     "no_open_sessions": "Nicio sesiune nu este deschisă. Conectați-vă după ID sau alegeți un dispozitiv mai jos.",
     "fail_signin_closed": "{name} a închis conexiunea când acest browser s-a conectat.",
     "try_signin_closed": "Dispozitivul a refuzat conectarea. Reconectează-te și autentifică-te din nou. Dacă se repetă, roagă un administrator să verifice jurnalul NeoDesk de pe dispozitiv.",
-    "screen_role": "ecran la distanță"
+    "screen_role": "ecran la distanță",
+    "tab_close_hint": "Apasă Delete pentru a închide această sesiune."
   },
   "diagram": {
     "your_computer": "Computerul dvs.",

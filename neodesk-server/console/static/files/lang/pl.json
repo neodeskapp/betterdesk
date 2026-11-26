@@ -8864,7 +8864,8 @@
     "no_open_sessions": "Żadna sesja nie jest otwarta. Połącz się po ID albo wybierz urządzenie poniżej.",
     "fail_signin_closed": "{name} zamknął połączenie, gdy ta przeglądarka się logowała.",
     "try_signin_closed": "Urządzenie odrzuciło logowanie. Połącz się ponownie i zaloguj jeszcze raz. Jeśli to się powtarza, poproś administratora o sprawdzenie dziennika NeoDesk na urządzeniu.",
-    "screen_role": "ekran zdalny"
+    "screen_role": "ekran zdalny",
+    "tab_close_hint": "Naciśnij Delete, aby zamknąć tę sesję."
   },
   "diagram": {
     "your_computer": "Twój komputer",

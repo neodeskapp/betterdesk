@@ -8864,7 +8864,8 @@
         "no_open_sessions": "No session is open. Connect by ID, or pick a device below.",
         "fail_signin_closed": "{name} closed the connection when this browser signed in.",
         "try_signin_closed": "The device refused the sign-in. Reconnect and sign in again. If it keeps happening, ask an administrator to look at the log of NeoDesk on the device.",
-        "screen_role": "remote screen"
+        "screen_role": "remote screen",
+        "tab_close_hint": "Press Delete to close this session."
     },
     "diagram": {
         "your_computer": "Your computer",

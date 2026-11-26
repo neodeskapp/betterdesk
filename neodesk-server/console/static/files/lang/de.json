@@ -8864,7 +8864,8 @@
     "no_open_sessions": "Keine Sitzung ist offen. Verbinde dich per ID oder wähle unten ein Gerät.",
     "fail_signin_closed": "{name} hat die Verbindung bei der Anmeldung dieses Browsers beendet.",
     "try_signin_closed": "Das Gerät hat die Anmeldung abgelehnt. Verbinde dich neu und melde dich noch einmal an. Wenn das immer wieder passiert, bitte einen Administrator, das Protokoll von NeoDesk auf dem Gerät anzusehen.",
-    "screen_role": "entfernter Bildschirm"
+    "screen_role": "entfernter Bildschirm",
+    "tab_close_hint": "Mit Entf schließt du diese Sitzung."
   },
   "diagram": {
     "your_computer": "Dein Computer",

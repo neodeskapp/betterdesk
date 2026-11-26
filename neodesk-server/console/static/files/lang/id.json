@@ -8870,7 +8870,8 @@
     "no_open_sessions": "Tidak ada sesi yang terbuka. Sambungkan dengan ID, atau pilih perangkat di bawah.",
     "fail_signin_closed": "{name} menutup koneksi saat browser ini masuk.",
     "try_signin_closed": "Perangkat menolak proses masuk. Hubungkan lagi dan masuk kembali. Jika terus terjadi, minta administrator memeriksa log NeoDesk di perangkat.",
-    "screen_role": "layar jarak jauh"
+    "screen_role": "layar jarak jauh",
+    "tab_close_hint": "Tekan Delete untuk menutup sesi ini."
   },
   "diagram": {
     "your_computer": "Komputer Anda",
