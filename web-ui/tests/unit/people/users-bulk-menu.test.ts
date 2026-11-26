@@ -52,7 +52,7 @@ describe('actions for selected accounts', () => {
 		render(Page);
 		await screen.findAllByText('jonas');
 		// The first checkbox selects all; the next ones are the rows
-		await fireEvent.click(screen.getAllByRole('checkbox')[2]);
+		await fireEvent.click(screen.getAllByRole('checkbox')[2]!);
 		const button = await screen.findByRole('button', { name: 'users.bulk_actions' });
 		await fireEvent.click(button);
 		const menu = await screen.findByRole('menu');
