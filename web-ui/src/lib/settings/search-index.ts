@@ -992,7 +992,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'backup-create',
 		'settings.backup_tab.create_title',
 		'',
-		['settings.backup_tab.create_note'],
+		['settings.backup_tab.create_note_plain'],
 		'server.config'
 	],
 	[

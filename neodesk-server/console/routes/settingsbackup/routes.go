@@ -104,6 +104,9 @@ func FileOptions(cfg *config.Config, serverDB string) backup.Options {
 		CAFile:         cfg.CAFile,
 		EndpointsFile:  filepath.Join(cfg.DataDir, serverinfo.DurableBasename),
 		AppVersion:     cfg.Version,
+		Docker:         cfg.Docker,
+		// the session secret's first source (session.LoadSecret)
+		SessionSecretFromEnv: cfg.Getenv != nil && cfg.Getenv("SESSION_SECRET") != "",
 	}
 }
 

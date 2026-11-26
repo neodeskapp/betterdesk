@@ -37,7 +37,7 @@
     "kind": "bytes",
     "type": "application/javascript",
     "length": 6636,
-    "sha256": "f70cac924eeb62ef409c5ea3d43b6a67944a1f5a89b0a2bd6574b9a598ee2968",
+    "sha256": "39abb7d614388d2e62097eb195456577bcef108154a2e97cf459b011b6341e13",
     "head": "(function (boot) {\n    var root = document.documentElement;\n    var VARS = {\n        bgPrimary: '--bg-primary', bgSecondary: '--bg-secondary', bgTertiary: '--bg-tertiary',\n        bgElevated: '--bg-elevated', textPrimary: '--text-primary', textSecondary: '--text-secondary',\n        accentBlue: '--ac"
    }
   }

@@ -20,20 +20,23 @@
 		type Schedule,
 		type ScheduleStatus
 	} from '#lib/api/settings-system.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
 	import { formatNumber } from '#lib/i18n/format.ts';
 	import {
 		INTERVALS,
 		JSON_RESTORE_ITEMS,
 		RESTORE_PARTS,
 		canRestore,
+		createNote,
 		fileKind,
 		nextBackup,
+		partState,
 		restoreFields,
 		restoreHint,
 		restoreNeedsRestart,
 		restoreOutcome,
 		restoredPartLabel,
+		securityWarning,
 		type RestorePart
 	} from '#lib/settings-b/backup.ts';
 	import TabCols from '#lib/settings-b/TabCols.svelte';
@@ -270,6 +273,9 @@
 		{ label: t('settings.side.backup_kept'), value: savedTo }
 	]);
 	const num = (n: number | undefined) => (stats ? formatNumber(n ?? 0) : undefined);
+	// What a backup holds, from the server's answer (texts and panel alike)
+	const keysState = $derived(partState(stats, 'server_keys', t));
+	const envState = $derived(partState(stats, 'env', t));
 	const contentFacts = $derived<IdFact[]>([
 		{
 			id: 'backup-stat-users',
@@ -364,13 +370,19 @@
 {/snippet}
 {#snippet keysIncluded()}
 	<BooleanStatus
-		value={!!(stats?.components.goPrivKey || stats?.components.goApiKey)}
+		value={keysState?.included ?? !!(stats?.components.goPrivKey || stats?.components.goApiKey)}
 		on={t('common.yes')}
 		off={t('common.no')}
 	/>
+	{#if keysState?.reason}<span class="part-reason">{keysState.reason}</span>{/if}
 {/snippet}
 {#snippet envIncluded()}
-	<BooleanStatus value={!!stats?.components.env} on={t('common.yes')} off={t('common.no')} />
+	<BooleanStatus
+		value={envState?.included ?? !!stats?.components.env}
+		on={t('common.yes')}
+		off={t('common.no')}
+	/>
+	{#if envState?.reason}<span class="part-reason">{envState.reason}</span>{/if}
 {/snippet}
 
 {#if !allowed}
@@ -391,8 +403,8 @@
 			<div class="settings-grid">
 				<section class="section" id="backup-create" aria-labelledby="backup-create-title">
 					<h2 id="backup-create-title">{t('settings.backup_tab.create_title')}</h2>
-					<p class="section-note">{t('settings.backup_tab.create_note')}</p>
-					<Notice tone="warning" message={t('backup.security_warning')} />
+					<p class="section-note">{createNote(stats, t, i18n.locale)}</p>
+					<Notice tone="warning" message={securityWarning(stats, t, i18n.locale)} />
 					{#if !fullBackups}
 						<Notice id="backup-super-admin-only" message={t('settings.backup_tab.super_admin_only')} />
 					{:else}
@@ -690,6 +702,11 @@
 	}
 	.state-error {
 		color: var(--danger);
+	}
+	.part-reason {
+		display: block;
+		color: var(--text-muted);
+		font-size: var(--text-sm);
 	}
 	.confirm-list {
 		margin: var(--space-2) 0;

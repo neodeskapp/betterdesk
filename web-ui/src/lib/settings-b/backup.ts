@@ -4,7 +4,82 @@
  * renderBackupSide). No DOM.
  */
 
-import type { Schedule, ScheduleStatus } from '#lib/api/settings-system.ts';
+import type { BackupPart, BackupStats, Schedule, ScheduleStatus } from '#lib/api/settings-system.ts';
+
+type Translate = (key: string, params?: Record<string, string | number>) => string;
+
+/*
+ * What a backup holds comes from the server's contents answer
+ * (GET /api/settings/backup/stats, `parts`), built from the plan the
+ * archive follows: the description, the warning and "In a backup now"
+ * read the same list. A fixed list in the text named the environment
+ * file on Docker, where there is none (BUGS L557).
+ */
+
+/** A list in the page's language: "a, b, and c" */
+function listText(items: readonly string[], locale?: string): string {
+	try {
+		return new Intl.ListFormat(locale, { type: 'conjunction' }).format(items);
+	} catch {
+		return items.join(', ');
+	}
+}
+
+/** A label of a part; a part this console has no words for keeps its id */
+function label(t: Translate, kind: 'part' | 'secret', id: string): string {
+	const key = `settings.backup_tab.${kind}_${id}`;
+	const text = t(key);
+	return text === key ? id : text;
+}
+
+function included(stats: BackupStats | null | undefined): BackupPart[] {
+	return (stats?.parts ?? []).filter((p) => p.included);
+}
+
+/** "Create a backup": what the file holds, as the server counts it now */
+export function createNote(stats: BackupStats | null | undefined, t: Translate, locale?: string): string {
+	const parts = included(stats);
+	if (!parts.length) return t('settings.backup_tab.create_note_plain');
+	return t('settings.backup_tab.create_note_parts', {
+		parts: listText(
+			parts.map((p) => label(t, 'part', p.id)),
+			locale
+		)
+	});
+}
+
+/** The warning over "Create a backup": the secrets a backup made now holds */
+export function securityWarning(
+	stats: BackupStats | null | undefined,
+	t: Translate,
+	locale?: string
+): string {
+	const secrets = included(stats).filter((p) => p.secret);
+	if (!secrets.length) return t('settings.backup_tab.warning_plain');
+	return t('settings.backup_tab.warning_parts', {
+		parts: listText(
+			secrets.map((p) => label(t, 'secret', p.id)),
+			locale
+		)
+	});
+}
+
+/**
+ * A part as "In a backup now" shows it: included, or left out and why.
+ * Undefined while the answer is not in or the server names no such part.
+ */
+export function partState(
+	stats: BackupStats | null | undefined,
+	id: string,
+	t: Translate
+): { included: boolean; reason: string } | undefined {
+	const part = (stats?.parts ?? []).find((p) => p.id === id);
+	if (!part) return undefined;
+	if (part.included) return { included: true, reason: '' };
+	const key = `settings.backup_tab.reason_${part.reason || 'missing'}`;
+	const reason = t(key);
+	return { included: false, reason: reason === key ? t('settings.backup_tab.reason_missing') : reason };
+}
 
 export type FileKind = '' | 'archive' | 'json' | 'invalid';
 
