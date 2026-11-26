@@ -38,7 +38,10 @@ const THEMES = ['light', 'dark'] as const;
 /* ── Openers ── */
 
 const button = (name: string | RegExp) => async (page: Page) => {
-	await page.getByRole('button', { name, exact: typeof name === 'string' }).first().click();
+	await page
+		.getByRole('button', { name, exact: typeof name === 'string' })
+		.first()
+		.click();
 	return page.getByRole('dialog').last();
 };
 
@@ -133,7 +136,11 @@ const SURFACES: Surface[] = [
 	// Users
 	{ name: 'users', path: '/users' },
 	{ name: 'users-edit-sheet', path: '/users', open: menu('More actions for e2e_operator', 'Edit') },
-	{ name: 'users-access-sheet', path: '/users', open: menu('More actions for e2e_operator', /^Console access/) },
+	{
+		name: 'users-access-sheet',
+		path: '/users',
+		open: menu('More actions for e2e_operator', /^Console access/)
+	},
 	{ name: 'users-orgs-sheet', path: '/users', open: menu('More actions for e2e_operator', /^Organizations/) },
 	{ name: 'users-add-sheet', path: '/users', open: button('Add user') },
 	{ name: 'users-group-dialog', path: '/users', open: button('Create group') },
@@ -299,7 +306,10 @@ for (const theme of THEMES) {
 						if (overlay) {
 							const extra = await overlayOverflow(overlay);
 							if (extra > 0) {
-								await page.setViewportSize({ width: size.width, height: Math.min(size.height + extra, 8000) });
+								await page.setViewportSize({
+									width: size.width,
+									height: Math.min(size.height + extra, 8000)
+								});
 								await page.waitForTimeout(300);
 							}
 							await page.screenshot({ path: file, animations: 'disabled' });

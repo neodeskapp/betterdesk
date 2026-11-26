@@ -30,7 +30,10 @@ async function schedule(page: Page): Promise<ScheduleAnswer> {
 async function putSchedule(page: Page, body: unknown): Promise<number> {
 	return page.evaluate(async (body) => {
 		const boot = await (
-			await fetch('/api/console/bootstrap', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+			await fetch('/api/console/bootstrap', {
+				credentials: 'same-origin',
+				headers: { Accept: 'application/json' }
+			})
 		).json();
 		const r = await fetch('/api/settings/backup/schedule', {
 			method: 'PUT',
@@ -58,7 +61,12 @@ async function tabTo(page: Page, target: Locator, max = 80): Promise<void> {
 /** The schedule as saved: daily at 02:00, 14 kept, the next run at 02:00 within a day */
 async function expectNightly(page: Page): Promise<void> {
 	const saved = await schedule(page);
-	expect(saved.schedule).toMatchObject({ enabled: true, intervalHours: 24, timeOfDay: '02:00', retentionCount: 14 });
+	expect(saved.schedule).toMatchObject({
+		enabled: true,
+		intervalHours: 24,
+		timeOfDay: '02:00',
+		retentionCount: 14
+	});
 	expect(saved.next.at).not.toBeNull();
 	const at = new Date(saved.next.at as string);
 	const now = Date.now();
