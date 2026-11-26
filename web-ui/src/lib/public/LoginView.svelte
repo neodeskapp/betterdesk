@@ -291,7 +291,9 @@
 		}
 	}
 
-	// Digits only; the sixth one sends the code (typed or pasted)
+	/* Digits only; the sixth one sends the code (typed or pasted). No
+	   maxlength: a pasted "123 456" would lose its last digit to it before
+	   the space is dropped (WCAG 3.3.8). */
 	function oncodeinput(e: Event) {
 		const digits = codeDigits((e.currentTarget as HTMLInputElement).value);
 		if (digits !== code) code = digits;
@@ -444,8 +446,6 @@
 								class="totp-input"
 								inputmode="numeric"
 								autocomplete="one-time-code"
-								pattern="[0-9]{6}"
-								maxlength={6}
 								bind:value={code}
 								bind:element={codeInput}
 								oninput={oncodeinput}
@@ -501,8 +501,6 @@
 									class="totp-input"
 									inputmode="numeric"
 									autocomplete="one-time-code"
-									pattern="[0-9]{6}"
-									maxlength={6}
 									bind:value={code}
 									bind:element={codeInput}
 									oninput={oncodeinput}

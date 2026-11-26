@@ -322,10 +322,8 @@
 							bind:element={codeEl}
 							bind:value={code}
 							inputmode="numeric"
-							pattern="[0-9]{6}"
-							maxlength={6}
 							autocomplete="one-time-code"
-							oninput={() => (code = code.replace(/[^0-9]/g, ''))}
+							oninput={() => (code = code.replace(/[^0-9]/g, '').slice(0, 6))}
 						/>
 					{/snippet}
 				</Field>
@@ -345,10 +343,8 @@
 							bind:element={codeEl}
 							bind:value={code}
 							inputmode="numeric"
-							pattern="[0-9]{6}"
-							maxlength={6}
 							autocomplete="one-time-code"
-							oninput={() => (code = code.replace(/[^0-9]/g, ''))}
+							oninput={() => (code = code.replace(/[^0-9]/g, '').slice(0, 6))}
 						/>
 					{/snippet}
 				</Field>
@@ -383,11 +379,10 @@
 							<Input
 								{...f}
 								inputmode="numeric"
-								pattern="[0-9]{6}"
-								maxlength={6}
 								autocomplete="one-time-code"
 								bind:element={disableEl}
 								bind:value={disablePassword}
+								oninput={() => (disablePassword = disablePassword.replace(/[^0-9]/g, '').slice(0, 6))}
 							/>
 						{/snippet}
 					</Field>
