@@ -106,6 +106,7 @@
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
+	import MenuGroup from '#lib/ui/MenuGroup.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
