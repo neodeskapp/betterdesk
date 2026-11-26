@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { timeLeft, viewingTitle } from '#lib/shell/viewing-as.ts';
+import { timeLeft, viewedName, viewingTitle } from '#lib/shell/viewing-as.ts';
 import {
 	applyBootstrap,
 	canWrite,
@@ -14,6 +14,12 @@ describe('the Sign in as bar', () => {
 		expect(timeLeft(14 * 60_000 + 5_400)).toBe('14:06');
 		expect(timeLeft(9_000)).toBe('0:09');
 		expect(timeLeft(-5_000)).toBe('0:00');
+	});
+
+	test('names the account by first and last name, as the bar does, else by username', () => {
+		expect(viewedName({ username: 'olga', displayName: 'Olga Berg' })).toBe('Olga Berg');
+		expect(viewedName({ username: 'olga', displayName: '' })).toBe('olga');
+		expect(viewedName(null)).toBe('');
 	});
 
 	test('puts the account first in the tab title', () => {

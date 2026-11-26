@@ -19,11 +19,11 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
-	import { timeLeft } from './viewing-as.ts';
+	import { timeLeft, viewedName } from './viewing-as.ts';
 
 	const imp = $derived(session.impersonation);
 	/** The person viewed, by display name */
-	const username = $derived(session.user?.displayName || session.user?.username || '');
+	const username = $derived(viewedName(session.user));
 	/** The server's clock minus this one's, from the bootstrap */
 	const skew = untrack(() => (imp ? imp.serverNow - Date.now() : 0));
 	let now = $state(Date.now());

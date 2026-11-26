@@ -56,7 +56,7 @@
 	import { isSearchShortcut } from './search.ts';
 	import { startGuard, stopGuard } from './session-guard.svelte.ts';
 	import ViewingAsBanner from './ViewingAsBanner.svelte';
-	import { viewingTitle } from './viewing-as.ts';
+	import { viewedName, viewingTitle } from './viewing-as.ts';
 	import { onImpersonationChange } from '#lib/api/impersonation.ts';
 
 	let { children }: { children: Snippet } = $props();
@@ -97,7 +97,7 @@
 	// Sign in as: the tab says whose console it is, first
 	const docTitle = $derived(
 		session.impersonation
-			? viewingTitle(t('impersonation.tab_title', { username: session.user?.username ?? '' }), baseTitle)
+			? viewingTitle(t('impersonation.tab_title', { username: viewedName(session.user) }), baseTitle)
 			: baseTitle
 	);
 
