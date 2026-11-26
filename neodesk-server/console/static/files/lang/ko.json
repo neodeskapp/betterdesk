@@ -7271,6 +7271,8 @@
     "perm_user_create": "사용자 생성",
     "perm_user_edit": "사용자 편집",
     "perm_user_delete": "사용자 삭제",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "서버 구성",
     "perm_server_keys": "API 키 관리",
     "perm_org_create": "조직 만들기",

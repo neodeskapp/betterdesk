@@ -7271,6 +7271,8 @@
     "perm_user_create": "Creare utenti",
     "perm_user_edit": "Modificare utenti",
     "perm_user_delete": "Eliminare utenti",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Configurare server",
     "perm_server_keys": "Gestire chiavi API",
     "perm_org_create": "Creare organizzazioni",

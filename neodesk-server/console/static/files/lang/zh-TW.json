@@ -4902,6 +4902,8 @@
     "perm_user_create": "創建用戶",
     "perm_user_edit": "編輯用戶",
     "perm_user_delete": "刪除用戶",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "服務器配置",
     "perm_server_keys": "管理API密鑰",
     "perm_server_attestation": "執行容量測試",

@@ -187,3 +187,10 @@ func (d *Deps) At(prefix string) *Deps {
 func (d *Deps) LogAction(r *http.Request, action, details string) error {
 	return d.Audit.Write(r.Context(), UserID(r), action, details, ClientIP(r))
 }
+
+// LogAccountAction is LogAction for an action about another account (or
+// the account's own): the entry names target as the account it is about,
+// so the account's history and its user page find it.
+func (d *Deps) LogAccountAction(r *http.Request, target int64, action, details string) error {
+	return d.Audit.WriteAbout(r.Context(), UserID(r), target, action, details, ClientIP(r))
+}

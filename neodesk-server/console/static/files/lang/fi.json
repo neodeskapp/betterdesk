@@ -7277,6 +7277,8 @@
     "perm_user_create": "Luo käyttäjiä",
     "perm_user_edit": "Muokkaa käyttäjiä",
     "perm_user_delete": "Poista käyttäjiä",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Palvelimen määritykset",
     "perm_server_keys": "Hallitse API-avaimia",
     "perm_org_create": "Luo organisaatioita",

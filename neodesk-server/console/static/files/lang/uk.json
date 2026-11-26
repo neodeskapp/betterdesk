@@ -7277,6 +7277,8 @@
     "perm_user_create": "Створення користувачів",
     "perm_user_edit": "Редагувати користувачів",
     "perm_user_delete": "Видалити користувачів",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Конфігурація сервера",
     "perm_server_keys": "Керуйте ключами API",
     "perm_org_create": "Створюйте організації",

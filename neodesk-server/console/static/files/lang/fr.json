@@ -4902,6 +4902,8 @@
     "perm_user_create": "Créer des utilisateurs",
     "perm_user_edit": "Modifier les utilisateurs",
     "perm_user_delete": "Supprimer des utilisateurs",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Configuration du serveur",
     "perm_server_keys": "Gérer les clés API",
     "perm_server_attestation": "Lancer des tests de capacité",

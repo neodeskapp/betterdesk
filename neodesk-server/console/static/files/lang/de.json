@@ -7271,6 +7271,8 @@
     "perm_user_create": "Benutzer erstellen",
     "perm_user_edit": "Benutzer bearbeiten",
     "perm_user_delete": "Benutzer löschen",
+    "perm_user_security": "Anmeldesicherheit von Benutzern verwalten",
+    "perm_user_impersonate": "Die Konsole als anderer Benutzer ansehen",
     "perm_server_config": "Server konfigurieren",
     "perm_server_keys": "API-Schlüssel verwalten",
     "perm_org_create": "Organisationen erstellen",

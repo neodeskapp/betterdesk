@@ -7277,6 +7277,8 @@
     "perm_user_create": "Creați utilizatori",
     "perm_user_edit": "Editați utilizatori",
     "perm_user_delete": "Ștergeți utilizatori",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Configurare server",
     "perm_server_keys": "Gestionați cheile API",
     "perm_org_create": "Creați organizații",

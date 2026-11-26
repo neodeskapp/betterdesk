@@ -7277,6 +7277,8 @@
     "perm_user_create": "Tạo người dùng",
     "perm_user_edit": "Chỉnh sửa người dùng",
     "perm_user_delete": "Xóa người dùng",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Cấu hình máy chủ",
     "perm_server_keys": "Quản lý khóa API",
     "perm_org_create": "Tạo tổ chức",

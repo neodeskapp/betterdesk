@@ -7277,6 +7277,8 @@
     "perm_user_create": "Kullanıcı oluştur",
     "perm_user_edit": "Kullanıcıları düzenle",
     "perm_user_delete": "Kullanıcıları sil",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Sunucu yapılandırması",
     "perm_server_keys": "API anahtarlarını yönetin",
     "perm_org_create": "Organizasyonlar oluşturun",

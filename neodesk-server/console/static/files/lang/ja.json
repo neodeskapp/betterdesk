@@ -7271,6 +7271,8 @@
     "perm_user_create": "ユーザーの作成",
     "perm_user_edit": "ユーザーの編集",
     "perm_user_delete": "ユーザーを削除する",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "サーバー構成",
     "perm_server_keys": "API キーを管理する",
     "perm_org_create": "組織を作成する",

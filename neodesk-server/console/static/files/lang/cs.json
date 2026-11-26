@@ -7271,6 +7271,8 @@
     "perm_user_create": "Vytvořit uživatele",
     "perm_user_edit": "Upravit uživatele",
     "perm_user_delete": "Smazat uživatele",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Konfigurace serveru",
     "perm_server_keys": "Správa API klíčů",
     "perm_org_create": "Vytvořit organizace",

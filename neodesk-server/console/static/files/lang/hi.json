@@ -7277,6 +7277,8 @@
     "perm_user_create": "उपयोगकर्ता बनाएं",
     "perm_user_edit": "उपयोगकर्ताओं को संपादित करें",
     "perm_user_delete": "उपयोगकर्ताओं को हटाएँ",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "सर्वर कॉन्फ़िगरेशन",
     "perm_server_keys": "API कुंजियाँ प्रबंधित करें",
     "perm_org_create": "संगठन बनाएं",

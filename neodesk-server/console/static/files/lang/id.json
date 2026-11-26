@@ -7277,6 +7277,8 @@
     "perm_user_create": "Buat pengguna",
     "perm_user_edit": "Sunting pengguna",
     "perm_user_delete": "Hapus pengguna",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Konfigurasi server",
     "perm_server_keys": "Kelola kunci API",
     "perm_org_create": "Buat organisasi",

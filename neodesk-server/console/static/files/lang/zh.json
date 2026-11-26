@@ -4880,6 +4880,8 @@
     "perm_user_create": "创建用户",
     "perm_user_edit": "编辑用户",
     "perm_user_delete": "删除用户",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "服务器配置",
     "perm_server_keys": "管理API密钥",
     "perm_org_create": "创建组织",

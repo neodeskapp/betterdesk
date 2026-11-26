@@ -7271,6 +7271,8 @@
     "perm_user_create": "Gebruikers maken",
     "perm_user_edit": "Gebruikers bewerken",
     "perm_user_delete": "Gebruikers verwijderen",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Server configureren",
     "perm_server_keys": "API-sleutels beheren",
     "perm_org_create": "Organisaties maken",

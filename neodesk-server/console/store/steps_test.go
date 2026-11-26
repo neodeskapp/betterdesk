@@ -118,7 +118,7 @@ func TestMigrateAddsEachMissingColumn(t *testing.T) {
 				requireColumnDefault(t, db, table, col)
 			})
 		}
-		if wantSteps := map[store.Dialect]int{store.SQLite: 39, store.Postgres: 31}[db.Dialect()]; added != wantSteps {
+		if wantSteps := map[store.Dialect]int{store.SQLite: 39 + len(laterColumns), store.Postgres: 31 + len(laterColumns)}[db.Dialect()]; added != wantSteps {
 			t.Errorf("%d column steps on %s, want %d", added, db.Dialect(), wantSteps)
 		}
 	})

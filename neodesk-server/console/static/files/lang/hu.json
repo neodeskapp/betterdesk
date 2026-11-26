@@ -7277,6 +7277,8 @@
     "perm_user_create": "Felhasználók létrehozása",
     "perm_user_edit": "Felhasználók szerkesztése",
     "perm_user_delete": "Felhasználók törlése",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Szerver konfigurációja",
     "perm_server_keys": "A API kulcsok kezelése",
     "perm_org_create": "Szervezetek létrehozása",

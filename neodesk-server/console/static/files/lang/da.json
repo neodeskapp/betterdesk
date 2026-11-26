@@ -7277,6 +7277,8 @@
     "perm_user_create": "Opret brugere",
     "perm_user_edit": "Rediger brugere",
     "perm_user_delete": "Slet brugere",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Server konfiguration",
     "perm_server_keys": "Administrer API nøgler",
     "perm_org_create": "Skab organisationer",

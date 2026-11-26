@@ -7277,6 +7277,8 @@
     "perm_user_create": "Skapa användare",
     "perm_user_edit": "Redigera användare",
     "perm_user_delete": "Ta bort användare",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "Serverkonfiguration",
     "perm_server_keys": "Hantera API-nycklar",
     "perm_org_create": "Skapa organisationer",

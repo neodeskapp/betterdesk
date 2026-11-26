@@ -4960,6 +4960,8 @@
         "perm_user_create": "Create users",
         "perm_user_edit": "Edit users",
         "perm_user_delete": "Delete users",
+        "perm_user_security": "Manage sign-in security of users",
+        "perm_user_impersonate": "View the console as another user",
         "perm_server_config": "Server configuration",
         "perm_server_keys": "Manage API keys",
         "perm_server_attestation": "Run capacity tests",

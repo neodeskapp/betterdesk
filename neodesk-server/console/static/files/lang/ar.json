@@ -7278,6 +7278,8 @@
     "perm_user_create": "إنشاء المستخدمين",
     "perm_user_edit": "تحرير المستخدمين",
     "perm_user_delete": "حذف المستخدمين",
+    "perm_user_security": "Manage sign-in security of users",
+    "perm_user_impersonate": "View the console as another user",
     "perm_server_config": "تكوين الخادم",
     "perm_server_keys": "إدارة مفاتيح API",
     "perm_org_create": "إنشاء المنظمات",
