@@ -144,10 +144,17 @@
 		else if (!on && port === 636) set('port', 389);
 	}
 
-	/** "Set here" for a stored text; the server reports no source for the rest */
+	/**
+	 * "Set here" for a text of a directory that was set up (it has a host).
+	 * The server fills some fields with its own values before anything is
+	 * saved, so on a fresh install no row claims to be set here.
+	 */
 	const stored = (f: Field) => {
 		const value = draft.loaded[f];
-		return storedSource(typeof value === 'string' && value.trim() !== '');
+		return storedSource(
+			draft.loaded.host.trim() !== '' &&
+				((typeof value === 'string' && value.trim() !== '') || (Array.isArray(value) && value.length > 0))
+		);
 	};
 
 	async function save() {
@@ -604,7 +611,7 @@
 					)}
 					group
 					changed={draft.isChanged('group_role_map')}
-					source={draft.loaded.group_role_map.length ? storedSource(true) : null}
+					source={stored('group_role_map')}
 					error={refused.group_role_map ?? ''}
 				>
 					{#snippet control(f)}
