@@ -1606,7 +1606,11 @@
       "status_readonly": "อ่านอย่างเดียว คอนโซลแสดงได้แต่แก้ไขไม่ได้",
       "status_file": "{size} แก้ไข {when}",
       "missing_title": "ไม่มีบนเซิร์ฟเวอร์นี้ ({n})",
-      "missing_note": "ไฟล์เหล่านี้เป็นของการติดตั้งแบบอื่นและไม่มีอยู่ที่นี่"
+      "missing_note": "ไฟล์เหล่านี้เป็นของการติดตั้งแบบอื่นและไม่มีอยู่ที่นี่",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "สิ่งที่ไคลเอนต์ได้รับตอนนี้",

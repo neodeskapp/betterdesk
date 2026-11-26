@@ -1600,7 +1600,11 @@
       "status_readonly": "Alleen-lezen. De console kan het tonen maar niet wijzigen.",
       "status_file": "{size}, gewijzigd {when}",
       "missing_title": "Niet op deze server ({n})",
-      "missing_note": "Deze bestanden horen bij andere soorten installaties en bestaan hier niet."
+      "missing_note": "Deze bestanden horen bij andere soorten installaties en bestaan hier niet.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "Wat clients nu krijgen",

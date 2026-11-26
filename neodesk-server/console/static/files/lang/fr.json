@@ -1604,7 +1604,11 @@
       "status_readonly": "Lecture seule. La console peut l'afficher mais pas le modifier.",
       "status_file": "{size}, modifié {when}",
       "missing_title": "Absents de ce serveur ({n})",
-      "missing_note": "Ces fichiers appartiennent à d'autres types d'installation et n'existent pas ici."
+      "missing_note": "Ces fichiers appartiennent à d'autres types d'installation et n'existent pas ici.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "Ce que reçoivent les clients",

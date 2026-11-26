@@ -1606,7 +1606,11 @@
       "status_readonly": "Doar citire. Consola îl poate afișa, dar nu îl poate modifica.",
       "status_file": "{size}, modificat {when}",
       "missing_title": "Nu sunt pe acest server ({n})",
-      "missing_note": "Aceste fișiere aparțin altor tipuri de instalare și nu există aici."
+      "missing_note": "Aceste fișiere aparțin altor tipuri de instalare și nu există aici.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "Ce primesc acum clienții",

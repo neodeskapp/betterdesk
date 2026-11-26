@@ -1606,7 +1606,11 @@
       "status_readonly": "Skrivebeskyttet. Konsollen kan vise den, men ikke ændre den.",
       "status_file": "{size}, ændret {when}",
       "missing_title": "Ikke på denne server ({n})",
-      "missing_note": "Disse filer hører til andre installationstyper og findes ikke her."
+      "missing_note": "Disse filer hører til andre installationstyper og findes ikke her.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "Hvad klienter får nu",

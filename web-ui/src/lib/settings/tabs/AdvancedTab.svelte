@@ -6,6 +6,10 @@
   phones, both stay in view). A file whose saves need a service restart
   gets a danger zone under the editor. Old page: views/settings.ejs
   "Advanced", settings.js initAdvancedSection.
+  One settings group (PATTERN.md rule 7): its consequence line says once
+  what Save file does; the line under the editor says when the open file's
+  change takes effect, and the restart it names is the separate action in
+  the danger zone (rule 8), never beside Save file.
 -->
 <script lang="ts">
 	import { getPendingRestart } from '#lib/api/restart.ts';
@@ -17,7 +21,7 @@
 		type ConfigFile
 	} from '#lib/api/settings-system.ts';
 	import { formatBytes } from '#lib/i18n/format.ts';
-	import { has, t } from '#lib/i18n/i18n.svelte.ts';
+	import { has, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { onRestartCanceled, showRestartPrompt } from '#lib/settings/restart.svelte.ts';
 	import {
 		fileLabelKey,
@@ -40,6 +44,7 @@
 	import Time from '#lib/ui/Time.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
+	import SettingsGroup from '#lib/ui/settings/SettingsGroup.svelte';
 	import { trackDirty } from '#lib/settings/dirty.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 
@@ -234,10 +239,16 @@
 {#if !allowed}
 	<States message={t('settings.page.admin_only')} />
 {:else}
-	<section class="section advanced-config" aria-labelledby="advanced-title">
-		<h2 id="advanced-title">{t('settings.advanced_title')}</h2>
-		<p class="section-note">{t('settings.advanced_tab.note')}</p>
-		<Notice tone="warning" message={t('settings.advanced_warning')} />
+	<SettingsGroup
+		id="advanced-config"
+		title={tf('settings.advanced_tab.group_title', 'Files on this server')}
+		description={tf('settings.advanced_tab.pick', 'Pick a file to see and edit it.')}
+		consequence={tf(
+			'settings.advanced_tab.save_effect',
+			'Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.'
+		)}
+	>
+		{#snippet note()}<Notice tone="warning" message={t('settings.advanced_warning')} />{/snippet}
 		<div class="split advanced-config-layout">
 			<div class="split-list">
 				<h3 class="files-label" id="advanced-files-label">{t('settings.advanced_files_label')}</h3>
@@ -325,7 +336,7 @@
 				{/if}
 			</div>
 		</div>
-	</section>
+	</SettingsGroup>
 
 	{#if open && restartRow}
 		<div id="advanced-restart-zone">
@@ -335,7 +346,7 @@
 					{
 						title: t('settings.advanced_tab.restart_row'),
 						consequence: t('settings.advanced_tab.restart_desc'),
-						action: t('settings.advanced_tab.restart_button'),
+						action: tf('settings.advanced_tab.restart_services', 'Restart services…'),
 						onclick: () => void restartServices()
 					}
 				]}
@@ -345,16 +356,12 @@
 {/if}
 
 <style>
-	.advanced-config {
-		min-width: 0;
-	}
 	/* List and editor side by side (ui/Split's look); on phones the editor
 	   follows the list and both stay in view, as before */
 	.split {
 		display: grid;
 		grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
 		min-height: 420px;
-		border-top: 1px solid var(--rule);
 	}
 	.split-list {
 		display: flex;

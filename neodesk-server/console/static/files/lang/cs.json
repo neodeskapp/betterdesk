@@ -1600,7 +1600,11 @@
       "status_readonly": "Jen pro čtení. Konzole ho zobrazí, ale nezmění.",
       "status_file": "{size}, změněno {when}",
       "missing_title": "Na tomto serveru nejsou ({n})",
-      "missing_note": "Tyto soubory patří k jiným typům instalace a tady neexistují."
+      "missing_note": "Tyto soubory patří k jiným typům instalace a tady neexistují.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "Co teď klienti dostávají",

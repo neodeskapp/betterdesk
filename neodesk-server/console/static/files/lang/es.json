@@ -1600,7 +1600,11 @@
       "status_readonly": "Solo lectura. La consola puede mostrarlo pero no cambiarlo.",
       "status_file": "{size}, cambiado {when}",
       "missing_title": "No están en este servidor ({n})",
-      "missing_note": "Estos archivos son de otros tipos de instalación y aquí no existen."
+      "missing_note": "Estos archivos son de otros tipos de instalación y aquí no existen.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "Lo que reciben ahora los clientes",

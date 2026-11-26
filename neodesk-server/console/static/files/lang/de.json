@@ -1600,7 +1600,11 @@
       "status_readonly": "Nur lesbar. Die Konsole kann sie anzeigen, aber nicht ändern.",
       "status_file": "{size}, geändert {when}",
       "missing_title": "Nicht auf diesem Server ({n})",
-      "missing_note": "Diese Dateien gibt es auf diesem Server nicht, darum lassen sie sich hier nicht bearbeiten."
+      "missing_note": "Diese Dateien gibt es auf diesem Server nicht, darum lassen sie sich hier nicht bearbeiten.",
+      "group_title": "Dateien auf diesem Server",
+      "pick": "Wähl eine Datei, um sie anzusehen und zu bearbeiten.",
+      "save_effect": "„Datei speichern“ schreibt die Datei sofort und behält eine Kopie der vorigen Fassung. Wann die Änderung wirkt, hängt von der Datei ab: Die Zeile unter dem Editor sagt es.",
+      "restart_services": "Dienste neu starten…"
     },
     "side": {
       "general_title": "Was Clients jetzt erhalten",
