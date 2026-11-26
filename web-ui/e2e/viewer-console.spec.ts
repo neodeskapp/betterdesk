@@ -100,7 +100,31 @@ test('the sidebar folds away and comes back, and is remembered', async ({ page }
 		'false'
 	);
 	// Folded: the top bar offers the menu that opens the sidebar as a drawer
-	await expect(page.locator('.shell-topbar button[aria-controls]').first()).toBeVisible();
+	const menu = page.locator('.shell-topbar button[aria-controls]').first();
+	await expect(menu).toBeVisible();
+	// The drawer lies over the whole viewer: no part of the viewer covers it.
+	// Hit testing skips the inert page behind the drawer, so the check lifts that for a moment
+	await menu.click();
+	const drawer = page.locator('.shell-sidebar.is-open');
+	await expect(drawer).toBeVisible();
+	await expect
+		.poll(() =>
+			drawer.evaluate((el) => {
+				const behind = document.querySelector('.shell-main');
+				behind?.removeAttribute('inert');
+				const r = el.getBoundingClientRect();
+				const covered: number[] = [];
+				for (let y = r.top + 8; y < r.bottom; y += 24) {
+					const hit = document.elementFromPoint(r.left + r.width / 2, y);
+					if (!hit || !el.contains(hit)) covered.push(Math.round(y));
+				}
+				behind?.setAttribute('inert', '');
+				return covered;
+			})
+		)
+		.toEqual([]);
+	await page.keyboard.press('Escape');
+	await expect(drawer).toHaveCount(0);
 	await page.reload();
 	await expect(page.locator('.session-panel.streaming')).toBeVisible({ timeout: 60_000 });
 	await expect(page.getByRole('button', { name: 'Show the sidebar' })).toBeVisible();
