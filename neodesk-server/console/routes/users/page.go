@@ -189,7 +189,7 @@ func (h *handlers) pageAccountOf(r *http.Request, user *account) (*pageAccount, 
 	if err != nil {
 		return nil, err
 	}
-	if inv, ok := invites[id]; ok && user.LastLogin.IsNull() {
+	if inv, ok := invites[id]; ok && !user.signedIn() {
 		out.Invite = &pageInvite{ExpiresAt: inv.ExpiresAt.Format(time.RFC3339), Expired: inv.Expired}
 	}
 	if out.Permissions, err = h.effectivePermissions(ctx, user.role()); err != nil {

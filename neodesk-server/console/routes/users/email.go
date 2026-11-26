@@ -39,7 +39,7 @@ func (h *handlers) changer() *emailchange.Changer {
 		D: h.d, Life: h.life, Links: h.links,
 		Invited: func(ctx context.Context, t emailchange.Target) (bool, error) {
 			user, err := accountByID(ctx, h.d.Store, float64(t.ID))
-			if err != nil || user == nil || !user.LastLogin.IsNull() || !isLocalAccount(user) {
+			if err != nil || user == nil || user.signedIn() || !isLocalAccount(user) {
 				return false, err
 			}
 			pending, err := h.links.Invites(ctx)

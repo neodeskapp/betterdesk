@@ -65,3 +65,27 @@ func TestRevokeInvite(t *testing.T) {
 		t.Errorf("a signed-in account was deleted: %d", n)
 	}
 }
+
+// The server's own SQLite schema leaves last_login empty for an account that
+// never signed in, not NULL: such an invited account can still get its
+// invite again, shows it on its page, and can have it withdrawn.
+func TestInviteOfAnAccountWithEmptyLastLogin(t *testing.T) {
+	w, _ := mailWorld(t, true)
+	admin := w.As("admin")
+	got := admin.Do("POST", "/api/users/invite", `{"email":"ivy@example.test","username":"ivy","role":"viewer"}`)
+	if got.Status != http.StatusOK {
+		t.Fatalf("invite: %d %s", got.Status, got.Body)
+	}
+	id := createdID(t, got)
+	if _, err := w.DB.Exec(context.Background(), `UPDATE users SET last_login = '' WHERE id = ?`, id); err != nil {
+		t.Fatal(err)
+	}
+	expect(t, "resend", admin.Do("POST", "/api/users/"+id+"/invite", "{}"), 200, "")
+	if page := admin.Do("GET", "/api/users/"+id, ""); page.Status != 200 || !strings.Contains(page.Body, `"invite":{`) {
+		t.Errorf("the page shows no invite: %d %s", page.Status, page.Body)
+	}
+	expect(t, "withdraw", admin.Do("DELETE", "/api/users/"+id+"/invite", ""), 200, `{"success":true}`)
+	if n := countAccounts(t, w, "ivy"); n != 0 {
+		t.Errorf("the account is still there: %d", n)
+	}
+}

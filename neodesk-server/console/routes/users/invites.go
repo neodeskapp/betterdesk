@@ -154,7 +154,7 @@ func (h *handlers) resendInvite(w http.ResponseWriter, r *http.Request) {
 	case email == "":
 		failKey(w, r, http.StatusBadRequest, "users.invite_email_required")
 		return
-	case !user.LastLogin.IsNull():
+	case user.signedIn():
 		failKey(w, r, http.StatusConflict, "users.invite_signed_in")
 		return
 	case !h.mailReady(ctx):
@@ -244,7 +244,7 @@ func (h *handlers) revokeInvite(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Revoke invite error:", err)
 		return
 	}
-	if _, invited := pending[user.ID.V]; !invited || !user.LastLogin.IsNull() || isSessionAccount(r, user.ID.V) {
+	if _, invited := pending[user.ID.V]; !invited || user.signedIn() || isSessionAccount(r, user.ID.V) {
 		failKey(w, r, http.StatusConflict, "users.invite_none")
 		return
 	}

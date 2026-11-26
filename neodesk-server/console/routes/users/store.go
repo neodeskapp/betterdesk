@@ -31,6 +31,13 @@ type account struct {
 
 const accountColumns = `id, username, role, auth_provider, created_at, last_login, totp_enabled, email, disabled`
 
+// signedIn says the account has signed in once. For an account that never
+// did, the server's own SQLite schema leaves last_login empty and the
+// console's schema leaves it NULL.
+func (a *account) signedIn() bool {
+	return !a.LastLogin.IsNull() && a.LastLogin.String() != ""
+}
+
 // username is the account's username as text, "" for none.
 func (a *account) username() string {
 	if v := a.Username.Value(); v.Truthy() {
