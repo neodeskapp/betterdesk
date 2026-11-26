@@ -8,10 +8,13 @@
   While a menu, dialog or sheet is open the stack goes below it, so a
   toast never covers what the person opened ("Copied" from a sheet then
   shows as the tick on its button; screen readers still hear the toast).
-  An error stays on top.
+  An error stays on top. The container hangs off <body> and is marked
+  data-layer-live, so the page behind an open dialog can be inert while
+  toasts are still read.
 -->
 <script lang="ts">
 	import Toast from './Toast.svelte';
+	import { portal } from './portal.ts';
 	import { overlays } from './popups.svelte.ts';
 	import { toasts } from './toasts.svelte.ts';
 
@@ -20,7 +23,8 @@
 	const under = $derived((overlays.popup || overlays.layers > 0) && errors.length === 0);
 </script>
 
-<div class={['toast-container', under && 'is-under']}>
+<!-- Hangs off <body> outside the page, so it stays announced while the page behind a dialog is inert (layers.ts) -->
+<div class={['toast-container', under && 'is-under']} data-layer-live {@attach portal}>
 	<div class="toast-region" role="status" aria-live="polite" aria-atomic="false">
 		{#each polite as t (t.id)}<Toast toast={t} />{/each}
 	</div>
