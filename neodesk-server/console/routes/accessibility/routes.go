@@ -2,6 +2,10 @@
 // accessibility settings (package console/accessibility). Every account
 // that may sign in reads and changes its own, and only its own: the
 // routes take the account from the session and need no permission.
+// While an admin views the console as another account (Sign in as), they
+// are the admin's own settings (kit.ActorID), never the viewed account's:
+// PUT is then the one write the impersonation may make besides its own
+// routes (impersonation.allowed), and it can only reach the admin's row.
 //
 //	GET /api/accessibility  {"success": true, "data": {"reduceMotion": "system", ...}}
 //	PUT /api/accessibility  body: some or all of the settings; answers all of them
@@ -30,7 +34,7 @@ func Register(d *kit.Deps) {
 }
 
 func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
-	s, _, err := settings.Load(r.Context(), h.d.Store, kit.UserID(r))
+	s, _, err := settings.Load(r.Context(), h.d.Store, kit.ActorID(r))
 	if err != nil {
 		h.fail(w, r, err)
 		return
@@ -45,7 +49,8 @@ func (h *handlers) put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	id := kit.UserID(r)
+	// The admin's own row while viewing as another account
+	id := kit.ActorID(r)
 	current, _, err := settings.Load(ctx, h.d.Store, id)
 	if err != nil {
 		h.fail(w, r, err)

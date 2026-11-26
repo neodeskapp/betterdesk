@@ -128,7 +128,9 @@ func (h *handlers) bootstrap(w http.ResponseWriter, r *http.Request) {
 	}
 	// The settings only change how the app looks: a failed read leaves the
 	// browser's copy and must not keep the account out
-	if a11y, found, err := accessibility.Load(ctx, h.d.Store, user.ID); err != nil {
+	// While an admin views the console as another account the console
+	// keeps the admin's own settings (ActorID)
+	if a11y, found, err := accessibility.Load(ctx, h.d.Store, kit.ActorID(r)); err != nil {
 		h.d.Log.Child("BOOTSTRAP").Warn("Accessibility settings:", err)
 	} else if found {
 		answer.User.Accessibility = &a11y
