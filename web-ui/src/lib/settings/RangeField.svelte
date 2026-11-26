@@ -1,26 +1,27 @@
 <!--
-  A slider with its value in the label ("Blur: 12 px"), as the old
-  Appearance page had them. The value is a number.
+  A slider for a setting row: the row names it, the value shows beside it
+  ("12 px") and is said with it. The value is a number.
+
+    <SettingRow id="bg-blur" label=... help=...>
+        {#snippet control(f)}<RangeField {...f} unit="px" min={0} max={30} bind:value={...} />{/snippet}
+    </SettingRow>
 -->
 <script lang="ts">
 	interface Props {
 		id: string;
-		label: string;
+		describedby?: string | undefined;
 		unit: string;
 		value: number;
 		min: number;
 		max: number;
 		step?: number;
-		hint?: string;
-		/** Extra id of the block around it (the settings search jumps there) */
-		groupId?: string;
+		disabled?: boolean;
 	}
 
-	let { id, label, unit, value = $bindable(), min, max, step = 1, hint, groupId }: Props = $props();
+	let { id, describedby, unit, value = $bindable(), min, max, step = 1, disabled = false }: Props = $props();
 </script>
 
-<div class="form-group" id={groupId}>
-	<label class="form-label" for={id}>{label}: <span class="num">{value}</span> {unit}</label>
+<div class="range-field">
 	<input
 		{id}
 		type="range"
@@ -28,28 +29,24 @@
 		{min}
 		{max}
 		{step}
+		{disabled}
+		aria-describedby={describedby}
+		aria-valuetext="{value} {unit}"
 		bind:value
-		aria-describedby={hint ? `${id}-hint` : undefined}
 	/>
-	{#if hint}<p class="form-hint" id="{id}-hint">{hint}</p>{/if}
+	<output class="num" for={id}>{value} {unit}</output>
 </div>
 
 <style>
-	.form-group {
+	.range-field {
 		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-		min-width: 0;
-	}
-	.form-label {
-		font-weight: 600;
-	}
-	.num {
-		font-variant-numeric: tabular-nums;
+		align-items: center;
+		gap: var(--space-3);
+		max-width: 420px;
 	}
 	.form-range {
-		width: 100%;
-		max-width: 360px;
+		flex: 1;
+		min-width: 0;
 		margin: 0;
 		accent-color: var(--accent);
 	}
@@ -59,12 +56,13 @@
 	}
 	@media (pointer: coarse) {
 		.form-range {
-			height: var(--control-h);
+			height: 44px;
 		}
 	}
-	.form-hint {
-		margin: 0;
-		color: var(--text-muted);
-		font-size: var(--text-sm);
+	.num {
+		flex: none;
+		min-width: 5ch;
+		font-variant-numeric: tabular-nums;
+		text-align: end;
 	}
 </style>

@@ -1437,7 +1437,29 @@
       "font_cat_sans": "Serifenlos",
       "font_cat_serif": "Serifen",
       "font_cat_mono": "Festbreite",
-      "font_cat_display": "Display"
+      "font_cat_display": "Display",
+      "undo_change": "Änderung zurücknehmen",
+      "reset_confirm_title": "Darstellung und Branding zurücksetzen?",
+      "reset_confirm": "Alle sehen wieder das eingebaute Aussehen und den eingebauten Namen. Dein Design und deine Farben, Schriften, Hintergründe, eigenes CSS, Name und Logo, Fußzeile, Einstellungen der Anmeldeseite und der Downloadseite werden entfernt, ungespeicherte Änderungen hier ebenso. Das lässt sich nicht rückgängig machen. Gespeicherte Erscheinungsbilder, hochgeladene Bilder und Schriften und das Branding der Client-App bleiben.",
+      "reset_confirm_button": "Für alle zurücksetzen",
+      "advanced": "Erweitert",
+      "library_help": "Bilder, die schon auf diesen Server hochgeladen wurden. Wähl eins aus, um es zu verwenden.",
+      "filter": "Darstellungs-Einstellungen filtern",
+      "theme_default": "Standard-Design",
+      "theme_default_help": "Was alle sehen, solange sie oben in der Leiste nicht selbst hell oder dunkel wählen.",
+      "bg_type_help": "Was hinter den Seiten der Konsole zu sehen ist.",
+      "blur_help": "Zeichnet den Hintergrund weich, damit die Seiten sich abheben.",
+      "advanced_note": "Einstellungen, die die meisten Konsolen nie ändern. Ein falscher Wert kann das Aussehen der Konsole und der Anmeldeseite verderben.",
+      "danger_zone": "Gefahrenbereich",
+      "reset_row": "Darstellung und Branding zurücksetzen",
+      "reset_removes": "Entfernt für alle dein Design und deine Farben, Schriften, Hintergründe, eigenes CSS, Name und Logo, Fußzeile und die Einstellungen der Anmeldeseite und der Downloadseite. Gespeicherte Erscheinungsbilder, hochgeladene Bilder und Schriften und das Branding der Client-App bleiben.",
+      "bg_uploaded": "{name} ist hochgeladen. Es wird verwendet, sobald du speicherst.",
+      "color_help": "Eine Farbe als #rrggbb, zum Beispiel #1e293b.",
+      "bg_upload_save": "Es wird beim Auswählen hochgeladen und verwendet, sobald du speicherst.",
+      "image_url_help": "Wird beim Hochladen oder Auswählen eines Bildes ausgefüllt. Du kannst auch eine Adresse auf diesem Server eingeben, die mit / beginnt, zum Beispiel /uploads/wallpaper.jpg. Bilder von anderen Websites werden nicht geladen.",
+      "size_help": "Wie das Bild den Platz hinter der Seite füllt.",
+      "n_characters": "{count} Zeichen",
+      "logo_file": "Logo-Datei zum Hochladen"
     },
     "signin": {
       "your_account": "Dein Konto",
@@ -1687,6 +1709,21 @@
     "tab_brand": "Branding",
     "branding": {
       "client_app": "Client-App"
+    },
+    "brand": {
+      "filter": "Branding-Einstellungen filtern",
+      "name_help": "Steht in der Seitenleiste, im Browser-Tab und auf der Anmeldeseite. Leer heißt NeoDesk.",
+      "footer_help": "Zum Beispiel ein Copyright-Hinweis oder dein Firmenname. Leer zeigt keinen Text.",
+      "login_title_help": "Die große Zeile auf der Anmeldeseite. Leer zeigt „{text}“.",
+      "login_subtitle_help": "Eine Zeile unter der Überschrift. Leer zeigt keine.",
+      "slide_upload_help": "Wird beim Auswählen hochgeladen und verwendet, sobald du speicherst.",
+      "slide_url_help": "Wird beim Hochladen eines Bildes ausgefüllt. Eine Adresse auf diesem Server, zum Beispiel /img/login-slides/free.jpg.",
+      "slide_empty_shows": "Leer zeigt „{text}“.",
+      "login_bg_help": "Was hinter dem Anmeldeformular zu sehen ist.",
+      "agent_bg_help": "Was hinter der Downloadseite zu sehen ist.",
+      "rdclient_bg_help": "Was hinter der Geräteliste zu sehen ist. „{inherit}“ nimmt den Konsolenhintergrund.",
+      "picture_kb": "Bild, {kb} KB",
+      "website_help": "Eine vollständige Adresse, zum Beispiel https://example.com."
     }
   },
   "audit": {

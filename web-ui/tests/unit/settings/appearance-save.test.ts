@@ -1,6 +1,7 @@
 /**
- * Appearance: Save pressed while a background picture uploads sends the
- * background the upload stored, not the one the form had before.
+ * Appearance: Save pressed while a background picture uploads waits for
+ * the upload and sends the picture it stored, not the address the form
+ * had before.
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -41,25 +42,23 @@ afterEach(() => {
 });
 
 describe('appearance', () => {
-	test('a save while a background uploads carries the uploaded background', async () => {
+	test('a save while a background uploads waits and carries the uploaded background', async () => {
 		const user = userEvent.setup();
 		render(AppearanceTab);
 		await vi.waitFor(() =>
 			expect(document.querySelector('.branding-form[aria-busy="false"]')).not.toBeNull()
 		);
+		await user.click(screen.getByRole('radio', { name: 'branding.bg_type_image' }));
 		const file = new File(['x'], 'new.png', { type: 'image/png' });
-		const picker = document.getElementById('bg-image-file') as HTMLInputElement;
+		const picker = document.getElementById('bg-image-file-control') as HTMLInputElement;
 		// A writable files list: the picker sets it back after the upload, which jsdom's getter refuses
 		Object.defineProperty(picker, 'files', { value: [file], writable: true, configurable: true });
 		await fireEvent.change(picker);
 		await vi.waitFor(() => expect(settingsApi.uploadBackground).toHaveBeenCalled());
 
-		await user.click(screen.getByRole('button', { name: 'settings.appearance.save' }));
+		await user.click(screen.getByRole('button', { name: 'Save changes' }));
 		expect(settingsApi.saveBranding).not.toHaveBeenCalled();
-		upload.finish({
-			url: '/uploads/new.png',
-			data: { appName: 'Desk', bgType: 'image', bgImageUrl: '/uploads/new.png' }
-		});
+		upload.finish({ url: '/uploads/new.png' });
 		await vi.waitFor(() => expect(settingsApi.saveBranding).toHaveBeenCalledTimes(1));
 		expect(vi.mocked(settingsApi.saveBranding).mock.calls[0]![0]).toMatchObject({
 			bgType: 'image',
