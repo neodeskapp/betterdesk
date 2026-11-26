@@ -2,8 +2,8 @@
  * Signed-in devices (A239): an account may be signed in on several
  * browsers; the account menu lists its own sessions with Sign out per entry
  * and everywhere else, the user's page lists another account's with Sign
- * out per entry and everywhere. Settings, Sign-in has "One session per
- * account", which SESSION_MAX_PER_USER overrides when it is set.
+ * out per entry and everywhere. "One session per account" on Settings,
+ * Sign-in is tested with that tab (settings/signin-tab.test.ts).
  */
 import { cleanup, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -13,7 +13,6 @@ vi.mock('#lib/ui/dialogs.svelte.ts', () => ({ confirm: vi.fn(async () => true) }
 
 const { deviceLabel, limitText } = await import('../../../src/lib/people/sessions.ts');
 const SessionsSheet = (await import('../../../src/lib/people/SessionsSheet.svelte')).default;
-const ConsoleSessionsForm = (await import('../../../src/lib/settings/ConsoleSessionsForm.svelte')).default;
 
 /** t() of the tests: the key with its values, so a test sees which were used */
 const t = (key: string, vars?: Record<string, unknown>) =>
@@ -174,46 +173,5 @@ describe("another account's list on the user's page", () => {
 		await waitFor(() =>
 			expect(writes()).toEqual(['DELETE /api/users/5/sessions/aaa', 'POST /api/users/5/sessions/end-all'])
 		);
-	});
-});
-
-describe('One session per account', () => {
-	test('the switch saves; the server environment deciding is said and the switch is off limits', async () => {
-		const user = userEvent.setup();
-		lists = [];
-		vi.stubGlobal('fetch', async (input: string, init: RequestInit = {}) => {
-			const method = init.method ?? 'GET';
-			calls.push({ method, path: new URL(input, location.origin).pathname, body: String(init.body ?? '') });
-			const data = { single_session: method !== 'GET', limit: 10, source: 'default', env_value: null };
-			return new Response(JSON.stringify({ success: true, data }), {
-				headers: { 'Content-Type': 'application/json' }
-			});
-		});
-		render(ConsoleSessionsForm);
-		const box = await screen.findByRole('checkbox', { name: /settings.signin.single_session/ });
-		expect(box).not.toBeChecked();
-		await user.click(box);
-		await user.click(screen.getByRole('button', { name: 'actions.save' }));
-		await waitFor(() =>
-			expect(calls.filter((c) => c.method === 'PUT').map((c) => c.body)).toEqual(['{"single_session":true}'])
-		);
-		cleanup();
-
-		vi.stubGlobal(
-			'fetch',
-			async () =>
-				new Response(
-					JSON.stringify({
-						success: true,
-						data: { single_session: false, limit: 1, source: 'env', env_value: '1' }
-					}),
-					{
-						headers: { 'Content-Type': 'application/json' }
-					}
-				)
-		);
-		render(ConsoleSessionsForm);
-		expect(await screen.findByText(/settings.signin.single_session_env/)).toBeInTheDocument();
-		expect(screen.getByRole('checkbox', { name: /settings.signin.single_session/ })).toBeDisabled();
 	});
 });
