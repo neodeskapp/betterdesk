@@ -400,6 +400,8 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("POST /api/peers/{id}/ban", s.requirePermission(auth.PermDeviceBan, s.handleBanPeer))
 	mux.HandleFunc("POST /api/peers/{id}/unban", s.requirePermission(auth.PermDeviceBan, s.handleUnbanPeer))
 	mux.HandleFunc("POST /api/peers/{id}/restore", s.requirePermission(auth.PermDeviceDelete, s.handleRestorePeer))
+	mux.HandleFunc("GET /api/peers/{id}/reach", s.requirePermission(auth.PermDeviceView, s.handlePeerReach))
+	mux.HandleFunc("POST /api/peers/{id}/unblock", s.requirePermission(auth.PermDeviceDelete, s.handleUnblockPeer))
 	mux.HandleFunc("POST /api/peers/{id}/change-id", s.requirePermission(auth.PermDeviceChangeID, s.handleChangePeerID))
 
 	// Detailed device status (enhanced in Phase 4).

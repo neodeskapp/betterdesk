@@ -711,7 +711,8 @@
     "signin_error_control": "Tabulatoren und Zeilenumbrüche lassen sich am Anmeldebildschirm nicht eingeben.",
     "signin_error_not_typeable": "Hier ist ein Zeichen enthalten, das sich am Anmeldebildschirm nicht eingeben lässt, etwa ein Emoji.",
     "signin_path_sealed": "NeoDesk auf diesem Computer meldet sich selbst an: Das Passwort erreicht den Browser nie.",
-    "signin_path_typed": "Solange NeoDesk auf diesem Computer sich nicht selbst anmelden kann, gibt der Browser-Viewer die Daten ein."
+    "signin_path_typed": "Solange NeoDesk auf diesem Computer sich nicht selbst anmelden kann, gibt der Browser-Viewer die Daten ein.",
+    "unblock_not_blocked": "Dieser Computer ist auf diesem Server nicht gesperrt."
   },
   "keys": {
     "title": "Dashboard",
@@ -1992,6 +1993,8 @@
     "action_user_invite_accepted": "Einladung angenommen",
     "action_password_reset_link_sent": "Link zum Zurücksetzen des Passworts gesendet",
     "action_password_reset_by_link": "Passwort über Link zum Zurücksetzen festgelegt",
+    "action_device_unblocked": "Gerät entsperrt",
+    "action_quick_support_refused": "Computer der Schnellhilfe abgewiesen",
     "action_user_invite_revoked": "Einladung zurückgezogen",
     "action_email_change_requested": "Änderung der E-Mail-Adresse angefordert",
     "action_email_changed": "E-Mail-Adresse geändert",

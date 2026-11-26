@@ -717,7 +717,8 @@
     "signin_error_control": "Tabs and line breaks can't be typed at a sign-in screen.",
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
-    "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details."
+    "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
+    "unblock_not_blocked": "This computer is not blocked on this server."
   },
   "keys": {
     "title": "Cheile serverului",
@@ -1998,6 +1999,8 @@
     "action_user_invite_accepted": "Invitație acceptată",
     "action_password_reset_link_sent": "Link de resetare a parolei trimis",
     "action_password_reset_by_link": "Parolă setată dintr-un link de resetare",
+    "action_device_unblocked": "Device unblocked",
+    "action_quick_support_refused": "Quick support computer refused",
     "action_user_invite_revoked": "Invite withdrawn",
     "action_email_change_requested": "Email address change asked for",
     "action_email_changed": "Email address changed",

@@ -168,3 +168,15 @@ func (c *Client) GetPeersByTag(ctx context.Context, tag string) []*Object {
 	}
 	return normalisePeers(peers, c.now())
 }
+
+// GetPeerReach calls GET /api/peers/{id}/reach: why a session to the
+// device can or cannot start ({reason, last_online}). W or F2.
+func (c *Client) GetPeerReach(ctx context.Context, id string) *Object {
+	return c.wrapped(ctx, f2, http.MethodGet, "/peers/"+seg(id)+"/reach")
+}
+
+// UnblockPeer calls POST /api/peers/{id}/unblock: the ID leaves the
+// blocklist. W or F2; the error is not_blocked when it was not blocked.
+func (c *Client) UnblockPeer(ctx context.Context, id string) *Object {
+	return c.wrapped(ctx, f2, http.MethodPost, "/peers/"+seg(id)+"/unblock")
+}
