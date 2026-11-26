@@ -253,6 +253,28 @@
    "route": "GET /api/users/me/profile"
   },
   {
+   "name": "account security-events",
+   "summary": "List your account's recent sign-ins and security events.",
+   "description": "Sign-ins, password and two-factor changes, and each time an admin viewed NeoDesk as you, with who and why. Newest first; --limit up to 200.",
+   "route": "GET /api/users/me/security-events",
+   "flags": [
+    {
+     "name": "limit",
+     "in": "query",
+     "type": "int",
+     "help": "how many, at most 200 (default 50)"
+    }
+   ],
+   "rows": "data.events",
+   "columns": [
+    "at",
+    "action",
+    "actor",
+    "reason",
+    "ip"
+   ]
+  },
+  {
    "name": "account verify",
    "summary": "Check that the token works and show the account it signs in as.",
    "route": "GET /api/auth/verify",
@@ -6481,6 +6503,30 @@
    "permission": "server.config"
   },
   {
+   "name": "settings impersonation",
+   "summary": "Show whether people get a mail when an admin views NeoDesk as them.",
+   "description": "notice_mail is the switch in Settings, Sign-in. It is on unless it was turned off.",
+   "route": "GET /api/settings/impersonation",
+   "permission": "server.config"
+  },
+  {
+   "name": "settings impersonation-set",
+   "summary": "Turn the mail about Sign in as on or off.",
+   "description": "On (the default): a person gets a mail with who viewed NeoDesk as them, when and why. Their recent sign-ins show it either way.",
+   "route": "PUT /api/settings/impersonation",
+   "flags": [
+    {
+     "name": "notice-mail",
+     "in": "body",
+     "type": "bool",
+     "help": "mail the person viewed",
+     "required": true,
+     "field": "notice_mail"
+    }
+   ],
+   "permission": "server.config"
+  },
+  {
    "name": "settings ldap",
    "summary": "Show the LDAP sign-in settings.",
    "route": "GET /api/settings/ldap",
@@ -8090,6 +8136,35 @@
    "permission": "user.view"
   },
   {
+   "name": "users security-events",
+   "summary": "List an account's recent sign-ins and security events.",
+   "description": "The same list the account sees on Your account: sign-ins, password and two-factor changes, and each time an admin viewed NeoDesk as the account.",
+   "route": "GET /api/users/{id}/security-events",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID (see users list)"
+    }
+   ],
+   "flags": [
+    {
+     "name": "limit",
+     "in": "query",
+     "type": "int",
+     "help": "how many, at most 200 (default 50)"
+    }
+   ],
+   "rows": "data.events",
+   "columns": [
+    "at",
+    "action",
+    "actor",
+    "reason",
+    "ip"
+   ],
+   "permission": "user.view"
+  },
+  {
    "name": "users send-reset-link",
    "summary": "Mail an account a link to set a new password.",
    "route": "POST /api/users/{id}/password-reset-link",
@@ -9349,6 +9424,26 @@
   {
    "route": "PUT /api/users/me/profile",
    "reason": "Your own profile: change it in the console. API tokens cannot change their account's profile."
+  },
+  {
+   "route": "GET /api/users/{id}/impersonation",
+   "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
+  },
+  {
+   "route": "POST /api/users/{id}/impersonate",
+   "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
+  },
+  {
+   "route": "GET /api/impersonation",
+   "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
+  },
+  {
+   "route": "POST /api/impersonation/extend",
+   "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
+  },
+  {
+   "route": "POST /api/impersonation/stop",
+   "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
   }
  ]
 }

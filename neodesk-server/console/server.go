@@ -41,6 +41,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/helpmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/housekeeping"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/impersonation"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jobs"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
@@ -135,6 +136,9 @@ type Server struct {
 	// the audit log of refused tokens to one entry a minute per token
 	tokens        *admintoken.Service
 	tokenRefusals *onceAMinute
+	// impersonation holds "Sign in as" to read-only (package
+	// impersonation): a step of the pipeline and the socket upgrades
+	impersonation *impersonation.Service
 }
 
 // clientAPIPort is the client API port while the console listens on it
@@ -526,6 +530,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	registerRoutes(s.deps, backups)
 	registerSockets(s.deps, opts.SignalProof)
 	s.newClientAPI()
+	s.impersonation = impersonation.New(s.deps)
 	s.pipeline = s.buildPipeline()
 	return s, nil
 }
@@ -575,7 +580,8 @@ func (s *Server) Deps() *kit.Deps { return s.deps }
 func (s *Server) Jobs() *jobs.Registry { return s.jobs }
 
 // ServeHTTP sends a request through the pipeline. An upgrade to a socket
-// the console has (console/ws) goes to that socket, outside the pipeline,
+// the console has (console/ws) goes to that socket, outside the pipeline
+// (but for an impersonation, which opens only some, RefuseUpgrade),
 // as Node's upgrade listener ran outside Express; any other upgrade
 // passes the pipeline like a plain request. The routing report
 // (routing.go), when switched on, answers before all of them.
@@ -585,6 +591,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.deps.Sockets.Serves(r) {
+		// A browser that views the console as another account opens only
+		// the sockets that push what the account may see
+		if s.impersonation.RefuseUpgrade(w, r, s.deps.Sockets.PatternOf(r)) {
+			return
+		}
 		s.deps.Sockets.ServeHTTP(w, r)
 		return
 	}

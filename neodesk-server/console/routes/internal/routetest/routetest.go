@@ -243,6 +243,27 @@ func (a *Agent) Try(method, target, body string, header ...string) (Answer, erro
 	return Answer{Status: res.StatusCode, Header: res.Header, Body: string(raw)}, nil
 }
 
+// Cookie is the value of a cookie the browser holds, "" for none.
+func (a *Agent) Cookie(name string) string { return a.cookies[name] }
+
+// SetCookie gives the browser a cookie; an empty value drops it.
+func (a *Agent) SetCookie(name, value string) {
+	if value == "" {
+		delete(a.cookies, name)
+		return
+	}
+	a.cookies[name] = value
+}
+
+// Copy is another browser with the same cookies and CSRF token.
+func (a *Agent) Copy() *Agent {
+	b := &Agent{w: a.w, cookies: map[string]string{}, token: a.token}
+	for name, value := range a.cookies {
+		b.cookies[name] = value
+	}
+	return b
+}
+
 func (a *Agent) csrf() string {
 	a.w.T.Helper()
 	if a.token == "" {

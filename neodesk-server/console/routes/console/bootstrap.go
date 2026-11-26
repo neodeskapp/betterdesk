@@ -3,6 +3,7 @@ package console
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
@@ -28,6 +29,21 @@ type bootstrapAnswer struct {
 	SessionPolicy session.Policy               `json:"sessionPolicy"`
 	CSRFToken     string                       `json:"csrfToken"`
 	AppVersion    string                       `json:"appVersion"`
+	// Impersonation is there only while an admin views the console as the
+	// user: the web app shows the banner, and every write is refused.
+	Impersonation *bootstrapImpersonation `json:"impersonation,omitempty"`
+}
+
+// bootstrapImpersonation is what the web app knows of an impersonation.
+// The admin's session stays on the server.
+type bootstrapImpersonation struct {
+	AdminUsername string `json:"adminUsername"`
+	Reason        string `json:"reason"`
+	// StartedAt and ExpiresAt are in milliseconds.
+	StartedAt int64 `json:"startedAt"`
+	ExpiresAt int64 `json:"expiresAt"`
+	CanExtend bool  `json:"canExtend"`
+	ServerNow int64 `json:"serverNow"`
 }
 
 type bootstrapUser struct {
@@ -97,6 +113,10 @@ func (h *handlers) bootstrap(w http.ResponseWriter, r *http.Request) {
 	}
 	if user.PreferredLanguage != "" {
 		answer.User.PreferredLanguage = &user.PreferredLanguage
+	}
+	if imp := kit.Impersonation(r); imp != nil {
+		answer.Impersonation = &bootstrapImpersonation{AdminUsername: imp.AdminUsername, Reason: imp.Reason,
+			StartedAt: imp.StartedAt, ExpiresAt: imp.ExpiresAt, CanExtend: !imp.Extended, ServerNow: time.Now().UnixMilli()}
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	kit.JSON(w, r, http.StatusOK, answer)

@@ -26,6 +26,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/guest"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/health"
 	i18nroutes "github.com/neodeskapp/neodesk/neodesk-server/console/routes/i18n"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/impersonate"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/inventory"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/keys"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/languages"
@@ -103,6 +104,7 @@ func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	clientbranding.Register(d) // routes/client-branding.routes.js
 	avatars.Register(d)        // routes/avatars.routes.js
 	users.Register(d)          // routes/users.routes.js
+	impersonate.Register(d)    // "Sign in as" (read-only), not in the Node console
 	panelaccess.Register(d)    // routes/panel-access.routes.js
 	uishell.Register(d)        // routes/ui-shell.routes.js
 	folders.Register(d)        // routes/folders.routes.js

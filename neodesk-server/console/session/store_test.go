@@ -68,6 +68,7 @@ func wantSchema(db *store.DB) map[string]string {
 			"user_id": "integer", "username": "text", "ip_address": "text", "user_agent": "text",
 			"client_fingerprint": "text", "created_at": "bigint", "last_activity_at": "bigint",
 			"ended_at": "bigint", "end_reason": "text", "is_active": "boolean NOT NULL",
+			"impersonated_by": "integer",
 		}
 	}
 	return map[string]string{
@@ -75,6 +76,7 @@ func wantSchema(db *store.DB) map[string]string {
 		"user_id": "INTEGER", "username": "TEXT", "ip_address": "TEXT", "user_agent": "TEXT",
 		"client_fingerprint": "TEXT", "created_at": "INTEGER", "last_activity_at": "INTEGER",
 		"ended_at": "INTEGER", "end_reason": "TEXT", "is_active": "INTEGER NOT NULL",
+		"impersonated_by": "INTEGER",
 	}
 }
 

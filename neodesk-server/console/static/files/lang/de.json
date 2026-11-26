@@ -1494,7 +1494,9 @@
       "single_session": "Eine Sitzung pro Konto",
       "single_session_hint": "Eine neue Anmeldung meldet den anderen Browser des Kontos ab. Aus: Ein Konto kann gleichzeitig auf bis zu {max} Browsern und Geräten angemeldet sein.",
       "single_session_env": "SESSION_MAX_PER_USER ist in der Umgebung des Servers auf {value} gesetzt und entscheidet statt dieses Schalters. Entferne es dort, um den Schalter zu verwenden.",
-      "oidc_advanced_note": "Nur nötig, wenn der Anbieter kein Discovery-Dokument hat oder in einem privaten Netz liegt."
+      "oidc_advanced_note": "Nur nötig, wenn der Anbieter kein Discovery-Dokument hat oder in einem privaten Netz liegt.",
+      "impersonation_mail": "Personen benachrichtigen, wenn ein Admin NeoDesk mit ihrem Konto ansieht",
+      "impersonation_mail_hint": "Die Mail sagt, wer wann und warum geschaut hat. Konten ohne E-Mail-Adresse bekommen keine; alle sehen es in ihren letzten Anmeldungen."
     },
     "backup_tab": {
       "create_title": "Sicherung erstellen",
@@ -1968,7 +1970,13 @@
     "action_user_invite_sent": "Einladung gesendet",
     "action_user_invite_accepted": "Einladung angenommen",
     "action_password_reset_link_sent": "Link zum Zurücksetzen des Passworts gesendet",
-    "action_password_reset_by_link": "Passwort über Link zum Zurücksetzen festgelegt"
+    "action_password_reset_by_link": "Passwort über Link zum Zurücksetzen festgelegt",
+    "action_impersonation_started": "NeoDesk mit anderem Konto angesehen",
+    "action_impersonation_extended": "Ansicht mit anderem Konto verlängert",
+    "action_impersonation_stopped": "Ansicht mit anderem Konto beendet",
+    "action_impersonation_ended": "Ansicht mit anderem Konto vom Server beendet",
+    "action_impersonation_request": "Anfrage in der Ansicht mit anderem Konto",
+    "action_impersonation_settings_changed": "Hinweis-Mail zur Ansicht mit anderem Konto geändert"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2586,7 +2594,8 @@
     "menu_group_account": "Konto",
     "menu_group_access": "Zugriff",
     "menu_group_security": "Anmeldesicherheit",
-    "menu_group_danger": "Deaktivieren oder löschen"
+    "menu_group_danger": "Deaktivieren oder löschen",
+    "sign_in_as_menu": "Anmelden als…"
   },
   "folders": {
     "title": "Ordner",
@@ -8976,7 +8985,14 @@
     "language_note": "Die Sprache der Konsole für dein Konto, auf jedem Gerät.",
     "accessibility_note": "Kontrast, Textgröße, Bewegung und Farbfilter für diesen Browser.",
     "accessibility_on": "In diesem Browser sind Einstellungen zur Barrierefreiheit an.",
-    "accessibility_open": "Barrierefreiheit einstellen"
+    "accessibility_open": "Barrierefreiheit einstellen",
+    "security_events": "Letzte Anmeldungen und Sicherheitsereignisse",
+    "security_events_note": "Anmeldungen, Änderungen an Passwort und Zwei-Faktor-Anmeldung, und wann ein Admin NeoDesk mit deinem Konto angesehen hat.",
+    "security_events_empty": "Noch nichts.",
+    "security_events_failed": "Die Liste konnte nicht geladen werden.",
+    "security_event_impersonation": "{admin} hat NeoDesk mit deinem Konto angesehen",
+    "security_event_by": "Von {actor}",
+    "security_event_reason": "Grund: {reason}"
   },
   "devices_add": {
     "tab_invites": "Einladungen und Installationslinks",
@@ -9016,5 +9032,54 @@
     "page_title_reset": "Neues Passwort festlegen",
     "page_intro_reset": "Wähle ein neues Passwort für dein Konto {username}.",
     "done_text_reset": "Deine anderen Sitzungen wurden abgemeldet. Melde dich als {username} mit deinem neuen Passwort an."
+  },
+  "impersonation": {
+    "refused_self": "Du kannst dich nicht als dich selbst anmelden.",
+    "refused_not_found": "Dieses Konto gibt es nicht mehr.",
+    "refused_disabled": "{username} ist deaktiviert. Aktiviere das Konto, um NeoDesk damit anzusehen.",
+    "refused_no_console": "{username} kann sich nicht an der Konsole anmelden, es gibt also nichts anzusehen.",
+    "refused_role": "Du kannst NeoDesk nur mit Konten ansehen, die weniger Rechte haben als du. {username} hat dieselbe Rolle wie du oder eine höhere.",
+    "refused_permissions": "{username} hat Berechtigungen, die du nicht hast. Du kannst NeoDesk nur mit Konten ansehen, die weniger Rechte haben als du.",
+    "refused_panel_access": "{username} erreicht Bereiche der Konsole, die du nicht erreichst. Du kannst NeoDesk nur mit Konten ansehen, die weniger Rechte haben als du.",
+    "refused_scope": "{username} sieht Geräte, die du nicht siehst. Du kannst NeoDesk nur mit Konten ansehen, die weniger Rechte haben als du.",
+    "refused_not_allowed": "Dein Konto darf NeoDesk nicht mehr mit anderen Konten ansehen.",
+    "refused_admin_disabled": "Dein Konto wurde deaktiviert.",
+    "refused_expired": "Die Zeit für die Ansicht mit einem anderen Konto ist abgelaufen.",
+    "refused_changed": "Die Rolle von {username} hat sich geändert.",
+    "refused_token": "API-Tokens und die Kommandozeile können sich nicht als andere Konten anmelden. Nutze die Konsole im Browser.",
+    "refused_active": "Du siehst NeoDesk schon mit einem anderen Konto. Beende das zuerst.",
+    "refused_needs_two_factor": "Dein Konto meldet sich über {provider} an, deshalb kann die Konsole dein Passwort nicht prüfen. Schalte die Zwei-Faktor-Anmeldung ein, um Anmelden als zu nutzen.",
+    "reason_required": "Sag, warum du NeoDesk mit diesem Konto ansehen willst. Der Grund kommt ins Audit-Protokoll.",
+    "password_required": "Gib dein Passwort ein.",
+    "code_required": "Gib den Code aus deiner Authenticator-App ein.",
+    "wrong_password": "Das ist nicht dein Passwort.",
+    "wrong_code": "Der Code stimmt nicht. Gib den aktuellen Code aus deiner Authenticator-App ein.",
+    "not_active": "Du siehst NeoDesk gerade nicht mit einem anderen Konto.",
+    "extended_once": "Du kannst nur einmal verlängern. Beende die Ansicht und starte neu, wenn du mehr Zeit brauchst.",
+    "notice_subject": "{admin} hat NeoDesk mit deinem Konto angesehen",
+    "notice_heading": "{admin} hat NeoDesk mit deinem Konto angesehen",
+    "notice_lead": "{admin} hat NeoDesk am {date} mit deinem Konto angesehen. Grund: {reason}",
+    "notice_read_only": "{admin} konnte sehen, was du siehst, aber nichts ändern.",
+    "notice_unexpected": "Wenn du das nicht erwartet hast, sag deinem Administrator Bescheid.",
+    "notice_button": "Deine letzten Anmeldungen ansehen",
+    "notice_link_hint": "Falls die Schaltfläche nicht funktioniert, öffne diesen Link:",
+    "notice_footer": "Gesendet von {server}.",
+    "dialog_title": "Anmelden als {username}",
+    "dialog_intro": "Du siehst die Konsole so, wie {username} sie sieht. Du kannst nichts ändern. Endet nach {minutes} Minuten.",
+    "dialog_mail": "{username} bekommt eine Mail, die sagt, wer wann und warum geschaut hat.",
+    "dialog_no_mail": "{username} sieht es in den letzten Anmeldungen unter Dein Konto.",
+    "your_password": "Dein Passwort",
+    "your_code": "Code aus deiner Authenticator-App",
+    "reason": "Grund",
+    "reason_hint": "Kommt ins Audit-Protokoll, zum Beispiel: Ticket 4711, die Geräteliste ist leer.",
+    "start": "Starten",
+    "banner": "Du siehst NeoDesk als {username}.",
+    "banner_read_only": "Du kannst nichts ändern.",
+    "time_left": "noch {time}",
+    "extend": "{minutes} Minuten verlängern",
+    "stop": "Beenden",
+    "tab_title": "Ansicht als {username}",
+    "ended": "Du siehst NeoDesk nicht mehr mit einem anderen Konto. Die Seite lädt wieder als du.",
+    "read_only_hint": "Du siehst NeoDesk als {username}. Hier lässt sich nichts ändern."
   }
 }

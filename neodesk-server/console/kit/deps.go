@@ -184,13 +184,20 @@ func (d *Deps) At(prefix string) *Deps {
 // client's address: db.logAction(req.session.userId, action, details,
 // req.ip). Most routes ignore the error, some answer 500 on it; the old
 // route says which.
+//
+// While an admin views the console as another account (impersonation),
+// the entry is the admin's (ActorID) and is about the account viewed.
 func (d *Deps) LogAction(r *http.Request, action, details string) error {
+	if actor := ActorID(r); actor != UserID(r) {
+		return d.Audit.WriteAbout(r.Context(), actor, UserID(r), action, details, ClientIP(r))
+	}
 	return d.Audit.Write(r.Context(), UserID(r), action, details, ClientIP(r))
 }
 
 // LogAccountAction is LogAction for an action about another account (or
 // the account's own): the entry names target as the account it is about,
-// so the account's history and its user page find it.
+// so the account's history and its user page find it. The entry is the
+// account's that acts (ActorID).
 func (d *Deps) LogAccountAction(r *http.Request, target int64, action, details string) error {
-	return d.Audit.WriteAbout(r.Context(), UserID(r), target, action, details, ClientIP(r))
+	return d.Audit.WriteAbout(r.Context(), ActorID(r), target, action, details, ClientIP(r))
 }

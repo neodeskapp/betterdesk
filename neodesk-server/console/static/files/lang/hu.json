@@ -1500,7 +1500,9 @@
       "single_session": "Fiókonként egy munkamenet",
       "single_session_hint": "Az új bejelentkezés kijelentkezteti a fiók másik böngészőjét. Kikapcsolva: egy fiók egyszerre legfeljebb {max} böngészőn és eszközön lehet bejelentkezve.",
       "single_session_env": "A SESSION_MAX_PER_USER értéke a szerver környezetében {value}, és ez dönt a kapcsoló helyett. A kapcsoló használatához távolítsa el onnan.",
-      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
+      "impersonation_mail": "Mail people when an admin views NeoDesk as them",
+      "impersonation_mail_hint": "The mail says who looked, when and why. Accounts without an email address get none; everyone sees it in their recent sign-ins."
     },
     "backup_tab": {
       "create_title": "Biztonsági mentés készítése",
@@ -1974,7 +1976,13 @@
     "action_user_invite_sent": "Meghívó elküldve",
     "action_user_invite_accepted": "Meghívó elfogadva",
     "action_password_reset_link_sent": "Jelszó-visszaállító link elküldve",
-    "action_password_reset_by_link": "Jelszó beállítva visszaállító linkkel"
+    "action_password_reset_by_link": "Jelszó beállítva visszaállító linkkel",
+    "action_impersonation_started": "Viewed NeoDesk as another account",
+    "action_impersonation_extended": "Viewing as another account made longer",
+    "action_impersonation_stopped": "Stopped viewing as another account",
+    "action_impersonation_ended": "Viewing as another account ended by the server",
+    "action_impersonation_request": "Request while viewing as another account",
+    "action_impersonation_settings_changed": "Notice mail for viewing as another account changed"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2592,7 +2600,8 @@
     "menu_group_account": "Account",
     "menu_group_access": "Access",
     "menu_group_security": "Sign-in security",
-    "menu_group_danger": "Disable or delete"
+    "menu_group_danger": "Disable or delete",
+    "sign_in_as_menu": "Sign in as…"
   },
   "folders": {
     "title": "Mappák",
@@ -8982,7 +8991,14 @@
     "language_note": "The language of the console for your account, on every device.",
     "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
     "accessibility_on": "Some accessibility settings are on in this browser.",
-    "accessibility_open": "Accessibility settings"
+    "accessibility_open": "Accessibility settings",
+    "security_events": "Recent sign-ins and security events",
+    "security_events_note": "Sign-ins, changes to your password and two-factor sign-in, and when an admin viewed NeoDesk as you.",
+    "security_events_empty": "Nothing yet.",
+    "security_events_failed": "The list couldn't be loaded.",
+    "security_event_impersonation": "{admin} viewed NeoDesk as you",
+    "security_event_by": "By {actor}",
+    "security_event_reason": "Reason: {reason}"
   },
   "devices_add": {
     "tab_invites": "Invites and install links",
@@ -9022,5 +9038,54 @@
     "page_title_reset": "Új jelszó beállítása",
     "page_intro_reset": "Válasszon új jelszót a(z) {username} fiókjához.",
     "done_text_reset": "A többi munkamenetéből kijelentkeztettük. Jelentkezzen be {username} néven az új jelszavával."
+  },
+  "impersonation": {
+    "refused_self": "You can't sign in as yourself.",
+    "refused_not_found": "This account no longer exists.",
+    "refused_disabled": "{username} is disabled. Enable the account to view NeoDesk as it.",
+    "refused_no_console": "{username} can't sign in to the console, so there is nothing to view.",
+    "refused_role": "You can only view NeoDesk as accounts with fewer rights than yours. {username} has the same role as you or a higher one.",
+    "refused_permissions": "{username} has permissions you don't have. You can only view NeoDesk as accounts with fewer rights than yours.",
+    "refused_panel_access": "{username} can reach parts of the console you can't. You can only view NeoDesk as accounts with fewer rights than yours.",
+    "refused_scope": "{username} can see devices you can't. You can only view NeoDesk as accounts with fewer rights than yours.",
+    "refused_not_allowed": "Your account may no longer view NeoDesk as other accounts.",
+    "refused_admin_disabled": "Your account was disabled.",
+    "refused_expired": "The time to view NeoDesk as another account is up.",
+    "refused_changed": "The role of {username} changed.",
+    "refused_token": "API tokens and the command line can't sign in as other accounts. Use the console in a browser.",
+    "refused_active": "You are viewing NeoDesk as another account already. Stop that first.",
+    "refused_needs_two_factor": "Your account signs in with {provider}, so the console can't check your password. Turn on two-factor sign-in to use Sign in as.",
+    "reason_required": "Say why you want to view NeoDesk as this account. The reason goes into the audit log.",
+    "password_required": "Enter your password.",
+    "code_required": "Enter the code from your authenticator app.",
+    "wrong_password": "That is not your password.",
+    "wrong_code": "That code is not right. Enter the current code from your authenticator app.",
+    "not_active": "You are not viewing NeoDesk as another account.",
+    "extended_once": "You can make it longer only once. Stop and start again if you need more time.",
+    "notice_subject": "{admin} viewed NeoDesk as you",
+    "notice_heading": "{admin} viewed NeoDesk as you",
+    "notice_lead": "{admin} viewed NeoDesk as you on {date} for: {reason}",
+    "notice_read_only": "{admin} could see what you see, but couldn't change anything.",
+    "notice_unexpected": "If you didn't expect this, tell your administrator.",
+    "notice_button": "See your recent sign-ins",
+    "notice_link_hint": "If the button doesn't work, open this link:",
+    "notice_footer": "Sent by {server}.",
+    "dialog_title": "Sign in as {username}",
+    "dialog_intro": "You see the console as {username} does. You can't change anything. Ends after {minutes} minutes.",
+    "dialog_mail": "{username} gets a mail that says who looked, when and why.",
+    "dialog_no_mail": "{username} sees it in the recent sign-ins on Your account.",
+    "your_password": "Your password",
+    "your_code": "Code from your authenticator app",
+    "reason": "Reason",
+    "reason_hint": "Goes into the audit log, for example: Ticket 4711, the device list is empty.",
+    "start": "Start",
+    "banner": "You are viewing NeoDesk as {username}.",
+    "banner_read_only": "You can't change anything.",
+    "time_left": "{time} left",
+    "extend": "Extend {minutes} minutes",
+    "stop": "Stop",
+    "tab_title": "Viewing as {username}",
+    "ended": "You are no longer viewing NeoDesk as another account. The page loads again as you.",
+    "read_only_hint": "You are viewing NeoDesk as {username}. Nothing can be changed here."
   }
 }

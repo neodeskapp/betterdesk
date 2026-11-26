@@ -40,7 +40,7 @@ func TestStepOrderIsTheOneOfTheNodeConsole(t *testing.T) {
 		last = st.n
 		got = append(got, strconv.Itoa(st.n)+" "+st.name)
 	}
-	want := "1 security headers|3 CORS|4 bodies|6 session|8 CSRF token|9 static folders|10 permissions and panel access|" +
+	want := "1 security headers|3 CORS|4 bodies|6 session|8 CSRF token|9 static folders|10 impersonation|10 permissions and panel access|" +
 		"11 rate limiters|12 client and device API routes|14 request language|15 cache header|16 CSRF gate|" +
 		"17 compression mark|18 JSON content type|18 routes|19 web app"
 	if strings.Join(got, "|") != want {

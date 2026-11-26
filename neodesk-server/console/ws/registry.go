@@ -232,6 +232,22 @@ func (g *Registry) Serves(r *http.Request) bool {
 	return route != nil
 }
 
+// PatternOf is the registered path an upgrade is for, as Handle was given
+// it ("/ws/chat/{id}"), "" when the upgrade is for none.
+func (g *Registry) PatternOf(r *http.Request) string {
+	if g == nil {
+		return ""
+	}
+	t, ok := parseTarget(requestTarget(r))
+	if !ok {
+		return ""
+	}
+	if route, _ := g.match(t.Path); route != nil {
+		return route.pattern
+	}
+	return ""
+}
+
 // ServeHTTP runs the handler of the socket an upgrade is for. Behind the
 // front door it only gets upgrades Serves said yes to; anything else is
 // refused with 400.

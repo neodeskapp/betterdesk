@@ -148,13 +148,29 @@ func FromContext(ctx context.Context) *Session {
 
 // Load returns the session a request's cookie names, without renewing it:
 // the row is not touched and no cookie is sent. Websocket upgrades use it.
-// A request without a valid, live session gets an empty one.
+// A request without a valid, live session gets an empty one. A browser
+// that views the console as another account (Impersonate) gets the
+// impersonation session, as Middleware gives its requests.
 func (m *Manager) Load(r *http.Request) (*Session, error) {
 	s, expired, err := m.load(r)
-	if err != nil || expired == "" {
+	if err != nil {
 		return s, err
 	}
-	return m.newSession(r)
+	if expired != "" {
+		return m.newSession(r)
+	}
+	if id := m.impCookieID(r); id != "" && s.signedInLocked() {
+		imp, err := m.loadImpersonation(r, s, id)
+		if err != nil {
+			return nil, err
+		}
+		if imp != nil {
+			if i := imp.Impersonation(); i != nil && !i.Expired(m.now()) {
+				return imp, nil
+			}
+		}
+	}
+	return s, nil
 }
 
 // load is Load that also reports a signed-in session the request's cookie
@@ -232,7 +248,11 @@ func (m *Manager) CookieSessionID(r *http.Request) string {
 
 // cookieHeader is the Set-Cookie text for a session.
 func (m *Manager) cookieHeader(s *Session) string {
-	return cookie.Format(m.cookieName, cookiePrefix+sign(s.id, m.secret), cookie.Attributes{
+	name := m.cookieName
+	if s.impersonating {
+		name = m.impCookieName()
+	}
+	return cookie.Format(name, cookiePrefix+sign(s.id, m.secret), cookie.Attributes{
 		Path:     s.cookie.path(),
 		Expires:  s.cookie.expires,
 		HTTPOnly: s.cookie.httpOnly(),
@@ -272,6 +292,14 @@ func (m *Manager) secureRequest(r *http.Request) bool {
 //
 // When the answer starts, the session cookie is added and the session is
 // written to the store, before the first byte goes out.
+//
+// A browser that views the console as another account sends a second
+// cookie (Impersonate). When the impersonation session it names is live
+// and belongs to the admin's session the first cookie names, the request
+// goes on with the impersonation session (From) and the admin's behind it
+// (Impersonator); both count the request as activity. When it is over, the
+// browser forgets the second cookie, and an API call is answered with 409
+// and the code impersonation_ended rather than run as the admin.
 func (m *Manager) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s, expired, err := m.load(r)
@@ -281,25 +309,79 @@ func (m *Manager) Middleware(next http.Handler) http.Handler {
 		}
 		r = r.WithContext(context.WithValue(r.Context(), contextKey{}, s))
 		s.req = r
+		impID := m.impCookieID(r)
 		if expired != "" {
+			m.endImpersonationRow(r, impID)
 			m.answerExpired(w, r, s, expired)
 			return
 		}
 		if s.notice != "" && tellsEnd(r) {
+			m.endImpersonationRow(r, impID)
 			m.answerEnded(w, r, s.notice)
 			return
 		}
 		if s.signedInLocked() {
 			if ok, reason := s.touchActivity(r); !ok {
+				m.endImpersonationRow(r, impID)
 				m.answerExpired(w, r, s, reason)
 				return
 			}
 			s.noteIPChange(r)
 		}
-		rw := &responseWriter{ResponseWriter: w, session: s}
+		admin := (*Session)(nil)
+		if impID != "" {
+			imp, err := m.impersonationFor(r, s, impID)
+			if err != nil {
+				m.onError(w, r, err)
+				return
+			}
+			if imp == nil {
+				if impersonationEnded(w, r) {
+					return
+				}
+			} else {
+				admin, s = s, imp
+				r = r.WithContext(context.WithValue(r.Context(), contextKey{}, s))
+				r = r.WithContext(context.WithValue(r.Context(), impersonatorKey{}, admin))
+				s.req, admin.req = r, r
+			}
+		}
+		rw := &responseWriter{ResponseWriter: w, session: s, also: admin}
+		if admin != nil {
+			defer admin.finish(w)
+		}
 		defer s.finish(w)
 		next.ServeHTTP(rw, r)
 	})
+}
+
+// impersonationFor is the live impersonation session the request's second
+// cookie names for the signed-in session admin, its activity counted; nil
+// when there is none. A session that is past its limits is ended.
+func (m *Manager) impersonationFor(r *http.Request, admin *Session, id string) (*Session, error) {
+	if !admin.signedInLocked() {
+		m.endImpersonationRow(r, id)
+		return nil, nil
+	}
+	imp, err := m.loadImpersonation(r, admin, id)
+	if err != nil || imp == nil {
+		return nil, err
+	}
+	if ok, reason := imp.touchActivity(r); !ok {
+		return nil, m.endRow(r.Context(), id, reason)
+	}
+	return imp, nil
+}
+
+// endImpersonationRow ends the impersonation session a request's second
+// cookie names, when the admin's session it came with is gone.
+func (m *Manager) endImpersonationRow(r *http.Request, id string) {
+	if id == "" {
+		return
+	}
+	if err := m.endRow(context.WithoutCancel(r.Context()), id, ReasonImpersonationEnded); err != nil {
+		logging.Logf("session", "WARN: ending the impersonation session failed: %v", err)
+	}
 }
 
 func (s *Session) signedInLocked() bool {
@@ -369,6 +451,7 @@ func (m *Manager) answerEnded(w http.ResponseWriter, r *http.Request, reason str
 	code, text, _ := Notice(reason)
 	clearCookie(w, cookieNameHTTPS)
 	clearCookie(w, cookieNameHTTP)
+	clearImpCookieOf(w, r)
 	// The reason stays a few minutes, so the answers after this one say it
 	// too, whichever request of the browser was first (EndedReason)
 	w.Header().Add("Set-Cookie", cookie.Format(httpx.EndedCookie, code, cookie.Attributes{
@@ -437,35 +520,44 @@ type expiredAnswer struct {
 	Code    string `json:"code"`
 }
 
-// responseWriter commits the session before the first byte of the answer.
+// responseWriter commits the session before the first byte of the answer,
+// and the admin's session behind an impersonation (also) too.
 type responseWriter struct {
 	http.ResponseWriter
 	session *Session
+	also    *Session
+}
+
+func (w *responseWriter) commit() {
+	if w.also != nil {
+		w.also.commit(w.ResponseWriter)
+	}
+	w.session.commit(w.ResponseWriter)
 }
 
 func (w *responseWriter) WriteHeader(status int) {
 	// An interim answer (100 to 199, but not a protocol switch) is not the
 	// answer yet
 	if status < 100 || status > 199 || status == http.StatusSwitchingProtocols {
-		w.session.commit(w.ResponseWriter)
+		w.commit()
 	}
 	w.ResponseWriter.WriteHeader(status)
 }
 
 func (w *responseWriter) Write(p []byte) (int, error) {
-	w.session.commit(w.ResponseWriter)
+	w.commit()
 	return w.ResponseWriter.Write(p)
 }
 
 // ReadFrom keeps the fast path for files.
 func (w *responseWriter) ReadFrom(src io.Reader) (int64, error) {
-	w.session.commit(w.ResponseWriter)
+	w.commit()
 	return io.Copy(w.ResponseWriter, src)
 }
 
 // Flush sends what was written so far.
 func (w *responseWriter) Flush() {
-	w.session.commit(w.ResponseWriter)
+	w.commit()
 	if f, ok := w.ResponseWriter.(http.Flusher); ok {
 		f.Flush()
 	}

@@ -51,6 +51,9 @@ func Register(d *kit.Deps) {
 	r.Delete("/api/users/{id}/sessions/{sessionId}", h.endUserSession, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Post("/api/users/{id}/sessions/end-all", h.endUserSessions, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/organizations", h.organizations, d.RequireAuth, d.RequirePermission("user.view"))
+	// The sign-in history: the account's own, then any account's (securityevents.go)
+	r.Get("/api/users/me/security-events", h.ownSecurityEvents, d.RequireAuth)
+	r.Get("/api/users/{id}/security-events", h.userSecurityEvents, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Post("/api/users/{id}/organizations", h.assignOrganization, d.RequireAuth, d.RequirePermission("org.manage_users"))
 }
 
