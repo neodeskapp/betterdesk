@@ -37,9 +37,12 @@
 		width: auto;
 		max-width: 100%;
 	}
+	/* Narrow: the label over its select, so the selects of a stack share their start edge */
 	@media (max-width: 767px) {
 		.filter {
-			flex-wrap: wrap;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: var(--space-1);
 		}
 	}
 </style>
