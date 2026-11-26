@@ -45,7 +45,7 @@
 			<RowList label={t('account.security_events')}>
 				{#each events as e (e.id)}
 					{#snippet sub()}
-						<span class="facts">
+						<span class="row-facts">
 							<Time value={e.at} />
 							{#each eventFacts(e, t) as fact (fact)}<span>{fact}</span>{/each}
 						</span>
@@ -65,7 +65,7 @@
 	.events {
 		max-width: var(--measure);
 	}
-	.facts {
+	.row-facts {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0 var(--space-3);
