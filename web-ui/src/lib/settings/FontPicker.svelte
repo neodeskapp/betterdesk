@@ -5,10 +5,14 @@
   the fonts on the server, downloaded or uploaded (source local). Picking a
   Google font that is not on the server yet downloads it first; the
   console loads fonts only from itself, so a font that could not be
-  downloaded is not used and the field says why. Arrow down moves into the
-  list (the fonts are not Tab stops, so Tab goes on to the next control),
-  Escape closes it, and so do a click outside and focus leaving the picker;
-  only one list is open at a time (openPopup).
+  downloaded is not used and the field says why.
+
+  An APG combobox with a listbox: focus stays in the field, ArrowDown and
+  ArrowUp move the active font (aria-activedescendant), Home and End jump
+  once the arrows are in the list, Enter picks it, Escape closes the list,
+  and so do a click outside and focus leaving the picker (the fonts are
+  not Tab stops, so Tab goes on to the next control). Only one list is
+  open at a time (openPopup).
 -->
 <script lang="ts">
 	import { searchFonts, downloadFont, listLocalFonts, type FontInfo } from '#lib/api/settings.ts';
@@ -51,7 +55,9 @@
 	let pickProblem = $state('');
 	let root = $state<HTMLElement | null>(null);
 	let input = $state<HTMLInputElement | null>(null);
-	let list = $state<HTMLElement | null>(null);
+	/** The font the arrows reached, -1 for none (the caret is in the text) */
+	let active = $state(-1);
+	const optionId = (i: number) => `${listId}-opt-${i}`;
 	let closePopup: (() => void) | null = null;
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let ctrl: AbortController | null = null;
@@ -64,6 +70,7 @@
 
 	function hide() {
 		open = false;
+		active = -1;
 		closePopup?.();
 		closePopup = null;
 	}
@@ -83,6 +90,7 @@
 			if (ctrl !== c) return;
 			fonts = out;
 			problem = '';
+			active = -1;
 		} catch (err) {
 			if (err instanceof DOMException && err.name === 'AbortError') return;
 			fonts = [];
@@ -108,7 +116,13 @@
 		if (open) void search();
 	});
 
+	function setActive(i: number) {
+		active = i;
+		if (i >= 0) document.getElementById(optionId(i))?.scrollIntoView?.({ block: 'nearest' });
+	}
+
 	function onkeydown(e: KeyboardEvent) {
+		const n = fonts?.length ?? 0;
 		if (e.key === 'Escape' && open) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -116,28 +130,19 @@
 		} else if (e.key === 'ArrowDown') {
 			e.preventDefault();
 			if (!open) void search();
-			else list?.querySelector<HTMLElement>('button')?.focus();
+			else if (n) setActive(Math.min(n - 1, active + 1));
+		} else if (e.key === 'ArrowUp') {
+			e.preventDefault();
+			// Up from the first font goes back to the text
+			if (open && n) setActive(Math.max(-1, active - 1));
+		} else if ((e.key === 'Home' || e.key === 'End') && open && active >= 0 && n) {
+			e.preventDefault();
+			setActive(e.key === 'Home' ? 0 : n - 1);
 		} else if (e.key === 'Enter') {
 			// Not the page's save
 			e.preventDefault();
-		}
-	}
-
-	function onListKey(e: KeyboardEvent) {
-		const items = [...(list?.querySelectorAll<HTMLElement>('button') ?? [])];
-		const at = items.indexOf(document.activeElement as HTMLElement);
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			e.stopPropagation();
-			hide();
-			input?.focus();
-		} else if (e.key === 'ArrowDown') {
-			e.preventDefault();
-			items[Math.min(items.length - 1, at + 1)]?.focus();
-		} else if (e.key === 'ArrowUp') {
-			e.preventDefault();
-			if (at <= 0) input?.focus();
-			else items[at - 1]?.focus();
+			const font = open && active >= 0 ? fonts?.[active] : undefined;
+			if (font && picking === null) void pick(font);
 		}
 	}
 
@@ -215,6 +220,7 @@
 			aria-expanded={open}
 			aria-controls={listId}
 			aria-autocomplete="list"
+			aria-activedescendant={open && active >= 0 ? optionId(active) : undefined}
 			describedby={pickProblem ? `${id}-hint font-${slot}-problem` : `${id}-hint`}
 			invalid={!!pickProblem}
 			autocomplete="off"
@@ -225,28 +231,25 @@
 			{onfocus}
 			{onkeydown}
 		/>
-		<!-- svelte-ignore a11y_no_noninteractive_element_interactions (keys move between the font buttons) -->
-		<div
-			class="font-dropdown"
-			id={listId}
-			role="group"
-			aria-label={t(`branding.font_${slot}`)}
-			hidden={!open}
-			bind:this={list}
-			onkeydown={onListKey}
-		>
+		<div class="font-dropdown" hidden={!open}>
 			{#if problem}
 				<p class="state is-error">{problem}</p>
 			{:else if fonts && !fonts.length}
 				<p class="state">{t('settings.appearance.font_none')}</p>
-			{:else if fonts}
-				{#each fonts as font (font.family)}
-					<button
-						type="button"
+			{/if}
+			<div id={listId} role="listbox" aria-label={t(`branding.font_${slot}`)}>
+				{#each fonts ?? [] as font, i (font.family)}
+					<!-- Keys are on the field (aria-activedescendant); the mouse picks here -->
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<div
+						id={optionId(i)}
 						class="font-item"
+						role="option"
+						aria-selected={i === active}
+						aria-disabled={picking !== null || undefined}
 						tabindex="-1"
-						disabled={picking !== null}
-						onclick={() => void pick(font)}
+						onmousemove={() => (active = i)}
+						onclick={() => picking === null && void pick(font)}
 					>
 						<span>{font.family}</span>
 						<span class="font-meta"
@@ -254,9 +257,9 @@
 								.filter(Boolean)
 								.join(', ')}</span
 						>
-					</button>
+					</div>
 				{/each}
-			{/if}
+			</div>
 		</div>
 	</div>
 </div>
@@ -319,13 +322,17 @@
 		text-align: start;
 		cursor: pointer;
 	}
+	/* The active font: where the arrows are (focus stays in the field) */
 	.font-item:hover,
-	.font-item:focus-visible {
+	.font-item[aria-selected='true'] {
 		background: var(--hover);
 	}
-	.font-item:focus-visible {
+	.font-item[aria-selected='true'] {
 		outline: var(--focus-ring);
 		outline-offset: calc(-1 * var(--focus-offset) - 2px);
+	}
+	.font-item[aria-disabled='true'] {
+		cursor: progress;
 	}
 	.font-meta {
 		color: var(--text-muted);
