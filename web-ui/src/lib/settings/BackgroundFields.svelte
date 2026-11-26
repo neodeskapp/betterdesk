@@ -232,9 +232,14 @@
 <style>
 	.bg-kind {
 		min-width: 0;
-		margin: 0 0 var(--space-4);
+		margin: 0;
 		padding: 0;
 		border: 0;
+	}
+	/* Space to the fields of the chosen kind only when one shows (an empty
+	   margin under the radios doubled the gap to the next section) */
+	.bg-kind:has(~ :global(:not([hidden]))) {
+		margin-bottom: var(--space-4);
 	}
 	.bg-kind > legend {
 		padding: 0;
