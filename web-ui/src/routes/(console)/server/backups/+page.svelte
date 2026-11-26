@@ -1,7 +1,7 @@
 <!--
   Server › Backups (/server/backups, server.config): the backups of the
-  whole server (make one, on a schedule, restore) and, under them, the
-  backups each update made of the files it replaced. Both retention counts
+  whole server (make one, on a schedule, restore) and, in the same column
+  above the restore, the backups each update made of the files it replaced. Both retention counts
   are on this page: "Keep scheduled backups" and "Keep update backups".
   Settings › Backup and the backups part of Updates before
   (/settings?tab=backup leads here).
@@ -18,13 +18,13 @@
 	title={t('nav.server_backups')}
 	description={t('settings.page.backup_desc')}
 >
-	<BackupTab />
-	<div class="update-backups"><UpdateBackups /></div>
+	<BackupTab>
+		{#snippet before()}<div class="update-backups"><UpdateBackups /></div>{/snippet}
+	</BackupTab>
 </SettingsPageFrame>
 
 <style>
 	.update-backups {
 		max-width: var(--measure);
-		margin-top: var(--space-6);
 	}
 </style>

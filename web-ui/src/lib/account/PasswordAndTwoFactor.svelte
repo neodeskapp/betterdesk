@@ -431,6 +431,7 @@
 	}
 	.form-hint,
 	.field-effect {
+		max-width: var(--measure);
 		margin: 0;
 		color: var(--text-muted);
 		font-size: var(--text-sm);

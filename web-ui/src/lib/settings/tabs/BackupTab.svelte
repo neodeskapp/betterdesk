@@ -3,9 +3,11 @@
   before). Download a full backup; make backups
   on a schedule into a folder; restore from a file. The
   side column has the schedule's state and what a backup made now holds.
+  before: more sections for the main column, placed above the restore.
   Old page: views/settings.ejs "Backup", settings.js initBackupSection.
 -->
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import {
 		downloadBackup,
 		errorText,
@@ -61,6 +63,9 @@
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { createForm } from '#lib/ui/form.svelte.ts';
 	import { wholeInRange } from '../numbers.ts';
+
+	/** before: more sections of the page in the main column, above the restore */
+	let { before }: { before?: Snippet } = $props();
 
 	const allowed = can('server.config');
 	/** Full backups hold every secret of the server: only super admins download, schedule or restore them */
@@ -499,6 +504,8 @@
 				{/if}
 			</div>
 
+			{@render before?.()}
+
 			{#if fullBackups}
 				<section class="danger-zone" id="backup-restore" aria-labelledby="backup-restore-title">
 					<h2 id="backup-restore-title">{t('settings.backup_tab.restore_title')}</h2>
@@ -656,6 +663,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-3);
+		max-width: var(--measure);
 		padding-top: var(--space-5);
 		border-top: 1px solid var(--rule);
 	}
