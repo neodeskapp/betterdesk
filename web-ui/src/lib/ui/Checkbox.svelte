@@ -84,8 +84,8 @@
 		accent-color: var(--accent);
 		cursor: pointer;
 	}
-	/* Switches render as plain checkboxes */
-	input.toggle-switch {
+	/* Switches render as plain checkboxes; one that can't be changed is drawn by base.css */
+	input.toggle-switch:not(:disabled) {
 		appearance: auto;
 	}
 	.checkbox-row {

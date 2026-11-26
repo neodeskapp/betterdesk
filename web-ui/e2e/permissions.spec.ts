@@ -174,3 +174,46 @@ test('which roles may manage API keys, and what Server admin can do with it', as
 	await row.getByText('Which roles have this?').click();
 	await expect(row.locator('.perm-who li')).toContainText(['Super admin (always)', 'Server admin']);
 });
+
+test('a setting that cannot be changed is still a readable box in light mode', async ({ page }) => {
+	await page.emulateMedia({ colorScheme: 'light' });
+	await page.goto(`${UI}/permissions?role=server_admin`);
+	const box = page.locator('#perm-user-create').getByRole('checkbox');
+	await expect(box).toBeDisabled();
+	const seen = await box.evaluate((input) => {
+		const rgb = (c: string) => (c.match(/[\d.]+/g) ?? []).map(Number);
+		const lum = (c: string) => {
+			const [r, g, b] = rgb(c).map((v) => {
+				const s = v / 255;
+				return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+			});
+			return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+		};
+		const ratio = (a: string, b: string) => {
+			const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+			return (x! + 0.05) / (y! + 0.05);
+		};
+		let el: Element | null = input.parentElement;
+		let bg = 'rgb(255, 255, 255)';
+		while (el) {
+			const c = getComputedStyle(el).backgroundColor;
+			if (c && !c.startsWith('rgba(0, 0, 0, 0)') && c !== 'transparent') {
+				bg = c;
+				break;
+			}
+			el = el.parentElement;
+		}
+		const style = getComputedStyle(input);
+		const label = input.closest('label')!.querySelector('.check-label')!;
+		return {
+			appearance: style.appearance,
+			border: ratio(style.borderTopColor, bg),
+			label: ratio(getComputedStyle(label).color, bg)
+		};
+	});
+	// Drawn by the console, not the browser's pale disabled box: its edge stands
+	// out like any control (3:1) and its name reads as text (4.5:1)
+	expect(seen.appearance).toBe('none');
+	expect(seen.border).toBeGreaterThanOrEqual(3);
+	expect(seen.label).toBeGreaterThanOrEqual(4.5);
+});
