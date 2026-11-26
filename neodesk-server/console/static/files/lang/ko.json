@@ -1653,7 +1653,11 @@
       "status_readonly": "읽기 전용입니다. 콘솔이 표시할 수는 있지만 바꿀 수는 없습니다.",
       "status_file": "{size}, 변경 {when}",
       "missing_title": "이 서버에 없음 ({n})",
-      "missing_note": "다른 설치 방식에 속한 파일이라 여기에는 없습니다."
+      "missing_note": "다른 설치 방식에 속한 파일이라 여기에는 없습니다.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "지금 클라이언트가 받는 값",

@@ -1660,7 +1660,11 @@
       "status_readonly": "للقراءة فقط. يمكن لوحدة التحكم عرضه دون تغييره.",
       "status_file": "{size}، عُدّل {when}",
       "missing_title": "غير موجودة على هذا الخادم ({n})",
-      "missing_note": "تخص هذه الملفات أنواعًا أخرى من التثبيت وليست موجودة هنا."
+      "missing_note": "تخص هذه الملفات أنواعًا أخرى من التثبيت وليست موجودة هنا.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "ما يحصل عليه العملاء الآن",

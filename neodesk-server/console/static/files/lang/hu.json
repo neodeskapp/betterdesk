@@ -1659,7 +1659,11 @@
       "status_readonly": "Csak olvasható. A konzol megjeleníti, de nem módosíthatja.",
       "status_file": "{size}, módosítva: {when}",
       "missing_title": "Nincs ezen a szerveren ({n})",
-      "missing_note": "Ezek a fájlok más telepítési módokhoz tartoznak, és itt nem léteznek."
+      "missing_note": "Ezek a fájlok más telepítési módokhoz tartoznak, és itt nem léteznek.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "Amit a kliensek most kapnak",

@@ -1659,7 +1659,11 @@
       "status_readonly": "Лише читання. Консоль може показати файл, але не змінити.",
       "status_file": "{size}, змінено {when}",
       "missing_title": "Немає на цьому сервері ({n})",
-      "missing_note": "Ці файли належать до інших типів встановлення й тут відсутні."
+      "missing_note": "Ці файли належать до інших типів встановлення й тут відсутні.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "Що зараз отримують клієнти",

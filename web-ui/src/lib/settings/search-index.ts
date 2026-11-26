@@ -1313,7 +1313,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['time', 'time-clock-ntp-server', 'commercialization.clock.status_server', '', [], 'server.config'],
 	['time', 'time-clock-os-sync', 'commercialization.clock.status_os', '', [], 'server.config'],
 	['time', 'time-clock-last-error', 'commercialization.clock.status_error', '', [], 'server.config'],
-	['server-config-files', 'advanced-title', 'settings.advanced_tab.restart_title', '', [], 'server.config'],
+	['server-config-files', 'advanced-config', 'settings.advanced_tab.restart_title', '', [], 'server.config'],
 	[
 		'brand',
 		'client-app',
@@ -1540,5 +1540,5 @@ export const TAB_IDS: Readonly<Record<string, string>> = {
 		'update-alerts update-available-heading update-backup-toggle update-changelog update-channel-active-badge update-channel-branch update-channel-development update-channel-docker-hint update-channel-effect update-channel-panel update-channel-select update-channel-stable update-channel-panel-title update-check-btn update-details-section update-docker-commands update-docker-desc update-docker-images update-docker-info update-docker-install-note update-files-summary update-install-blocked-hint update-install-btn update-local-version update-progress update-progress-fill update-progress-text update-rebuild-server-btn update-remote-version update-stale-detail update-stale-warning update-status-badge update-status-desc update-status-headline update-status-row updates-side-title',
 	permissions: PERMISSION_ROWS.map((r) => r[1]).join(' '),
 	'server-config-files':
-		'advanced-config-file-list advanced-config-meta advanced-config-path advanced-config-placeholder advanced-config-reload advanced-config-restart advanced-config-restart-hint advanced-config-save advanced-config-textarea advanced-config-toolbar advanced-files-label advanced-restart-desc advanced-restart-title advanced-restart-zone advanced-title'
+		'advanced-config-file-list advanced-config-meta advanced-config-path advanced-config-placeholder advanced-config-reload advanced-config-restart advanced-config-restart-hint advanced-config-save advanced-config-textarea advanced-config-toolbar advanced-files-label advanced-restart-desc advanced-restart-title advanced-config advanced-config-title advanced-restart-zone'
 };

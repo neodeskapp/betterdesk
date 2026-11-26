@@ -153,5 +153,5 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'time-clock-require-sync': 'billing abrechnung',
 	'time-clock-max-skew': 'skew drift abweichung',
 	// Advanced
-	'advanced-title': 'restart reboot neustart neu starten'
+	'advanced-config': 'restart reboot neustart neu starten'
 };

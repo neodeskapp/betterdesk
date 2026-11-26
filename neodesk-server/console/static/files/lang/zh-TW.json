@@ -1657,7 +1657,11 @@
       "status_readonly": "唯讀。主控台可以顯示但無法修改。",
       "status_file": "{size}，修改於 {when}",
       "missing_title": "此伺服器上沒有 ({n})",
-      "missing_note": "這些檔案屬於其他安裝方式，這裡沒有。"
+      "missing_note": "這些檔案屬於其他安裝方式，這裡沒有。",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "用戶端目前取得的值",

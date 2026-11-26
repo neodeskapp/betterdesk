@@ -1659,7 +1659,11 @@
       "status_readonly": "Skrivskyddad. Konsolen kan visa den men inte ändra den.",
       "status_file": "{size}, ändrad {when}",
       "missing_title": "Finns inte på den här servern ({n})",
-      "missing_note": "De här filerna hör till andra installationstyper och finns inte här."
+      "missing_note": "De här filerna hör till andra installationstyper och finns inte här.",
+      "group_title": "Files on this server",
+      "pick": "Pick a file to see and edit it.",
+      "save_effect": "Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.",
+      "restart_services": "Restart services…"
     },
     "side": {
       "general_title": "Vad klienterna får nu",
