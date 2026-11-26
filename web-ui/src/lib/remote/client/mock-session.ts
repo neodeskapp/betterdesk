@@ -10,7 +10,15 @@
  * Scenarios (?mock=1&scenario=...): ok, slow, password (accepts "demo"),
  * 2fa (password "demo", code 123456), fail-relay, refused, offline,
  * timeout, ended, dropped, one-at-a-time (a device older than RustDesk
- * 1.2.4: its three displays switch one at a time). The scenario applies to
+ * 1.2.4: its three displays switch one at a time). As the desktop client
+ * 1.5 behaves for click-to-accept: click (a computer that accepts by click
+ * answers the login without a password with "No Password Access", then
+ * the person accepts), quick-support (a quick support session whose
+ * password the server does not hold: the person accepts), quick-support-
+ * decline (the person declines), quick-support-timeout (nobody answers; the
+ * viewer gives up after 4 s here). revoked: the server refuses the ID (the
+ * signal server says offline, reach says revoked) until Unblock. The mock
+ * stands in for the server's answers too (mockServer). The scenario applies to
  * the first device of the page; tabs opened later with "New connection"
  * connect normally.
  *
@@ -945,6 +953,10 @@ interface MockDeviceState {
 	copy?: (text: string, png?: Blob | null) => void;
 	/** The last key presses the device received (code, then +ctrl and +meta) */
 	keys?: string[];
+	/** The revoked scenario's ID was unblocked (mockServer.unblock) */
+	unblocked?: boolean;
+	/** The person at the quick support or click-to-accept device was asked (the consent window opened) */
+	asked?: number;
 	/** The logins of the current connection: without a password or typed, and the caller each named */
 	logins?: { password: boolean; latch: string }[];
 }
@@ -1009,7 +1021,7 @@ export class MockRemoteSession implements RemoteClient {
 		this._quality = opts.qualityPreset || 'best';
 		this._fpsMode = opts.fpsMode || 'adaptive';
 		this._codec = opts.preferCodec && opts.preferCodec !== 'Auto' ? opts.preferCodec : 'VP9';
-		this._needsPassword = this.scenario === 'password' || this.scenario === '2fa';
+		this._needsPassword = this.scenario === 'password' || this.scenario === '2fa' || this._asksPerson();
 		this._mainDecoder = new MockDecoder();
 		this._mainDecoder.onFrame = (frame) => this.renderer.pushFrame(frame);
 		this.displays = new RDDisplayStreams<MockViewParts>({
@@ -1122,12 +1134,48 @@ export class MockRemoteSession implements RemoteClient {
 		return false;
 	}
 
-	/** The login without a password RDClient sends while the form shows: this device wants a password, so no answer */
+	/** The scenarios where the person at the computer accepts or declines */
+	_asksPerson(): boolean {
+		return this.scenario === 'click' || this.scenario.startsWith('quick-support');
+	}
+
+	/**
+	 * The login without a password RDClient sends while the form shows. A
+	 * device that wants a password does not answer it; one that asks the
+	 * person opens its consent window, as the desktop client does
+	 */
 	async askWithoutPassword(): Promise<void> {
 		if (this._askedWithoutPassword || this._state !== 'waiting_password') return;
 		this._askedWithoutPassword = true;
-		this._login(false);
+		if (!this._login(false) || !this._asksPerson()) return;
+		const state = deviceState();
+		state.asked = (state.asked ?? 0) + 1;
+		if (this.scenario === 'click') this._emit('approval_wait');
+		if (this.scenario === 'quick-support' || this.scenario === 'click')
+			this._after(1200, () => this._loginOk());
+		if (this.scenario === 'quick-support-decline')
+			this._after(1000, () =>
+				this._disconnect('Remote: ', { source: 'peer', peerReason: '', loginUnanswered: true })
+			);
 	}
+
+	/** The server's answers the mock stands in for: reach, unblock and the quick support session */
+	mockServer = {
+		reach: async () => ({
+			reason: this.scenario === 'revoked' && !deviceState().unblocked ? 'device_revoked' : 'device_offline',
+			last_online: '',
+			can_unblock: true
+		}),
+		unblock: async () => {
+			deviceState().unblocked = true;
+		},
+		support: async () => ({
+			password: '',
+			session: this.scenario.startsWith('quick-support') ? { name: 'Ana', status: 'allowed' } : null
+		}),
+		// A getter: the field is made before the constructor sets the scenario
+		consentWait: () => (this.scenario === 'quick-support-timeout' ? 4000 : undefined)
+	};
 
 	async connect(): Promise<void> {
 		this._logins.reset();
@@ -1144,12 +1192,14 @@ export class MockRemoteSession implements RemoteClient {
 		this._emit('log', 'Loading protocol definitions...');
 		at(350, () => this._emit('log', 'Connecting to rendezvous server...'));
 		at(450, () => this._emit('log', 'Requesting connection to ' + this.deviceId + '...'));
-		if (this.scenario === 'offline') {
-			at(900, () => this._fail('Connection refused: Device offline'));
+		if (this.scenario === 'offline' || (this.scenario === 'revoked' && !deviceState().unblocked)) {
+			at(900, () => this._fail('Connection refused: Device offline', 'device_offline'));
 			return;
 		}
 		if (this.scenario === 'timeout') {
-			at(5000, () => this._fail('Rendezvous response timeout (30s) - target device may be offline'));
+			at(5000, () =>
+				this._fail('Rendezvous response timeout (30s) - target device may be offline', 'no_answer')
+			);
 			return;
 		}
 		at(500, () => this._emit('log', 'Requesting relay (uuid: 6f1c2a9e...)...'));
@@ -1169,7 +1219,9 @@ export class MockRemoteSession implements RemoteClient {
 			return;
 		}
 		if (this.scenario === 'refused') {
-			at(2200, () => this._fail('Relay refused: the remote user declined the connection'));
+			at(2200, () =>
+				this._fail('Relay refused: the remote user declined the connection', 'consent_declined')
+			);
 			return;
 		}
 		// Slow: the device answers only after the "someone has to accept" hint shows
@@ -1267,10 +1319,11 @@ export class MockRemoteSession implements RemoteClient {
 		});
 	}
 
-	_fail(msg: string): void {
+	/** A failure with its reason, as RDClient reports one (failures.ts) */
+	_fail(msg: string, reason: string): void {
 		this._stop();
 		this._emit('diagnostics', { type: 'error', message: msg, at: Date.now() });
-		this._emit('error', msg, { cdapFallback: false });
+		this._emit('error', msg, { cdapFallback: false, reason });
 		this._setState('error');
 	}
 

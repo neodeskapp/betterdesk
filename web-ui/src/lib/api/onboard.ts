@@ -85,6 +85,8 @@ export const SupportSession = v.object({
 	consent_at: Text,
 	ended_at: Text,
 	ended_by: Text,
+	/** Why the server ended it (ended_by refused): a failure reason of failures.ts */
+	end_reason: v.optional(Text, ''),
 	device_id: Text,
 	hostname: Text,
 	platform: Text,
@@ -203,20 +205,33 @@ export async function takeSessionPassword(id: string): Promise<string> {
 	).password;
 }
 
+/** This account's quick support session on a device, as the viewer needs it */
+export interface DeviceSupport {
+	/** The session password the person's app handed over, '' when the server has none */
+	password: string;
+	/** The session that runs on the device: the person accepts there, nobody types a password */
+	session: { name: string; status: string } | null;
+}
+
 /**
  * The password of this account's allowed quick support session on a device,
- * for the browser viewer when the device asks; '' when there is none.
+ * for the browser viewer when the device asks, and the session itself even
+ * when the server holds no password (a restart loses it, and it is handed
+ * out once).
  */
-export async function takeDevicePassword(deviceId: string): Promise<string> {
+export async function takeDevicePassword(deviceId: string): Promise<DeviceSupport> {
 	try {
 		const out = await api(
-			v.object({ password: v.string() }),
+			v.object({
+				password: v.string(),
+				session: v.optional(v.nullable(v.object({ name: v.string(), status: v.string() })), null)
+			}),
 			`/api/support/devices/${enc(deviceId)}/password`,
 			{ method: 'POST', allowAnonymous: true, activity: false }
 		);
-		return out.password;
+		return { password: out.password, session: out.session ?? null };
 	} catch {
-		return '';
+		return { password: '', session: null };
 	}
 }
 
