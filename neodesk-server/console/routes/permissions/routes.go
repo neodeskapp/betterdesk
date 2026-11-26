@@ -9,6 +9,7 @@ package permissions
 import (
 	"net/http"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -94,7 +95,30 @@ func (h *handlers) roles(w http.ResponseWriter, r *http.Request) {
 			role.Set("fixed", fixed)
 		}
 	}
+	if data, isObject := result.Get("data").(*goapi.Object); isObject && result.Bool("success") {
+		data.Set("requires", requiresObject())
+	}
 	answerRead(w, r, result)
+}
+
+// requiresObject is access.PermissionNeeds as the role list sends it:
+// {permission: [{permission, reason}]}, in the order of the permission
+// list.
+func requiresObject() *goapi.Object {
+	needs := access.PermissionNeeds()
+	out := goapi.NewObject()
+	for _, p := range auth.AllPermissions {
+		list := needs[p]
+		if len(list) == 0 {
+			continue
+		}
+		entries := make([]any, 0, len(list))
+		for _, n := range list {
+			entries = append(entries, goapi.NewObject("permission", n.Permission, "reason", n.Reason))
+		}
+		out.Set(p, entries)
+	}
+	return out
 }
 
 // rolePermissions answers GET /api/panel/roles/{role}/permissions: the
