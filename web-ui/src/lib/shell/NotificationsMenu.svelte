@@ -6,9 +6,13 @@
   accent rule on the start side. "Mark all read" in the head, links to
   the full lists in the foot (by permission).
 
-  Keys: Enter, Space or ArrowDown on the bell opens it on the first row;
-  arrows, Home and End move; Escape closes and returns to the bell; Tab
-  closes and moves on (Menu).
+  Keys: Enter, Space or ArrowDown on the bell opens it on the first row,
+  ArrowUp on the last item; arrows, Home and End move; Escape closes and
+  returns to the bell; Tab closes and moves on (Menu).
+
+  Screen readers only read items inside a menu, so the Loading, empty and
+  error lines are disabled items: the arrow keys reach them, and focus
+  starts there until the rows arrive.
 -->
 <script lang="ts">
 	import { t } from '#lib/i18n/i18n.svelte.ts';
@@ -17,6 +21,7 @@
 	import Icon from '#lib/ui/Icon.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
 	import Menu from '#lib/ui/Menu.svelte';
+	import { menuItems } from '#lib/ui/menu.ts';
 	import OsIcon from '#lib/ui/OsIcon.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
@@ -47,13 +52,38 @@
 		return list?.querySelector<HTMLElement>('.notif-row') ?? null;
 	}
 
-	function show() {
+	/** Where focus goes on opening: the first row (or the line that stands for the rows), or the last item */
+	let start: 'first' | 'last' = 'first';
+
+	function focusStart() {
+		const menu = document.getElementById(`${uid}-menu`);
+		if (!menu) return;
+		const target =
+			start === 'last'
+				? menuItems(menu).at(-1)
+				: (list?.querySelector<HTMLElement>('[role="menuitem"]') ?? menuItems(menu)[0]);
+		target?.focus();
+	}
+
+	function show(where: 'first' | 'last' = 'first') {
 		if (open) return;
+		start = where;
 		open = true;
 		void loadNotifications().catch(() => {});
 		// Menu puts focus on itself; the first row is where the old menu started
-		queueMicrotask(() => firstRow()?.focus());
+		queueMicrotask(focusStart);
 	}
+
+	/* The Loading line had focus and gave way to the rows: focus follows to
+	   where it would have started, instead of dropping to the page */
+	$effect(() => {
+		void rows.length;
+		void notifications.loaded;
+		void notifications.failed;
+		if (!open) return;
+		const active = document.activeElement;
+		if (!active || active === document.body) focusStart();
+	});
 
 	function onclick() {
 		if (open) {
@@ -63,9 +93,9 @@
 	}
 
 	function onkeydown(e: KeyboardEvent) {
-		if (e.key === 'ArrowDown' && !open) {
+		if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !open) {
 			e.preventDefault();
-			show();
+			show(e.key === 'ArrowUp' ? 'last' : 'first');
 		}
 	}
 
@@ -130,16 +160,20 @@
 		</div>
 		<div class="notif-list" bind:this={list}>
 			{#if notifications.failed && !notifications.items.length}
-				<p class="notif-state is-error">
-					{t('notifications.load_failed')}
+				<p class="notif-state is-error" role="none">
+					<span role="menuitem" aria-disabled="true" tabindex="-1">{t('notifications.load_failed')}</span>
 					<button type="button" class="notif-link" role="menuitem" tabindex="-1" onclick={retry}>
 						{t('errors.try_again')}
 					</button>
 				</p>
 			{:else if !notifications.loaded}
-				<p class="notif-state">{t('notifications.loading')}</p>
+				<div class="notif-state" role="menuitem" aria-disabled="true" tabindex="-1">
+					{t('notifications.loading')}
+				</div>
 			{:else if !rows.length}
-				<p class="notif-state">{t('notifications.empty_hint')}</p>
+				<div class="notif-state" role="menuitem" aria-disabled="true" tabindex="-1">
+					{t('notifications.empty_hint')}
+				</div>
 			{:else}
 				<ul class="notif-rows" role="none">
 					{#each rows as { item, view } (item.id)}

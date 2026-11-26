@@ -35,6 +35,8 @@
 	/** The language list, opened from Language */
 	let languages = $state(false);
 	let button = $state<HTMLButtonElement | null>(null);
+	/** ArrowUp opens on the last item, everything else on the first (APG menu button) */
+	let initialFocus = $state<'first' | 'last'>('first');
 
 	const user = $derived(session.user);
 	const person = $derived(
@@ -57,12 +59,14 @@
 	];
 
 	function toggle() {
+		initialFocus = 'first';
 		open = !open;
 	}
 
 	function onkeydown(e: KeyboardEvent) {
 		if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
 			e.preventDefault();
+			initialFocus = e.key === 'ArrowUp' ? 'last' : 'first';
 			open = true;
 		}
 	}
@@ -97,6 +101,7 @@
 		bind:open
 		anchor={button}
 		align="end"
+		{initialFocus}
 		id={`${uid}-menu`}
 		label={tf('user_menu.label', 'Account')}
 		class="account-menu"

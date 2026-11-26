@@ -53,15 +53,19 @@ describe('Menu', () => {
 		expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: /edit/i }));
 	});
 
-	test('arrow keys move, skip disabled items and wrap; Home and End jump', async () => {
+	test('arrow keys move, reach disabled items and wrap; Home and End jump', async () => {
 		const { trigger, user } = setup();
 		trigger.focus();
 		await user.keyboard('{Enter}');
 		const name = () => document.activeElement?.querySelector('.menu-item-label')?.textContent;
 		await user.keyboard('{ArrowDown}');
 		expect(name()).toBe('Tags');
+		// A disabled item stays reachable (APG), so people learn it exists
 		await user.keyboard('{ArrowDown}');
-		expect(name()).toBe('Move to folder'); // Archive is disabled
+		expect(name()).toBe('Archive');
+		expect(document.activeElement).toHaveAttribute('aria-disabled', 'true');
+		await user.keyboard('{ArrowDown}');
+		expect(name()).toBe('Move to folder');
 		await user.keyboard('{End}');
 		expect(name()).toBe('Delete…');
 		await user.keyboard('{ArrowDown}');
@@ -147,9 +151,12 @@ describe('Menu', () => {
 		const { trigger, user, onselect } = setup();
 		await user.click(trigger);
 		const archive = screen.getByRole('menuitem', { name: /archive/i });
-		expect(archive).toBeDisabled();
+		expect(archive).toHaveAttribute('aria-disabled', 'true');
 		await user.click(archive);
+		archive.focus();
+		await user.keyboard('{Enter}');
 		expect(onselect).not.toHaveBeenCalled();
+		expect(screen.getByRole('menu')).toBeInTheDocument();
 	});
 
 	test('a checkbox item toggles and leaves the menu open', async () => {
