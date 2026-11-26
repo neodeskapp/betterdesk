@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
@@ -55,8 +57,12 @@ func writeReleaseCache(t *testing.T, dataDir string) {
 // with their headers and the portal's installers. The audit log and the
 // stored pictures are compared after the requests.
 //
-// A profile save with another email address notes email_changed in the
-// audit log too, which Node didn't; the comparison leaves those out.
+// A profile save that takes the email address away notes email_changed
+// in the audit log too, which Node didn't; the comparison leaves those
+// out. One that gives another address is refused (A272: this console has
+// no email settings, so nothing could confirm it), where Node set it: the
+// other fields are saved as Node saved them, and the test sets the
+// address as Node did, so the steps after it compare with Node's.
 //
 // A profile save keeps the fields its body leaves out, where Node emptied
 // them (BUGS C3): keptFields checks that at every save and then empties
@@ -72,15 +78,26 @@ func TestNodeAnswers(t *testing.T) {
 			}
 		}()
 		rec := replay.Load(t, db, "node")
-		// A profile save with another address changes it as Your account
-		// does (package emailchange), which notes email_changed beside
-		// Node's profile_updated
+		// A profile save that takes the address away changes it as Your
+		// account does (package emailchange), which notes email_changed
+		// beside Node's profile_updated
 		for i, step := range rec.Steps {
 			if step.SQL == "SELECT action, details, user_id FROM audit_log ORDER BY id" {
 				rec.Steps[i].SQL = "SELECT action, details, user_id FROM audit_log WHERE action <> 'email_changed' ORDER BY id"
 			}
 		}
+		refused := 0
+		defer func() {
+			if refused == 0 {
+				t.Error("no profile save gave another address")
+			}
+		}()
 		w.Run(rec, func(t *testing.T, step replay.Step, got replay.Answer) bool {
+			if newAddressRefused(t, w, step, got) {
+				refused++
+				kept(t, step)
+				return true
+			}
 			kept(t, step)
 			// A new template's token is random: 48 hex digits in place of
 			// each other
@@ -166,6 +183,51 @@ func deref(s *string) any {
 		return nil
 	}
 	return *s
+}
+
+// newAddressRefused reports whether the step is a profile save Node took
+// that gave the person another email address, which this console refuses
+// without email settings (A272). It then checks the refusal and that the
+// address really was another one, and sets it as Node did.
+func newAddressRefused(t *testing.T, w *replay.World, step replay.Step, got replay.Answer) bool {
+	t.Helper()
+	if step.Method != http.MethodPut || step.Path != "/api/users/me/profile" || step.Status != http.StatusOK || got.Status != http.StatusConflict {
+		return false
+	}
+	var answer struct {
+		Success bool   `json:"success"`
+		Code    string `json:"code"`
+	}
+	if json.Unmarshal([]byte(got.Body), &answer) != nil || answer.Success || answer.Code != "email_change_needs_mail" {
+		return false
+	}
+	var body map[string]json.RawMessage
+	if step.Body == nil || json.Unmarshal([]byte(*step.Body), &body) != nil || body["email"] == nil {
+		t.Errorf("step %q: refused a save without an address: %s", step.Name, got.Body)
+		return true
+	}
+	// The address as the route makes it: the value as text, 200 characters
+	value, err := branding.ParseJSON(body["email"])
+	if err != nil {
+		t.Fatalf("step %q: %v", step.Name, err)
+	}
+	text, err := branding.ToString(value)
+	if err != nil {
+		t.Fatalf("step %q: %v", step.Name, err)
+	}
+	address := goapipath.Slice(text, 200)
+	user := "e2e_" + step.Role
+	var rows []struct {
+		Email *string `json:"email"`
+	}
+	if err := json.Unmarshal([]byte(w.Rows("SELECT email FROM users WHERE username = ?", []any{user})), &rows); err != nil || len(rows) != 1 {
+		t.Fatalf("step %q: the address of %s: %v", step.Name, user, err)
+	}
+	if now := rows[0].Email; now != nil && strings.EqualFold(*now, address) {
+		t.Errorf("step %q: refused the address the account has: %q", step.Name, address)
+	}
+	w.Exec("UPDATE users SET email = ? WHERE username = ?", []any{address, user})
+	return true
 }
 
 // profileColumns are the profile fields a save writes.

@@ -66,9 +66,11 @@ func TestNoAccountWidensItsOwnAccess(t *testing.T) {
 		t.Errorf("the viewer joined %d user groups", groups)
 	}
 
-	// Its own email and password it still changes
-	if got := viewer.Do("PATCH", own, `{"email":"v@example.org"}`); got.Status != 200 {
-		t.Errorf("viewer sets its own email: %d %s, want 200", got.Status, got.Body)
+	// Its own email and password it still changes: a new address is not
+	// refused for its role, only because this console has no mail settings
+	// to confirm it with (A272)
+	if got := viewer.Do("PATCH", own, `{"email":"v@example.org"}`); got.Status != 409 || !strings.Contains(got.Body, `"code":"email_change_needs_mail"`) {
+		t.Errorf("viewer sets its own email: %d %s, want 409 email_change_needs_mail", got.Status, got.Body)
 	}
 	// An account that may give viewer sets them
 	global := w.As("global_admin")

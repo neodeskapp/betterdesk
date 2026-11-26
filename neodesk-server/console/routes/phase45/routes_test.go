@@ -266,25 +266,35 @@ func TestProfilePicture(t *testing.T) {
 
 // A save changes the fields the body has and keeps the others: saving the
 // phone keeps the names, a field sent as null is emptied, and a body with
-// none of the fields, {} or a list, changes nothing (BUGS C3).
+// none of the fields, {} or a list, changes nothing (BUGS C3). This
+// console has no email settings, so another address is refused (A272)
+// and the address stays; the fields beside it are saved.
 func TestSaveProfileKeepsFieldsTheBodyLeavesOut(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		admin := routetest.New(t, routetest.Options{DB: db}).As("admin")
+		w := routetest.New(t, routetest.Options{DB: db})
+		if _, err := db.Exec(context.Background(), `UPDATE users SET email = 'grace@example.test' WHERE id = ?`, routetest.RoleIDs["admin"]); err != nil {
+			t.Fatal(err)
+		}
+		admin := w.As("admin")
 		profile := func() string { return admin.Do("GET", "/api/users/me/profile", "").Body }
 		full := `{"first_name":"Grace","last_name":"Hopper","email":"grace@example.test","phone":"+1 555","role_display":"Rear admiral"}`
 		if res := admin.Do("PUT", "/api/users/me/profile", full); res.Status != http.StatusOK {
 			t.Fatalf("save the whole profile: %d %s", res.Status, res.Body)
 		}
-		for _, c := range []struct{ body, want string }{
-			{`{"phone":"555"}`, `"first_name":"Grace","last_name":"Hopper","email":"grace@example.test","phone":"555","role_display":"Rear admiral"`},
-			{`{"last_name":null,"role_display":""}`, `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"555","role_display":""`},
-			{`{}`, `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"555","role_display":""`},
-			{`[{"first_name":"x"}]`, `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"555","role_display":""`},
-			{`{"email":5,"other":"x"}`, `"first_name":"Grace","last_name":"","email":"5","phone":"555","role_display":""`},
+		const refused = `{"success":false,"error":"users.email_change_needs_mail","code":"email_change_needs_mail"}`
+		for _, c := range []struct{ body, answer, want string }{
+			{`{"phone":"555"}`, "", `"first_name":"Grace","last_name":"Hopper","email":"grace@example.test","phone":"555","role_display":"Rear admiral"`},
+			{`{"last_name":null,"role_display":""}`, "", `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"555","role_display":""`},
+			{`{}`, "", `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"555","role_display":""`},
+			{`[{"first_name":"x"}]`, "", `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"555","role_display":""`},
+			{`{"email":5,"other":"x","phone":"556"}`, refused, `"first_name":"Grace","last_name":"","email":"grace@example.test","phone":"556","role_display":""`},
 		} {
 			res := admin.Do("PUT", "/api/users/me/profile", c.body)
-			if res.Status != http.StatusOK || res.Body != `{"success":true,"avatar":"unchanged"}` {
+			if c.answer == "" && (res.Status != http.StatusOK || res.Body != `{"success":true,"avatar":"unchanged"}`) {
 				t.Errorf("save %s: %d %s", c.body, res.Status, res.Body)
+			}
+			if c.answer != "" && (res.Status != http.StatusConflict || res.Body != c.answer) {
+				t.Errorf("save %s: %d %s, want 409 %s", c.body, res.Status, res.Body, c.answer)
 			}
 			if got := profile(); !strings.Contains(got, c.want) {
 				t.Errorf("after saving %s: %s, want %s", c.body, got, c.want)
