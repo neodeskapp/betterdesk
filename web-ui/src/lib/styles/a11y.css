@@ -89,6 +89,8 @@ html[data-a11y-dyslexia='true']
 	--warning: #ffe66d;
 	--danger: #ff8585;
 	--danger-hover: #ffb3b3;
+	--accent-purple: #d0dde2;
+	--info: #d0dde2;
 }
 
 :root[data-a11y-contrast='high-light'] {
@@ -120,6 +122,9 @@ html[data-a11y-dyslexia='true']
 	--warning: #8a5a00;
 	--danger: #a40000;
 	--danger-hover: #7a0000;
+	--accent-purple: #1f2937;
+	--info: #1f2937;
+	--presence-away: #8a5a00;
 }
 
 :root[data-a11y-contrast='yellow-black'] {
@@ -151,6 +156,8 @@ html[data-a11y-dyslexia='true']
 	--warning: #fff36d;
 	--danger: #ff8a80;
 	--danger-hover: #ffb3ad;
+	--accent-purple: #ffe66d;
+	--info: #ffe66d;
 }
 
 /* Colour filters go on the root element: a filter on any other element

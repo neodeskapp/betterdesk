@@ -38,7 +38,7 @@
        text colour, so it shows on --bg, --bg-subtle, a hovered row and in
        dialogs alike. Text on it is --text. */
 	--tag-bg: color-mix(in srgb, var(--text) 9%, transparent);
-	--success: var(--accent-green, #1c7a3b);
+	--success: var(--accent-green, #1c793b);
 	--danger: var(--accent-red, #b3261e);
 	--danger-hover: var(--accent-red-hover, #8c1d17);
 	--warning: var(--accent-yellow, #875b00);
@@ -138,8 +138,9 @@
 	--os-apple: #68717a;
 	--os-chrome: #c5221f;
 
-	/* Away status dot (.presence.is-away): a yellow that still reaches 3:1 on white */
-	--presence-away: #b88a00;
+	/* Away status dot (.presence.is-away): a yellow that still reaches 3:1 on
+	   every surface, hovered rows included (tests/unit/contrast.test.ts) */
+	--presence-away: #aa8000;
 
 	/* Avatar initials (components.css .avatar.is-c1..6): one colour per name,
        the initials in it on a 16 % tint of it. 4.5:1 on the tint, checked by
