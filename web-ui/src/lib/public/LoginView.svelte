@@ -4,7 +4,9 @@
   the server decides which; a second step for the two-factor code or a
   recovery code, or, where the server requires two-factor sign-in and the
   account has none, its set-up and the recovery codes before the sign-in
-  ends; single sign-on (OIDC) below when it is on, and started
+  ends; where an admin asks for a new password, a step that sets it
+  (after the code, before a mandatory set-up); single sign-on (OIDC)
+  below when it is on, and started
   right away when the admin prefers it (not with ?autoLaunch=0). After
   sign-in the browser goes to ?return= when it is a console path (R3).
 
@@ -19,6 +21,7 @@
 	import { saveLanguage } from '#lib/api/console.ts';
 	import { passwordResetAvailable } from '#lib/api/passwordlinks.ts';
 	import {
+		changeRequiredPassword,
 		enableRequiredTotp,
 		getLoginPage,
 		getOidcStatus,
@@ -32,6 +35,8 @@
 	} from '#lib/api/signin.ts';
 	import { i18n, switchLanguage, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
+	import PasswordField from '#lib/people/PasswordField.svelte';
+	import { passwordProblem } from '#lib/people/users.ts';
 	import LanguageMenu from '#lib/shell/LanguageMenu.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
@@ -73,7 +78,11 @@
 	const host = typeof location !== 'undefined' ? location.host : '';
 	const mode = $derived(compact ? 'classic' : page.branding.loginPromoMode);
 
-	let step = $state<'password' | 'totp' | 'setup' | 'codes'>('password');
+	let step = $state<'password' | 'totp' | 'change' | 'setup' | 'codes'>('password');
+	/** The new password an admin asked for, twice */
+	let newPassword = $state('');
+	let newAgain = $state('');
+	let changeError = $state<{ password?: string; again?: string }>({});
 	/** The mandatory set-up's secret and QR code, and what its first code answered */
 	let setup = $state<RequiredTotpSetup | null>(null);
 	let recoveryCodes = $state<string[]>([]);
@@ -171,6 +180,11 @@
 				await showTotp();
 				return;
 			}
+			if (res.passwordChangeRequired) {
+				busy = false;
+				showChange();
+				return;
+			}
 			if (res.totpSetupRequired) {
 				busy = false;
 				await showSetup();
@@ -195,6 +209,45 @@
 		missing = null;
 		await tick();
 		codeInput?.focus();
+	}
+
+	/** An admin asks for a new password: it is set before the sign-in ends */
+	function showChange() {
+		step = 'change';
+		newPassword = '';
+		newAgain = '';
+		changeError = {};
+		error = '';
+		missing = null;
+	}
+
+	async function submitChange(e: SubmitEvent) {
+		e.preventDefault();
+		if (busy) return;
+		error = '';
+		const problem = passwordProblem(newPassword, true);
+		changeError = {
+			password: problem ? t(problem) : undefined,
+			again: !problem && newAgain !== newPassword ? t('password_link.passwords_differ') : undefined
+		};
+		if (changeError.password || changeError.again) return;
+		busy = true;
+		try {
+			const res = await changeRequiredPassword({
+				newPassword,
+				confirmPassword: newAgain,
+				...(query.returnPath ? { return: query.returnPath } : {})
+			});
+			busy = false;
+			if (res.totpSetupRequired) {
+				await showSetup();
+				return;
+			}
+			done(res.redirect);
+		} catch (err) {
+			busy = false;
+			error = signInErrorText(err, 'auth.login_failed');
+		}
 	}
 
 	/** Two-factor sign-in is mandatory and the account has none: its set-up comes first */
@@ -281,6 +334,11 @@
 				clientFingerprint: fingerprint,
 				...(query.returnPath ? { return: query.returnPath } : {})
 			});
+			if (res.passwordChangeRequired) {
+				busy = false;
+				showChange();
+				return;
+			}
 			done(res.redirect);
 		} catch (err) {
 			busy = false;
@@ -416,6 +474,41 @@
 						<Button href={ssoHref} block>{ssoLabel}</Button>
 					</div>
 				{/if}
+			{:else if step === 'change'}
+				<form class="login-form" novalidate onsubmit={submitChange}>
+					<div class="totp-header">
+						<h2 class="totp-title">{t('auth.change_required_title')}</h2>
+						<p class="totp-subtitle">{t('auth.change_required')}</p>
+					</div>
+					<!-- The username for password managers, which file the new password under it -->
+					<input
+						class="sr-only"
+						type="text"
+						autocomplete="username"
+						value={username.trim()}
+						readonly
+						tabindex="-1"
+						aria-hidden="true"
+					/>
+					<PasswordField
+						label={t('users.new_password')}
+						hint={t('users.password_hint')}
+						error={changeError.password}
+						autofocus
+						bind:value={newPassword}
+					/>
+					<Field label={t('password_link.repeat_password')} id="new-password-again" error={changeError.again}>
+						{#snippet children(f)}
+							<Input {...f} type="password" autocomplete="new-password" bind:value={newAgain} />
+						{/snippet}
+					</Field>
+					<Button type="submit" variant="primary" block {busy}>{t('auth.change_required_save')}</Button>
+					<p class="totp-links">
+						<Button variant="link" onclick={() => void backToPassword()}
+							>{t('auth.totp_back_to_login')}</Button
+						>
+					</p>
+				</form>
 			{:else if step === 'setup'}
 				<form class="login-form" novalidate onsubmit={submitSetup}>
 					<div class="totp-header">
