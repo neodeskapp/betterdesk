@@ -28,7 +28,7 @@ const TABS = [
 	{ path: '/server/updates', heading: 'Update channel', page: true },
 	{ path: '/settings?tab=email', heading: 'Mail server', page: false },
 	{ path: '/settings?tab=time', heading: 'Billing time zone', page: false },
-	{ path: '/server/config-files', heading: 'Configuration files', page: true }
+	{ path: '/server/config-files', heading: 'Files on this server', page: true }
 ] as const;
 
 /**
