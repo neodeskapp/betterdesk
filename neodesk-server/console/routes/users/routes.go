@@ -76,6 +76,7 @@ func Register(d *kit.Deps) {
 	r.Patch("/api/users/{id}", h.update, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/effective-scope", h.effectiveScope, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Delete("/api/users/{id}", h.remove, d.RequireAuth, d.RequirePermission("user.delete"))
+	r.Get("/api/users/{id}/delete-preview", h.deletePreview, d.RequireAuth, d.RequirePermission("user.delete"))
 	r.Post("/api/users/{id}/reset-password", h.resetPassword, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/sessions", h.userSessions, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Delete("/api/users/{id}/sessions/{sessionId}", h.endUserSession, d.RequireAuth, d.RequirePermission("user.edit"))

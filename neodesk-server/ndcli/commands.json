@@ -8030,8 +8030,31 @@
    "permission": "user.delete",
    "destructive": true,
    "examples": [
-    "neodesk users delete 7 --yes"
-   ]
+    "neodesk users delete 7 --yes",
+    "neodesk users delete 7 --handover-to 3 --yes"
+   ],
+   "flags": [
+    {
+     "name": "handover-to",
+     "in": "query",
+     "type": "string",
+     "help": "an account ID that gets the account's API tokens, organization memberships, saved reports and open tickets first",
+     "field": "handover_to"
+    }
+   ],
+   "description": "Without --handover-to the account's API tokens are revoked and its organization memberships go; open tickets become unassigned. A handed-over API token keeps only the permissions its new owner has. See users delete-preview for what goes and what stays."
+  },
+  {
+   "name": "users delete-preview",
+   "summary": "Show what deleting an account removes and what stays, as counts, and who it can hand over to.",
+   "route": "GET /api/users/{id}/delete-preview",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.delete"
   },
   {
    "name": "users invalidate-recovery-codes",

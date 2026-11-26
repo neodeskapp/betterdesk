@@ -280,9 +280,49 @@ export function updateUser(id: number | string, body: UserInput) {
 	return api(Ok, `/api/users/${encodeURIComponent(String(id))}`, { method: 'PATCH', body });
 }
 
-/** Needs user.delete; never yourself */
-export function deleteUser(id: number | string) {
-	return api(Ok, `/api/users/${encodeURIComponent(String(id))}`, { method: 'DELETE' });
+/**
+ * Needs user.delete; never yourself. handoverTo gives the account's API
+ * tokens, organization memberships, saved reports and open tickets to
+ * that account first (one the caller may change).
+ */
+export function deleteUser(id: number | string, handoverTo?: number | string) {
+	const query = handoverTo !== undefined ? `?handover_to=${encodeURIComponent(String(handoverTo))}` : '';
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}${query}`, { method: 'DELETE' });
+}
+
+const Count = v.pipe(
+	v.optional(v.nullable(v.number()), 0),
+	v.transform((n) => n ?? 0)
+);
+
+/** What a delete removes and keeps, counted, and who may take over */
+export const DeletePreview = v.looseObject({
+	id: v.union([v.number(), v.string()]),
+	username: Str,
+	counts: v.looseObject({
+		sessions: Count,
+		client_sign_ins: Count,
+		api_tokens: Count,
+		organizations: Count,
+		user_groups: Count,
+		device_grants: Count,
+		saved_reports: Count,
+		open_tickets: Count,
+		audit_entries: Count,
+		tickets_opened: Count,
+		ticket_comments: Count,
+		chat_messages: Count
+	}),
+	candidates: v.array(v.looseObject({ id: v.union([v.number(), v.string()]), username: Str, role: Str })),
+	organizations_move: v.optional(v.boolean(), false)
+});
+export type DeletePreview = v.InferOutput<typeof DeletePreview>;
+
+/** Needs user.delete */
+export function getDeletePreview(id: number | string, signal?: AbortSignal): Promise<DeletePreview> {
+	return api(wrapped(DeletePreview), `/api/users/${encodeURIComponent(String(id))}/delete-preview`, {
+		signal
+	});
 }
 
 /** Needs user.edit (local accounts) */

@@ -1027,21 +1027,15 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Prevent demoting the last super-admin/admin.
+		// Prevent demoting the last super-admin/admin that can sign in.
 		if auth.IsSuperAdminRole(user.Role) && !auth.IsSuperAdminRole(body.Role) {
-			users, listErr := s.db.ListUsers()
+			others, listErr := s.otherActiveSuperAdmins(user.ID)
 			if listErr != nil {
 				log.Printf("api: update user %d: list users for last-admin check failed: %v", user.ID, listErr)
 				writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 				return
 			}
-			adminCount := 0
-			for _, u := range users {
-				if auth.IsSuperAdminRole(u.Role) {
-					adminCount++
-				}
-			}
-			if adminCount <= 1 {
+			if others == 0 {
 				writeJSON(w, http.StatusConflict, map[string]string{"error": "Cannot demote the last admin"})
 				return
 			}
@@ -1072,6 +1066,24 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"status": "updated", "id": user.ID})
 }
 
+// otherActiveSuperAdmins counts the accounts other than id with a super
+// admin role that are not disabled: a disabled one can't sign in, so it
+// doesn't keep the server administrable. (The web console's end dates are
+// its own; it checks them itself.)
+func (s *Server) otherActiveSuperAdmins(id int64) (int, error) {
+	users, err := s.db.ListUsers()
+	if err != nil {
+		return 0, err
+	}
+	n := 0
+	for _, u := range users {
+		if u.ID != id && auth.IsSuperAdminRole(u.Role) && !u.Disabled {
+			n++
+		}
+	}
+	return n, nil
+}
+
 // handleDeleteUser removes a user. Refuses to delete the last admin.
 // DELETE /api/users/{id}
 func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -1091,21 +1103,15 @@ func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Prevent deleting the last super-admin/admin.
+	// Prevent deleting the last super-admin/admin that can sign in.
 	if auth.IsSuperAdminRole(user.Role) {
-		users, listErr := s.db.ListUsers()
+		others, listErr := s.otherActiveSuperAdmins(user.ID)
 		if listErr != nil {
 			log.Printf("api: delete user %d: list users for last-admin check failed: %v", id, listErr)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 			return
 		}
-		adminCount := 0
-		for _, u := range users {
-			if auth.IsSuperAdminRole(u.Role) {
-				adminCount++
-			}
-		}
-		if adminCount <= 1 {
+		if others == 0 {
 			writeJSON(w, http.StatusConflict, map[string]string{"error": "Cannot delete the last admin user"})
 			return
 		}

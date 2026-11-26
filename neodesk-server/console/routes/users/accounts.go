@@ -871,49 +871,39 @@ func providerOf(a *account) (string, error) {
 
 // ---- Deleting ----
 
-// remove answers DELETE /api/users/{id}. An account cannot delete itself
-// or an account it may not change (mayChange), and the last account with
-// the role admin or super_admin cannot be deleted. The account's panel
-// access policy is emptied first.
+// remove answers DELETE /api/users/{id}, with ?handover_to=<id> to give
+// the account's API tokens, organization memberships, saved reports and
+// open tickets to another account first (deletion.go). An account cannot
+// delete itself, an account it may not change (mayChange), or the last
+// Super admin that can sign in. What still points at the account goes
+// with it (leftovers); the audit log keeps its history.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
-	userID, ok := pathID(r)
-	if !ok {
-		invalidID(w, r)
-		return
-	}
-	ctx := r.Context()
-	user, err := accountByID(ctx, h.d.Store, userID)
-	if err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
+	user := h.deletable(w, r)
 	if user == nil {
-		failKey(w, r, http.StatusNotFound, "users.not_found")
 		return
 	}
-	if isSessionAccount(r, user.ID.V) {
-		failKey(w, r, http.StatusBadRequest, "users.cannot_delete_self")
+	to, ok := h.handoverTarget(w, r, user)
+	if !ok {
 		return
 	}
-	if ok, err := h.mayChange(r, user); err != nil {
+	details := "Deleted user: " + user.username()
+	if to != nil {
+		moved, err := h.handOver(r, user, to)
+		if err != nil {
+			h.serverError(w, r, "Delete user error:", err)
+			return
+		}
+		details += "; handed over to " + to.username() + ": " + moved.String()
+	}
+	if err := h.leftovers(r, user); err != nil {
 		h.serverError(w, r, "Delete user error:", err)
-		return
-	} else if !ok {
-		sent(w, r, errRoleAboveOwn)
-		return
-	}
-	if last, err := isLastSuperAdmin(ctx, h.d.Store, user.ID.V, user.role(), h.now()); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	} else if last {
-		failKey(w, r, http.StatusBadRequest, "users.last_admin")
 		return
 	}
 	if err := h.wipe(r, user); err != nil {
 		h.serverError(w, r, "Delete user error:", err)
 		return
 	}
-	if err := h.d.LogAction(r, "user_deleted", "Deleted user: "+user.username()); err != nil {
+	if err := h.d.LogAccountAction(r, user.ID.V, "user_deleted", details); err != nil {
 		h.serverError(w, r, "Delete user error:", err)
 		return
 	}

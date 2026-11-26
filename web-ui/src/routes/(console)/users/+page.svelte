@@ -32,7 +32,6 @@
 	import { replaceState } from '$app/navigation';
 	import { ApiError } from '#lib/api/client.ts';
 	import {
-		deleteUser,
 		deleteUserGroup,
 		getEffectiveScope,
 		invalidateRecoveryCodes,
@@ -62,7 +61,6 @@
 	import { takeIntent } from '#lib/shell/intent.svelte.ts';
 	import {
 		assignableRoles,
-		deleteConfirmKey,
 		DESCRIBED_ROLES,
 		eachLimited,
 		filterUsers,
@@ -100,6 +98,7 @@
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
 	import AccessSheet from './AccessSheet.svelte';
+	import DeleteUserDialog from './DeleteUserDialog.svelte';
 	import ResetPasswordDialog from './ResetPasswordDialog.svelte';
 	import SignInAsDialog from './SignInAsDialog.svelte';
 	import UserGroupDialog from './UserGroupDialog.svelte';
@@ -271,6 +270,7 @@
 		if (takeIntent('add-user') && canCreate) editing = { user: null };
 	});
 	let resetFor = $state.raw<ConsoleUser | null>(null);
+	let deleteFor = $state.raw<ConsoleUser | null>(null);
 	let orgsFor = $state.raw<ConsoleUser | null>(null);
 	let sessionsFor = $state.raw<ConsoleUser | null>(null);
 	let viewAsFor = $state.raw<ConsoleUser | null>(null);
@@ -308,25 +308,6 @@
 			toast.success(t('users.invite_revoked_named', { username: u.username }));
 			void loadUsers();
 			void loadInvites();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	async function removeUser(u: ConsoleUser) {
-		const ok = await confirm({
-			title: t('users.delete_title'),
-			message: t(deleteConfirmKey(u), { username: u.username }),
-			confirmLabel: t('users.delete_title'),
-			confirmIcon: ICONS.delete,
-			danger: true
-		});
-		if (!ok) return;
-		try {
-			await deleteUser(u.id);
-			toast.success(t('users.deleted_named', { username: u.username }));
-			void loadUsers();
-			void loadGroups();
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
 		}
@@ -752,7 +733,7 @@
 					>
 				{/if}
 				{#if deletable}
-					<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void removeUser(u)}
+					<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => (deleteFor = u)}
 						>{t('users.delete_menu')}</MenuItem
 					>
 				{/if}
@@ -923,6 +904,19 @@
 				void loadUsers();
 				void loadGroups();
 				void loadInvites();
+			}}
+		/>
+	{/if}
+
+	{#if deleteFor}
+		<DeleteUserDialog
+			user={deleteFor}
+			{roleLabel}
+			onclose={() => (deleteFor = null)}
+			ondeleted={() => {
+				deleteFor = null;
+				void loadUsers();
+				void loadGroups();
 			}}
 		/>
 	{/if}

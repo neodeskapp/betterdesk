@@ -61,8 +61,8 @@ describe('edit user, life cycle', () => {
 		await userEvent.type(field, '2030-06-30');
 		await userEvent.click(screen.getByRole('button', { name: 'actions.save' }));
 		await vi.waitFor(() => expect(saved).toHaveBeenCalled());
-		expect(writes[0].path).toBe('/api/users/7');
-		expect(writes[0].body?.expires_at).toBe(new Date('2030-06-30T00:00:00').toISOString());
+		expect(writes[0]?.path).toBe('/api/users/7');
+		expect(writes[0]?.body?.expires_at).toBe(new Date('2030-06-30T00:00:00').toISOString());
 	});
 
 	test('the own account has no end date', () => {
@@ -90,6 +90,6 @@ describe('edit user, life cycle', () => {
 		sheet({ id: 9, username: 'dir', email: 'dir@example.com', auth_provider: 'ldap' }, saved);
 		await userEvent.click(screen.getByRole('button', { name: 'actions.save' }));
 		await vi.waitFor(() => expect(saved).toHaveBeenCalled());
-		expect(writes[0].body).not.toHaveProperty('email');
+		expect(writes[0]?.body).not.toHaveProperty('email');
 	});
 });
