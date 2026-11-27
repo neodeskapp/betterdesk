@@ -1,4 +1,4 @@
-import { render, screen, cleanup, within } from '@testing-library/svelte';
+import { render, screen, cleanup, within, fireEvent } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import adminNav from '../../fixtures/nav-admin.json';
@@ -151,6 +151,17 @@ describe('Sidebar', () => {
 		handle.focus();
 		await user.keyboard('{ArrowLeft}');
 		expect(handle).toHaveAttribute('aria-valuenow', '242');
+	});
+
+	test('a double click on the handle goes back to the default width and forgets the saved one', async () => {
+		localStorage.setItem('nd_ux35_sidebar_width', '300');
+		await setup('/devices');
+		const handle = screen.getByRole('separator');
+		expect(handle).toHaveAttribute('aria-valuenow', '300');
+		await fireEvent.dblClick(handle);
+		expect(handle).toHaveAttribute('aria-valuenow', '232');
+		expect(document.documentElement.style.getPropertyValue('--sidebar-w')).toBe('232px');
+		expect(localStorage.getItem('nd_ux35_sidebar_width')).toBeNull();
 	});
 
 	test('a saved width is used and kept within the limits', async () => {

@@ -5,7 +5,7 @@
   heading where the group changes); Help at the end on phones, where the
   top bar has no room for it; the footer text and "Powered by NeoDesk" at
   the bottom (the account menu is in the top bar); a handle on the end
-  edge to change the width.
+  edge to change the width (a double click on it goes back to the default).
 
   Remembered with the old keys: sections opened or closed in this tab
   (sessionStorage nd_nav_sections_collapsed; the current page's section is
@@ -159,6 +159,17 @@
 		if (pointerId !== null && el.hasPointerCapture(pointerId)) el.releasePointerCapture(pointerId);
 		pointerId = null;
 		saveWidth();
+	}
+
+	// A double click puts the default width back and forgets the stored one
+	function ondblclick() {
+		if (drawer) return;
+		applyWidth(WIDTH_DEFAULT);
+		try {
+			localStorage.removeItem(WIDTH_KEY);
+		} catch {
+			/* kept for this page */
+		}
 	}
 
 	function onHandleKey(e: KeyboardEvent) {
@@ -384,6 +395,7 @@
 				{onpointermove}
 				onpointerup={endDrag}
 				onpointercancel={endDrag}
+				{ondblclick}
 				onkeydown={onHandleKey}
 			></div>
 		{/if}
