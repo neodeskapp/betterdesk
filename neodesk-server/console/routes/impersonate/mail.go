@@ -11,7 +11,6 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 )
 
@@ -60,39 +59,47 @@ type noticeFacts struct {
 	// Admin is who viewed, Username the account viewed.
 	Admin, Username string
 	Reason          string
-	// Date is when it started, as the reader sees it.
-	Date string
-	// Link leads to the person's sign-in history (Your account).
-	Link     string
-	Branding brandmail.Branding
+	// At is when it started, Zone the reader's time zone.
+	At   time.Time
+	Zone *time.Location
+	// Base is the console's address; the button leads to the person's
+	// sign-in history (Your account).
+	Base string
 }
 
-// noticeMail is a notice: a subject, a text part and the same as HTML.
-type noticeMail struct {
-	Subject, Text, HTML string
-	Inline              []message.Inline
-}
-
-// buildNotice writes the notice in a language, in the console's branded
-// layout. The keys are below impersonation in the language files.
-func buildNotice(bundle *i18n.Bundle, lang string, f noticeFacts) noticeMail {
-	vars := i18n.V("admin", f.Admin, "username", f.Username, "reason", f.Reason, "date", f.Date, "server", f.Branding.Server)
-	t := func(key string) string { return bundle.T(lang, "impersonation."+key, vars) }
-	subject, heading, lead := t("notice_subject"), t("notice_heading"), t("notice_lead")
-	button, footer, hint := t("notice_button"), t("notice_footer"), t("notice_link_hint")
-	small := []string{t("notice_read_only"), t("notice_unexpected")}
-	lines := []string{heading, "", lead, ""}
-	lines = append(lines, small...)
-	if f.Link != "" {
-		lines = append(lines, "", button+": "+f.Link)
-	} else {
-		// Without a known address the mail names no link
-		button, hint = "", ""
+// buildNotice writes the notice in a language: who viewed the console as
+// the reader, when and why, that nothing could be changed, and a button
+// to the reader's sign-ins. The keys are below mail.impersonation.
+func buildNotice(bundle *i18n.Bundle, lang string, f noticeFacts) brandmail.Mail {
+	t := func(key string, vars map[string]any) string {
+		pairs := make([]any, 0, 2*len(vars))
+		for k, v := range vars {
+			pairs = append(pairs, k, v)
+		}
+		return bundle.T(lang, key, i18n.V(pairs...))
 	}
-	lines = append(lines, "", "--", footer)
-	page := brandmail.Page{Branding: f.Branding, Heading: heading, Lead: lead, Button: button, Link: f.Link,
-		LinkHint: hint, Small: small, Footer: footer}
-	return noticeMail{Subject: subject, Text: strings.Join(lines, "\n") + "\n", HTML: brandmail.HTML(page), Inline: brandmail.Inline(page)}
+	host := brandmail.HostOf(f.Base)
+	vars := map[string]any{"admin": f.Admin, "username": f.Username, "reason": f.Reason, "host": host}
+	m := brandmail.Mail{
+		Kind: "impersonation", T: t, Lang: lang, Automatic: true, Host: host,
+		Subject: t("mail.impersonation.subject", vars), Preheader: t("mail.impersonation.preheader", vars),
+		Heading: t("mail.impersonation.heading", vars), Lead: t("mail.impersonation.lead", vars),
+		Facts: []brandmail.Fact{
+			{Label: t("mail.impersonation.label_when", nil), Value: brandmail.DateTime(f.At, lang, f.Zone)},
+			{Label: t("mail.impersonation.label_reason", nil), Value: f.Reason},
+		},
+		Details: []string{t("mail.impersonation.unexpected", vars)},
+		Why:     t("mail.impersonation.why", vars),
+	}
+	if f.Base != "" {
+		m.Button, m.Link = t("mail.impersonation.button", vars), f.Base+"/account"
+	}
+	return m
+}
+
+// PreviewNotice is the notice with made-up facts, for the mail previews.
+func PreviewNotice(bundle *i18n.Bundle, lang, base string, at time.Time) brandmail.Mail {
+	return buildNotice(bundle, lang, noticeFacts{Admin: "Jana Weber", Username: "mmueller", Reason: "Ticket 4711: printer settings", At: at, Zone: time.Local, Base: base})
 }
 
 // notify sends the notice mail in the background, when it is on and the
@@ -106,20 +113,15 @@ func (h *handlers) notify(r *http.Request, admin, target *authn.Account, reason 
 	if to == "" {
 		return
 	}
-	base, link := h.consoleBase(), ""
-	if base != "" {
-		link = base + "/account"
-	}
 	m := buildNotice(h.d.I18n.Bundle, mailLanguage(h.d.I18n.Bundle, target.PreferredLanguage.String), noticeFacts{
 		Admin: h.displayName(ctx, admin), Username: target.Username, Reason: reason,
-		Date: people.TimeIn(at, people.TimeZone(ctx, h.d.Store, target.ID.V)), Link: link,
-		Branding: brandmail.Of(h.d.Branding, base),
+		At: at, Zone: brandmail.Zone(people.TimeZone(ctx, h.d.Store, target.ID.V)), Base: h.consoleBase(),
 	})
 	service := h.d.Mail
 	go func() {
 		ctx, cancel := context.WithTimeout(ctx, time.Minute)
 		defer cancel()
-		sent, err := service.SendEmail(ctx, mail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline})
+		sent, err := service.SendEmail(ctx, mail.Email{To: []string{to}, Mail: m})
 		if err != nil || !sent {
 			h.log.Warn("The mail about viewing NeoDesk as "+target.Username+" did not go out:", err)
 		}
