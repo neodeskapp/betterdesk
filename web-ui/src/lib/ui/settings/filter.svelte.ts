@@ -45,12 +45,18 @@ export class SettingsFilter {
 	}
 }
 
-export function provideFilter(filter: SettingsFilter): SettingsFilter {
-	return setContext(FILTER, filter);
+/**
+ * The page's filter for its rows and groups. A getter, since a page may
+ * hand its filter over only once its data has loaded (Policies, Permissions)
+ */
+export function provideFilter(filter: () => SettingsFilter | undefined): void {
+	setContext(FILTER, filter);
 }
 
-export function useFilter(): SettingsFilter | null {
-	return getContext<SettingsFilter | undefined>(FILTER) ?? null;
+/** The page's filter, read inside a $derived or $effect; null without one */
+export function useFilter(): () => SettingsFilter | null {
+	const get = getContext<(() => SettingsFilter | undefined) | undefined>(FILTER);
+	return () => get?.() ?? null;
 }
 
 /** The rows of one group and whether each matches the filter */
