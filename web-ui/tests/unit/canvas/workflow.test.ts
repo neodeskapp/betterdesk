@@ -38,7 +38,10 @@ describe('step types', () => {
 	});
 
 	test('the settings of each type, as before', () => {
-		expect(STEP_FIELDS.trigger_schedule?.map((f) => f.key)).toEqual(['cron']);
+		// Every trigger names the devices the workflow runs on
+		expect(STEP_FIELDS.trigger_manual?.map((f) => f.key)).toEqual(['targets']);
+		expect(STEP_FIELDS.trigger_schedule?.map((f) => f.key)).toEqual(['targets', 'cron']);
+		expect(STEP_FIELDS.trigger_event?.[0]?.key).toBe('targets');
 		expect(STEP_FIELDS.cond_threshold?.map((f) => [f.key, f.kind])).toEqual([
 			['metric', 'select'],
 			['operator', 'select'],

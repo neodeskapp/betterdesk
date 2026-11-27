@@ -128,9 +128,14 @@ const S = (key: string, label: string, options: readonly string[]): StepField =>
 });
 
 /** The settings of each step type, besides its name (old buildPropsForm) */
+/** The devices a workflow runs on, entered as for a task */
+const TARGETS = F('targets', 'Devices', 'ID, group, org:<id>, tag:<tag>', true);
+
 export const STEP_FIELDS: Readonly<Record<string, readonly StepField[]>> = {
-	trigger_schedule: [F('cron', 'Cron expression', '*/5 * * * *', true)],
+	trigger_manual: [TARGETS],
+	trigger_schedule: [TARGETS, F('cron', 'Cron expression', '*/5 * * * *', true)],
 	trigger_event: [
+		TARGETS,
 		S('event', 'Event', ['disk_full', 'cpu_high', 'user_login', 'service_down']),
 		F('threshold', 'Threshold in percent', '90')
 	],

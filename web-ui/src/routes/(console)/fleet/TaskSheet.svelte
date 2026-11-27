@@ -8,7 +8,14 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { saveTask, TASK_TYPES, type Task } from '#lib/api/fleet.ts';
-	import { taskNumbers, taskProblem, taskTargets, taskType } from '#lib/canvas/fleet.ts';
+	import {
+		onceToInput,
+		onceToServer,
+		taskNumbers,
+		taskProblem,
+		taskTargets,
+		taskType
+	} from '#lib/canvas/fleet.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Field from '#lib/ui/Field.svelte';
@@ -43,7 +50,10 @@
 			type: (editing && taskType(editing)) || 'script',
 			targets: editing ? taskTargets(editing) : '',
 			schedule_type: editing?.schedule_type || 'immediate',
-			schedule_value: editing?.schedule_value || editing?.cron || '',
+			schedule_value:
+				editing?.schedule_type === 'once'
+					? onceToInput(editing.schedule_value) || editing.schedule_value
+					: editing?.schedule_value || editing?.cron || '',
 			script: editing?.script || editing?.payload || '',
 			retries: String(editing?.retries ?? 0),
 			timeout: String(editing?.timeout ?? 300)
@@ -65,7 +75,12 @@
 				type: v.type,
 				targets: v.targets.trim(),
 				schedule_type: v.schedule_type,
-				schedule_value: v.schedule_type === 'immediate' ? '' : v.schedule_value.trim(),
+				schedule_value:
+					v.schedule_type === 'immediate'
+						? ''
+						: v.schedule_type === 'once'
+							? onceToServer(v.schedule_value.trim())
+							: v.schedule_value.trim(),
 				script: v.script,
 				...taskNumbers(v.retries, v.timeout)
 			};

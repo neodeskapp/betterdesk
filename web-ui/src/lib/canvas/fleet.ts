@@ -108,12 +108,48 @@ export function taskProblem(body: {
 	return null;
 }
 
+/** A date and time field's local value ("2026-11-27T14:30") as the server gets it: that moment in UTC, or the text as it is when it is no time */
+export function onceToServer(local: string): string {
+	const d = new Date(local);
+	return local && !Number.isNaN(d.getTime()) ? d.toISOString() : local;
+}
+
+/** A stored time back in a date and time field: local, to the minute ('' when it is no time) */
+export function onceToInput(value: string): string {
+	const d = value ? new Date(value) : null;
+	if (!d || Number.isNaN(d.getTime())) return '';
+	const p = (n: number) => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 /** Retries 0-3 and a time limit of 30-3600 s as the server gets them (empty or invalid: 0 and 300, as before) */
 export function taskNumbers(retries: unknown, timeout: unknown): { retries: number; timeout: number } {
 	return { retries: parseInt(String(retries), 10) || 0, timeout: parseInt(String(timeout), 10) || 300 };
 }
 
+const RUN_STATES = ['running', 'success', 'failed', 'timeout', 'unsupported'];
+
+/** The label of a device's run: a pending run waits for its device */
+export function runStatusKey(status: string): string {
+	if (RUN_STATES.includes(status)) return 'fleet.status_' + status;
+	return 'fleet.run_waiting';
+}
+
+/** The tone of a device's run */
+export function runTone(status: string): string {
+	if (status === 'timeout') return 'failed';
+	if (status === 'unsupported') return 'warning';
+	return status || 'pending';
+}
+
 /* ── Compliance ── */
+
+const CHECKS = ['firewall', 'disk_encryption', 'os_updates', 'antivirus', 'screen_lock'];
+
+/** fleet.check_<key> for the checks the client knows, else null (the key is shown) */
+export function checkKey(key: string): string | null {
+	return CHECKS.includes(key) ? 'fleet.check_' + key : null;
+}
 
 export function deviceOf(row: Pick<ComplianceRow, 'device_id' | 'id'>): string {
 	return row.device_id || row.id;
@@ -130,18 +166,26 @@ export function scoreLevel(value: number): 'good' | 'warning' | 'danger' {
 	return value >= 80 ? 'good' : value >= 50 ? 'warning' : 'danger';
 }
 
+/** A device that was never scanned has no score */
+export function scanned(row: Pick<ComplianceRow, 'score'>): boolean {
+	return row.score !== null && row.score !== undefined && row.score !== '';
+}
+
+/** The summary of the scanned devices; unscanned counts the others */
 export function complianceSummary(list: readonly Pick<ComplianceRow, 'score'>[]): {
 	count: number;
 	compliant: number;
 	warning: number;
 	critical: number;
 	score: number;
+	unscanned: number;
 } {
 	let compliant = 0;
 	let warning = 0;
 	let critical = 0;
 	let total = 0;
-	for (const d of list) {
+	const done = list.filter(scanned);
+	for (const d of done) {
 		const s = Number(d.score ?? 0) || 0;
 		total += s;
 		if (s >= 80) compliant++;
@@ -149,10 +193,11 @@ export function complianceSummary(list: readonly Pick<ComplianceRow, 'score'>[])
 		else critical++;
 	}
 	return {
-		count: list.length,
+		count: done.length,
 		compliant,
 		warning,
 		critical,
-		score: list.length ? Math.round(total / list.length) : 0
+		score: done.length ? Math.round(total / done.length) : 0,
+		unscanned: list.length - done.length
 	};
 }

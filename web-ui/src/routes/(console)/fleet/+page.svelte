@@ -6,9 +6,9 @@
   (admin, super admin, global admin, operator); other roles get the
   no-access page and no requests.
 
-  The Go server has no fleet handlers yet (BUGS.md P4). The page asks the
-  console once (GET /api/panel/fleet/availability); when fleet is not
-  offered, a notice says so, the lists say "nothing to show" without
+  The page asks the console once whether the API server offers fleet
+  tasks (GET /api/panel/fleet/availability); when it does not, a notice
+  says so, the lists say "nothing to show" without
   asking the server, and the controls that need the server are turned off
   with the notice as their description. Forms still open, and a workflow
   can still be laid out and exported.

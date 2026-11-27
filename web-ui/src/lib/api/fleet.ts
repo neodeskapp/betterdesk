@@ -1,14 +1,14 @@
 /**
- * Fleet tasks (routes/fleet.routes.js): resources pushed to an
+ * Fleet tasks (console/routes/fleet): resources pushed to an
  * organization's devices, tasks run on many devices, saved workflows and
  * compliance results. Every route needs org.manage_devices and proxies to
- * the Go server's /api/fleet; Go answers lists bare, as { data }, or under
- * a key (resources, tasks, workflows, devices), so the lists accept all
- * three, as the old page did.
+ * the API server's /api/fleet, which hands the work to the devices with
+ * their heartbeats. Lists are accepted bare, as { data }, or under a key
+ * (resources, tasks, workflows, devices), as the old page did.
  *
- * Go has no fleet handlers yet (BUGS.md P4) and answers 404 for all of
- * them. fleetAvailability() asks the console once; a 404 from a list means
- * the same.
+ * An API server without fleet handlers answers 404 for all of them.
+ * fleetAvailability() asks the console once; a 404 from a list means the
+ * same.
  */
 
 import * as v from 'valibot';
@@ -73,7 +73,10 @@ export const Resource = v.looseObject({
 	value: Str,
 	scope: Str,
 	scope_value: Str,
-	active: v.optional(v.nullable(v.union([v.boolean(), v.number(), v.string()])), null)
+	active: v.optional(v.nullable(v.union([v.boolean(), v.number(), v.string()])), null),
+	/** Devices that get the resource, and how many of them applied their current list */
+	devices: OptNum,
+	applied: OptNum
 });
 export type Resource = v.InferOutput<typeof Resource>;
 
@@ -119,9 +122,24 @@ export const Task = v.looseObject({
 	script: Str,
 	payload: Str,
 	retries: OptNum,
-	timeout: OptNum
+	timeout: OptNum,
+	next_run: Str
 });
 export type Task = v.InferOutput<typeof Task>;
+
+/** One device's part of a task's last run */
+export const TaskRun = v.looseObject({
+	id: Id,
+	device_id: Str,
+	hostname: Str,
+	status: Str,
+	exit_code: OptNum,
+	attempt: OptNum,
+	output: Str,
+	started_at: Str,
+	finished_at: Str
+});
+export type TaskRun = v.InferOutput<typeof TaskRun>;
 
 export interface TaskInput {
 	name: string;
@@ -162,6 +180,24 @@ export async function taskOutput(id: string, signal?: AbortSignal): Promise<stri
 		}
 	);
 	return out.output || out.log;
+}
+
+/** A task's last run: each device's state and output, and all of it as one text */
+export async function taskRuns(
+	id: string,
+	signal?: AbortSignal
+): Promise<{ output: string; runs: TaskRun[]; next_run: string }> {
+	const out = await api(
+		v.looseObject({
+			output: Str,
+			log: Str,
+			next_run: Str,
+			runs: v.optional(v.nullable(v.array(TaskRun)), null)
+		}),
+		`/api/panel/fleet/tasks/${enc(id)}/output`,
+		{ signal }
+	);
+	return { output: out.output || out.log, runs: out.runs ?? [], next_run: out.next_run };
 }
 
 /* ── Workflows ── */
@@ -220,9 +256,39 @@ export const ComplianceRow = v.looseObject({
 	platform: Str,
 	score: OptNum,
 	issues: OptNum,
-	last_scan: Str
+	last_scan: Str,
+	/** pending while a scan waits for the device, ok or error after */
+	status: Str
 });
 export type ComplianceRow = v.InferOutput<typeof ComplianceRow>;
+
+export const ComplianceCheck = v.looseObject({
+	key: Str,
+	ok: v.optional(v.boolean(), false),
+	detail: Str,
+	fixable: v.optional(v.boolean(), false)
+});
+export type ComplianceCheck = v.InferOutput<typeof ComplianceCheck>;
+
+export const Software = v.looseObject({ name: Str, version: Str, publisher: Str });
+export type Software = v.InferOutput<typeof Software>;
+
+/** A device's last scan: its checks and its installed software */
+export function complianceDetails(
+	deviceId: string,
+	signal?: AbortSignal
+): Promise<{ checks: ComplianceCheck[]; software: Software[]; last_scan: string; status: string }> {
+	return api(
+		v.looseObject({
+			last_scan: Str,
+			status: Str,
+			checks: v.optional(v.array(ComplianceCheck), []),
+			software: v.optional(v.array(Software), [])
+		}),
+		`/api/panel/fleet/compliance/${enc(deviceId)}`,
+		{ signal }
+	);
+}
 
 export function listCompliance(orgId: string, signal?: AbortSignal): Promise<ComplianceRow[]> {
 	return api(listOf('devices', ComplianceRow), '/api/panel/fleet/compliance', { query: { orgId }, signal });
