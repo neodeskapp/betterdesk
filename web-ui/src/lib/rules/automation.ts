@@ -64,6 +64,32 @@ export function unitKey(type: string): string | null {
 	return /_duration$/.test(type) ? 'automation.unit_seconds' : 'automation.unit_percent';
 }
 
+/**
+ * When the server checks a condition, as a string key with its English
+ * text; null for Custom, which the server never checks
+ */
+export function checkedWhenKey(type: string): { key: string; fallback: string } | null {
+	switch (type) {
+		case 'cpu_usage':
+		case 'memory_usage':
+			return {
+				key: 'automation.checked_usage',
+				fallback: 'Checked with each usage report from a device.'
+			};
+		case 'disk_usage':
+			return { key: 'automation.checked_disk', fallback: 'Checked when a device sends its inventory.' };
+		case 'idle_duration':
+			return {
+				key: 'automation.checked_idle',
+				fallback: 'Checked with each activity report from a device.'
+			};
+		case 'offline_duration':
+			return { key: 'automation.checked_offline', fallback: 'Checked once a minute.' };
+		default:
+			return null;
+	}
+}
+
 export function isAcknowledged(a: Pick<Alert, 'acknowledged' | 'acknowledged_at'>): boolean {
 	return a.acknowledged || !!a.acknowledged_at;
 }

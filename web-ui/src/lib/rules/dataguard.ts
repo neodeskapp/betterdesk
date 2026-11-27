@@ -28,6 +28,22 @@ export function actionLabel(t: (key: string) => string, action: string): string 
 	return (DLP_ACTIONS as readonly string[]).includes(action) ? t(`dataguard.action_${action}`) : action;
 }
 
+/** The device IDs of a policy's scope (stored as one comma-separated text); none means all devices */
+export function scopeList(scope: string | null | undefined): string[] {
+	return (scope ?? '')
+		.split(',')
+		.map((x) => x.trim())
+		.filter(Boolean);
+}
+
+/** The device IDs as the scope text the server stores; '' for all devices */
+export function scopeText(ids: readonly string[]): string {
+	return ids
+		.map((x) => x.trim())
+		.filter(Boolean)
+		.join(',');
+}
+
 /** The rules as the sheet's text field shows them: empty for none */
 export function rulesText(rules: unknown): string {
 	if (rules === undefined || rules === null) return '';

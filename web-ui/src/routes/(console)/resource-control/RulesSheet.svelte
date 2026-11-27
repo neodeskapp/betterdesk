@@ -2,7 +2,9 @@
   One device's USB and drive rules, in a wide sheet: the device's facts,
   then each kind of rule under its own heading (USB drives, optical
   drives, monitors, disks, usage limits), so every kind is one scroll
-  away. One Save sends every kind that changed, each to its own
+  away. Where the sheet is wide enough each field is one line, name and
+  help left, the control right. A limit left empty is no limit (said
+  beside the field, never as a 0 to type); lists are one entry per row. One Save sends every kind that changed, each to its own
   endpoint, and names the ones that failed; closing with unsaved changes
   asks first.
 
@@ -36,7 +38,7 @@
 	import ShowWhen from '#lib/ui/ShowWhen.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
-	import Textarea from '#lib/ui/Textarea.svelte';
+	import ListEditor from '#lib/ui/settings/ListEditor.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 
@@ -145,6 +147,7 @@
 		{ value: 'blocked', label: t('resource_control.policy_blocked') }
 	]);
 	// Resolutions are written the same in every language
+	const noLimit = $derived(tf('resource_control.no_limit', 'No limit'));
 	const resolutionOptions = $derived([
 		{ value: 'any', label: t('resource_control.policy_any') },
 		{ value: '1920x1080', label: '1920 × 1080 (Full HD)' },
@@ -170,11 +173,56 @@
 				min="0"
 				max="100"
 				value={get()}
+				aria-valuetext={get() >= 100 ? noLimit : `${get()}%`}
 				oninput={(e) => set(Number(e.currentTarget.value))}
 				aria-describedby="{id}-hint"
 			/>
-			<output for={id}>{get()}%</output>
+			<output for={id}>{get() >= 100 ? noLimit : `${get()}%`}</output>
 		</div>
+		<p class="form-hint" id="{id}-hint">{hint}</p>
+	</div>
+{/snippet}
+
+<!-- A limit: a number, or empty for no limit, said beside the field -->
+{#snippet limitField(
+	label: string,
+	max: number | undefined,
+	get: () => number | null,
+	set: (n: number | null) => void
+)}
+	<Field {label} hint={tf('resource_control.empty_no_limit', 'Leave empty for no limit.')} width="short">
+		{#snippet children(f)}
+			<span class="value-row">
+				<Input
+					{...f}
+					type="number"
+					min={0}
+					{max}
+					value={get() ?? ''}
+					oninput={(e) => {
+						const raw = e.currentTarget.value;
+						set(raw === '' ? null : Number(raw));
+					}}
+				/>
+				{#if get() === null || get() === 0}<span class="value-note">{noLimit}</span>{/if}
+			</span>
+		{/snippet}
+	</Field>
+{/snippet}
+
+<!-- A list: one entry per row -->
+{#snippet listField(
+	id: string,
+	label: string,
+	hint: string,
+	itemLabel: (n: number) => string,
+	addLabel: string,
+	get: () => string[],
+	set: (list: string[]) => void
+)}
+	<div class="form-group" role="group" aria-labelledby="{id}-label">
+		<p class="form-label" id="{id}-label">{label}</p>
+		<ListEditor {id} items={get()} onchange={set} {itemLabel} {addLabel} describedby="{id}-hint" />
 		<p class="form-hint" id="{id}-hint">{hint}</p>
 	</div>
 {/snippet}
@@ -218,18 +266,18 @@
 									/>{/snippet}
 							</Field>
 							<ShowWhen id="{uid}-usb-list" when={values.usb.storage_policy === 'whitelist'}>
-								<Field
-									label={t('resource_control.usb_list_label')}
-									hint={t('resource_control.usb_list_hint')}
-								>
-									{#snippet children(f)}<Textarea
-											{...f}
-											class="mono"
-											rows={4}
-											dir="ltr"
-											bind:value={values.usb.whitelist}
-										/>{/snippet}
-								</Field>
+								{@render listField(
+									`${uid}-usb-devices`,
+									t('resource_control.usb_list_label'),
+									tf(
+										'resource_control.usb_list_hint_rows',
+										'One device per row, as vendor and product ID, for example 0781:5583.'
+									),
+									(n) => tf('resource_control.usb_device_n', 'Allowed USB device {n}', { n }),
+									tf('resource_control.add_usb_device', 'Add a USB device'),
+									() => values.usb.whitelist,
+									(list) => (values.usb.whitelist = list)
+								)}
 							</ShowWhen>
 							<Checkbox
 								label={t('resource_control.usb_log_label')}
@@ -256,19 +304,12 @@
 							/>
 						{:else if id === 'monitors'}
 							<p class="note">{t('resource_control.monitors_note')}</p>
-							<Field
-								label={t('resource_control.monitors_count_label')}
-								hint={t('resource_control.zero_no_limit')}
-								width="short"
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										type="number"
-										min={0}
-										max={16}
-										bind:value={values.monitors.max_count}
-									/>{/snippet}
-							</Field>
+							{@render limitField(
+								t('resource_control.monitors_count_label'),
+								16,
+								() => values.monitors.max_count,
+								(n) => (values.monitors.max_count = n)
+							)}
 							<Field
 								label={t('resource_control.monitors_resolution_label')}
 								hint={t('resource_control.monitors_resolution_hint')}
@@ -315,17 +356,18 @@
 								hint={t('resource_control.disks_smart_hint')}
 								bind:checked={values.disks.smart_monitoring}
 							/>
-							<Field
-								label={t('resource_control.disks_hidden_label')}
-								hint={t('resource_control.disks_hidden_hint_new')}
-								width="medium"
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										class="mono"
-										bind:value={values.disks.hidden_partitions}
-									/>{/snippet}
-							</Field>
+							{@render listField(
+								`${uid}-hidden`,
+								t('resource_control.disks_hidden_label'),
+								tf(
+									'resource_control.disks_hidden_hint_rows',
+									'One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.'
+								),
+								(n) => tf('resource_control.hidden_partition_n', 'Hidden partition {n}', { n }),
+								tf('resource_control.add_partition', 'Add a partition'),
+								() => values.disks.hidden_partitions,
+								(list) => (values.disks.hidden_partitions = list)
+							)}
 						{:else}
 							<p class="note">{t('resource_control.quotas_note')}</p>
 							{@render range(
@@ -342,42 +384,30 @@
 								() => values.quotas.ram_limit,
 								(n) => (values.quotas.ram_limit = n)
 							)}
-							<Field
-								label={t('resource_control.quotas_bandwidth_label')}
-								hint={t('resource_control.zero_no_limit')}
-								width="short"
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										type="number"
-										min={0}
-										bind:value={values.quotas.bandwidth_limit}
-									/>{/snippet}
-							</Field>
-							<Field
-								label={t('resource_control.quotas_disk_label')}
-								hint={t('resource_control.zero_no_limit')}
-								width="short"
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										type="number"
-										min={0}
-										bind:value={values.quotas.disk_quota}
-									/>{/snippet}
-							</Field>
-							<Field
-								label={t('resource_control.quotas_programs_label')}
-								hint={t('resource_control.quotas_programs_hint')}
-							>
-								{#snippet children(f)}<Textarea
-										{...f}
-										class="mono"
-										rows={4}
-										dir="ltr"
-										bind:value={values.quotas.process_whitelist}
-									/>{/snippet}
-							</Field>
+							{@render limitField(
+								t('resource_control.quotas_bandwidth_label'),
+								undefined,
+								() => values.quotas.bandwidth_limit,
+								(n) => (values.quotas.bandwidth_limit = n)
+							)}
+							{@render limitField(
+								t('resource_control.quotas_disk_label'),
+								undefined,
+								() => values.quotas.disk_quota,
+								(n) => (values.quotas.disk_quota = n)
+							)}
+							{@render listField(
+								`${uid}-programs`,
+								t('resource_control.quotas_programs_label'),
+								tf(
+									'resource_control.quotas_programs_hint_rows',
+									'One program per row, for example chrome.exe.'
+								),
+								(n) => tf('resource_control.program_n', 'Allowed program {n}', { n }),
+								tf('resource_control.add_program', 'Add a program'),
+								() => values.quotas.process_whitelist,
+								(list) => (values.quotas.process_whitelist = list)
+							)}
 						{/if}
 					</FormSection>
 				{/each}
@@ -409,6 +439,40 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-5);
+		container: rc-editor / inline-size;
+	}
+	/* Wide enough: each field one line, name and help left, the control
+	   right, lined up down the sheet like a form grid */
+	@container rc-editor (min-width: 600px) {
+		.rc-editor :global(.form-group) {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem);
+			/* A tall control (a list) grows the last row, not the gap under the name */
+			grid-template-rows: auto auto 1fr;
+			grid-auto-flow: dense;
+			align-items: start;
+			gap: 2px var(--space-4);
+		}
+		.rc-editor :global(.form-group > .form-label),
+		.rc-editor :global(.form-group > .form-label-line),
+		.rc-editor :global(.form-group > .form-hint),
+		.rc-editor :global(.form-group > .field-effect) {
+			grid-column: 1;
+		}
+		.rc-editor :global(.form-group > :not(.form-label, .form-label-line, .form-hint, .field-effect)) {
+			grid-column: 2;
+			grid-row: 1 / span 3;
+		}
+	}
+	.value-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+	.value-note {
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+		white-space: nowrap;
 	}
 	.note {
 		max-width: var(--measure);
@@ -434,7 +498,7 @@
 		accent-color: var(--accent);
 	}
 	.range output {
-		min-width: 5ch;
+		min-width: 8ch;
 		font-variant-numeric: tabular-nums;
 		text-align: end;
 	}

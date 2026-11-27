@@ -91,7 +91,6 @@
 	import Select from '#lib/ui/Select.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Table from '#lib/ui/Table.svelte';
-	import Tag from '#lib/ui/Tag.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import User from '#lib/ui/User.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
@@ -573,9 +572,9 @@
 
 {#snippet timeCell(e: AuditEntry)}<Time value={auditTime(e)} />{/snippet}
 
-{#snippet policyCell(e: AuditEntry)}{@const cat = auditSection(e)}{#if cat}<Tag
-			label={sectionName(cat)}
-		/>{:else}<Empty />{/if}{#if e.detail || e.description}<span class="cell-sub"
+{#snippet policyCell(e: AuditEntry)}{@const cat = auditSection(e)}{#if cat}<span class="policy-group"
+			>{sectionName(cat)}</span
+		>{:else}<Empty />{/if}{#if e.detail || e.description}<span class="cell-sub"
 			>{e.detail || e.description}</span
 		>{/if}{/snippet}
 

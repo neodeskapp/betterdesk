@@ -656,8 +656,8 @@
 						title={t('updates.channel_title')}
 						description={t('settings.updates_tab.channel_note')}
 						consequence={tf(
-							'settings.updates_tab.channel_applies',
-							'Applies to the next check for updates. Nothing is installed until you click Install.'
+							'settings.updates_tab.channel_applies_short',
+							'Applies to the next check for updates.'
 						)}
 					>
 						<fieldset id="update-channel-select" class="channel" disabled={docker || draft.busy}>
@@ -665,7 +665,7 @@
 							<ChoiceList
 								name="update-channel"
 								labelledby="update-channel-panel-title"
-								describedby="update-channel-effect"
+								describedby={docker || draft.isChanged('channel') ? 'update-channel-effect' : undefined}
 								value={draft.values.channel}
 								onchange={(v, on) => on && draft.set('channel', v)}
 								choices={[
@@ -681,12 +681,16 @@
 									}
 								]}
 							/>
-							<p class="source" id="update-channel-effect">
-								{#if docker}{t('settings.updates_tab.channel_docker_note')}{:else}{channelSource}{/if}
-								{#if draft.isChanged('channel')}<span class="changed"
-										>{tf('settings_ui.changed', 'Changed, not saved')}</span
-									>{/if}
-							</p>
+							<!-- The saved channel is the chosen one and is in the side column: the line speaks only
+								 when the choice differs from it, or on Docker, where the channel does nothing -->
+							{#if docker || draft.isChanged('channel')}
+								<p class="source" id="update-channel-effect">
+									{#if docker}{t('settings.updates_tab.channel_docker_note')}{:else}{channelSource}{/if}
+									{#if draft.isChanged('channel')}<span class="changed"
+											>{tf('settings_ui.changed', 'Changed, not saved')}</span
+										>{/if}
+								</p>
+							{/if}
 						</fieldset>
 					</SettingsGroup>
 				</div>

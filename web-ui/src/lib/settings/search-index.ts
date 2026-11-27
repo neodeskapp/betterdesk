@@ -1111,7 +1111,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'backup-create',
 		'backups_page.make_title',
 		'',
-		['backups_page.make_note', 'backups_page.download_title'],
+		['backups_page.make_note_short', 'backups_page.download_title'],
 		'server.config'
 	],
 	[

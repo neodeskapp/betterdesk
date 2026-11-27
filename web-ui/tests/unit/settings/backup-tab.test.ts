@@ -194,6 +194,39 @@ describe('Backups page', () => {
 		expect(screen.getByText('2 unsaved changes')).toBeTruthy();
 	});
 
+	test('no side column: what a backup holds is a group of the page, and the secrets warning sits once on Make a backup', async () => {
+		render(BackupTab);
+		await ready();
+		// Rows get the page's width: nothing beside them pushes them into one column
+		expect(document.querySelector('.settings-summary')).toBeNull();
+		const contents = await screen.findByRole('region', { name: 'What a backup holds now' });
+		await within(contents).findByText('In a backup');
+		expect(within(contents).getByText('Left out')).toBeTruthy();
+		expect(contents.querySelector('#backup-stat-users')).not.toBeNull();
+		// It comes after the settings, so the backup actions and the schedule are first
+		const order = [...document.querySelectorAll('section.settings-group')].map((g) => g.id);
+		expect(order.indexOf('backup-contents')).toBeGreaterThan(order.indexOf('backup-restore'));
+		const make = screen.getByRole('region', { name: 'Make a backup' });
+		await vi.waitFor(() => expect(within(make).getByText(/backup_tab\.warning/)).toBeTruthy());
+		expect(screen.getAllByText(/backup_tab\.warning/)).toHaveLength(1);
+	});
+
+	test('the danger zone shows only once there are update backups to delete', async () => {
+		render(BackupTab);
+		await ready();
+		await vi.waitFor(() => expect(api.listUpdateBackups).toHaveBeenCalled());
+		expect(screen.queryByRole('button', { name: /Delete older update backups/ })).toBeNull();
+		cleanup();
+		const one = { timestamp: null, sha: 'abc1234', fileCount: 1, filesBackedUp: 1, sizeBytes: 10 };
+		vi.mocked(api.listUpdateBackups).mockResolvedValueOnce([
+			{ ...one, name: 'update-a' },
+			{ ...one, name: 'update-b' }
+		]);
+		render(BackupTab);
+		await ready();
+		expect(await screen.findByRole('button', { name: /Delete older update backups/ })).toBeTruthy();
+	});
+
 	test('restore: a file, then what to restore, then a red confirmation that names it', async () => {
 		const user = userEvent.setup();
 		render(BackupTab);

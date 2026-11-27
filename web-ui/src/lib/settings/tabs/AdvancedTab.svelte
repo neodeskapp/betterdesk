@@ -242,7 +242,6 @@
 	<SettingsGroup
 		id="advanced-config"
 		title={tf('settings.advanced_tab.group_title', 'Files on this server')}
-		description={tf('settings.advanced_tab.pick', 'Pick a file to see and edit it.')}
 		consequence={tf(
 			'settings.advanced_tab.save_effect',
 			'Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.'

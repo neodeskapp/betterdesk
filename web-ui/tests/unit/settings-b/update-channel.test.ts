@@ -1,9 +1,11 @@
 /**
  * Server › Updates: the update channel is a setting (PATTERN.md rules 1, 2
  * and 7). Picking a channel saves nothing; the save bar names the change
- * and Save switches it. Under the choice a line says which channel is in
- * force and what it installs, and the group says once when a change
- * applies. Check for updates and Install stay buttons.
+ * and Save switches it. The channel in force is said once (the side
+ * column); under the choice a line says it only while another one is
+ * picked. The group says once when a change applies, without repeating
+ * the install note of Software updates. Check for updates and Install
+ * stay buttons.
  */
 import { cleanup, render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -59,17 +61,25 @@ async function pickDevelopment() {
 	return user;
 }
 
-test('the channel in force and what it installs show under the choice', async () => {
+test('the channel in force is said under the choice only while another one is picked', async () => {
+	await pickDevelopment();
+	expect(screen.getByText(/Now: Stable\. Releases of neodeskapp\/neodesk on GitHub\./)).toBeTruthy();
+});
+
+test('with the saved channel picked, the choice has no line repeating it', async () => {
 	render(UpdatesTab);
-	expect(await screen.findByText(/Now: Stable\. Releases of neodeskapp\/neodesk on GitHub\./)).toBeTruthy();
+	await vi.waitFor(() => expect(api.getUpdateChannel).toHaveBeenCalled());
+	const panel = await screen.findByRole('region', { name: 'updates.channel_title' });
+	await vi.waitFor(() => expect(within(panel).getByRole('radio', { name: /channel_stable/ })).toBeChecked());
+	expect(panel.textContent).not.toContain('Now: Stable');
 });
 
 test('the group says once when a change of channel applies', async () => {
 	render(UpdatesTab);
 	const panel = await screen.findByRole('region', { name: 'updates.channel_title' });
-	expect(panel.textContent).toContain(
-		'Applies to the next check for updates. Nothing is installed until you click Install.'
-	);
+	expect(panel.textContent).toContain('Applies to the next check for updates.');
+	// Software updates above already says nothing is installed before Install
+	expect(panel.textContent).not.toContain('Nothing is installed');
 });
 
 test('picking a channel saves nothing and the save bar names the change', async () => {
