@@ -87,8 +87,11 @@
 		const onDown = (e: PointerEvent) => {
 			if (anchor && e.target instanceof Node && !anchor.contains(e.target)) close();
 		};
+		// A click on a checkbox's text focuses the nearest focusable ancestor (the
+		// page's main, tabindex -1), not the checkbox: that is not focus leaving
 		const onFocus = (e: FocusEvent) => {
-			if (anchor && e.target instanceof Node && !anchor.contains(e.target)) close();
+			const to = e.target;
+			if (anchor && to instanceof Node && !anchor.contains(to) && !to.contains(anchor)) close();
 		};
 		document.addEventListener('keydown', onKey);
 		document.addEventListener('pointerdown', onDown, true);
