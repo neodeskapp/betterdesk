@@ -25,6 +25,7 @@ export const FIELD_LABEL: Readonly<Record<string, string>> = {
 	'security.password_require_special': 'policies.password_require_special',
 	'security.password_max_age_days': 'policies.password_max_age',
 	'security.allowed_operators': 'policies.allowed_operators',
+	'security.allow_uninstall': 'policies.allow_uninstall',
 	'network.block_direct_p2p': 'policies.block_direct_p2p',
 	'network.allowed_relay_servers': 'policies.allowed_relays',
 	'network.ip_allowlist': 'policies.ip_allowlist',

@@ -122,6 +122,9 @@ var policySettings = map[string]map[string]policyRule{
 		"password_require_special": policySwitch,
 		"password_max_age_days":    policyWhole(0, 365),
 		"allowed_operators":        policyList("account names", policyAnyName),
+		// allow_uninstall false: people on the device can't remove the
+		// NeoDesk app (the receiver blocks its uninstall); unset allows it
+		"allow_uninstall": policySwitch,
 	},
 	"network": {
 		"block_direct_p2p":      policySwitch,

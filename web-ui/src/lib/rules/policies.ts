@@ -53,7 +53,8 @@ export const FIELDS: Readonly<Record<Section, Readonly<Record<string, FieldKind>
 		password_min_length: { kind: 'whole', min: 6, max: 128 },
 		password_require_special: { kind: 'switch' },
 		password_max_age_days: { kind: 'whole', min: 0, max: 365 },
-		allowed_operators: { kind: 'list', entry: 'name' }
+		allowed_operators: { kind: 'list', entry: 'name' },
+		allow_uninstall: { kind: 'switch' }
 	},
 	network: {
 		block_direct_p2p: { kind: 'switch' },

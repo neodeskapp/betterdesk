@@ -22,7 +22,7 @@ func TestOrgPolicyIsCheckedBeforeItIsStored(t *testing.T) {
 	good := map[string]string{
 		"connection": `{"mode":"attended","max_session_duration":480,"idle_lock_timeout":15,"wallpaper":"hide_during_session"}`,
 		"features":   `{"allow_file_transfer":true,"allow_clipboard":false,"allow_audio":false,"allow_recording":true}`,
-		"security":   `{"require_2fa":true,"password_min_length":12,"password_require_special":true,"password_max_age_days":90,"allowed_operators":["admin","op1"]}`,
+		"security":   `{"require_2fa":true,"password_min_length":12,"password_require_special":true,"password_max_age_days":90,"allowed_operators":["admin","op1"],"allow_uninstall":false}`,
 		"network":    `{"block_direct_p2p":true,"allowed_relay_servers":["relay.example.com:21117","relay2.example.com","[2001:db8::1]:21117"],"ip_allowlist":["192.168.1.0/24","10.0.0.5","2001:db8::/32"]}`,
 		"update":     `{"auto_update":false,"channel":"beta"}`,
 	}
@@ -44,6 +44,7 @@ func TestOrgPolicyIsCheckedBeforeItIsStored(t *testing.T) {
 		{"security", `{"password_min_length":5}`, "password_min_length"},
 		{"security", `{"password_max_age_days":400}`, "password_max_age_days"},
 		{"security", `{"allowed_operators":"admin"}`, "allowed_operators"},
+		{"security", `{"allow_uninstall":"no"}`, "allow_uninstall"},
 		{"network", `{"block_direct_p2p":"yes"}`, "block_direct_p2p"},
 		{"network", `{"allowed_relay_servers":"not a list"}`, "allowed_relay_servers"},
 		{"network", `{"allowed_relay_servers":["relay with space"]}`, "allowed_relay_servers"},
@@ -77,7 +78,7 @@ func TestPolicyFieldsAreTheCheckedSettings(t *testing.T) {
 	want := []PolicyGroupFields{
 		{"connection", []string{"idle_lock_timeout", "max_session_duration", "mode", "wallpaper"}},
 		{"features", []string{"allow_audio", "allow_clipboard", "allow_file_transfer", "allow_recording"}},
-		{"security", []string{"allowed_operators", "password_max_age_days", "password_min_length", "password_require_special", "require_2fa"}},
+		{"security", []string{"allow_uninstall", "allowed_operators", "password_max_age_days", "password_min_length", "password_require_special", "require_2fa"}},
 		{"network", []string{"allowed_relay_servers", "block_direct_p2p", "ip_allowlist"}},
 		{"update", []string{"auto_update", "channel"}},
 	}
