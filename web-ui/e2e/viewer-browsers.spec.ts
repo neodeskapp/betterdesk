@@ -2,7 +2,7 @@
  * What differs between Chromium and Firefox in the viewer, on a secure
  * page (local-origin.ts) with the dev mock device: Firefox has no
  * Keyboard Lock, so full screen says once which shortcuts stay with the
- * browser (Chromium hands them to the remote and says nothing); Actions
+ * browser (Chromium hands them to the remote and says nothing); Keys
  * sends the Windows key and Alt+Tab in both; both decode the video codecs
  * the remote computers use with WebCodecs.
  *
@@ -43,12 +43,12 @@ test('full screen: a browser without Keyboard Lock says which shortcuts stay wit
 	}
 });
 
-test('Actions sends the Windows key and Alt+Tab', async ({ page }) => {
+test('Keys sends the Windows key and Alt+Tab', async ({ page }) => {
 	test.skip(!(await streaming(page)), 'the console runs without ND_DEV_MOCK_REMOTE=1');
 	await page.locator('.session-canvas').focus();
 	await page.keyboard.press('F8');
 	const controls = page.getByRole('group', { name: 'Session controls' });
-	await controls.getByRole('button', { name: 'Actions', exact: true }).click();
+	await controls.getByRole('button', { name: 'Keys', exact: true }).click();
 	const menu = page.getByRole('menu');
 	await expect(menu.getByRole('menuitem', { name: 'Windows key' })).toBeVisible();
 	await expect(menu.getByRole('menuitem', { name: 'Alt+Tab' })).toBeVisible();

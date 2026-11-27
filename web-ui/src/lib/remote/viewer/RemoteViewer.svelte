@@ -1,15 +1,15 @@
 <!--
   The viewer's frame: the session bar (Back, one tab per device, New
-  connection, Controls and Full screen while a picture shows), the controls
-  row, the stage (the screens and at most one side sheet beside them), the
+  connection, and the session controls while a picture shows, ControlsRow.svelte),
+  the stage (the screens and at most one side sheet beside them), the
   New connection dialog, and on tablets the touch toolbar. Phones get the
   "open in the app" page instead (the web viewer needs a larger screen).
 
   Keyboard: on the remote screen every key goes to the device, Tab
-  included. F8 leaves the screen (opens Controls and focuses it, or the
-  current tab while there is no picture). F11 toggles full screen. On the
-  tabs, arrows, Home and End move and open, Delete closes. Escape closes an
-  open sheet; elsewhere it opens Controls while a picture shows.
+  included. F8 leaves the screen (focuses the first menu of the session
+  controls, or the current tab while there is no picture). F11 toggles full
+  screen. On the tabs, arrows, Home and End move and open, Delete closes.
+  Escape closes an open sheet.
   Ctrl+Alt+Shift with 1 to 9 picks a display of the device, L changes the
   layout, Z the zoom of the display worked on, P opens it in a window of
   its own (DisplayMenu.svelte). A middle click on a tab closes it.
@@ -39,7 +39,6 @@
 	import IconButton from '#lib/ui/IconButton.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { appLink } from '#lib/util/app-links.ts';
-	import ClipboardStatus from './ClipboardStatus.svelte';
 	import ControlsRow from './ControlsRow.svelte';
 	import { attachClipboardKeys } from './clipboard-keys.ts';
 	import { claimViewerWindow, releaseViewerWindow, VIEWER_CHANNEL } from '#lib/remote/viewer-window.ts';
@@ -79,7 +78,6 @@
 	let phoneTurnHelps = $state(false);
 	let mobile = $state(false);
 	let started = false;
-	let controlsBtn = $state<HTMLElement | null>(null);
 	let specialOpen = $state(false);
 	let bridge = $state<HTMLInputElement | null>(null);
 	let pickerReload = $state(0);
@@ -195,7 +193,7 @@
 		document.getElementById(`rd-tab-${id}`)?.focus();
 	}
 
-	/* ── Controls, full screen ── */
+	/* ── Full screen ── */
 
 	/** Said once per page: this browser keeps its own shortcuts in full screen */
 	let keyboardLockNoted = false;
@@ -212,8 +210,8 @@
 				keyboardLockNoted = true;
 				toast.info(
 					tf(
-						'remote_viewer.no_keyboard_lock',
-						'This browser keeps some shortcuts for itself, also in full screen: Ctrl+W, Ctrl+T, Ctrl+N, the Windows key, and Esc leaves full screen. Actions sends the Windows key, Alt+Tab and Ctrl+Alt+Del to the remote computer.'
+						'remote_viewer.no_keyboard_lock_keys',
+						'This browser keeps some shortcuts for itself, also in full screen: Ctrl+W, Ctrl+T, Ctrl+N, the Windows key, and Esc leaves full screen. Keys sends the Windows key, Alt+Tab and Ctrl+Alt+Del to the remote computer.'
 					)
 				);
 			}
@@ -230,14 +228,6 @@
 		} catch {
 			/* storage blocked: shown again next time */
 		}
-	}
-
-	function toggleControls() {
-		if (viewer.controlsShown) {
-			viewer.controlsOpen = false;
-			viewer.keepOpen = false;
-		} else viewer.controlsOpen = true;
-		viewer.resize();
 	}
 
 	/* ── New connection ── */
@@ -328,10 +318,11 @@
 			if (!isReleaseKey(e)) return;
 			e.preventDefault();
 			e.stopPropagation();
-			if (viewer.chromeVisible) {
-				viewer.controlsOpen = true;
-				void tick().then(() => controlsBtn?.focus());
-			} else if (viewer.activeId) focusTab(viewer.activeId);
+			const firstMenu = viewer.chromeVisible
+				? document.getElementById(`${uid}-controls`)?.querySelector<HTMLElement>('[aria-haspopup="menu"]')
+				: null;
+			if (firstMenu) firstMenu.focus();
+			else if (viewer.activeId) focusTab(viewer.activeId);
 		};
 		const onKey = (e: KeyboardEvent) => {
 			if (!shown) return;
@@ -346,10 +337,7 @@
 				const was = viewer.sheet;
 				viewer.closeSheet();
 				void tick().then(() => document.getElementById(SHEET_BUTTONS[was])?.focus());
-				return;
 			}
-			if (!document.fullscreenElement && viewer.chromeVisible && !document.querySelector('[role="dialog"]'))
-				viewer.controlsOpen = true;
 		};
 		const onFullscreen = () => {
 			viewer.fullscreen = !!document.fullscreenElement;
@@ -431,7 +419,7 @@
 		};
 	});
 
-	// The screen area changes size with the controls row and the side sheet
+	// The screen area changes size with the side sheet and the window
 	function observeSize(node: HTMLElement): (() => void) | undefined {
 		if (typeof ResizeObserver !== 'function') return undefined;
 		const ro = new ResizeObserver(() => viewer.resize());
@@ -536,14 +524,23 @@
 		{#if !viewer.guest}
 			<Button
 				icon="add"
-				class="bar-btn"
+				class="bar-btn is-icon"
 				title={tf('remote_viewer.new_connection_hint', 'Connect to another device in a new tab')}
 				aria-haspopup="dialog"
 				onclick={openPicker}
-				><span class="bar-label">{tf('remote.new_connection', 'New connection')}</span></Button
+				><span class="sr-only">{tf('remote.new_connection', 'New connection')}</span></Button
 			>
 		{/if}
-		{#if embedded && onopennewtab && active}
+		{#if viewer.chromeVisible && !mobile}
+			<ControlsRow
+				{viewer}
+				id="{uid}-controls"
+				onopennewtab={embedded && onopennewtab && active
+					? () => active && onopennewtab(active.deviceId)
+					: undefined}
+				ontogglefullscreen={() => void toggleFullscreen()}
+			/>
+		{:else if embedded && onopennewtab && active}
 			<Button
 				icon="open_in_new"
 				class="bar-btn"
@@ -555,44 +552,7 @@
 				><span class="bar-label">{tf('remote_viewer.open_in_new_tab', 'Open in new tab')}</span></Button
 			>
 		{/if}
-		{#if viewer.chromeVisible && !mobile}
-			<div class="bar-controls">
-				<ClipboardStatus {viewer} />
-				<Button
-					icon="tune"
-					class="bar-btn"
-					bind:element={controlsBtn}
-					title={tf('remote_viewer.controls_hint', 'Show or hide the session controls (F8)')}
-					aria-expanded={viewer.controlsShown}
-					aria-controls="{uid}-controls"
-					onclick={toggleControls}
-					><span class="bar-label">{tf('remote_viewer.controls', 'Controls')}</span><Icon
-						name={viewer.controlsShown ? 'expand_less' : 'expand_more'}
-						class="btn-caret"
-					/></Button
-				>
-				<Button
-					icon={viewer.fullscreen ? 'fullscreen_exit' : 'fullscreen'}
-					class="bar-btn"
-					title={`${
-						viewer.fullscreen
-							? tf('remote_viewer.exit_fullscreen', 'Exit full screen')
-							: tf('remote.fullscreen', 'Full screen')
-					} (F11)`}
-					onclick={() => void toggleFullscreen()}
-					><span class="bar-label"
-						>{viewer.fullscreen
-							? tf('remote_viewer.exit_fullscreen', 'Exit full screen')
-							: tf('remote.fullscreen', 'Full screen')}</span
-					></Button
-				>
-			</div>
-		{/if}
 	</div>
-
-	{#if viewer.controlsShown && !mobile}
-		<ControlsRow {viewer} id="{uid}-controls" />
-	{/if}
 
 	<div class="rd-stage">
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -799,11 +759,9 @@
 		border-color: var(--accent);
 		background: var(--accent-tint);
 	}
-	.bar-controls {
-		display: flex;
-		flex-shrink: 0;
-		align-items: center;
-		gap: var(--space-2);
+	.session-bar :global(.bar-btn.is-icon) {
+		width: var(--control-h);
+		padding: 0;
 	}
 	/* Open sessions: the shared tab style (underline on the selected one) */
 	.session-tabs {

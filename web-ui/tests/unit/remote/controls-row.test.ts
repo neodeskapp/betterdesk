@@ -1,9 +1,10 @@
 /**
- * The viewer's controls row for a streaming session: what a watch-only
- * guest is offered (nothing that sends input to the device) next to what a
- * signed-in operator gets.
+ * The session controls in the viewer's bar for a streaming session: what a
+ * watch-only guest is offered (nothing that sends input to the device) next
+ * to what a signed-in operator gets, and settings that show up in the bar
+ * while they are on and switch off from there.
  */
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { describe, expect, test, vi } from 'vitest';
 
 type Listener = (...args: unknown[]) => void;
@@ -85,28 +86,52 @@ describe('remote viewer controls', () => {
 			guest_peer_ids: ['900100012']
 		});
 		render(ControlsRow, { viewer: v, id: 'ctl' });
-		expect(screen.queryByTitle('Actions')).toBeNull();
-		expect(screen.queryByTitle('Type text')).toBeNull();
-		expect(screen.queryByTitle('View only')).toBeNull();
+		expect(screen.queryByTitle('Keys')).toBeNull();
 		expect(screen.queryByTitle('Chat')).toBeNull();
+		expect(screen.queryByTitle('File transfer')).toBeNull();
+		expect(screen.queryByTitle('View only')).toBeNull();
 		// Watching and leaving stay
-		expect(screen.getByTitle('Display')).toBeInTheDocument();
-		expect(screen.getByTitle('Session info')).toBeInTheDocument();
+		expect(screen.getByTitle('View')).toBeInTheDocument();
+		expect(screen.getByTitle('More')).toBeInTheDocument();
+		expect(screen.getByTitle('Disconnect')).toBeInTheDocument();
 	});
 
-	test('an operator keeps Actions, Type text and View only', () => {
+	test('an operator gets Keys, View, Chat, File transfer and More, and no switched-on settings yet', () => {
 		const v = streamingViewer({ transport: 'rd' });
 		render(ControlsRow, { viewer: v, id: 'ctl' });
-		expect(screen.getByTitle('Actions')).toBeInTheDocument();
-		expect(screen.getByTitle('Type text')).toBeInTheDocument();
-		expect(screen.getByTitle('View only')).toBeInTheDocument();
+		for (const name of ['Keys', 'View', 'Chat', 'File transfer', 'More', 'Disconnect'])
+			expect(screen.getByTitle(name)).toBeInTheDocument();
+		expect(screen.queryByTitle('View only')).toBeNull();
+		expect(screen.queryByTitle('Turn sound on')).toBeNull();
+		expect(screen.queryByTitle('Stop recording')).toBeNull();
+	});
+
+	test('view only shows in the bar while it is on, and a click there turns it off', async () => {
+		const v = streamingViewer({ transport: 'rd' });
+		render(ControlsRow, { viewer: v, id: 'ctl' });
+		const c = v.sessions[0]!.client as unknown as FakeClient;
+		v.toggleViewOnly();
+		const btn = await screen.findByTitle('View only');
+		expect(btn).toHaveAttribute('aria-pressed', 'true');
+		await fireEvent.click(btn);
+		expect(c.setViewOnly).toHaveBeenLastCalledWith(false);
+		await vi.waitFor(() => expect(screen.queryByTitle('View only')).toBeNull());
+	});
+
+	test('muted sound shows in the bar, and a click there turns it on again', async () => {
+		const v = streamingViewer({ transport: 'rd' });
+		render(ControlsRow, { viewer: v, id: 'ctl' });
+		const c = v.sessions[0]!.client as unknown as FakeClient;
+		v.toggleAudio();
+		await fireEvent.click(await screen.findByTitle('Turn sound on'));
+		expect(c.setAudioMuted).toHaveBeenLastCalledWith(false);
+		await vi.waitFor(() => expect(screen.queryByTitle('Turn sound on')).toBeNull());
 	});
 
 	test('what the device turned off for the account cannot be used: view only stays, no file sheet', async () => {
 		const v = streamingViewer({ transport: 'rd' });
 		render(ControlsRow, { viewer: v, id: 'ctl' });
 		const c = v.sessions[0]!.client as unknown as FakeClient;
-		expect(screen.getByTitle('View only')).toBeEnabled();
 		expect(screen.getByTitle('File transfer')).toBeEnabled();
 		c.emit('permission', { permission: 0, enabled: false });
 		c.emit('permission', { permission: 4, enabled: false });
