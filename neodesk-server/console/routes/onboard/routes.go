@@ -24,6 +24,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
@@ -51,7 +52,11 @@ type handlers struct {
 	sessions *onboard.Sessions
 	// callers is what the server answered the quick support apps about
 	// their callers, for the helpers' viewers (A273)
-	callers  *onboard.CallerBook
+	callers *onboard.CallerBook
+	// thumbs are the helpers' pictures as the vouch answer carries them,
+	// by account
+	thumbMu  sync.Mutex
+	thumbs   map[int64]thumb
 	releases *clientrelease.Service
 	limit    kit.Middleware
 	log      *kit.Logger
@@ -95,6 +100,7 @@ func RegisterWith(d *kit.Deps, opts Options) {
 		codes:    onboard.NewCodes(d.GoAPI),
 		sessions: onboard.NewSessions(d.GoAPI, opts.Now),
 		callers:  onboard.NewCallerBook(opts.Now),
+		thumbs:   map[int64]thumb{},
 		releases: opts.Releases,
 		limit: limits.New(limits.Config{
 			Name: "onboardCodeLimiter", WindowMs: 60_000, Max: CodeLimit,
@@ -158,6 +164,9 @@ func RegisterWith(d *kit.Deps, opts Options) {
 		d.Jobs.Add("onboard sweep", h.sweepLoop)
 	}
 }
+
+// thumb is a helper's scaled picture and the version it was made from.
+type thumb struct{ version, url string }
 
 // refusal is the answer of a request that did not work.
 type refusal struct {

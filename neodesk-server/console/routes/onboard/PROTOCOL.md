@@ -74,11 +74,16 @@ The server vouches:
 
 ```
 200
-{"success":true,"vouched":true,"device_id":"523456781","session":"<the relay session's UUID>","helper":"Olga Operator"}
+{"success":true,"vouched":true,"device_id":"523456781","session":"<the relay session's UUID>","helper":"Olga Operator","helper_avatar":"data:image/jpeg;base64,/9j/4AAQ..."}
 ```
 
 `helper` is the helper's first and last name as the console knows them,
-else their user name. The audit log gets a `quick_support_caller` entry
+else their user name. `helper_avatar` is the helper account's console picture as
+`data:image/png;base64,...` (a picture with see-through parts) or
+`data:image/jpeg;base64,...`, scaled down to at most 96 by 96 pixels and
+at most 48 KB of text, the `data:` prefix included. It is left out when
+the account has no picture or it can't be made that small (a WebP picture
+among them, which the server does not decode). The audit log gets a `quick_support_caller` entry
 about the helper before the answer goes out; when it can't be written the
 answer is `500 {"error":"audit_failed"}` and nobody is vouched for.
 
