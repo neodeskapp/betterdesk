@@ -1,11 +1,13 @@
 <!--
   Roles and permissions (/permissions, super admins only, as the server
   requires since commit 024540ff), on the settings pattern (PATTERN.md):
-  the role is the scope and comes first, a picker with each role's name and
-  sentence; the summary says in one sentence what the role can do, live
-  with the unsaved changes. The permissions are grouped by what a person
-  does, each with its name, one sentence and its key (muted, found by the
-  filter). Edit, then save: the ChangesBar lists every change, Save sends
+  the role is the scope and comes first, a picker of role names with what
+  the chosen role can do beside it (one sentence, live with the unsaved
+  changes, and the counts). The permissions are grouped by what a person
+  does, each one line of name and sentence with its box; the key is not
+  shown (rule E): the filter finds it and it is the name's title. On wide
+  screens the compare value and "Which roles have this?" sit in the right
+  column. Edit, then save: the ChangesBar lists every change, Save sends
   one batch, and the toast names what changed and offers Undo (the batch's
   `previous` sent back). A permission another one needs says so with a
   button that turns it on (in the same draft); one others need says which
@@ -60,12 +62,10 @@
 	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import DangerZone from '#lib/ui/DangerZone.svelte';
-	import Field from '#lib/ui/Field.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Switch from '#lib/ui/Switch.svelte';
-	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
@@ -366,7 +366,8 @@
 	}
 
 	const pickerChoices = $derived(
-		roleOptions(roles, t).map((o) => ({ value: o.value, title: o.label, description: o.hint }))
+		// Names only: the chosen role's own sentence is beside the picker
+		roleOptions(roles, t).map((o) => ({ value: o.value, title: o.label }))
 	);
 	const compareOptions = $derived([
 		{ value: '', label: tf('permissions.compare_none', 'No other role') },
@@ -405,44 +406,42 @@
 >
 	{#snippet scope()}
 		{#if phase === 'ok' && roles.length}
-			<div id="perm-role" class="perm-role">
-				<h2 id="perm-role-title" class="perm-scope-title">{tf('permissions.pick_role', 'Role to change')}</h2>
-				{#key pickerKey}
-					<ChoiceList
-						choices={pickerChoices}
-						labelledby="perm-role-title"
-						describedby="perm-role-note"
-						name="perm-role"
-						value={role}
-						onchange={(v, on) => {
-							if (on) void selectRole(v);
-						}}
-					/>
-				{/key}
-				<p id="perm-role-note" class="perm-muted">
-					{tf('permissions.role_desc_note', "The sentences describe each role's defaults.")}
-				</p>
-			</div>
-		{/if}
-	{/snippet}
-
-	{#snippet summary()}
-		{#if current}
-			<div class="perm-summary" aria-live="polite">
-				<h2 class="perm-scope-title">
-					{tf('permissions.summary_title_named', 'What {role} can do', { role: roleLabel(role, t) })}
-				</h2>
-				{#if current.is_super_admin}
-					<p>{t('permissions.locked_desc')}</p>
-				{:else}
-					<p class="perm-sentence">{sentence}</p>
-					{#if draft.dirty}<p class="perm-muted">
-							{tf('permissions.summary_unsaved', 'With your unsaved changes.')}
-						</p>{/if}
-					<CountLine
-						text={t('permissions.role_summary')}
-						values={{ granted: live.size, total: all.length, changed: overridden }}
-					/>
+			<div class="perm-scope">
+				<div id="perm-role" class="perm-role">
+					<h2 id="perm-role-title" class="perm-scope-title">
+						{tf('permissions.pick_role', 'Role to change')}
+					</h2>
+					{#key pickerKey}
+						<ChoiceList
+							choices={pickerChoices}
+							labelledby="perm-role-title"
+							name="perm-role"
+							value={role}
+							onchange={(v, on) => {
+								if (on) void selectRole(v);
+							}}
+						/>
+					{/key}
+				</div>
+				{#if current}
+					<!-- What the role can do now, beside the picker: the first thing to read after picking -->
+					<div class="perm-summary" aria-live="polite">
+						<h2 class="perm-scope-title">
+							{tf('permissions.summary_title_named', 'What {role} can do', { role: roleLabel(role, t) })}
+						</h2>
+						{#if current.is_super_admin}
+							<p>{t('permissions.locked_desc')}</p>
+						{:else}
+							<p class="perm-sentence">{sentence}</p>
+							{#if draft.dirty}<p class="perm-muted">
+									{tf('permissions.summary_unsaved', 'With your unsaved changes.')}
+								</p>{/if}
+							<CountLine
+								text={t('permissions.role_summary')}
+								values={{ granted: live.size, total: all.length, changed: overridden }}
+							/>
+						{/if}
+					</div>
 				{/if}
 			</div>
 		{/if}
@@ -457,6 +456,7 @@
 	{:else if current.is_super_admin}
 		<Notice message={t('permissions.locked_desc')} />
 	{:else}
+		<!-- The views in one line under the filter: what differs, and a second role to compare with -->
 		<div id="perm-views" class="perm-views" role="group" aria-labelledby="perm-views-title">
 			<h2 id="perm-views-title" class="sr-only">{tf('permissions.views_title', 'Views')}</h2>
 			<Switch
@@ -464,17 +464,22 @@
 				label={tf('permissions.diff_only', 'Only show what differs from the default')}
 				bind:checked={diffOnly}
 			/>
-			<Field
-				label={tf('permissions.compare_label', 'Compare with')}
-				hint={tf(
-					'permissions.compare_hint',
-					"Shows the other role's value under each permission. It can't be changed from here."
-				)}
-			>
-				{#snippet children(f)}
-					<Select {...f} options={compareOptions} bind:value={compareRole} />
-				{/snippet}
-			</Field>
+			<div class="perm-compare-pick">
+				<label for="perm-compare">{tf('permissions.compare_label', 'Compare with')}</label>
+				<Select
+					id="perm-compare"
+					small
+					describedby="perm-compare-hint"
+					options={compareOptions}
+					bind:value={compareRole}
+				/>
+				<span id="perm-compare-hint" class="sr-only"
+					>{tf(
+						'permissions.compare_hint',
+						"Shows the other role's value under each permission. It can't be changed from here."
+					)}</span
+				>
+			</div>
 		</div>
 
 		{#if diffOnly && !shownGroups.length}
@@ -498,7 +503,9 @@
 						id={permRowId(perm)}
 						label={permLabel(perm, t)}
 						help={permHelp(perm, t) || undefined}
-						terms={[perm, groupTitle(g.id, t)]}
+						keyName={perm}
+						terms={[groupTitle(g.id, t)]}
+						class="perm-row"
 						checked={live.has(perm)}
 						disabled={!!fixedBy}
 						onchange={(on) => setPerm(perm, on)}
@@ -542,47 +549,51 @@
 									<p>{tf('permissions.who_none', 'No role has it.')}</p>
 								{/if}
 							</details>
-							<!-- The key on this line, not one of its own: it is found by the filter through terms -->
-							<span class="perm-key"
-								><span class="sr-only">{tf('settings_ui.internal_name', 'Internal name')}</span><ValueCopy
-									value={perm}
-									label={perm}
-								/></span
-							>
 						</div>
 					</SettingRow>
 				{/each}
 			</SettingsGroup>
 		{/each}
 
-		<DangerZone
-			title={t('permissions.danger_title')}
-			rows={[
-				{
-					title: tf('permissions.reset_overrides', 'Reset all changes'),
-					consequence: t('permissions.reset_overrides_desc'),
-					action: t('permissions.reset_overrides_button'),
-					onclick: () => void resetAll(),
-					disabled: stored.length === 0,
-					busy: resetting
-				}
-			]}
-		/>
+		<!-- Only while the role has a saved change: a reset with nothing to reset is a dead button (rule F) -->
+		{#if stored.length}
+			<DangerZone
+				title={t('permissions.danger_title')}
+				rows={[
+					{
+						title: tf('permissions.reset_overrides', 'Reset all changes'),
+						consequence: t('permissions.reset_overrides_desc'),
+						action: t('permissions.reset_overrides_button'),
+						onclick: () => void resetAll(),
+						busy: resetting
+					}
+				]}
+			/>
+		{/if}
 	{/if}
 
 	{#snippet bar()}<ChangesBar {draft} onsave={save} />{/snippet}
 </SettingsPage>
 
 <style>
+	.perm-scope {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-4) var(--space-6);
+	}
 	.perm-scope-title {
 		margin: 0 0 var(--space-2);
 		font-size: var(--text-md);
 		font-weight: 600;
 	}
+	/* Names only, in columns: the whole picker is two or three lines */
 	.perm-role :global(.choice-list) {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
 		column-gap: var(--space-4);
+	}
+	.perm-role :global(.choice) {
+		padding-block: var(--space-2);
 	}
 	.perm-muted {
 		margin: var(--space-2) 0 0;
@@ -595,15 +606,30 @@
 	.perm-sentence {
 		max-width: var(--measure);
 	}
+	/* The picker and what the role can do side by side once both fit */
+	@media (min-width: 1100px) {
+		.perm-scope {
+			grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+		}
+	}
 	.perm-views {
 		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: var(--space-3);
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2) var(--space-6);
 	}
-	.perm-views :global(.form-group) {
-		width: min(100%, 360px);
-		margin: 0;
+	.perm-compare-pick {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-1) var(--space-2);
+	}
+	.perm-compare-pick label {
+		font-weight: 600;
+	}
+	.perm-compare-pick :global(select) {
+		width: auto;
+		min-width: 12rem;
 	}
 	.perm-extra {
 		display: flex;
@@ -613,11 +639,28 @@
 		padding-inline-start: calc(var(--check-size) + var(--check-gap));
 		font-size: var(--text-sm);
 	}
-	.perm-key {
-		margin-inline-start: auto;
-		font-family: var(--mono);
-		font-size: var(--text-xs);
-		color: var(--text-muted);
+	/* Two columns: the compare line and "Which roles have this?" go to the
+	   right column beside the name, Reset under them, so a permission is
+	   one line of name and help */
+	@container settings-rows (min-width: 900px) {
+		:global(.setting-row.perm-row) {
+			--setting-control-w: 24rem;
+			grid-template-rows: auto 1fr;
+		}
+		:global(.perm-row > .setting-text) {
+			grid-row: 1 / span 2;
+		}
+		:global(.perm-row > .setting-extra) {
+			grid-column: 2;
+			grid-row: 1;
+		}
+		:global(.perm-row > .setting-actions) {
+			grid-column: 2;
+			grid-row: 2;
+		}
+		.perm-extra {
+			padding-inline-start: 0;
+		}
 	}
 	.perm-compare {
 		display: flex;

@@ -12,7 +12,7 @@
 	import type { Device, DeviceGroup } from '#lib/api/devices.ts';
 	import { deleteStrategy, getStrategy, listStrategies, type Strategy } from '#lib/api/strategies.ts';
 	import { listUserGroups, type UserGroup } from '#lib/api/users.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
@@ -191,7 +191,8 @@
 					<Button size="sm" icon={ICONS.refresh} onclick={() => void load()}>{t('actions.retry')}</Button>
 				</p>
 			{:else if !rules.length}
-				<p class="state">{t('devices.no_strategies')}</p>
+				<!-- The note above already says what a rule does -->
+				<p class="state">{tf('devices.no_strategies_short', 'No rules yet.')}</p>
 			{:else}
 				<Table
 					rows={rules}

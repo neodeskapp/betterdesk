@@ -2,7 +2,10 @@
   Your account › Preferences (#preferences): the theme of this browser
   (Console default follows Settings › Appearance; Light and Dark are this
   browser's own), the console language of the account, its time zone
-  (the security mails give times in it), and the accessibility panel. The account menu has the same three under
+  (the security mails give times in it), and the accessibility panel.
+  Settings rows: name and help left, the control right on a wide page;
+  the theme's three choices side by side, one click each. The account
+  menu has the same three under
   Preferences. Settings › Appearance › Theme is the console's default for
   everyone, which is something else.
 -->
@@ -17,16 +20,16 @@
 	import { can } from '#lib/state/session.svelte.ts';
 	import { setTheme, theme, type ThemeChoice } from '#lib/state/theme.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
-	import ChoiceList from '#lib/ui/ChoiceList.svelte';
-	import Field from '#lib/ui/Field.svelte';
 	import Select from '#lib/ui/Select.svelte';
+	import ChoiceSegments from '#lib/ui/settings/ChoiceSegments.svelte';
+	import SettingRow from '#lib/ui/settings/SettingRow.svelte';
 	import SettingsGroup from '#lib/ui/settings/SettingsGroup.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 
-	const themes = $derived<{ value: ThemeChoice; title: string }[]>([
-		{ value: 'default', title: t('theme.console_default') },
-		{ value: 'light', title: t('theme.light') },
-		{ value: 'dark', title: t('theme.dark') }
+	const themes = $derived<{ value: ThemeChoice; label: string }[]>([
+		{ value: 'default', label: t('theme.console_default') },
+		{ value: 'light', label: t('theme.light') },
+		{ value: 'dark', label: t('theme.dark') }
 	]);
 	const languages = $derived(
 		i18n.available.map((l) => ({ value: l.code, label: l.native || l.name || l.code }))
@@ -87,104 +90,79 @@
 		'Theme and accessibility stay in this browser. The language goes with your account to every device.'
 	)}`}
 >
-	<div class="prefs">
-		<div class="pref" id="preferences-theme">
-			<h3 id="preferences-theme-title">{t('account.theme')}</h3>
-			<p class="form-hint" id="preferences-theme-note">{t('account.theme_note')}</p>
-			<ChoiceList
-				choices={themes}
-				name="preferences-theme"
-				labelledby="preferences-theme-title"
-				describedby="preferences-theme-note preferences-theme-source"
+	<!-- What applies now comes from Settings › Appearance unless this browser has its own: said under the theme, with the link -->
+	<SettingRow
+		id="preferences-theme"
+		label={t('account.theme')}
+		help={t('account.theme_note')}
+		group
+		source={{
+			kind: theme.choice === 'default' ? 'inherited' : 'here',
+			text: themeSource,
+			href: mayOpenAppearance ? link('/settings?tab=branding') : undefined,
+			linkLabel: tf('account.theme_source_link', 'Settings › Appearance'),
+			visible: true
+		}}
+	>
+		{#snippet control(f)}
+			<ChoiceSegments
+				id={f.id}
+				labelledby={f.labelledby}
+				describedby={f.describedby}
+				options={themes}
 				value={theme.choice}
-				onchange={(v, checked) => {
-					if (checked) setTheme(v);
-				}}
+				onchange={(v) => setTheme(v as ThemeChoice)}
 			/>
-			<p class="source" id="preferences-theme-source">
-				{themeSource}
-				{#if mayOpenAppearance}<a href={link('/settings?tab=branding')}
-						>{tf('account.theme_source_link', 'Settings › Appearance')}</a
-					>{/if}
-			</p>
-		</div>
-		<div class="pref">
-			<Field id="preferences-language" label={t('settings.language')} hint={t('account.language_note')}>
-				{#snippet children(f)}
-					<Select
-						{...f}
-						width="medium"
-						options={languages}
-						value={i18n.lang}
-						onchange={(e) => void chooseLanguage(e.currentTarget.value)}
-					/>
-				{/snippet}
-			</Field>
-		</div>
-		<div class="pref" id="preferences-time-zone">
-			{#if zone === 'error'}
-				<p class="form-hint">{t('account.time_zone_load_failed')}</p>
-			{:else}
-				<Field
-					id="preferences-time-zone-field"
-					label={t('users.time_zone')}
-					hint={browserZone && zone !== browserZone
-						? t('account.time_zone_note_browser', { zone: browserZone })
-						: t('account.time_zone_note')}
-				>
-					{#snippet children(f)}
-						<Select
-							{...f}
-							width="medium"
-							options={zones}
-							value={zone ?? ''}
-							disabled={zone === null}
-							onchange={(e) => void pickZone(e.currentTarget.value)}
-						/>
-					{/snippet}
-				</Field>
+		{/snippet}
+	</SettingRow>
+	<SettingRow id="preferences-language" label={t('settings.language')} help={t('account.language_note')}>
+		{#snippet control(f)}
+			<Select
+				id={f.id}
+				describedby={f.describedby}
+				options={languages}
+				value={i18n.lang}
+				onchange={(e) => void chooseLanguage(e.currentTarget.value)}
+			/>
+		{/snippet}
+	</SettingRow>
+	<SettingRow
+		id="preferences-time-zone"
+		label={t('users.time_zone')}
+		help={zone === 'error'
+			? t('account.time_zone_load_failed')
+			: browserZone && zone !== browserZone
+				? t('account.time_zone_note_browser', { zone: browserZone })
+				: t('account.time_zone_note')}
+	>
+		{#snippet control(f)}
+			{#if zone !== 'error'}
+				<Select
+					id={f.id}
+					describedby={f.describedby}
+					options={zones}
+					value={zone ?? ''}
+					disabled={zone === null}
+					onchange={(e) => void pickZone(e.currentTarget.value)}
+				/>
 			{/if}
-		</div>
-		<div class="pref" id="preferences-accessibility">
-			<h3>{t('accessibility.title')}</h3>
-			<p class="form-hint">{a11yOn ? t('account.accessibility_on') : t('account.accessibility_note')}</p>
-			<p class="line">
-				<Button icon="accessibility_new" aria-haspopup="dialog" onclick={() => (a11y.open = true)}
-					>{t('account.accessibility_open')}</Button
-				>
-			</p>
-		</div>
-	</div>
+		{/snippet}
+	</SettingRow>
+	<SettingRow
+		id="preferences-accessibility"
+		label={t('accessibility.title')}
+		help={a11yOn ? t('account.accessibility_on') : t('account.accessibility_note')}
+	>
+		{#snippet control(f)}
+			<!-- Its own words name it, not the row's label pointing at it -->
+			<Button
+				id={f.id}
+				aria-label={t('account.accessibility_open')}
+				aria-describedby={f.describedby}
+				icon="accessibility_new"
+				aria-haspopup="dialog"
+				onclick={() => (a11y.open = true)}>{t('account.accessibility_open')}</Button
+			>
+		{/snippet}
+	</SettingRow>
 </SettingsGroup>
-
-<style>
-	.prefs {
-		padding: var(--space-3) var(--row-pad-x) 0;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-5);
-		max-width: var(--measure);
-	}
-	.pref {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-	.pref :global(.form-group) {
-		margin-bottom: 0;
-	}
-	h3 {
-		margin: 0;
-		font-size: var(--text-md);
-	}
-	.form-hint,
-	.line {
-		margin: 0;
-	}
-	.form-hint,
-	.source {
-		margin: 0;
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-	}
-</style>

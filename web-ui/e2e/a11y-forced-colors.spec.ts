@@ -94,9 +94,19 @@ test.describe('selection is visible in forced colours', () => {
 
 	test('a chosen option in a choice list', async ({ page }) => {
 		await forced(page);
-		await page.goto(`${UI}/account#preferences`);
+		// Settings › General: how clients connect
+		await page.goto(`${UI}/settings`);
 		const chosen = page.locator('.choice:has(input:checked)').first();
 		const other = page.locator('.choice:not(:has(input:checked))').first();
+		await expectDifferent(chosen, other);
+	});
+
+	test('a chosen choice of side-by-side choices', async ({ page }) => {
+		await forced(page);
+		// Your account › Preferences: the theme
+		await page.goto(`${UI}/account#preferences`);
+		const chosen = page.locator('.segment:has(input:checked) label').first();
+		const other = page.locator('.segment:not(:has(input:checked)) label').first();
 		await expectDifferent(chosen, other);
 	});
 

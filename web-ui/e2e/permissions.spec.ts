@@ -79,7 +79,7 @@ test('let helpdesk staff connect but not delete, with the mouse', async ({ page 
 	const picker = page.getByRole('radiogroup', { name: 'Role to change' });
 	await picker.getByRole('radio', { name: 'Guest link issuer' }).check();
 	await expect(page).toHaveURL(/[?&]role=guest_issuer/);
-	await expect(page.locator('.settings-summary')).toContainText(
+	await expect(page.locator('.perm-summary')).toContainText(
 		"People with this role can make guest links and see and change devices. They can't connect to devices"
 	);
 
@@ -95,7 +95,7 @@ test('let helpdesk staff connect but not delete, with the mouse', async ({ page 
 	await expect(bar).toContainText('Connect to devices: default (not allowed) → allowed');
 	await expect(bar).toContainText('Delete devices: allowed → default (not allowed)');
 	await expect(page.locator('#perm-device-connect')).toContainText('Changed, not saved');
-	await expect(page.locator('.settings-summary')).toContainText('With your unsaved changes.');
+	await expect(page.locator('.perm-summary')).toContainText('With your unsaved changes.');
 	expect(await has(page)).toContain('device.delete');
 	await expectNoAxeViolations(page);
 

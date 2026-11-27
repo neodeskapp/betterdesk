@@ -80,3 +80,14 @@ test('an account that may make tokens gets the API tokens link too', async () =>
 		'#api-tokens'
 	);
 });
+
+test('My status is its three choices side by side, not a list of rows', async () => {
+	render(Page);
+	const group = await vi.waitFor(() => {
+		const el = document.querySelector('#profile-status [role="radiogroup"]');
+		if (!el) throw new Error('no status choices');
+		return el as HTMLElement;
+	});
+	expect(group).toHaveClass('choice-segments');
+	expect(within(group).getAllByRole('radio')).toHaveLength(3);
+});

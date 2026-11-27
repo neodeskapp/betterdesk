@@ -95,13 +95,15 @@ test('with both recipients off it says that nobody gets the mail', async () => {
 	).toBeTruthy();
 });
 
-test('without email sending the main option says it has no effect yet', async () => {
+test('without email sending the group says once that no mail goes out, with the link to set it up', async () => {
 	smtp = false;
 	render(BillingSettings, { open: true, canManage: true });
-	await box('help_requests_enabled');
-	expect(
-		await screen.findByText('Has no effect until email sending is set up in Settings › Email.')
-	).toBeTruthy();
+	const main = await box('help_requests_enabled');
+	const note = await screen.findByText(/Email sending is not set up, so none of these mails go out yet\./);
+	expect(note.closest('.group-note')).not.toBeNull();
+	expect(within(note).getByRole('link', { name: 'commercialization.notifications.smtp_link' })).toBeTruthy();
+	// Not repeated on the row
+	expect(main).not.toHaveAccessibleDescription(/no effect/i);
 });
 
 test('without billing.manage the options are shown switched off for editing and no save bar appears', async () => {

@@ -80,6 +80,12 @@
 			? { kind: 'here' as const, text: tf('organizations.policy_set', 'Set for this organization.') }
 			: null;
 
+	/** An empty group in the Policies page's words: the server applies Network itself, the devices the rest */
+	const notSet = (section: string) =>
+		section === 'network'
+			? tf('organizations.network_not_set', 'Not set (the server’s connection settings apply)')
+			: tf('policies.not_set_option', 'Not set (each device decides)');
+
 	const rawColumns = $derived<Column<OrgSetting>[]>([
 		{ id: 'key', label: t('organizations.key'), cell: keyCell, sortValue: (r) => r.key, class: 'col-key' },
 		{ id: 'value', label: t('organizations.value'), cell: valueCell, class: 'col-value' }
@@ -105,11 +111,9 @@
 {/snippet}
 
 <div class="org-settings">
+	<!-- One sentence: each group links to where its values are changed -->
 	<p class="tab-note">
-		{tf(
-			'organizations.settings_tab_note',
-			'What applies to this organization now. Each value is changed where it is set: policies on the Policies page, the shared address book on the Address book tab.'
-		)}
+		{tf('organizations.settings_tab_lead', 'What applies to this organization now, and where to change it.')}
 	</p>
 
 	{#if !view && loadError}
@@ -147,10 +151,7 @@
 				>
 					{#snippet control(f)}
 						<div id={f.id} aria-describedby={f.describedby} class={['state', p.set && 'is-set']}>
-							{#if p.values.length}{@render storedValues(p.values)}{:else if !p.set}{tf(
-									'policies.not_set_option',
-									'Not set (each device decides)'
-								)}{/if}
+							{#if p.values.length}{@render storedValues(p.values)}{:else if !p.set}{notSet(p.section)}{/if}
 						</div>
 					{/snippet}
 				</SettingRow>

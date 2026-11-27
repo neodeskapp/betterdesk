@@ -3,7 +3,7 @@
  * once (PATTERN.md rule 1): it says so once for the group, and under the
  * theme it says what applies now and where that comes from (rule 2).
  */
-import { cleanup, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/svelte';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { session, type User } from '../../../src/lib/state/session.svelte.ts';
 import { theme } from '../../../src/lib/state/theme.svelte.ts';
@@ -62,4 +62,28 @@ test('the link to Settings › Appearance shows only to those who may open it', 
 	expect(screen.getByRole('link', { name: 'Settings › Appearance' }).getAttribute('href')).toBe(
 		'/app/settings?tab=branding'
 	);
+});
+
+test('the theme is its three choices side by side: one click picks one', async () => {
+	await show();
+	const group = screen.getByRole('radiogroup', { name: 'account.theme' });
+	expect(group).toHaveClass('choice-segments');
+	const [own, light, dark] = within(group).getAllByRole('radio');
+	expect(own).toBeChecked();
+	await fireEvent.click(light!);
+	expect(theme.choice).toBe('light');
+	expect(dark).not.toBeChecked();
+});
+
+test('each preference is a settings row with its control beside the name', async () => {
+	await show();
+	for (const id of [
+		'preferences-theme',
+		'preferences-language',
+		'preferences-time-zone',
+		'preferences-accessibility'
+	])
+		expect(document.getElementById(id)).toHaveClass('setting-row');
+	expect(screen.getByRole('combobox', { name: 'settings.language' })).toBeTruthy();
+	expect(screen.getByRole('button', { name: 'account.accessibility_open' })).toBeTruthy();
 });
