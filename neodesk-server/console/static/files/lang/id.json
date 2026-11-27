@@ -1088,7 +1088,8 @@
       "alert_n": "Email peringatan {n}",
       "alert_add": "Tambah alamat",
       "err_address": "Ini bukan alamat email. Misalnya ops@example.com.",
-      "err_host_alone": "Masukkan hanya nama host atau alamat IP, tanpa port. Misalnya smtp.example.com."
+      "err_host_alone": "Masukkan hanya nama host atau alamat IP, tanpa port. Misalnya smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Cari pengaturan…",
@@ -1741,6 +1742,7 @@
       "local_warning": "Alamat ini hanya berfungsi di komputer ini. Komputer dan ponsel lain tidak dapat menjangkaunya. Masukkan alamat server di Endpoint klien publik.",
       "preview_title": "Pratinjau",
       "preview_note": "Konsol dengan pilihan di halaman ini. Simpan untuk menerapkannya.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "PC resepsionis",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Tema: {theme}. Warna aksen: {accent}.",
@@ -1820,7 +1822,8 @@
       "rdclient_bg_help": "Apa yang tampil di belakang daftar perangkat. \"{inherit}\" memakai latar konsol.",
       "picture_kb": "Gambar, {kb} KB",
       "website_help": "Alamat lengkap, misalnya https://example.com.",
-      "console_preview": "Pratinjau panel"
+      "console_preview": "Pratinjau panel",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Perangkat baru mana yang boleh bergabung ke server ini, dan bagaimana caranya.",
@@ -1907,7 +1910,10 @@
     "mesh": {
       "groups_effect": "Menambah, mengganti nama, dan menghapus grup langsung tersimpan. Perangkat yang sudah terpasang tetap di grupnya.",
       "install_note": "Unduh file .msh sebuah grup dan pasang MeshAgent dengannya di perangkat.",
-      "msh_name_help": "MeshAgent menampilkan nama ini untuk server. Nama ini hanya masuk ke file yang diunduh dan tidak disimpan. File-nya untuk grup dengan ID default; untuk grup lain, gunakan menu di barisnya."
+      "msh_name_help": "MeshAgent menampilkan nama ini untuk server. Nama ini hanya masuk ke file yang diunduh dan tidak disimpan. File-nya untuk grup dengan ID default; untuk grup lain, gunakan menu di barisnya.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

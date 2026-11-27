@@ -1088,7 +1088,8 @@
       "alert_n": "{n}. riasztási e-mail",
       "alert_add": "Cím hozzáadása",
       "err_address": "Ez nem e-mail-cím. Például ops@example.com.",
-      "err_host_alone": "Csak a gépnevet vagy az IP-címet adja meg, port nélkül. Például smtp.example.com."
+      "err_host_alone": "Csak a gépnevet vagy az IP-címet adja meg, port nélkül. Például smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Keresés a beállításokban…",
@@ -1741,6 +1742,7 @@
       "local_warning": "Ezek a címek csak ezen a gépen működnek. Más gépek és telefonok nem érik el őket. Adja meg a szerver címét a Nyilvános kliens végpontok résznél.",
       "preview_title": "Előnézet",
       "preview_note": "A konzol az oldalon választott beállításokkal. Mentéssel lépnek életbe.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Recepciós gép",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Téma: {theme}. Kiemelőszín: {accent}.",
@@ -1820,7 +1822,8 @@
       "rdclient_bg_help": "Ami az eszközlista mögött látszik. A(z) „{inherit}” a konzol hátterét használja.",
       "picture_kb": "Kép, {kb} KB",
       "website_help": "Teljes cím, például https://example.com.",
-      "console_preview": "Konzol előnézete"
+      "console_preview": "Konzol előnézete",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Mely új eszközök csatlakozhatnak ehhez a szerverhez, és hogyan.",
@@ -1907,7 +1910,10 @@
     "mesh": {
       "groups_effect": "Csoport hozzáadása, átnevezése és eltávolítása azonnal mentődik. A már telepített eszközök a csoportjukban maradnak.",
       "install_note": "Töltse le egy csoport .msh fájlját, és telepítse vele a MeshAgentet az eszközre.",
-      "msh_name_help": "A MeshAgent ezt a nevet mutatja a szerverhez. Csak a letöltött fájlba kerül, nem mentődik. A fájl a default azonosítójú csoporthoz szól; más csoporthoz használja a sorában lévő menüt."
+      "msh_name_help": "A MeshAgent ezt a nevet mutatja a szerverhez. Csak a letöltött fájlba kerül, nem mentődik. A fájl a default azonosítójú csoporthoz szól; más csoporthoz használja a sorában lévő menüt.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

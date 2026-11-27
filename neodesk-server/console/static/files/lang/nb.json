@@ -1088,7 +1088,8 @@
       "alert_n": "Varsel-e-post {n}",
       "alert_add": "Legg til en adresse",
       "err_address": "Dette er ikke en e-postadresse. For eksempel ops@example.com.",
-      "err_host_alone": "Skriv bare inn vertsnavnet eller IP-adressen, uten port. For eksempel smtp.example.com."
+      "err_host_alone": "Skriv bare inn vertsnavnet eller IP-adressen, uten port. For eksempel smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Søk i innstillinger…",
@@ -1741,6 +1742,7 @@
       "local_warning": "Disse adressene virker bare på denne datamaskinen. Andre datamaskiner og telefoner når dem ikke. Skriv inn serverens adresse under Offentlige klient-endepunkter.",
       "preview_title": "Forhåndsvisning",
       "preview_note": "Konsollen med valgene på denne siden. Lagre for å ta dem i bruk.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Resepsjons-PC",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Tema: {theme}. Aksentfarge: {accent}.",
@@ -1820,7 +1822,8 @@
       "rdclient_bg_help": "Det som vises bak enhetslisten. «{inherit}» bruker konsollens bakgrunn.",
       "picture_kb": "Bilde, {kb} KB",
       "website_help": "En full adresse, for eksempel https://example.com.",
-      "console_preview": "Forhåndsvisning av konsollen"
+      "console_preview": "Forhåndsvisning av konsollen",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Hvilke nye enheter som kan knyttes til denne serveren, og hvordan.",
@@ -1907,7 +1910,10 @@
     "mesh": {
       "groups_effect": "Å legge til, gi nytt navn til og fjerne en gruppe lagres med en gang. Enheter som allerede er installert, blir i gruppen sin.",
       "install_note": "Last ned .msh-filen til en gruppe, og installer MeshAgent med den på enheten.",
-      "msh_name_help": "MeshAgent viser dette navnet for serveren. Det havner bare i den nedlastede filen og lagres ikke. Filen er for gruppen med ID-en default; for en annen gruppe, bruk menyen i raden dens."
+      "msh_name_help": "MeshAgent viser dette navnet for serveren. Det havner bare i den nedlastede filen og lagres ikke. Filen er for gruppen med ID-en default; for en annen gruppe, bruk menyen i raden dens.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

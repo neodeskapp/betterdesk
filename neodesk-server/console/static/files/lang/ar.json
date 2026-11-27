@@ -1089,7 +1089,8 @@
       "alert_n": "بريد التنبيهات {n}",
       "alert_add": "إضافة عنوان",
       "err_address": "هذا ليس عنوان بريد إلكتروني. مثلًا ops@example.com.",
-      "err_host_alone": "أدخل اسم المضيف أو عنوان IP فقط، بدون منفذ. مثلًا smtp.example.com."
+      "err_host_alone": "أدخل اسم المضيف أو عنوان IP فقط، بدون منفذ. مثلًا smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "البحث في الإعدادات…",
@@ -1742,6 +1743,7 @@
       "local_warning": "هذه العناوين تعمل على هذا الحاسوب فقط، ولا تصل إليها الحواسيب والهواتف الأخرى. أدخل عنوان الخادم تحت نقاط نهاية العملاء العامة.",
       "preview_title": "معاينة",
       "preview_note": "شكل لوحة التحكم مع اختيارات هذه الصفحة. احفظ لتطبيقها.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "حاسوب الاستقبال",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "السمة: {theme}. لون التمييز: {accent}.",
@@ -1821,7 +1823,8 @@
       "rdclient_bg_help": "ما يظهر خلف قائمة الأجهزة. \"{inherit}\" يستخدم خلفية وحدة التحكم.",
       "picture_kb": "صورة، {kb} كيلوبايت",
       "website_help": "عنوان كامل، مثلًا https://example.com.",
-      "console_preview": "معاينة اللوحة"
+      "console_preview": "معاينة اللوحة",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "ما الأجهزة الجديدة التي يمكنها الانضمام إلى هذا الخادم، وكيف.",
@@ -1908,7 +1911,10 @@
     "mesh": {
       "groups_effect": "إضافة مجموعة وإعادة تسميتها وإزالتها تُحفظ فورًا. تبقى الأجهزة المثبّتة في مجموعتها.",
       "install_note": "نزّل ملف .msh لمجموعة وثبّت به MeshAgent على الجهاز.",
-      "msh_name_help": "يعرض MeshAgent هذا الاسم للخادم. يدخل في الملف المنزَّل فقط ولا يُحفظ. الملف للمجموعة ذات المعرّف default؛ لمجموعة أخرى استخدم القائمة في صفها."
+      "msh_name_help": "يعرض MeshAgent هذا الاسم للخادم. يدخل في الملف المنزَّل فقط ولا يُحفظ. الملف للمجموعة ذات المعرّف default؛ لمجموعة أخرى استخدم القائمة في صفها.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

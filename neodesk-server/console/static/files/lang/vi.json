@@ -1088,7 +1088,8 @@
       "alert_n": "Email cảnh báo {n}",
       "alert_add": "Thêm địa chỉ",
       "err_address": "Đây không phải là địa chỉ email. Ví dụ ops@example.com.",
-      "err_host_alone": "Chỉ nhập tên máy chủ hoặc địa chỉ IP, không kèm cổng. Ví dụ smtp.example.com."
+      "err_host_alone": "Chỉ nhập tên máy chủ hoặc địa chỉ IP, không kèm cổng. Ví dụ smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Tìm kiếm cài đặt…",
@@ -1741,6 +1742,7 @@
       "local_warning": "Các địa chỉ này chỉ dùng được trên máy tính này. Máy tính và điện thoại khác không truy cập được. Hãy nhập địa chỉ máy chủ trong phần Điểm cuối client công khai.",
       "preview_title": "Xem trước",
       "preview_note": "Bảng điều khiển với các lựa chọn trên trang này. Lưu để áp dụng.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Máy tính lễ tân",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Giao diện: {theme}. Màu nhấn: {accent}.",
@@ -1820,7 +1822,8 @@
       "rdclient_bg_help": "Những gì hiện phía sau danh sách thiết bị. \"{inherit}\" dùng hình nền của bảng điều khiển.",
       "picture_kb": "Hình ảnh, {kb} KB",
       "website_help": "Địa chỉ đầy đủ, ví dụ https://example.com.",
-      "console_preview": "Xem trước bảng điều khiển"
+      "console_preview": "Xem trước bảng điều khiển",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Thiết bị mới nào được tham gia máy chủ này, và bằng cách nào.",
@@ -1907,7 +1910,10 @@
     "mesh": {
       "groups_effect": "Thêm, đổi tên và xóa nhóm được lưu ngay. Thiết bị đã cài vẫn ở trong nhóm của chúng.",
       "install_note": "Tải tệp .msh của một nhóm và cài MeshAgent bằng tệp đó trên thiết bị.",
-      "msh_name_help": "MeshAgent hiển thị tên này cho máy chủ. Tên chỉ nằm trong tệp đã tải và không được lưu. Tệp dành cho nhóm có ID default; với nhóm khác, dùng menu ở dòng của nhóm đó."
+      "msh_name_help": "MeshAgent hiển thị tên này cho máy chủ. Tên chỉ nằm trong tệp đã tải và không được lưu. Tệp dành cho nhóm có ID default; với nhóm khác, dùng menu ở dòng của nhóm đó.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

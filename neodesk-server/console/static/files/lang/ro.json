@@ -1088,7 +1088,8 @@
       "alert_n": "E-mail pentru alerte {n}",
       "alert_add": "Adăugați o adresă",
       "err_address": "Aceasta nu este o adresă de e-mail. De exemplu ops@example.com.",
-      "err_host_alone": "Introduceți doar numele de gazdă sau adresa IP, fără port. De exemplu smtp.example.com."
+      "err_host_alone": "Introduceți doar numele de gazdă sau adresa IP, fără port. De exemplu smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Căutați în setări…",
@@ -1741,6 +1742,7 @@
       "local_warning": "Aceste adrese funcționează doar pe acest computer. Alte computere și telefoane nu le pot accesa. Introduceți adresa serverului la Endpoint-uri publice client.",
       "preview_title": "Previzualizare",
       "preview_note": "Consola cu alegerile de pe această pagină. Salvați pentru a le aplica.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "PC recepție",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Temă: {theme}. Culoare de accent: {accent}.",
@@ -1820,7 +1822,8 @@
       "rdclient_bg_help": "Ce se vede în spatele listei de dispozitive. „{inherit}” folosește fundalul consolei.",
       "picture_kb": "Imagine, {kb} KB",
       "website_help": "O adresă completă, de exemplu https://example.com.",
-      "console_preview": "Previzualizare consolă"
+      "console_preview": "Previzualizare consolă",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Ce dispozitive noi se pot alătura acestui server și cum.",
@@ -1907,7 +1910,10 @@
     "mesh": {
       "groups_effect": "Adăugarea, redenumirea și eliminarea unui grup se salvează imediat. Dispozitivele deja instalate rămân în grupul lor.",
       "install_note": "Descărcați fișierul .msh al unui grup și instalați cu el MeshAgent pe dispozitiv.",
-      "msh_name_help": "MeshAgent afișează acest nume pentru server. Ajunge doar în fișierul descărcat și nu se salvează. Fișierul este pentru grupul cu ID-ul default; pentru alt grup, folosiți meniul din rândul lui."
+      "msh_name_help": "MeshAgent afișează acest nume pentru server. Ajunge doar în fișierul descărcat și nu se salvează. Fișierul este pentru grupul cu ID-ul default; pentru alt grup, folosiți meniul din rândul lui.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

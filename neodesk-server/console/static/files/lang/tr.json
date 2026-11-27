@@ -1088,7 +1088,8 @@
       "alert_n": "Uyarı e-postası {n}",
       "alert_add": "Adres ekle",
       "err_address": "Bu bir e-posta adresi değil. Örneğin ops@example.com.",
-      "err_host_alone": "Yalnızca ana bilgisayar adını veya IP adresini girin, port olmadan. Örneğin smtp.example.com."
+      "err_host_alone": "Yalnızca ana bilgisayar adını veya IP adresini girin, port olmadan. Örneğin smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Ayarlarda ara…",
@@ -1741,6 +1742,7 @@
       "local_warning": "Bu adresler yalnızca bu bilgisayarda çalışır. Diğer bilgisayarlar ve telefonlar onlara ulaşamaz. Sunucunun adresini Genel istemci uç noktaları bölümüne girin.",
       "preview_title": "Önizleme",
       "preview_note": "Bu sayfadaki seçimlerle konsol. Uygulamak için kaydedin.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Resepsiyon bilgisayarı",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Tema: {theme}. Vurgu rengi: {accent}.",
@@ -1820,7 +1822,8 @@
       "rdclient_bg_help": "Cihaz listesinin arkasında görünen. \"{inherit}\" konsolun arka planını kullanır.",
       "picture_kb": "Resim, {kb} KB",
       "website_help": "Tam bir adres, örneğin https://example.com.",
-      "console_preview": "Panel önizlemesi"
+      "console_preview": "Panel önizlemesi",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Bu sunucuya hangi yeni cihazların ve nasıl katılabileceği.",
@@ -1907,7 +1910,10 @@
     "mesh": {
       "groups_effect": "Grup eklemek, yeniden adlandırmak ve kaldırmak hemen kaydedilir. Zaten kurulu cihazlar gruplarında kalır.",
       "install_note": "Bir grubun .msh dosyasını indirin ve MeshAgent'ı bununla cihaza kurun.",
-      "msh_name_help": "MeshAgent sunucu için bu adı gösterir. Yalnızca indirilen dosyaya girer ve kaydedilmez. Dosya default kimlikli grup içindir; başka bir grup için o grubun satırındaki menüyü kullanın."
+      "msh_name_help": "MeshAgent sunucu için bu adı gösterir. Yalnızca indirilen dosyaya girer ve kaydedilmez. Dosya default kimlikli grup içindir; başka bir grup için o grubun satırındaki menüyü kullanın.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

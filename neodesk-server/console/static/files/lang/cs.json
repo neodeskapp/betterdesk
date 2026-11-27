@@ -1082,7 +1082,8 @@
       "alert_n": "E-mail pro upozornění {n}",
       "alert_add": "Přidat adresu",
       "err_address": "Toto není e-mailová adresa. Například ops@example.com.",
-      "err_host_alone": "Zadejte jen název hostitele nebo IP adresu, bez portu. Například smtp.example.com."
+      "err_host_alone": "Zadejte jen název hostitele nebo IP adresu, bez portu. Například smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Hledat v nastavení…",
@@ -1735,6 +1736,7 @@
       "local_warning": "Tyto adresy fungují jen na tomto počítači. Jiné počítače a telefony se k nim nedostanou. Zadejte adresu serveru v části Veřejné koncové body klientů.",
       "preview_title": "Náhled",
       "preview_note": "Konzole s volbami z této stránky. Uložením je použijete.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Počítač na recepci",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Motiv: {theme}. Barva zvýraznění: {accent}.",
@@ -1814,7 +1816,8 @@
       "rdclient_bg_help": "Co je vidět za seznamem zařízení. „{inherit}“ použije pozadí konzole.",
       "picture_kb": "Obrázek, {kb} KB",
       "website_help": "Celá adresa, například https://example.com.",
-      "console_preview": "Náhled konzole"
+      "console_preview": "Náhled konzole",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Která nová zařízení se smějí připojit k tomuto serveru, a jak.",
@@ -1901,7 +1904,10 @@
     "mesh": {
       "groups_effect": "Přidání, přejmenování a odebrání skupiny se uloží hned. Už nainstalovaná zařízení zůstanou ve své skupině.",
       "install_note": "Stáhněte soubor .msh skupiny a nainstalujte s ním MeshAgent na zařízení.",
-      "msh_name_help": "MeshAgent zobrazuje tento název serveru. Dostane se jen do staženého souboru a neukládá se. Soubor je pro skupinu s ID default; pro jinou skupinu použijte nabídku v jejím řádku."
+      "msh_name_help": "MeshAgent zobrazuje tento název serveru. Dostane se jen do staženého souboru a neukládá se. Soubor je pro skupinu s ID default; pro jinou skupinu použijte nabídku v jejím řádku.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

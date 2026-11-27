@@ -1082,7 +1082,8 @@
       "alert_n": "Meldingsadres {n}",
       "alert_add": "Adres toevoegen",
       "err_address": "Dit is geen e-mailadres. Bijvoorbeeld ops@example.com.",
-      "err_host_alone": "Voer alleen de hostnaam of het IP-adres in, zonder poort. Bijvoorbeeld smtp.example.com."
+      "err_host_alone": "Voer alleen de hostnaam of het IP-adres in, zonder poort. Bijvoorbeeld smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Instellingen zoeken…",
@@ -1735,6 +1736,7 @@
       "local_warning": "Deze adressen werken alleen op deze computer. Andere computers en telefoons kunnen ze niet bereiken. Vul het adres van de server in onder Openbare client-eindpunten.",
       "preview_title": "Voorbeeld",
       "preview_note": "De console met de keuzes op deze pagina. Sla op om ze toe te passen.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Receptie-pc",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Thema: {theme}. Accentkleur: {accent}.",
@@ -1814,7 +1816,8 @@
       "rdclient_bg_help": "Wat achter de apparatenlijst te zien is. \"{inherit}\" gebruikt de achtergrond van de console.",
       "picture_kb": "Afbeelding, {kb} KB",
       "website_help": "Een volledig adres, bijvoorbeeld https://example.com.",
-      "console_preview": "Voorbeeld van de console"
+      "console_preview": "Voorbeeld van de console",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Welke nieuwe apparaten aan deze server mogen deelnemen, en hoe.",
@@ -1901,7 +1904,10 @@
     "mesh": {
       "groups_effect": "Een groep toevoegen, hernoemen en verwijderen wordt meteen opgeslagen. Apparaten die al geïnstalleerd zijn, blijven in hun groep.",
       "install_note": "Download het .msh-bestand van een groep en installeer daarmee MeshAgent op het apparaat.",
-      "msh_name_help": "MeshAgent toont deze naam voor de server. Hij komt alleen in het gedownloade bestand en wordt niet opgeslagen. Het bestand is voor de groep met de ID default; gebruik voor een andere groep het menu in de rij ervan."
+      "msh_name_help": "MeshAgent toont deze naam voor de server. Hij komt alleen in het gedownloade bestand en wordt niet opgeslagen. Het bestand is voor de groep met de ID default; gebruik voor een andere groep het menu in de rij ervan.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

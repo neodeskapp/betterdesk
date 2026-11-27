@@ -1088,7 +1088,8 @@
       "alert_n": "Пошта для сповіщень {n}",
       "alert_add": "Додати адресу",
       "err_address": "Це не адреса електронної пошти. Наприклад ops@example.com.",
-      "err_host_alone": "Введіть лише ім'я хоста або IP-адресу, без порту. Наприклад smtp.example.com."
+      "err_host_alone": "Введіть лише ім'я хоста або IP-адресу, без порту. Наприклад smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Пошук у налаштуваннях…",
@@ -1741,6 +1742,7 @@
       "local_warning": "Ці адреси працюють лише на цьому комп'ютері. Інші комп'ютери й телефони до них не дістануться. Введіть адресу сервера в розділі «Публічні кінцеві точки клієнта».",
       "preview_title": "Попередній перегляд",
       "preview_note": "Консоль із вибором на цій сторінці. Збережіть, щоб застосувати.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "ПК на рецепції",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Тема: {theme}. Колір акценту: {accent}.",
@@ -1820,7 +1822,8 @@
       "rdclient_bg_help": "Що видно за списком пристроїв. «{inherit}» використовує фон консолі.",
       "picture_kb": "Зображення, {kb} КБ",
       "website_help": "Повна адреса, наприклад https://example.com.",
-      "console_preview": "Попередній перегляд панелі"
+      "console_preview": "Попередній перегляд панелі",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Які нові пристрої можуть приєднатися до цього сервера, і як.",
@@ -1907,7 +1910,10 @@
     "mesh": {
       "groups_effect": "Додавання, перейменування й видалення групи зберігаються одразу. Уже встановлені пристрої залишаються у своїй групі.",
       "install_note": "Завантажте файл .msh групи й установіть з ним MeshAgent на пристрій.",
-      "msh_name_help": "MeshAgent показує цю назву для сервера. Вона потрапляє лише в завантажений файл і не зберігається. Файл для групи з ID default; для іншої групи скористайтеся меню в її рядку."
+      "msh_name_help": "MeshAgent показує цю назву для сервера. Вона потрапляє лише в завантажений файл і не зберігається. Файл для групи з ID default; для іншої групи скористайтеся меню в її рядку.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

@@ -1088,7 +1088,8 @@
       "alert_n": "अलर्ट ईमेल {n}",
       "alert_add": "पता जोड़ें",
       "err_address": "यह ईमेल पता नहीं है। उदाहरण के लिए ops@example.com।",
-      "err_host_alone": "केवल होस्ट नाम या IP पता दर्ज करें, पोर्ट के बिना। उदाहरण के लिए smtp.example.com।"
+      "err_host_alone": "केवल होस्ट नाम या IP पता दर्ज करें, पोर्ट के बिना। उदाहरण के लिए smtp.example.com।",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "सेटिंग्स खोजें…",
@@ -1741,6 +1742,7 @@
       "local_warning": "ये पते सिर्फ़ इसी कंप्यूटर पर काम करते हैं। दूसरे कंप्यूटर और फ़ोन इन तक नहीं पहुँच सकते। सर्वर का पता 'सार्वजनिक क्लाइंट एंडपॉइंट' में डालें।",
       "preview_title": "पूर्वावलोकन",
       "preview_note": "इस पेज के विकल्पों के साथ कंसोल। लागू करने के लिए सेव करें।",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "रिसेप्शन पीसी",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "थीम: {theme}। मुख्य रंग: {accent}।",
@@ -1820,7 +1822,8 @@
       "rdclient_bg_help": "डिवाइस सूची के पीछे क्या दिखता है। \"{inherit}\" कंसोल का बैकग्राउंड इस्तेमाल करता है।",
       "picture_kb": "तस्वीर, {kb} KB",
       "website_help": "पूरा पता, उदाहरण के लिए https://example.com।",
-      "console_preview": "पैनल पूर्वावलोकन"
+      "console_preview": "पैनल पूर्वावलोकन",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "कौन से नए डिवाइस इस सर्वर से जुड़ सकते हैं, और कैसे।",
@@ -1907,7 +1910,10 @@
     "mesh": {
       "groups_effect": "समूह जोड़ना, नाम बदलना और हटाना तुरंत सहेजा जाता है। पहले से इंस्टॉल डिवाइस अपने समूह में रहते हैं।",
       "install_note": "किसी समूह की .msh फ़ाइल डाउनलोड करें और उससे डिवाइस पर MeshAgent इंस्टॉल करें।",
-      "msh_name_help": "MeshAgent सर्वर के लिए यह नाम दिखाता है। यह केवल डाउनलोड की गई फ़ाइल में जाता है और सहेजा नहीं जाता। फ़ाइल default ID वाले समूह के लिए है; दूसरे समूह के लिए उसकी पंक्ति का मेनू इस्तेमाल करें।"
+      "msh_name_help": "MeshAgent सर्वर के लिए यह नाम दिखाता है। यह केवल डाउनलोड की गई फ़ाइल में जाता है और सहेजा नहीं जाता। फ़ाइल default ID वाले समूह के लिए है; दूसरे समूह के लिए उसकी पंक्ति का मेनू इस्तेमाल करें।",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

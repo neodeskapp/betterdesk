@@ -1082,7 +1082,8 @@
       "alert_n": "Email per gli avvisi {n}",
       "alert_add": "Aggiungi un indirizzo",
       "err_address": "Questo non è un indirizzo email. Per esempio ops@example.com.",
-      "err_host_alone": "Inserisci solo il nome host o l'indirizzo IP, senza porta. Per esempio smtp.example.com."
+      "err_host_alone": "Inserisci solo il nome host o l'indirizzo IP, senza porta. Per esempio smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Cerca nelle impostazioni…",
@@ -1735,6 +1736,7 @@
       "local_warning": "Questi indirizzi funzionano solo su questo computer. Altri computer e telefoni non li raggiungono. Inserisca l'indirizzo del server in «Endpoint client pubblici».",
       "preview_title": "Anteprima",
       "preview_note": "La console con le scelte di questa pagina. Salvi per applicarle.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "PC della reception",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Tema: {theme}. Colore di accento: {accent}.",
@@ -1814,7 +1816,8 @@
       "rdclient_bg_help": "Cosa si vede dietro l'elenco dei dispositivi. \"{inherit}\" usa lo sfondo della console.",
       "picture_kb": "Immagine, {kb} KB",
       "website_help": "Un indirizzo completo, per esempio https://example.com.",
-      "console_preview": "Anteprima della console"
+      "console_preview": "Anteprima della console",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Quali nuovi dispositivi possono unirsi a questo server, e come.",
@@ -1901,7 +1904,10 @@
     "mesh": {
       "groups_effect": "Aggiungere, rinominare e rimuovere un gruppo salva subito. I dispositivi già installati restano nel loro gruppo.",
       "install_note": "Scarica il file .msh di un gruppo e installa MeshAgent con quel file sul dispositivo.",
-      "msh_name_help": "MeshAgent mostra questo nome per il server. Va solo nel file scaricato e non viene salvato. Il file è per il gruppo con ID default; per un altro gruppo, usa il menu nella sua riga."
+      "msh_name_help": "MeshAgent mostra questo nome per il server. Va solo nel file scaricato e non viene salvato. Il file è per il gruppo con ID default; per un altro gruppo, usa il menu nella sua riga.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

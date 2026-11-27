@@ -1088,7 +1088,8 @@
       "alert_n": "Hälytysosoite {n}",
       "alert_add": "Lisää osoite",
       "err_address": "Tämä ei ole sähköpostiosoite. Esimerkiksi ops@example.com.",
-      "err_host_alone": "Anna vain isäntänimi tai IP-osoite ilman porttia. Esimerkiksi smtp.example.com."
+      "err_host_alone": "Anna vain isäntänimi tai IP-osoite ilman porttia. Esimerkiksi smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Hae asetuksista…",
@@ -1741,6 +1742,7 @@
       "local_warning": "Nämä osoitteet toimivat vain tällä tietokoneella. Muut tietokoneet ja puhelimet eivät tavoita niitä. Anna palvelimen osoite kohdassa Julkiset asiakaspäätepisteet.",
       "preview_title": "Esikatselu",
       "preview_note": "Konsoli tämän sivun valinnoilla. Ota ne käyttöön tallentamalla.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Vastaanoton tietokone",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Teema: {theme}. Korostusväri: {accent}.",
@@ -1820,7 +1822,8 @@
       "rdclient_bg_help": "Mitä laiteluettelon takana näkyy. \"{inherit}\" käyttää konsolin taustaa.",
       "picture_kb": "Kuva, {kb} kt",
       "website_help": "Koko osoite, esimerkiksi https://example.com.",
-      "console_preview": "Konsolin esikatselu"
+      "console_preview": "Konsolin esikatselu",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Mitkä uudet laitteet saavat liittyä tälle palvelimelle ja miten.",
@@ -1907,7 +1910,10 @@
     "mesh": {
       "groups_effect": "Ryhmän lisääminen, nimeäminen uudelleen ja poistaminen tallentuu heti. Jo asennetut laitteet pysyvät ryhmässään.",
       "install_note": "Lataa ryhmän .msh-tiedosto ja asenna MeshAgent sen avulla laitteelle.",
-      "msh_name_help": "MeshAgent näyttää tämän nimen palvelimelle. Se menee vain ladattuun tiedostoon eikä sitä tallenneta. Tiedosto on ryhmälle, jonka tunnus on default; käytä muissa ryhmissä niiden rivin valikkoa."
+      "msh_name_help": "MeshAgent näyttää tämän nimen palvelimelle. Se menee vain ladattuun tiedostoon eikä sitä tallenneta. Tiedosto on ryhmälle, jonka tunnus on default; käytä muissa ryhmissä niiden rivin valikkoa.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

@@ -1086,7 +1086,8 @@
       "alert_n": "警示電子郵件 {n}",
       "alert_add": "新增地址",
       "err_address": "這不是電子郵件地址。例如 ops@example.com。",
-      "err_host_alone": "只輸入主機名稱或 IP 位址，不含連接埠。例如 smtp.example.com。"
+      "err_host_alone": "只輸入主機名稱或 IP 位址，不含連接埠。例如 smtp.example.com。",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "搜尋設定…",
@@ -1739,6 +1740,7 @@
       "local_warning": "這些位址只在本機有效，其他電腦和手機無法連線。請在「公共用戶端端點」中填寫伺服器位址。",
       "preview_title": "預覽",
       "preview_note": "依本頁選項顯示的主控台。儲存後生效。",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "櫃台電腦",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "主題：{theme}。強調色：{accent}。",
@@ -1818,7 +1820,8 @@
       "rdclient_bg_help": "裝置清單後方顯示的內容。「{inherit}」使用主控台的背景。",
       "picture_kb": "圖片，{kb} KB",
       "website_help": "完整位址，例如 https://example.com。",
-      "console_preview": "面板預覽"
+      "console_preview": "面板預覽",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "哪些新裝置可以加入這台伺服器，以及如何加入。",
@@ -1905,7 +1908,10 @@
     "mesh": {
       "groups_effect": "新增、重新命名和移除群組會立即儲存。已安裝的裝置留在原群組中。",
       "install_note": "下載群組的 .msh 檔案，並用它在裝置上安裝 MeshAgent。",
-      "msh_name_help": "MeshAgent 以這個名稱顯示伺服器。它只寫入下載的檔案，不會儲存。該檔案用於 ID 為 default 的群組；其他群組請使用其所在列的選單。"
+      "msh_name_help": "MeshAgent 以這個名稱顯示伺服器。它只寫入下載的檔案，不會儲存。該檔案用於 ID 為 default 的群組；其他群組請使用其所在列的選單。",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {

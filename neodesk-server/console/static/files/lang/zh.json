@@ -1082,7 +1082,8 @@
       "alert_n": "告警邮箱 {n}",
       "alert_add": "添加地址",
       "err_address": "这不是电子邮件地址。例如 ops@example.com。",
-      "err_host_alone": "只输入主机名或 IP 地址，不带端口。例如 smtp.example.com。"
+      "err_host_alone": "只输入主机名或 IP 地址，不带端口。例如 smtp.example.com。",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "搜索设置…",
@@ -1735,6 +1736,7 @@
       "local_warning": "这些地址只在本机有效，其他电脑和手机无法访问。请在“公共客户端端点”中填写服务器地址。",
       "preview_title": "预览",
       "preview_note": "按本页选项显示的控制台。保存后生效。",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "前台电脑",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "主题：{theme}。强调色：{accent}。",
@@ -1814,7 +1816,8 @@
       "rdclient_bg_help": "设备列表后面显示的内容。“{inherit}”使用控制台的背景。",
       "picture_kb": "图片，{kb} KB",
       "website_help": "完整地址，例如 https://example.com。",
-      "console_preview": "面板预览"
+      "console_preview": "面板预览",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "哪些新设备可以加入此服务器，以及如何加入。",
@@ -1901,7 +1904,10 @@
     "mesh": {
       "groups_effect": "添加、重命名和删除分组会立即保存。已安装的设备留在原分组中。",
       "install_note": "下载分组的 .msh 文件，并用它在设备上安装 MeshAgent。",
-      "msh_name_help": "MeshAgent 用这个名称显示服务器。它只写入下载的文件，不会保存。该文件用于 ID 为 default 的分组；其他分组请使用其所在行的菜单。"
+      "msh_name_help": "MeshAgent 用这个名称显示服务器。它只写入下载的文件，不会保存。该文件用于 ID 为 default 的分组；其他分组请使用其所在行的菜单。",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
