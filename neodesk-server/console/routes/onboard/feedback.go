@@ -355,3 +355,42 @@ func (h *handlers) listFeedback(w http.ResponseWriter, r *http.Request) {
 	})
 	kit.JSON(w, r, http.StatusOK, out)
 }
+
+// receiverOfferSetting is the setting "Offer to install after quick
+// support" as the console reads and writes it.
+type receiverOfferSetting struct {
+	Success bool `json:"success"`
+	Enabled bool `json:"enabled"`
+}
+
+// getReceiverOffer answers GET /api/support/receiver-offer.
+func (h *handlers) getReceiverOffer(w http.ResponseWriter, r *http.Request) {
+	on, err := onboard.LoadReceiverOffer(r.Context(), h.d.Store)
+	if err != nil {
+		h.serverError(w, r, "Quick support receiver offer:", err)
+		return
+	}
+	kit.JSON(w, r, http.StatusOK, receiverOfferSetting{Success: true, Enabled: on})
+}
+
+// saveReceiverOffer answers PUT /api/support/receiver-offer with the body
+// {enabled}. The audit log gets quick_support_receiver_offer.
+func (h *handlers) saveReceiverOffer(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Enabled *bool `json:"enabled"`
+	}
+	if err := kit.Bind(r, &body); err != nil || body.Enabled == nil {
+		fail(w, r, http.StatusBadRequest, "invalid_body")
+		return
+	}
+	if err := onboard.SaveReceiverOffer(r.Context(), h.d.Store, *body.Enabled); err != nil {
+		h.serverError(w, r, "Store the quick support receiver offer:", err)
+		return
+	}
+	state := "off"
+	if *body.Enabled {
+		state = "on"
+	}
+	h.audit(r, "quick_support_receiver_offer", "Offer to install after quick support: "+state)
+	kit.JSON(w, r, http.StatusOK, receiverOfferSetting{Success: true, Enabled: *body.Enabled})
+}

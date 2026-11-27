@@ -97,6 +97,8 @@ const token = (over: Partial<DeviceToken> = {}): DeviceToken => ({
 	expires_at: '',
 	created_at: '2026-11-01T00:00:00Z',
 	created_by: 'anna',
+	folder_id: 0,
+	org_id: '',
 	...over
 });
 

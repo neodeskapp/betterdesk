@@ -246,6 +246,12 @@ type DeviceToken struct {
 	// CreatedByToken is the public id of the console API token the token
 	// was made with, "" for none: the end of that API token ends it.
 	CreatedByToken string `json:"-"`
+	// FolderID is the folder (device group) a device that enrolls with
+	// the token goes into, 0 for none.
+	FolderID int64 `json:"folder_id,omitempty"`
+	// OrgID is the organization a device that enrolls with the token
+	// joins, so that its policies apply to the device; "" for none.
+	OrgID string `json:"org_id,omitempty"`
 }
 
 // DeviceTokenStatus constants

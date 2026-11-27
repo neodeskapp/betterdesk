@@ -39,6 +39,14 @@
    },
    "volatile": [
     {
+     "path": "receiver_offer.admission",
+     "pattern": "^[9aA+/_=-]{48}$"
+    },
+    {
+     "path": "receiver_offer.expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
      "path": "server.key",
      "pattern": "^[9aA+/_=-]{44}$"
     },
@@ -56,6 +64,11 @@
     "json": {
      "company": "NeoDesk",
      "console": "<base>",
+     "receiver_offer": {
+      "admission": "<volatile>",
+      "allowed": true,
+      "expires_at": "<volatile>"
+     },
      "server": {
       "api_server": "http://<hostname>:21121",
       "id_server": "<hostname>",

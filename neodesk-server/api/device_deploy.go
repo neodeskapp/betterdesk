@@ -291,6 +291,7 @@ func (s *Server) handleDeviceDeploy(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
 		return
 	}
+	s.placeEnrolledDevice(tok, id, "")
 	s.db.SetConfig("device_sync_mode_"+id, "standard")
 	s.db.DeleteConfig(pendingDevicePrefix + id)
 

@@ -50,7 +50,7 @@ func TestResolvedPoliciesSayWhatIsInForce(t *testing.T) {
 			"features":{"set":false,"applied_by":"device","device_app_applies":false,"timing":"device_next_check","fields":{
 				"allow_audio":`+none+`,"allow_clipboard":`+none+`,"allow_file_transfer":`+none+`,"allow_recording":`+none+`}},
 			"security":{"set":false,"applied_by":"device","device_app_applies":false,"timing":"device_next_check","fields":{
-				"allowed_operators":`+none+`,"password_max_age_days":`+none+`,"password_min_length":`+none+`,"password_require_special":`+none+`,"require_2fa":`+none+`}},
+				"allow_uninstall":`+none+`,"allowed_operators":`+none+`,"password_max_age_days":`+none+`,"password_min_length":`+none+`,"password_require_special":`+none+`,"require_2fa":`+none+`}},
 			"network":{"set":true,"applied_by":"server","device_app_applies":false,"timing":"server_minute","fields":{
 				"allowed_relay_servers":`+none+`,
 				"block_direct_p2p":{"value":null,"source":"server","server_value":`+relay+`,

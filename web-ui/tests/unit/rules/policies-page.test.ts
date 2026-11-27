@@ -40,6 +40,7 @@ const GROUP_FIELDS: Record<string, string[]> = {
 	connection: ['idle_lock_timeout', 'max_session_duration', 'mode', 'wallpaper'],
 	features: ['allow_audio', 'allow_clipboard', 'allow_file_transfer', 'allow_recording'],
 	security: [
+		'allow_uninstall',
 		'allowed_operators',
 		'password_max_age_days',
 		'password_min_length',

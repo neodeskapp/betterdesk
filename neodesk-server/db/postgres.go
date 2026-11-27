@@ -794,6 +794,10 @@ func (pg *PostgresDB) Migrate() error {
 		// made with, so that the end of the token ends it
 		`ALTER TABLE device_tokens ADD COLUMN IF NOT EXISTS created_by_token TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE org_invitations ADD COLUMN IF NOT EXISTS created_by_token TEXT NOT NULL DEFAULT ''`,
+		// device_tokens: the folder and the organization (whose policies
+		// apply) a device that enrolls with the token goes into, 0 and "" for none
+		`ALTER TABLE device_tokens ADD COLUMN IF NOT EXISTS folder_id BIGINT NOT NULL DEFAULT 0`,
+		`ALTER TABLE device_tokens ADD COLUMN IF NOT EXISTS org_id TEXT NOT NULL DEFAULT ''`,
 		// peer_metrics: network rates of NeoDesk telemetry, and a value
 		// the device did not measure stays NULL (L480)
 		`ALTER TABLE peer_metrics ADD COLUMN IF NOT EXISTS net_rx_bps REAL`,
@@ -2308,10 +2312,10 @@ func (pg *PostgresDB) CreateDeviceToken(t *DeviceToken) error {
 	}
 
 	err := pg.pool.QueryRow(pg.ctx, `
-		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note, created_by_token)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note, created_by_token, folder_id, org_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		RETURNING id, created_at`,
-		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note, t.CreatedByToken,
+		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note, t.CreatedByToken, t.FolderID, t.OrgID,
 	).Scan(&t.ID, &t.CreatedAt)
 	return err
 }
@@ -2319,21 +2323,21 @@ func (pg *PostgresDB) CreateDeviceToken(t *DeviceToken) error {
 // GetDeviceToken returns a device token by ID.
 func (pg *PostgresDB) GetDeviceToken(id int64) (*DeviceToken, error) {
 	return pg.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note 
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
 		FROM device_tokens WHERE id = $1`, id)
 }
 
 // GetDeviceTokenByHash returns a device token by its hash.
 func (pg *PostgresDB) GetDeviceTokenByHash(tokenHash string) (*DeviceToken, error) {
 	return pg.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note 
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
 		FROM device_tokens WHERE token_hash = $1`, tokenHash)
 }
 
 // GetDeviceTokenByPeerID returns the token bound to a peer.
 func (pg *PostgresDB) GetDeviceTokenByPeerID(peerID string) (*DeviceToken, error) {
 	return pg.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note 
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
 		FROM device_tokens WHERE peer_id = $1 AND status IN ('active', 'pending')`, peerID)
 }
 
@@ -2344,7 +2348,7 @@ func (pg *PostgresDB) getDeviceTokenByQuery(query string, args ...interface{}) (
 
 	err := pg.pool.QueryRow(pg.ctx, query, args...).Scan(
 		&t.ID, &t.TokenHash, &t.Token, &t.Name, &t.PeerID, &t.Status, &t.MaxUses, &t.UseCount,
-		&t.CreatedAt, &expiresAt, &revokedAt, &lastUsedAt, &t.CreatedBy, &t.Note)
+		&t.CreatedAt, &expiresAt, &revokedAt, &lastUsedAt, &t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID)
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
@@ -2361,7 +2365,7 @@ func (pg *PostgresDB) getDeviceTokenByQuery(query string, args ...interface{}) (
 // ListDeviceTokens returns all device tokens.
 func (pg *PostgresDB) ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, error) {
 	query := `SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note 
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
 		FROM device_tokens`
 	if !includeRevoked {
 		query += ` WHERE status != 'revoked'`
@@ -2381,7 +2385,7 @@ func (pg *PostgresDB) ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, err
 
 		if err := rows.Scan(&t.ID, &t.TokenHash, &t.Token, &t.Name, &t.PeerID, &t.Status,
 			&t.MaxUses, &t.UseCount, &t.CreatedAt, &expiresAt, &revokedAt, &lastUsedAt,
-			&t.CreatedBy, &t.Note); err != nil {
+			&t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID); err != nil {
 			return nil, err
 		}
 
@@ -2396,8 +2400,8 @@ func (pg *PostgresDB) ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, err
 // UpdateDeviceToken updates a device token.
 func (pg *PostgresDB) UpdateDeviceToken(t *DeviceToken) error {
 	_, err := pg.pool.Exec(pg.ctx, `
-		UPDATE device_tokens SET name=$1, peer_id=$2, status=$3, max_uses=$4, expires_at=$5, note=$6
-		WHERE id=$7`, t.Name, t.PeerID, t.Status, t.MaxUses, t.ExpiresAt, t.Note, t.ID)
+		UPDATE device_tokens SET name=$1, peer_id=$2, status=$3, max_uses=$4, expires_at=$5, note=$6, folder_id=$7, org_id=$8
+		WHERE id=$9`, t.Name, t.PeerID, t.Status, t.MaxUses, t.ExpiresAt, t.Note, t.FolderID, t.OrgID, t.ID)
 	return err
 }
 

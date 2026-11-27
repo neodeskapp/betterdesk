@@ -73,6 +73,11 @@ export function setCsrfToken(token: string): void {
 	csrfToken = token;
 }
 
+/** The CSRF token the requests send, for a write whose answer is a file (fetch of a Blob) */
+export function getCsrfToken(): string {
+	return csrfToken;
+}
+
 /*
  * While the console shows another account (Sign in as), every request
  * says so: a request the server no longer takes as that account (the

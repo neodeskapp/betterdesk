@@ -7,6 +7,7 @@
   - Pairing codes (enrollment.approve; /pairing before); ?pair=1 opens
     Pair with code at once (/?activateAgent=1 leads here)
   - Support agents (the admin roles; /agents and /generator before)
+  - Receiver app (enrollment.manage): the silent install of the NeoDesk app
   - Manual setup (every account; /keys, Client setup, before)
   The old addresses lead here (lib/redirects.ts). ?tab= follows the open
   tab; a tab the account doesn't have opens the first one it has. The Add
@@ -28,6 +29,7 @@
 	import Invites from '#lib/devices-area/add/Invites.svelte';
 	import ManualSetup from '#lib/devices-area/add/ManualSetup.svelte';
 	import PairingCodes from '#lib/devices-area/add/PairingCodes.svelte';
+	import ReceiverApp from '#lib/devices-area/add/ReceiverApp.svelte';
 	import SupportAgents from '#lib/devices-area/add/SupportAgents.svelte';
 	import { can, session } from '#lib/state/session.svelte.ts';
 	import Tabs from '#lib/ui/Tabs.svelte';
@@ -82,6 +84,8 @@
 					<PairingCodes {pair} />
 				{:else if current === 'agents'}
 					<SupportAgents />
+				{:else if current === 'receiver'}
+					<ReceiverApp />
 				{:else}
 					<ManualSetup />
 				{/if}

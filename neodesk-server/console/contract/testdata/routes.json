@@ -859,6 +859,10 @@
   {"id":"GET /api/user-groups [21121 legacy]","method":"GET","path":"/api/user-groups","app":"rustdesk-api-21121-legacy","group":"rustdesk-api","csrf":"none","file":"routes/rustdesk-api.routes.js"},
   {"id":"POST /api/user-groups [21121 legacy]","method":"POST","path":"/api/user-groups","app":"rustdesk-api-21121-legacy","group":"rustdesk-api","csrf":"none","file":"routes/rustdesk-api.routes.js"},
   {"id":"GET /api/user/group [21121 legacy]","method":"GET","path":"/api/user/group","app":"rustdesk-api-21121-legacy","group":"rustdesk-api","csrf":"none","file":"routes/rustdesk-api.routes.js"},
-  {"id":"GET /api/users [21121 legacy]","method":"GET","path":"/api/users","app":"rustdesk-api-21121-legacy","group":"rustdesk-api","csrf":"none","file":"routes/rustdesk-api.routes.js"}
+  {"id":"GET /api/users [21121 legacy]","method":"GET","path":"/api/users","app":"rustdesk-api-21121-legacy","group":"rustdesk-api","csrf":"none","file":"routes/rustdesk-api.routes.js"},
+  {"id":"GET /api/panel/receiver/setup","method":"GET","path":"/api/panel/receiver/setup","app":"console","group":"receiver-app","csrf":"gate","file":"console/routes/receiverapp/routes.go"},
+  {"id":"POST /api/panel/receiver/installer","method":"POST","path":"/api/panel/receiver/installer","app":"console","group":"receiver-app","csrf":"gate","file":"console/routes/receiverapp/routes.go"},
+  {"id":"GET /api/support/receiver-offer","method":"GET","path":"/api/support/receiver-offer","app":"console","group":"receiver-app","csrf":"gate","file":"console/routes/onboard/feedback.go"},
+  {"id":"PUT /api/support/receiver-offer","method":"PUT","path":"/api/support/receiver-offer","app":"console","group":"receiver-app","csrf":"gate","file":"console/routes/onboard/feedback.go"}
  ]
 }

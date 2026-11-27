@@ -34,6 +34,8 @@ const token = (over: Partial<DeviceToken>): DeviceToken => ({
 	expires_at: '',
 	created_at: '',
 	created_by: '',
+	folder_id: 0,
+	org_id: '',
 	...over
 });
 
@@ -70,5 +72,34 @@ describe('token dialog', () => {
 	test('a token with a limit keeps its number', () => {
 		render(TokenDialog, { token: token({ max_uses: 5 }), onclose: () => {}, onsaved: () => {} });
 		expect(screen.getByLabelText('tokens.max_uses')).toHaveValue(5);
+	});
+
+	test('a new token can name a folder and an organization whose policies the computer gets', async () => {
+		const posted: unknown[] = [];
+		vi.stubGlobal('fetch', async (input: string, init: RequestInit = {}) => {
+			const json = (body: unknown) =>
+				new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
+			if (String(input).startsWith('/api/folders'))
+				return json({ success: true, data: { folders: [{ id: 4, name: 'Lab', color: '', icon: '' }] } });
+			if (String(input).startsWith('/api/panel/org'))
+				return json({ organizations: [{ id: 'org-9', name: 'Acme' }] });
+			if (init.method === 'POST' && typeof init.body === 'string') posted.push(JSON.parse(init.body));
+			return json({
+				success: true,
+				data: { id: 1, name: 'Lab PCs', token: '0123456789abcdef0123456789abcdef' }
+			});
+		});
+		const user = userEvent.setup();
+		const onsaved = vi.fn();
+		render(TokenDialog, { token: null, onclose: () => {}, onsaved });
+		const folder = await screen.findByLabelText('onboard.invite.folder');
+		await user.selectOptions(folder, 'Lab');
+		await user.selectOptions(screen.getByLabelText('tokens.policies'), 'Acme');
+		await user.type(screen.getByLabelText('tokens.name'), 'Lab PCs');
+		await user.click(screen.getByRole('button', { name: 'tokens.create' }));
+		await vi.waitFor(() => expect(onsaved).toHaveBeenCalled());
+		expect(posted).toEqual([
+			{ name: 'Lab PCs', max_uses: 1, note: '', folder_id: 4, org_id: 'org-9', expires_in: 0 }
+		]);
 	});
 });

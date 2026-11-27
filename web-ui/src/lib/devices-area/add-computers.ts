@@ -7,7 +7,7 @@
 
 import { isAdminRole } from '#lib/clients/agents.ts';
 
-export const ADD_TABS = ['invites', 'tokens', 'pairing', 'agents', 'manual'] as const;
+export const ADD_TABS = ['invites', 'tokens', 'pairing', 'agents', 'receiver', 'manual'] as const;
 export type AddTab = (typeof ADD_TABS)[number];
 
 /** The tab's name */
@@ -16,6 +16,7 @@ export const ADD_TAB_TITLE: Readonly<Record<AddTab, string>> = {
 	tokens: 'nav.tokens',
 	pairing: 'nav.pairing',
 	agents: 'nav.agents',
+	receiver: 'receiver_app.tab',
 	manual: 'devices_add.tab_manual'
 };
 
@@ -25,6 +26,7 @@ export const ADD_TAB_DESC: Readonly<Record<AddTab, string>> = {
 	tokens: 'tokens.page_description',
 	pairing: 'pairing.subtitle',
 	agents: 'agents.page_description',
+	receiver: 'receiver_app.page_description',
 	manual: 'keys.page_description'
 };
 
@@ -40,6 +42,8 @@ const NEEDS: Readonly<Record<AddTab, (c: AddTabContext) => boolean>> = {
 	pairing: (c) => c.can('enrollment.approve'),
 	// requireAdmin on the server
 	agents: (c) => isAdminRole(c.role),
+	// The download names a device token: what Device tokens asks
+	receiver: (c) => c.can('enrollment.manage'),
 	// The values a client needs: a session is enough
 	manual: () => true
 };

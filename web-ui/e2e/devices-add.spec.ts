@@ -13,7 +13,7 @@ const tabs = (page: import('@playwright/test').Page) => page.getByRole('tablist'
 test.describe('as a super admin', () => {
 	test.use({ role: 'super_admin' });
 
-	test('one entry under Devices, five tabs, the Add a computer button stays on All devices', async ({
+	test('one entry under Devices, six tabs, the Add a computer button stays on All devices', async ({
 		page
 	}) => {
 		await page.goto(`${UI}/devices`);
@@ -30,11 +30,20 @@ test.describe('as a super admin', () => {
 			'Device tokens',
 			'Pairing codes',
 			'Support agents',
+			'Receiver app',
 			'Manual setup'
 		]);
 		await tabs(page).filter({ hasText: 'Device tokens' }).click();
 		await expect(page).toHaveURL(/\/devices\/add\?tab=tokens$/);
 		await expect(page.locator('.tokens-page')).toBeVisible();
+	});
+
+	test('Receiver app: the silent install appears once a token is entered', async ({ page }) => {
+		await page.goto(`${UI}/devices/add?tab=receiver`);
+		await expect(page.locator('.receiver-page')).toBeVisible();
+		await expect(page.locator('.receiver-props')).toContainText('SERVER');
+		await page.locator('.receiver-token').fill('0123456789abcdef0123456789abcdef');
+		await expect(page.locator('.receiver-props')).toContainText('TOKEN');
 	});
 
 	test('the old addresses open their tab', async ({ page }) => {

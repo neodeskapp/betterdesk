@@ -190,6 +190,11 @@
 					'policies.help_operators',
 					'Only people with one of these roles may connect to these devices, for example Remote operator.'
 				);
+			case 'security.allow_uninstall':
+				return tf(
+					'policies.help_allow_uninstall',
+					'Off: people at these computers cannot remove the NeoDesk app. Not set allows it.'
+				);
 			case 'network.block_direct_p2p':
 				return tf(
 					'policies.help_block_p2p',

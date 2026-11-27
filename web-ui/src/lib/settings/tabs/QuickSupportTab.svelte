@@ -1,6 +1,8 @@
 <!--
   Settings › Quick support (server.config): the feedback form the quick
-  support app shows the person after a session they allowed. One draft
+  support app shows the person after a session they allowed, and whether
+  the app offers to keep NeoDesk on the computer afterwards (Offer to
+  install after quick support, GET/PUT /api/support/receiver-offer). One draft
   with one save bar (PATTERN.md rule 1): the switch and the questions. A
   question is added and changed in a dialog (lib/support/QuestionDialog),
   moved and removed in its row; Save sends the whole form
@@ -9,7 +11,12 @@
   the console's language. The answers are on Help requests › Feedback.
 -->
 <script lang="ts">
-	import { getFeedbackForm, saveFeedbackForm } from '#lib/api/feedback.ts';
+	import {
+		getFeedbackForm,
+		getReceiverOffer,
+		saveFeedbackForm,
+		saveReceiverOffer
+	} from '#lib/api/feedback.ts';
 	import { plural, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import { can } from '#lib/state/session.svelte.ts';
@@ -47,6 +54,7 @@
 	interface Values {
 		enabled: boolean;
 		questions: FeedbackQuestion[];
+		receiver: boolean;
 		[key: string]: unknown;
 	}
 
@@ -60,10 +68,14 @@
 	};
 
 	const draft = new SettingsDraft<Values>(
-		{ enabled: false, questions: [] },
+		{ enabled: false, questions: [], receiver: true },
 		{
 			enabled: { label: tf('quick_support_feedback.enabled', 'Ask for feedback'), format: onOff },
-			questions: { label: tf('quick_support_feedback.questions', 'Questions'), format: count }
+			questions: { label: tf('quick_support_feedback.questions', 'Questions'), format: count },
+			receiver: {
+				label: tf('quick_support_receiver.offer', 'Offer to install after quick support'),
+				format: onOff
+			}
 		}
 	);
 	$effect(() => draft.track());
@@ -78,8 +90,8 @@
 
 	async function loadForm() {
 		try {
-			const form = await getFeedbackForm();
-			draft.load({ enabled: form.enabled, questions: form.questions });
+			const [form, receiver] = await Promise.all([getFeedbackForm(), getReceiverOffer()]);
+			draft.load({ enabled: form.enabled, questions: form.questions, receiver });
 			loadError = '';
 			loaded = true;
 		} catch (err) {
@@ -148,15 +160,22 @@
 			return;
 		}
 		const values = $state.snapshot(draft.values) as Values;
+		const formChanged = draft.isChanged('enabled') || draft.isChanged('questions');
+		const receiverChanged = draft.isChanged('receiver');
 		await saveAndConfirm(draft, async () => {
-			const saved = await saveFeedbackForm({ enabled: values.enabled, questions: values.questions });
+			let saved = { enabled: draft.loaded.enabled, questions: draft.loaded.questions };
+			let receiver = draft.loaded.receiver;
+			if (formChanged)
+				saved = await saveFeedbackForm({ enabled: values.enabled, questions: values.questions });
+			if (receiverChanged) receiver = await saveReceiverOffer(values.receiver);
 			// New questions get their ids from the server
-			draft.load({ enabled: saved.enabled, questions: saved.questions });
+			draft.load({ enabled: saved.enabled, questions: saved.questions, receiver });
 		});
 	}
 
 	const sections = $derived([
-		{ id: 'qs-feedback-section', label: tf('quick_support_feedback.title', 'Feedback after quick support') }
+		{ id: 'qs-feedback-section', label: tf('quick_support_feedback.title', 'Feedback after quick support') },
+		{ id: 'qs-receiver-section', label: tf('quick_support_receiver.title', 'Keep NeoDesk on the computer') }
 	]);
 </script>
 
@@ -289,6 +308,30 @@
 						</div>
 					{/snippet}
 				</SettingRow>
+			</SettingsGroup>
+			<SettingsGroup
+				id="qs-receiver-section"
+				title={tf('quick_support_receiver.title', 'Keep NeoDesk on the computer')}
+				description={tf(
+					'quick_support_receiver.description',
+					'After the session the quick support app can ask the person whether to keep NeoDesk on the computer. If they agree, it installs the NeoDesk app and the computer joins this server, also when new computers need a token or approval.'
+				)}
+				consequence={tf(
+					'quick_support_receiver.effect',
+					'Applies to quick support sessions that start from now on.'
+				)}
+			>
+				<SettingRow
+					id="qs-receiver-offer"
+					label={tf('quick_support_receiver.offer', 'Offer to install after quick support')}
+					help={tf(
+						'quick_support_receiver.offer_help',
+						'The person is asked after the feedback. Installing needs administrator rights on the computer.'
+					)}
+					checked={v.receiver}
+					onchange={(on: boolean) => draft.set('receiver', on)}
+					changed={draft.isChanged('receiver')}
+				/>
 			</SettingsGroup>
 		{/if}
 	</SettingsBody>

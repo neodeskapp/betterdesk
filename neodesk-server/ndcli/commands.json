@@ -363,6 +363,45 @@
    "permission": "enrollment.manage"
   },
   {
+   "name": "agents receiver-installer",
+   "summary": "Download the NeoDesk app's MSI with an install.cmd for this server as a zip (use --output).",
+   "route": "POST /api/panel/receiver/installer",
+   "flags": [
+    {
+     "name": "enrollment-token",
+     "in": "body",
+     "type": "string",
+     "help": "the enrollment token the computer joins with",
+     "required": true,
+     "field": "token",
+     "secret": true
+    },
+    {
+     "name": "group",
+     "in": "body",
+     "type": "int",
+     "help": "the folder id the computer goes into; the token's own folder wins"
+    },
+    {
+     "name": "arch",
+     "in": "body",
+     "type": "string",
+     "help": "x86_64 (the default) or aarch64"
+    }
+   ],
+   "permission": "enrollment.manage",
+   "secrets": true,
+   "examples": [
+    "neodesk agents receiver-installer --enrollment-token-stdin --group 12 --output neodesk-support.zip"
+   ]
+  },
+  {
+   "name": "agents receiver-setup",
+   "summary": "Show the values of a silent install of the NeoDesk app and the MSI it uses.",
+   "route": "GET /api/panel/receiver/setup",
+   "permission": "enrollment.manage"
+  },
+  {
    "name": "api-tokens current",
    "summary": "Show the token this command line uses, its account and what it may do now.",
    "route": "GET /api/panel/api-tokens/current",
@@ -7227,6 +7266,27 @@
    "summary": "Replace the feedback form after quick support: on or off and the questions.",
    "route": "PUT /api/support/feedback/form",
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
+  },
+  {
+   "name": "support receiver-offer",
+   "summary": "Show whether quick support offers to keep the NeoDesk app on the computer afterwards.",
+   "route": "GET /api/support/receiver-offer",
+   "permission": "server.config"
+  },
+  {
+   "name": "support receiver-offer-set",
+   "summary": "Turn the offer to keep the NeoDesk app after quick support on or off.",
+   "route": "PUT /api/support/receiver-offer",
+   "flags": [
+    {
+     "name": "enabled",
+     "in": "body",
+     "type": "bool",
+     "help": "true to offer the app after a session, false to offer nothing",
+     "required": true
+    }
+   ],
    "permission": "server.config"
   },
   {

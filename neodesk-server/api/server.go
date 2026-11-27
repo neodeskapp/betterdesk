@@ -179,6 +179,9 @@ type Server struct {
 	now         func() time.Time // the clock of the export file names
 	// fleet is the fleet scheduler's state (fleet_queue.go)
 	fleet fleetState
+	// admissionNow is the clock of quick support admissions
+	// (receiver_admission.go); nil is time.Now. Tests set it.
+	admissionNow func() time.Time
 }
 
 // SetPanelStore attaches the panel data source for RustDesk group/folder sync.

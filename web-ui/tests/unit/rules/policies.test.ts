@@ -90,6 +90,16 @@ describe('saving', () => {
 		expect(groupBody('network', v)).toEqual({ ip_allowlist: ['10.0.0.0/8'] });
 	});
 
+	test('"People can remove the app" is a security switch: off blocks the uninstall, not set allows it', () => {
+		expect(groupFields('security')).toContain('security.allow_uninstall');
+		const loaded = valuesFromResolved(resolved({ security: { require_2fa: true } }));
+		expect(loaded['security.allow_uninstall']).toBeNull();
+		const v = { ...loaded, 'security.allow_uninstall': false };
+		expect(writesFor(v, loaded)).toEqual([
+			{ group: 'security', body: { require_2fa: true, allow_uninstall: false } }
+		]);
+	});
+
 	test('only changed groups are written: PUT with the rules, DELETE when the last rule went', () => {
 		const loaded = valuesFromResolved(
 			resolved({ connection: { mode: 'unattended' }, update: { channel: 'beta' } })

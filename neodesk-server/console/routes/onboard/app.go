@@ -82,6 +82,42 @@ type redeemAnswer struct {
 	Company      string       `json:"company"`
 	Server       serverAnswer `json:"server"`
 	Console      string       `json:"console"`
+	// ReceiverOffer says whether the app may offer to stay on the
+	// computer after the session, with the admission it enrolls with
+	ReceiverOffer receiverOffer `json:"receiver_offer"`
+}
+
+// receiverOffer is the redeem answer's receiver_offer: allowed follows
+// the console's setting; admission is a one-time secret that admits one
+// computer in managed or locked mode for 24 hours (expires_at), null
+// with expires_at when not allowed.
+type receiverOffer struct {
+	Allowed   bool    `json:"allowed"`
+	Admission *string `json:"admission"`
+	ExpiresAt *string `json:"expires_at"`
+}
+
+// receiverOfferFor is the offer for a session that was just opened. An
+// offer the console can't make (the setting or the admission can't be
+// read or made) is not allowed: the session itself still works.
+func (h *handlers) receiverOfferFor(ctx context.Context, sessionID string) receiverOffer {
+	if h.d.Store == nil {
+		return receiverOffer{}
+	}
+	on, err := onboard.LoadReceiverOffer(ctx, h.d.Store)
+	if err != nil {
+		h.log.Warn("Quick support receiver offer:", err)
+		return receiverOffer{}
+	}
+	if !on {
+		return receiverOffer{}
+	}
+	adm, err := h.codes.Admission(ctx, sessionID)
+	if err != nil {
+		h.log.Warn("Quick support admission:", err)
+		return receiverOffer{}
+	}
+	return receiverOffer{Allowed: true, Admission: &adm.Secret, ExpiresAt: &adm.ExpiresAt}
 }
 
 // redeemSupport answers POST /api/support/redeem with the body {code}:
@@ -116,6 +152,7 @@ func (h *handlers) redeemSupport(w http.ResponseWriter, r *http.Request) {
 		Success: true, SessionToken: token, Session: appAnswerOf(sess).Session,
 		Supporter: h.personName(r.Context(), sess.CreatedByID, sess.CreatedBy), Company: h.serverName(),
 		Server: h.serverOf(r), Console: h.consoleOf(r).Base(),
+		ReceiverOffer: h.receiverOfferFor(r.Context(), sess.ID),
 	})
 }
 

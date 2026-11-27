@@ -2321,7 +2321,9 @@
     "action_fleet_task_retried": "Flottenaufgabe erneut ausgeführt",
     "action_fleet_resource_changed": "Flottenressource geändert",
     "action_fleet_scan_requested": "Compliance-Scan angefordert",
-    "action_fleet_workflow_run": "Workflow ausgeführt"
+    "action_fleet_workflow_run": "Workflow ausgeführt",
+    "action_quick_support_receiver_offer": "Installationsangebot nach der Schnellhilfe geändert",
+    "action_receiver_installer_downloaded": "Installationsprogramm der Empfänger-App heruntergeladen"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -5725,7 +5727,11 @@
     "mode_notice_locked": "Der Beitrittsmodus ist Gesperrt: Ein neues Gerät kann nur mit einem Token aus dieser Liste beitreten.",
     "created_next": "Gib es der Person, die das Gerät einrichtet, zusammen mit den Verbindungswerten aus {page}.",
     "status_used_up": "Aufgebraucht",
-    "actions_for": "Aktionen für {name}"
+    "actions_for": "Aktionen für {name}",
+    "folder_hint": "Ein Computer, der mit diesem Token beitritt, kommt in diesen Ordner.",
+    "policies": "Richtlinien",
+    "policies_hint": "Ein Computer, der mit diesem Token beitritt, bekommt die Richtlinien dieser Organisation.",
+    "no_policies": "Keine"
   },
   "api_tokens": {
     "title": "API-Tokens",
@@ -6738,7 +6744,9 @@
     "not_set_short": "Nicht festgelegt",
     "not_set_list": "Nicht festgelegt (keine Einschränkung)",
     "server_value_short": "Wert des Servers",
-    "devices_none": "Noch ist kein Gerät in dieser Organisation, diese Richtlinien erreichen also keines."
+    "devices_none": "Noch ist kein Gerät in dieser Organisation, diese Richtlinien erreichen also keines.",
+    "allow_uninstall": "Personen können die App entfernen",
+    "help_allow_uninstall": "Aus: Personen an diesen Computern können die NeoDesk-App nicht entfernen. Nicht festgelegt erlaubt es."
   },
   "attestation": {
     "title": "Dashboard",
@@ -10877,5 +10885,45 @@
     "none_for_helper": "Für diesen Helfer gibt es noch keine Antworten.",
     "show_more": "Mehr zeigen",
     "shown_of": "{shown} von {count}"
+  },
+  "receiver_app": {
+    "tab": "Empfänger-App",
+    "page_description": "Installiere die NeoDesk-App auf einem Computer, ohne dass jemand etwas anklicken muss. Der Computer tritt mit einem Gerätetoken diesem Server bei.",
+    "token_title": "Token",
+    "token_note": "Ein Token fügt einen Computer hinzu. Füge eines aus Gerätetoken ein oder erstelle hier eines. Das Token bestimmt Ordner und Richtlinien.",
+    "token": "Gerätetoken",
+    "token_hint": "Es wird nur einmal angezeigt, wenn das Token erstellt wird.",
+    "token_invalid": "Das ist kein Gerätetoken. Ein Token hat 16 bis 128 Buchstaben und Ziffern.",
+    "token_filled": "Das neue Token ist eingetragen.",
+    "folder_hint": "Gilt, wenn das Token keinen eigenen Ordner hat.",
+    "arch": "Prozessor",
+    "arch_x64": "64-Bit (x64)",
+    "arch_arm64": "ARM64",
+    "install_title": "Installieren",
+    "no_release": "Es ist noch kein Support-Agent-Release importiert, daher gibt es kein Installationsprogramm zum Herunterladen. Importiere eines unter",
+    "install_note": "Der Download enthält {msi} und install.cmd. Führe install.cmd als Administrator aus oder führe den Befehl unten neben {msi} aus, zum Beispiel über deine Softwareverteilung.",
+    "download": "Installationsprogramm herunterladen",
+    "downloading": "Download wird vorbereitet…",
+    "downloaded": "Heruntergeladen.",
+    "command": "Stille Installation",
+    "command_needs_token": "Gib ein Gerätetoken ein, um den Befehl zu sehen.",
+    "properties_title": "MSI-Eigenschaften",
+    "properties_note": "Die Werte, die das Installationsprogramm für diesen Server braucht. TOKEN ist nötig, wenn neue Computer ein Token oder eine Freigabe brauchen.",
+    "errors": {
+      "invalid_body": "Die Anfrage konnte nicht gelesen werden.",
+      "invalid_token": "Gib ein Gerätetoken ein.",
+      "token_unknown": "Dieses Token gibt es nicht, es wurde widerrufen oder ist abgelaufen.",
+      "token_used": "Mit diesem Token ist schon ein Computer beigetreten. Erstelle ein neues.",
+      "invalid_group": "Diesen Ordner gibt es nicht.",
+      "no_release": "Für diesen Prozessor gibt es kein Installationsprogramm. Importiere das Support-Agent-Release unter Support-Agenten.",
+      "server_error": "Auf dem Server ist etwas schiefgegangen. Versuche es noch einmal."
+    }
+  },
+  "quick_support_receiver": {
+    "title": "NeoDesk auf dem Computer behalten",
+    "description": "Nach der Sitzung kann die Schnellhilfe-App fragen, ob NeoDesk auf dem Computer bleiben soll. Wenn die Person zustimmt, installiert sie die NeoDesk-App und der Computer tritt diesem Server bei, auch wenn neue Computer ein Token oder eine Freigabe brauchen.",
+    "effect": "Gilt für Schnellhilfe-Sitzungen, die ab jetzt beginnen.",
+    "offer": "Nach der Schnellhilfe die Installation anbieten",
+    "offer_help": "Die Person wird nach der Rückmeldung gefragt. Die Installation braucht Administratorrechte auf dem Computer."
   }
 }

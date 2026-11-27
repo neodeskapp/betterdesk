@@ -1112,6 +1112,7 @@ func (s *Server) handleGetPeerPolicy(w http.ResponseWriter, r *http.Request) {
 			orgPolicies[category] = parsed
 		}
 	}
+	withDeviceDefaults(orgPolicies)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -1119,6 +1120,20 @@ func (s *Server) handleGetPeerPolicy(w http.ResponseWriter, r *http.Request) {
 		"org_id":    orgID,
 		"policies":  orgPolicies,
 	})
+}
+
+// withDeviceDefaults fills in the settings a device must not have to
+// guess: security.allow_uninstall is true unless the organization turned
+// it off, so the app knows without a rule that people may remove it.
+func withDeviceDefaults(policies map[string]interface{}) {
+	security, _ := policies["security"].(map[string]interface{})
+	if security == nil {
+		security = map[string]interface{}{}
+	}
+	if _, isBool := security["allow_uninstall"].(bool); !isBool {
+		security["allow_uninstall"] = true
+	}
+	policies["security"] = security
 }
 
 // ---------------------------------------------------------------------------
