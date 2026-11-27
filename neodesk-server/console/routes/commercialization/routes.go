@@ -11,6 +11,7 @@ package commercialization
 import (
 	"context"
 	"net/http"
+	"os"
 	"runtime"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/billingclock"
@@ -83,11 +84,16 @@ func NewClock(d *kit.Deps) *billingclock.Service {
 		opts.EnvPath, opts.Docker, opts.Getenv = cfg.EnvPath, cfg.Docker, cfg.Getenv
 	}
 	windows := runtime.GOOS == "windows"
+	getenv := os.Getenv
+	if opts.Getenv != nil {
+		getenv = opts.Getenv
+	}
 	service := servicedef.New(servicedef.Options{
 		Windows:        windows,
 		ServerService:  serviceName(windows, "NeoDeskServer", "neodesk-server"),
 		ConsoleService: serviceName(windows, "NeoDeskConsole", "neodesk-console"),
 		ConsoleEnvPath: opts.EnvPath,
+		Supervisor:     getenv("NEODESK_SUPERVISOR"),
 	})
 	opts.ServiceConfig = func(ctx context.Context) any { return service.Check(ctx) }
 	return billingclock.New(opts)

@@ -1,7 +1,7 @@
 # Checks of neodesk.ps1's service set-up for the server with its web
 # console, without Windows: the installer's functions are loaded from the
-# script's syntax tree and the Windows-only commands (scheduled tasks,
-# icacls, NSSM) are replaced by stand-ins.
+# script's syntax tree and the Windows-only commands (the service manager,
+# scheduled tasks, icacls) are replaced by stand-ins.
 #
 #   pwsh -NoProfile -File scripts/test-windows-installer.ps1
 $ErrorActionPreference = 'Stop'
@@ -19,13 +19,42 @@ foreach ($fn in $ast.FindAll({ $args[0] -is [System.Management.Automation.Langua
 $script:failures = 0
 function Fail([string]$Message) { Write-Host "FAIL: $Message"; $script:failures++ }
 
-# Stand-ins for Windows and NSSM
+# Stand-ins for Windows: the service manager holds one service,
+# NeoDeskServer, or none; an older install's NSSM settings are a table
 $script:registeredTasks = @{}
-$script:fakeNssm = $null
-$script:nssmCalls = @()
-function Get-NssmPath { return $script:fakeNssm }
-function fake-nssm { $script:nssmCalls += , @($args | ForEach-Object { $_ } | ForEach-Object { "$_" }) }
-function Set-ServiceLeastPrivilege { param($ServiceName, $NssmPath, $Paths) }
+$script:fakeService = $null
+$script:scCalls = @()
+$script:nssmSettings = @{}
+function Get-ServerServiceInfo { $script:fakeService }
+function New-Service {
+    param($Name, $BinaryPathName, $DisplayName, $Description, $StartupType, $ErrorAction)
+    $script:fakeService = [pscustomobject]@{ PathName = $BinaryPathName; StartName = 'LocalSystem'; DisplayName = $DisplayName; StartupType = "$StartupType"; Environment = @() }
+}
+function Set-Service {
+    param($Name, $DisplayName, $Description, $StartupType, $ErrorAction)
+    if ($script:fakeService) { $script:fakeService.DisplayName = $DisplayName; $script:fakeService.StartupType = "$StartupType" }
+}
+function Set-ServerServicePath { param($PathName) if (-not $script:fakeService) { return $false }; $script:fakeService.PathName = $PathName; return $true }
+function Get-ServerServiceEnvironment { if ($script:fakeService) { @($script:fakeService.Environment) } else { @() } }
+function Set-ServerServiceEnvironment { param([string[]]$Environment) $script:fakeService.Environment = @($Environment) }
+function Invoke-ServiceControl {
+    $call = @($args | ForEach-Object { "$_" })
+    $script:scCalls += , $call
+    if ($call[0] -eq 'config' -and $call[2] -eq 'obj=' -and $script:fakeService) { $script:fakeService.StartName = $call[3] }
+    if ($call[0] -eq 'delete' -and $call[1] -eq 'NeoDeskServer') { $script:fakeService = $null }
+    return 0
+}
+function Set-ServerServiceAccount { param($Account) $script:fakeService.StartName = $Account; return $true }
+function Get-NssmSetting { param($Name) $script:nssmSettings[$Name] }
+function Remove-NssmSettings { $script:nssmSettings = @{} }
+function Stop-Service { param($Name, [switch]$Force, $ErrorAction) }
+function Start-Service { param($Name, $ErrorAction) }
+function Stop-ScheduledTask { param($TaskName, $ErrorAction) }
+# No test ends a process of the machine it runs on
+function Stop-Process { param([Parameter(ValueFromPipeline = $true)]$InputObject, $Name, $Id, [switch]$Force) process { } }
+function Test-BinaryRunsAsService { param($Path) $true }
+$script:leastPrivilege = @()
+function Set-ServiceLeastPrivilege { param($ServiceName, $Paths) $script:leastPrivilege += , @($ServiceName, $Paths) }
 $script:icaclsCalls = @()
 function icacls { $script:icaclsCalls += , @($args | ForEach-Object { "$_" }); $global:LASTEXITCODE = 0 }
 function Unregister-ScheduledTask { param($TaskName, [switch]$Confirm, $ErrorAction) $script:registeredTasks.Remove($TaskName) }
@@ -35,7 +64,7 @@ function New-ScheduledTaskPrincipal { param($UserId, $LogonType, $RunLevel) $Use
 function New-ScheduledTaskSettingsSet { param([switch]$AllowStartIfOnBatteries, [switch]$DontStopIfGoingOnBatteries, $RestartCount, $RestartInterval, $ExecutionTimeLimit) [pscustomobject]@{ ExecutionTimeLimit = $ExecutionTimeLimit } }
 function Register-ScheduledTask { param($TaskName, $Action, $Trigger, $Principal, $Settings, $Description, $Xml) $script:registeredTasks[$TaskName] = $Settings }
 function Get-ScheduledTask { param($TaskName, $ErrorAction) if ($script:registeredTasks.ContainsKey($TaskName)) { [pscustomobject]@{ TaskName = $TaskName } } }
-function Get-Service { param($Name, $ErrorAction) $null }
+function Get-Service { param($Name, $ErrorAction) if ($script:fakeService -and $Name -eq 'NeoDeskServer') { [pscustomobject]@{ Name = $Name; Status = 'Stopped' } } }
 # Windows Firewall: the rules in a list
 $script:fwRules = @()
 function Get-NetFirewallRule {
@@ -81,67 +110,161 @@ function New-TestInstall {
     $script:fwRules = @()
     $env:CONNECTION_MODE_SET = '1'
     $script:registeredTasks = @{}
+    $script:fakeService = $null
+    $script:scCalls = @()
+    $script:nssmSettings = @{}
+    $script:leastPrivilege = @()
     return $dir
 }
 
-# UP14: without NSSM the server runs as a scheduled task. Task Scheduler
-# does not start a task again after a clean exit, so the launcher loops and
-# only then tells the server it is supervised.
-function Test-TaskLauncherLoops {
+# WD-2: the install makes NeoDeskServer the Windows service that the binary
+# is, under its own virtual account (LocalSystem only with -RunAsRoot),
+# started with Windows. The service manager starts it again after a crash
+# and after exit status 3, the server's restart request (failureflag); the
+# server is told so (NEODESK_SUPERVISOR) and reads .env. No scheduled task,
+# no launcher, no NSSM, and the name carries no version (WD-17).
+function Test-InstallMakesTheWindowsService {
     $dir = New-TestInstall
-    Setup-Services | Out-Null
-    $launcher = Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd'
-    if (-not (Test-Path $launcher)) { Fail 'no launcher written'; return }
-    $text = Get-Content $launcher -Raw
-    if ($text -notmatch '(?m)^:run\r?$') { Fail 'the launcher has no loop label' }
-    if ($text -notmatch '(?m)^goto run\r?$') { Fail 'the launcher does not start the server again' }
-    if ($text -notmatch '(?m)^set "NEODESK_SUPERVISOR=task"\r?$') { Fail 'the launcher does not set NEODESK_SUPERVISOR=task' }
-    if ($text -notmatch [regex]::Escape('set "NEODESK_ENV_FILE=' + (Join-Path $script:CONSOLE_PATH '.env') + '"')) { Fail 'the launcher does not name the env file' }
-    if ($text -match 'CONSOLE_PORT=0') { Fail 'the launcher keeps the console off' }
-    $settings = $script:registeredTasks['NeoDeskServer']
-    if (-not $settings) { Fail 'no task registered' }
-    elseif ($settings.ExecutionTimeLimit -ne [TimeSpan]::Zero) { Fail 'the task has a time limit, which would stop the loop' }
+    Use-RealServerBinaryPath
+    $exe = Join-Path $script:RUSTDESK_PATH 'neodesk-server.exe'
+    $ok = Setup-Services 6> $null
+    $svc = $script:fakeService
+    if ("$ok" -ne 'True' -or -not $svc) { Fail "the install made no service: $ok"; Remove-Item -Recurse -Force $dir; return }
+    if (-not $svc.PathName.StartsWith("`"$exe`" -mode all ")) { Fail "the service does not run the binary itself: $($svc.PathName)" }
+    if ($svc.StartName -ne 'NT SERVICE\NeoDeskServer') { Fail "the service runs as $($svc.StartName)" }
+    if ($svc.DisplayName -ne 'NeoDesk Server') { Fail "the service's display name is '$($svc.DisplayName)'" }
+    if ($svc.StartupType -ne 'Automatic') { Fail "the service starts $($svc.StartupType)" }
+    if ($svc.Environment -notcontains 'NEODESK_SUPERVISOR=windows-service') { Fail "the server is not told the service manager starts it again: $($svc.Environment -join ' ')" }
+    if ($svc.Environment -notcontains ('NEODESK_ENV_FILE=' + (Join-Path $script:CONSOLE_PATH '.env'))) { Fail "the service does not name the env file: $($svc.Environment -join ' ')" }
+    if ($svc.Environment -contains 'CONSOLE_PORT=0') { Fail 'the service keeps the console off' }
+    $sc = @($script:scCalls | ForEach-Object { $_ -join ' ' })
+    if ($sc -notcontains 'failure NeoDeskServer reset= 86400 actions= restart/2000/restart/5000/restart/10000') { Fail "the service is not started again after a failure: $($sc -join ' | ')" }
+    if ($sc -notcontains 'failureflag NeoDeskServer 1') { Fail "an exit with status 3 does not start the service again: $($sc -join ' | ')" }
+    if (@($script:leastPrivilege | Where-Object { $_[0] -eq 'NeoDeskServer' -and ($_[1] -join '|') -eq "$($script:RUSTDESK_PATH)|$($script:CONSOLE_PATH)" }).Count -ne 1) { Fail "the service's account gets no rights on the folders" }
+    if (-not (Test-Path (Split-Path -Parent (Get-ServerLogPath)))) { Fail 'the service has no folder for its log' }
+    if ($script:registeredTasks.Count -gt 0) { Fail 'the install registered a scheduled task' }
+    if (Test-Path (Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd')) { Fail 'the install wrote a task launcher' }
+    $out = (Show-InstallSummary 6>&1 | Out-String -Width 4096)
+    if ($out -notmatch 'Runs as:\s+Windows service NeoDeskServer, as NT SERVICE\\NeoDeskServer') { Fail "the summary does not say how the server runs: $out" }
+    if ($out -notmatch 'then: Restart-Service NeoDeskServer') { Fail "the summary does not restart the service: $out" }
+    $text = Get-Content $installer -Raw
+    if ($text -match '(?m)^[^#\r\n]*&\s*\$?nssm\b' -or $text -match '(^|[^n])Register-ScheduledTask') { Fail 'neodesk.ps1 still runs nssm or registers a scheduled task' }
+
+    # -RunAsRoot: LocalSystem, and the folders need no grant
+    $script:RUN_AS_ROOT = $true
+    Setup-Services 6> $null | Out-Null
+    $script:RUN_AS_ROOT = $false
+    if ($script:fakeService.StartName -ne 'LocalSystem') { Fail "-RunAsRoot runs the service as $($script:fakeService.StartName)" }
+
+    # A binary from before the service is not made one, which the service
+    # manager would end after 30 seconds
+    $script:fakeService = $null
+    function Test-BinaryRunsAsService { param($Path) $false }
+    $ok = Setup-Services 6> $null
+    if ("$ok" -ne 'False' -or $script:fakeService) { Fail 'an older binary became the service' }
     Remove-Item -Recurse -Force $dir
 }
 
-# BN4: an update rewrites the launcher of a task install made while the
-# Node.js console ran (CONSOLE_PORT=0, no loop).
-function Test-UpdateRewritesOldLauncher {
+# The binary says it runs as a Windows service with the line it logs on a
+# stop of the service; the installer looks for that line.
+function Test-BinaryRunsAsServiceProbe {
     $dir = New-TestInstall
+    $line = 'Service stop requested, shutting down'
+    $main = Get-Content (Join-Path $root 'neodesk-server/main.go') -Raw
+    if (-not $main.Contains("`"$line...`"")) { Fail "main.go no longer logs '$line', which the installer looks for" }
+    foreach ($fn in $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq 'Test-BinaryRunsAsService' }, $false)) {
+        . ([scriptblock]::Create($fn.Extent.Text))
+    }
+    $probe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $probe -Value "bytes $line... bytes"
+    if (-not (Test-BinaryRunsAsService -Path $probe)) { Fail 'a binary with the service does not count as one' }
+    Set-Content -Path $probe -Value 'bytes Received signal %v, shutting down... bytes'
+    if (Test-BinaryRunsAsService -Path $probe) { Fail 'an older binary counts as one that runs as a service' }
+    Remove-Item -Recurse -Force $dir
+}
+
+# WD-2: an update makes an older install's scheduled task (a SYSTEM task
+# whose launcher looped the server) the Windows service, with the task's
+# arguments and settings; the task and its launcher go. A launcher written
+# while the Node.js console ran held CONSOLE_PORT=0 (BN4).
+function Test-TaskBecomesTheService {
+    $dir = New-TestInstall
+    Use-RealServerBinaryPath
     $launcher = Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd'
     $exe = Join-Path $script:RUSTDESK_PATH 'neodesk-server.exe'
+    Set-Content -Path (Join-Path $script:CONSOLE_PATH '.env') -Value @('SESSION_SECRET=kept', 'NEODESK_SUPERVISOR=task')
     Set-Content -Path $launcher -Encoding ASCII -Value @(
         '@echo off',
         'set "DB_URL=C:\NeoDesk\db_v2.sqlite3"',
         'set "CONSOLE_PORT=0"',
-        "`"$exe`" -mode all -relay-servers 203.0.113.7 -api-port 21114"
+        'set "NEODESK_SUPERVISOR=task"',
+        ':run',
+        "`"$exe`" -mode all -relay-servers 203.0.113.7 -api-port 21114 >> `"C:\NeoDesk\logs\server.log`" 2>&1",
+        'goto run'
     )
     $script:registeredTasks['NeoDeskServer'] = 'old'
-    Update-ServerServiceDefinition | Out-Null
-    $text = Get-Content $launcher -Raw
-    if ($text -match 'CONSOLE_PORT=0') { Fail 'the update kept CONSOLE_PORT=0 in the launcher' }
-    if ($text -notmatch '(?m)^goto run\r?$') { Fail 'the update did not give the launcher its loop' }
-    if ($text -notmatch [regex]::Escape('set "DB_URL=C:\NeoDesk\db_v2.sqlite3"')) { Fail 'the update lost the launcher settings' }
-    if ($text -notmatch [regex]::Escape("`"$exe`" -mode all -relay-servers 203.0.113.7 -api-port 21114")) { Fail 'the update changed the server arguments' }
+    $out = (Update-ServerServiceDefinition 6>&1 | Out-String -Width 4096)
+    $svc = $script:fakeService
+    if (-not $svc) { Fail "the task did not become the service: $out"; Remove-Item -Recurse -Force $dir; return }
+    if ($svc.PathName -ne "`"$exe`" -mode all -relay-servers 203.0.113.7 -api-port 21114") { Fail "the service lost the task's arguments: $($svc.PathName)" }
+    if ($svc.Environment -notcontains 'DB_URL=C:\NeoDesk\db_v2.sqlite3') { Fail "the service lost the launcher's settings: $($svc.Environment -join ' ')" }
+    if ($svc.Environment -contains 'CONSOLE_PORT=0') { Fail 'the service keeps CONSOLE_PORT=0 of the old launcher' }
+    if (@($svc.Environment | Where-Object { $_ -like 'NEODESK_SUPERVISOR=*' }) -join ' ' -ne 'NEODESK_SUPERVISOR=windows-service') { Fail "the service's supervisor: $($svc.Environment -join ' ')" }
+    if ($svc.StartName -ne 'NT SERVICE\NeoDeskServer') { Fail "the former task runs as $($svc.StartName)" }
+    if ($script:registeredTasks.ContainsKey('NeoDeskServer')) { Fail 'the task stays next to the service and would start a second server' }
+    if (Test-Path $launcher) { Fail 'the launcher stays' }
+    if ((Get-ConsoleEnvValue -Key 'NEODESK_SUPERVISOR') -ne 'windows-service') { Fail ".env still names the task: $(Get-ConsoleEnvValue -Key 'NEODESK_SUPERVISOR')" }
+    if ($out -notmatch 'scheduled task NeoDeskServer is now a Windows service') { Fail "the update does not say the task became the service: $out" }
     Remove-Item -Recurse -Force $dir
 }
 
-# RC1: the NSSM service tells the server that NSSM starts it again
-# (NEODESK_SUPERVISOR=nssm) and restarts it after any exit.
-function Test-NssmServiceIsSupervised {
+# WD-2: an update makes an older install's NSSM service the binary's own
+# service in place, with NSSM's arguments and environment read from the
+# registry (nssm.exe need not be there); its NSSM settings go and
+# -tls-api is dropped as before.
+function Test-NssmServiceBecomesTheService {
     $dir = New-TestInstall
-    $script:fakeNssm = 'fake-nssm'
-    $script:nssmCalls = @()
-    Setup-Services | Out-Null
-    $script:fakeNssm = $null
-    $envCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppEnvironmentExtra' } | Select-Object -Last 1
-    if (-not $envCall) { Fail 'the NSSM service gets no environment' }
-    else {
-        if ($envCall -notcontains 'NEODESK_SUPERVISOR=nssm') { Fail "the NSSM service has no NEODESK_SUPERVISOR=nssm: $($envCall -join ' ')" }
-        if ($envCall -contains 'CONSOLE_PORT=0') { Fail 'the NSSM service keeps the console off' }
+    Use-RealServerBinaryPath
+    $exe = Join-Path $script:RUSTDESK_PATH 'neodesk-server.exe'
+    $script:fakeService = [pscustomobject]@{ PathName = 'C:\NeoDesk\tools\nssm.exe'; StartName = 'NT SERVICE\NeoDeskServer'; DisplayName = 'NeoDesk Server 3.6.20'; StartupType = 'Automatic'; Environment = @() }
+    $script:nssmSettings = @{
+        AppParameters       = '-mode all -relay-servers 203.0.113.7 -api-port 21114 -tls-api'
+        AppEnvironmentExtra = @('NEODESK_SUPERVISOR=nssm', 'P2P_FIRST=Y', 'SIGNAL_PORT=31116')
     }
-    $exitCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppExit' } | Select-Object -Last 1
-    if (-not $exitCall -or ($exitCall -join ' ') -notmatch 'AppExit Default Restart$') { Fail 'NSSM does not restart the server after it ends' }
+    Set-Content -Path (Join-Path $script:CONSOLE_PATH '.env') -Value 'SESSION_SECRET=kept'
+    if ((Get-ServerSupervisor) -ne 'nssm') { Fail "an NSSM service counts as $(Get-ServerSupervisor)" }
+    Update-ServerServiceDefinition 6> $null | Out-Null
+    $svc = $script:fakeService
+    if ($svc.PathName -ne "`"$exe`" -mode all -relay-servers 203.0.113.7 -api-port 21114") { Fail "the service runs $($svc.PathName)" }
+    if ((Get-ServerSupervisor) -ne 'service') { Fail "after the update the service counts as $(Get-ServerSupervisor)" }
+    if ($svc.Environment -notcontains 'P2P_FIRST=Y' -or $svc.Environment -notcontains 'NEODESK_SUPERVISOR=windows-service') { Fail "the service's settings: $($svc.Environment -join ' ')" }
+    if (@($svc.Environment | Where-Object { $_ -like 'SIGNAL_PORT=*' }).Count -gt 0 -or (Get-ConsoleEnvValue -Key 'SIGNAL_PORT') -ne '31116') { Fail "the NSSM service's port did not move to .env" }
+    if ($script:nssmSettings.Count -gt 0) { Fail "the NSSM settings stay: $($script:nssmSettings.Keys -join ', ')" }
+    if ($svc.DisplayName -ne 'NeoDesk Server') { Fail "the display name keeps a version: $($svc.DisplayName)" }
+    Remove-Item -Recurse -Force $dir
+}
+
+# The SSL menu and the protocol switch change TLS on the service's command
+# line, with paths in quotes, and take it off again; nothing else of the
+# command line changes.
+function Test-TlsOnTheServiceCommandLine {
+    $dir = New-TestInstall
+    Use-RealServerBinaryPath
+    $exe = Join-Path $script:RUSTDESK_PATH 'neodesk-server.exe'
+    $script:fakeService = [pscustomobject]@{ PathName = "`"$exe`" -mode all -relay-servers 203.0.113.7 -api-port 21114 -tls-api"; StartName = 'NT SERVICE\NeoDeskServer'; DisplayName = 'NeoDesk Server'; StartupType = 'Automatic'; Environment = @('NEODESK_SUPERVISOR=windows-service') }
+    Set-ServerTls -CertPath 'C:\Neo Desk\ssl\neodesk.crt' -KeyPath 'C:\Neo Desk\ssl\neodesk.key'
+    $want = "`"$exe`" -mode all -relay-servers 203.0.113.7 -api-port 21114 -tls-cert `"C:\Neo Desk\ssl\neodesk.crt`" -tls-key `"C:\Neo Desk\ssl\neodesk.key`" -tls-signal -tls-relay"
+    if ($script:fakeService.PathName -ne $want) { Fail "TLS on the command line: $($script:fakeService.PathName)" }
+    Set-ServerTls -CertPath 'C:\NeoDesk\ssl\other.crt' -KeyPath 'C:\NeoDesk\ssl\other.key'
+    if (([regex]::Matches($script:fakeService.PathName, '-tls-cert')).Count -ne 1 -or $script:fakeService.PathName -notmatch [regex]::Escape('-tls-cert "C:\NeoDesk\ssl\other.crt"')) { Fail "a second certificate: $($script:fakeService.PathName)" }
+    Set-ServerTls
+    if ($script:fakeService.PathName -ne "`"$exe`" -mode all -relay-servers 203.0.113.7 -api-port 21114") { Fail "TLS off: $($script:fakeService.PathName)" }
+    if ((Split-ServiceCommandLine -PathName 'C:\NeoDesk\neodesk-server.exe -mode all') -ne '-mode all') { Fail 'an unquoted command line loses its arguments' }
+
+    # The protocol switch: HTTPS keys of an older service go, .env has them
+    $script:fakeService.Environment = @('NEODESK_SUPERVISOR=windows-service', 'HTTPS_ENABLED=true', 'NEODESK_API_URL=https://localhost:21114/api', 'P2P_FIRST=Y')
+    Clear-TlsSettingsOfService
+    if (($script:fakeService.Environment -join ' ') -ne 'NEODESK_SUPERVISOR=windows-service NEODESK_API_URL=http://localhost:21114/api P2P_FIRST=Y') { Fail "the switch left the service's settings as $($script:fakeService.Environment -join ' ')" }
     Remove-Item -Recurse -Force $dir
 }
 
@@ -367,12 +490,9 @@ function Test-FreshInstallStartsManaged {
     if (Get-ConsoleEnvValue -Key 'ENROLLMENT_MODE') { Fail 'an update added an enrollment mode to .env' }
     $env:ADMIN_PASSWORD = $null
 
-    $script:fakeNssm = 'fake-nssm'
-    $script:nssmCalls = @()
-    Setup-Services | Out-Null
-    $script:fakeNssm = $null
-    $envCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppEnvironmentExtra' } | Select-Object -Last 1
-    if (-not $envCall) { Fail 'the NSSM service gets no environment' }
+    Setup-Services 6> $null | Out-Null
+    $envCall = if ($script:fakeService) { @($script:fakeService.Environment) } else { @() }
+    if ($envCall.Count -eq 0) { Fail 'the service gets no environment' }
     elseif (@($envCall | Where-Object { $_ -like 'ENROLLMENT_MODE*' }).Count -gt 0) { Fail "the service sets the enrollment mode: $($envCall -join ' ')" }
     Remove-Item -Recurse -Force $dir
 }
@@ -429,55 +549,20 @@ function Test-PgUriMeansPostgreSQL {
     Remove-Item -Recurse -Force $dir
 }
 
-# L74: the server's log, which it writes to standard error, goes to
-# logs\server.log, as a service and as a scheduled task; an update of the
-# task keeps one redirect.
-function Test-ServerLogFile {
-    $dir = New-TestInstall
-    $log = Join-Path $script:RUSTDESK_PATH 'logs\server.log'
-    $script:fakeNssm = 'fake-nssm'
-    $script:nssmCalls = @()
-    Setup-Services | Out-Null
-    $script:fakeNssm = $null
-    foreach ($stream in 'AppStdout', 'AppStderr') {
-        $call = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq $stream } | Select-Object -Last 1
-        if (-not $call -or $call[3] -ne $log) { Fail "the service's $stream goes to $($call[3]), not $log" }
-    }
-    $script:registeredTasks = @{}
-    Setup-Services | Out-Null
-    $launcher = Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd'
-    $redirect = '>> "' + $log + '" 2>&1'
-    $line = @(Get-Content $launcher | Where-Object { $_ -like '"*neodesk-server.exe"*' })
-    if ($line.Count -ne 1 -or -not $line[0].EndsWith($redirect)) { Fail "the task's server line does not write $log`: $line" }
-    Update-ServerServiceDefinition | Out-Null
-    $line = @(Get-Content $launcher | Where-Object { $_ -like '"*neodesk-server.exe"*' })
-    if ($line.Count -ne 1 -or -not $line[0].EndsWith($redirect) -or ($line[0] -split '>>').Count -ne 2) { Fail "an update of the task changed the redirect: $line" }
-    Remove-Item -Recurse -Force $dir
-}
 
 # L68: the signal and relay ports live in .env, where the admin changes
 # them. The service does not set them, and an update moves the ports an
-# older launcher set into .env instead of setting 21116 and 21117 again.
+# older service set into .env instead of setting 21116 and 21117 again.
 function Test-UpdateKeepsTheAdminsPorts {
     $dir = New-TestInstall
     $envFile = Join-Path $script:CONSOLE_PATH '.env'
     Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'SIGNAL_PORT=21116', 'RELAY_PORT=21117')
-    Setup-Services | Out-Null
-    $launcher = Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd'
-    if ((Get-Content $launcher -Raw) -match '(SIGNAL|RELAY)_PORT') { Fail "the launcher sets the ports: $(Get-Content $launcher)" }
-    $exe = Join-Path $script:RUSTDESK_PATH 'neodesk-server.exe'
-    Set-Content -Path $launcher -Encoding ASCII -Value @(
-        '@echo off',
-        'set "NEODESK_SUPERVISOR=task"',
-        'set "SIGNAL_PORT=31116"',
-        'set "RELAY_PORT=31117"',
-        ':run',
-        "`"$exe`" -mode all -api-port 21114",
-        'goto run'
-    )
-    Update-ServerServiceDefinition | Out-Null
-    if ((Get-Content $launcher -Raw) -match '(SIGNAL|RELAY)_PORT') { Fail "the updated launcher sets the ports: $(Get-Content $launcher)" }
-    if ((Get-ConsoleEnvValue -Key 'SIGNAL_PORT') -ne '31116' -or (Get-ConsoleEnvValue -Key 'RELAY_PORT') -ne '31117') { Fail "the update lost the launcher's ports: $(Get-Content $envFile)" }
+    Setup-Services 6> $null | Out-Null
+    if (($script:fakeService.Environment -join ' ') -match '(SIGNAL|RELAY)_PORT') { Fail "the service sets the ports: $($script:fakeService.Environment -join ' ')" }
+    $script:fakeService.Environment = @('NEODESK_SUPERVISOR=windows-service', 'SIGNAL_PORT=31116', 'RELAY_PORT=31117')
+    Update-ServerServiceDefinition 6> $null | Out-Null
+    if (($script:fakeService.Environment -join ' ') -match '(SIGNAL|RELAY)_PORT') { Fail "the updated service sets the ports: $($script:fakeService.Environment -join ' ')" }
+    if ((Get-ConsoleEnvValue -Key 'SIGNAL_PORT') -ne '31116' -or (Get-ConsoleEnvValue -Key 'RELAY_PORT') -ne '31117') { Fail "the update lost the service's ports: $(Get-Content $envFile)" }
     if ((Get-ConsoleEnvValue -Key 'SESSION_SECRET') -ne 'kept') { Fail 'the update lost a line of .env' }
     Remove-Item -Recurse -Force $dir
 }
@@ -616,8 +701,8 @@ function Test-WindowsFirstHour {
         if (-not $out.Contains($want)) { Fail "the summary does not give $want" }
     }
     if ($out -match "& '") { Fail "the summary gives a command the execution policy refuses in a new window: $out" }
-    # WD-2: it says how the server runs; without NSSM that is SYSTEM
-    if ($out -notmatch 'Runs as:\s+scheduled task NeoDeskServer, as SYSTEM') { Fail "the summary does not say the task runs as SYSTEM: $out" }
+    # WD-2: it says how the server runs: the service under its own account
+    if ($out -notmatch 'Runs as:\s+Windows service NeoDeskServer, as NT SERVICE\\NeoDeskServer') { Fail "the summary does not say the service runs as NT SERVICE\\NeoDeskServer: $out" }
     $text = Get-Content $installer -Raw
     foreach ($bare in "& '`$(Join-Path `$script:RUSTDESK_PATH 'neodesk.ps1')'", "& '`$manager'", "& '`$target'") {
         if ($text.Contains($bare)) { Fail "neodesk.ps1 still prints $bare" }
@@ -1442,65 +1527,7 @@ function Test-FoldersAreLocked {
     Remove-Item -Recurse -Force $dir
 }
 
-# WD-2: without NSSM the task runs as SYSTEM and the install says so; once
-# NSSM is there, the repair or update makes the task the service with the
-# task's arguments and settings, and removes the task. The service's name
-# carries no version (WD-17).
-function Test-TaskBecomesServiceWithNssm {
-    $dir = New-TestInstall
-    Use-RealServerBinaryPath
-    $out = (Setup-Services 6>&1 3>&1 | Out-String -Width 4096)
-    if ($out -notmatch 'scheduled task under SYSTEM') { Fail "the install does not say the task runs as SYSTEM: $out" }
-    if ($out -notmatch [regex]::Escape('-ExecutionPolicy Bypass -File')) { Fail "the install does not say how to make it a service later: $out" }
-    if (-not $script:registeredTasks.ContainsKey('NeoDeskServer')) { Fail 'no task registered'; return }
-    $taskArgs = Get-LauncherArguments
-    $script:fakeNssm = 'fake-nssm'
-    $script:nssmCalls = @()
-    Update-ServerServiceDefinition *> $null
-    $script:fakeNssm = $null
-    if ($script:registeredTasks.ContainsKey('NeoDeskServer')) { Fail 'the task stays next to the new service' }
-    if (-not ($script:nssmCalls | Where-Object { $_[0] -eq 'install' -and $_[1] -eq 'NeoDeskServer' })) { Fail 'the task did not become an NSSM service' }
-    $params = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppParameters' } | Select-Object -Last 1
-    if (-not $params -or $params[3] -ne $taskArgs) { Fail "the service lost the task's arguments: [$($params[3])] [$taskArgs]" }
-    $envCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppEnvironmentExtra' } | Select-Object -Last 1
-    if (-not $envCall -or $envCall -notcontains 'NEODESK_SUPERVISOR=nssm' -or $envCall -notcontains 'P2P_FIRST=Y') { Fail "the service's settings: $($envCall -join ' ')" }
-    $name = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'DisplayName' } | Select-Object -Last 1
-    if (-not $name -or $name[3] -ne 'NeoDesk Server') { Fail "the service's display name is '$($name[3])'" }
-    $script:registeredTasks['NeoDeskServer'] = 'task'
-    $script:fakeNssm = 'fake-nssm'
-    Setup-Services | Out-Null
-    $script:fakeNssm = $null
-    if ($script:registeredTasks.ContainsKey('NeoDeskServer')) { Fail 'an install with NSSM keeps the task, which starts a second server' }
-    Remove-Item -Recurse -Force $dir
-}
 
-# WD-14: the task's launcher rotates the log before each start, as NSSM
-# does the service's: over 10 MB it becomes server.log.1.
-function Test-TaskLogRotates {
-    $dir = New-TestInstall
-    Use-RealServerBinaryPath
-    Setup-Services | Out-Null
-    $lines = @(Get-Content (Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd'))
-    $log = Get-ServerLogPath
-    $run = [array]::IndexOf($lines, ':run')
-    $server = @(0..($lines.Count - 1) | Where-Object { $lines[$_] -like '"*neodesk-server.exe"*' })[0]
-    $rotate = @(0..($lines.Count - 1) | Where-Object { $lines[$_] -like "*GTR 10485760 move /y `"$log`" `"$log.1`"*" })
-    if ($rotate.Count -ne 1) { Fail "the launcher does not rotate $log`: $($lines -join ' | ')" }
-    elseif (-not ($run -lt $rotate[0] -and $rotate[0] -lt $server)) { Fail "the launcher rotates the log outside its loop, or after the start: run $run, rotate $($rotate[0]), server $server" }
-    elseif ($env:OS -eq 'Windows_NT') {
-        # The line itself, in cmd
-        $cmd = Join-Path $dir 'rotate.cmd'
-        Set-Content -Path $cmd -Encoding ASCII -Value @('@echo off', $lines[$rotate[0]])
-        [IO.File]::WriteAllBytes($log, (New-Object byte[] (11MB)))
-        & cmd.exe /c $cmd | Out-Null
-        if ((Test-Path $log) -or -not (Test-Path "$log.1")) { Fail 'cmd did not move a log of 11 MB aside' }
-        Set-Content -Path $log -Value 'small'
-        & cmd.exe /c $cmd | Out-Null
-        if (-not (Test-Path $log)) { Fail 'cmd moved a small log aside' }
-        Remove-Item $cmd
-    }
-    Remove-Item -Recurse -Force $dir
-}
 
 # WD-3: the admin's first password is in the summary, and the summary is
 # the last thing of the install: no menu, no question and no cleared
@@ -1521,7 +1548,7 @@ function Test-PasswordIsTheLastThingShown {
     function Install-Binaries { $true }
     function Setup-ConsoleHome { $script:FRESH_CONSOLE_ENV = $true; $true }
     function Generate-SSLCertificates { $true }
-    function Setup-Services { }
+    function Setup-Services { $true }
     function Configure-Firewall { $true }
     function Start-ServicesWithVerification { $true }
     function Remove-FirstAdminPassword { }
@@ -1663,7 +1690,9 @@ function Test-FirewallRulesAndUninstall {
     $script:AUTO_MODE = $true
     $script:UNINSTALL_MODE = $true
     $script:PURGE_MODE = $false
+    $script:fakeService = [pscustomobject]@{ PathName = 'x'; StartName = 'NT SERVICE\NeoDeskServer'; DisplayName = 'NeoDesk Server'; StartupType = 'Automatic'; Environment = @() }
     $out = (Do-Uninstall 6>&1 | Out-String -Width 4096)
+    if ($script:fakeService) { Fail "the uninstall leaves the service: $(($script:scCalls | ForEach-Object { $_ -join ' ' }) -join ' | ')" }
     $names = @($script:fwRules | ForEach-Object { $_.DisplayName })
     if (@($names | Where-Object { $_ -like 'NeoDesk - *' }).Count -gt 0) { Fail "the uninstall leaves firewall rules: $($names -join ', ')" }
     if ($names -notcontains 'Other app') { Fail 'the uninstall took a rule of another program' }
@@ -1698,16 +1727,17 @@ function Test-HelpDownloadsAndWording {
 
 Test-HeaderAndColours
 Test-MenuColours
-Test-TaskLauncherLoops
-Test-UpdateRewritesOldLauncher
-Test-NssmServiceIsSupervised
+Test-InstallMakesTheWindowsService
+Test-BinaryRunsAsServiceProbe
+Test-TaskBecomesTheService
+Test-NssmServiceBecomesTheService
+Test-TlsOnTheServiceCommandLine
 Test-ConsoleHomeCopiesNoConsoleFiles
 Test-MigrationMenusPassOverwrite
 Test-PostgreSQLSwitchMovesTheWholeInstall
 Test-ReleasesComeFromTheFork
 Test-PostgreSQLAddressIsKept
 Test-PgUriMeansPostgreSQL
-Test-ServerLogFile
 Test-UpdateKeepsTheAdminsPorts
 Test-ChannelAndDownloadErrors
 Test-PanelPublicHost
@@ -1728,8 +1758,6 @@ Test-MigrateCommand
 Test-BackupUsesTheServersBackup
 Test-FreshInstallStartsManaged
 Test-FoldersAreLocked
-Test-TaskBecomesServiceWithNssm
-Test-TaskLogRotates
 Test-PasswordIsTheLastThingShown
 Test-SummaryNamesTheLanAddress
 Test-ResetPasswordWithoutQuestions

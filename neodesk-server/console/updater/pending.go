@@ -10,8 +10,9 @@ import (
 	"time"
 )
 
-// ExitRestart is the exit status that asks the supervisor (systemd,
-// NSSM, Docker) to start the process again (DECISIONS A30).
+// ExitRestart is the exit status that asks the supervisor (systemd, the
+// Windows service manager, Docker) to start the process again (DECISIONS
+// A30).
 const ExitRestart = 3
 
 // MaxStarts is how many starts a new binary gets to become ready. The

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
@@ -34,9 +35,10 @@ func loadEnvFile(getenv func(string) string, setenv func(key, value string) erro
 }
 
 // loadEnvFileFromOS is loadEnvFile on the process environment. A file
-// that cannot be read is reported on stderr and the start goes on.
+// that cannot be read is reported in the log (standard error, or the
+// Windows service's log file) and the start goes on.
 func loadEnvFileFromOS() {
 	if err := loadEnvFile(os.Getenv, os.Setenv, os.ReadFile); err != nil {
-		fmt.Fprintf(os.Stderr, "WARN: %v\n", err)
+		log.Printf("WARN: %v", err)
 	}
 }

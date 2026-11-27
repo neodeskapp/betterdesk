@@ -125,11 +125,36 @@ func detectLevel(msg string) string {
 	}
 }
 
+// destination is where Setup sends the log: standard error, or the
+// writer SetDestination gave (the Windows service's log file).
+var (
+	destinationMu sync.Mutex
+	destination   io.Writer
+)
+
+// SetDestination makes Setup write the log to w instead of standard
+// error; nil goes back to standard error. A process without standard
+// error, such as a Windows service, sets it before Setup.
+func SetDestination(w io.Writer) {
+	destinationMu.Lock()
+	defer destinationMu.Unlock()
+	destination = w
+}
+
+func currentDestination() io.Writer {
+	destinationMu.Lock()
+	defer destinationMu.Unlock()
+	if destination != nil {
+		return destination
+	}
+	return os.Stderr
+}
+
 // Setup configures the global logger based on the format and minimum level strings.
 // level: error | warn | info | debug (default info).
 // Returns a cleanup function (currently a no-op, reserved for future use).
 func Setup(format string, level string) func() {
-	setupTo(os.Stderr, format, level)
+	setupTo(currentDestination(), format, level)
 	return func() {}
 }
 
