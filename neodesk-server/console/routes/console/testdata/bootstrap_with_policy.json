@@ -1349,6 +1349,16 @@
        "countId": null,
        "external": false,
        "group": "",
+       "href": "/help-requests/feedback",
+       "keywords": "feedback quick support rating stars answers survey",
+       "page": "quick-support-feedback",
+       "text": "Feedback"
+      },
+      {
+       "core": true,
+       "countId": null,
+       "external": false,
+       "group": "",
        "href": "/tickets",
        "keywords": "issues",
        "page": "tickets",
@@ -1947,6 +1957,16 @@
        "keywords": "help support requests",
        "page": "help-requests",
        "text": "Help requests"
+      },
+      {
+       "core": true,
+       "countId": null,
+       "external": false,
+       "group": "",
+       "href": "/help-requests/feedback",
+       "keywords": "feedback quick support rating stars answers survey",
+       "page": "quick-support-feedback",
+       "text": "Feedback"
       },
       {
        "core": true,
