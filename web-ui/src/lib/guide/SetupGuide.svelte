@@ -5,7 +5,8 @@
   on, an address clients reach, HTTPS, a computer, a session, a second
   person, a backup); nothing here marks a step done. Each row leads to the
   place where the step is done: a page that offers the way back
-  (GuideReturn), Add a computer right here, or the docs for HTTPS.
+  (GuideReturn), Add a computer right here, or the docs for HTTPS (the
+  part for Docker on a Docker install).
 
   Shown only while the server says the guide is open for this account
   (the first admin of a new install, or someone who brought it back from
@@ -29,7 +30,7 @@
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { lazy } from '#lib/util/lazy.ts';
 	import { guide, guideAvailable, loadGuide, setGuideOpen } from './guide.svelte.ts';
-	import { STEP_TARGETS, stepHintKey, stepTitleKey } from './steps.ts';
+	import { stepHintKey, stepTarget, stepTitleKey } from './steps.ts';
 
 	const available = guideAvailable();
 
@@ -89,7 +90,7 @@
 		</div>
 		<ol class="guide-steps">
 			{#each steps as step (step.id)}
-				{@const target = STEP_TARGETS[step.id]}
+				{@const target = stepTarget(step.id, status?.docker ?? false)}
 				{#snippet row()}
 					<Icon
 						name={step.done ? 'check_circle' : 'radio_button_unchecked'}

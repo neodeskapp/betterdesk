@@ -75,6 +75,9 @@ type Options struct {
 	Address func() string
 	// ServesHTTPS reports whether the console listens with TLS itself.
 	ServesHTTPS func() bool
+	// Docker says the console runs in a container, where the install
+	// script's --domain puts HTTPS in front of it.
+	Docker bool
 	// Devices returns how many devices the server has.
 	Devices func(ctx context.Context) (int, error)
 	// DirectorySignIn reports whether single sign-on or LDAP is on.
@@ -116,10 +119,12 @@ type Step struct {
 }
 
 // Status is what the overview shows: whether the guide is open for the
-// account, and its steps.
+// account, and its steps. Docker is there on a container install, whose
+// HTTPS step leads to the install script's way.
 type Status struct {
 	Visible bool   `json:"visible"`
 	Steps   []Step `json:"steps"`
+	Docker  bool   `json:"docker,omitempty"`
 }
 
 type installState struct {
@@ -244,7 +249,7 @@ func (s *Service) Status(ctx context.Context, v Viewer) (Status, error) {
 		}
 		add(StepBackup, done)
 	}
-	return Status{Visible: found && state.Open, Steps: steps}, nil
+	return Status{Visible: found && state.Open, Steps: steps, Docker: s.o.Docker}, nil
 }
 
 func (s *Service) address() string {

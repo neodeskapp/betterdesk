@@ -23,6 +23,8 @@ const Step = v.object({ id: v.string(), done: v.boolean() });
 
 export const GuideStatus = v.object({
 	visible: v.boolean(),
+	/** The server runs in a container (Docker) */
+	docker: v.optional(v.boolean(), false),
 	// Steps this console does not know (a newer server) are left out
 	steps: v.pipe(
 		v.array(Step),

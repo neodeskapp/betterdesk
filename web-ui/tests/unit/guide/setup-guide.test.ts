@@ -17,7 +17,13 @@ vi.mock('$app/navigation', () => ({ goto: navigation.goto, pushState: vi.fn(), r
 import SetupGuide from '../../../src/lib/guide/SetupGuide.svelte';
 import GuideLink from '../../../src/lib/guide/GuideLink.svelte';
 import GuideReturn from '../../../src/lib/guide/GuideReturn.svelte';
-import { guideStep, STEP_TARGETS } from '../../../src/lib/guide/steps.ts';
+import {
+	guideStep,
+	HTTPS_DOCS_DOCKER,
+	HTTPS_DOCS_NATIVE,
+	STEP_TARGETS,
+	stepTarget
+} from '../../../src/lib/guide/steps.ts';
 import { STEP_IDS } from '../../../src/lib/api/setupGuide.ts';
 import { guide } from '../../../src/lib/guide/guide.svelte.ts';
 import { setStrings } from '../../../src/lib/i18n/i18n.svelte.ts';
@@ -97,6 +103,16 @@ describe('where each step leads', () => {
 		});
 		expect(STEP_TARGETS.computer).toEqual({ kind: 'add-computer' });
 		expect(STEP_TARGETS.https.kind).toBe('docs');
+	});
+
+	// Setup audit WD-32: Docker gets HTTPS from the install script's --domain,
+	// Linux and Windows serve it themselves
+	test('the HTTPS step leads to the way of this install', () => {
+		expect(stepTarget('https', true)).toEqual({ kind: 'docs', href: HTTPS_DOCS_DOCKER });
+		expect(stepTarget('https', false)).toEqual({ kind: 'docs', href: HTTPS_DOCS_NATIVE });
+		expect(HTTPS_DOCS_DOCKER).toMatch(/#https-with-lets-encrypt-on-docker$/);
+		expect(HTTPS_DOCS_NATIVE).toMatch(/#https-without-a-proxy$/);
+		expect(stepTarget('backup', true)).toEqual(STEP_TARGETS.backup);
 	});
 
 	test('only a known step counts as the way back', () => {
