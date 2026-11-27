@@ -33,6 +33,14 @@ export const test = base.extend<{ problems: Problems; role: Role; allowProblems:
 				// Firefox also logs a font download that a navigation away aborted
 				// (status NS_BINDING_ABORTED); like the aborted request below, no failure
 				if (/downloadable font: download failed .*status=2152398850\b/.test(m.text())) return;
+				// The init script above runs in every frame; in a frame sandboxed
+				// without scripts (the mail preview) Chromium blocks it and says so
+				if (
+					/^Blocked script execution in 'about:srcdoc' because the document's frame is sandboxed/.test(
+						m.text()
+					)
+				)
+					return;
 				problems.list.push('console: ' + m.text());
 			});
 			page.on('pageerror', (e) => problems.list.push('pageerror: ' + e.message));
