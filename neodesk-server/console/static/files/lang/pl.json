@@ -10408,5 +10408,37 @@
     "updates_title": "Przed aktualizacjami",
     "where": "Gdzie zapisywać",
     "where_help": "Folder danych NeoDesk lub własny folder. Udział sieciowy musi najpierw zamontować system operacyjny."
+  },
+  "device_authorize": {
+    "title": "Zaloguj się w aplikacji NeoDesk",
+    "description": "Komputer prosi o zalogowanie się w aplikacji NeoDesk na Twoje konto {account}.",
+    "facts_label": "Komputer, który prosi",
+    "device_name": "Komputer",
+    "device_os": "System",
+    "device_id": "Identyfikator NeoDesk",
+    "ip": "Adres IP",
+    "asked": "Prośba",
+    "check": "Zezwól tylko, jeśli właśnie rozpocząłeś to logowanie na tym komputerze. Jeśli nie, kliknij Odmów: osoba, która wysłała Ci ten link, dostałaby się na Twoje konto.",
+    "allow": "Zezwól",
+    "deny": "Odmów",
+    "unnamed": "Komputer bez nazwy",
+    "allowed_title": "Aplikacja jest zalogowana",
+    "allowed_text": "{device} jest teraz zalogowany jako {account}. Wróć do aplikacji NeoDesk; możesz zamknąć tę kartę.",
+    "declined_title": "Odmówiono logowania",
+    "declined_text": "Komputer nie został zalogowany. Możesz zamknąć tę kartę.",
+    "ended_title": "To logowanie się zakończyło",
+    "ended_text": "Wygasło po pięciu minutach lub zostało już rozstrzygnięte. Rozpocznij logowanie ponownie w aplikacji NeoDesk.",
+    "load_failed": "Nie udało się wczytać prośby o logowanie.",
+    "errors": {
+      "already_decided": "To logowanie zostało już rozstrzygnięte.",
+      "not_found": "To logowanie się zakończyło. Rozpocznij je ponownie w aplikacji NeoDesk.",
+      "account_disabled": "Twoje konto jest wyłączone i nie może zalogować się w aplikacji.",
+      "totp_setup_required": "Twoje konto musi najpierw skonfigurować logowanie dwuskładnikowe. Skonfiguruj je w sekcji Twoje konto, a potem ponownie kliknij Zezwól.",
+      "password_change_required": "Twoje konto musi najpierw wybrać nowe hasło. Zmień je w sekcji Twoje konto, a potem ponownie kliknij Zezwól.",
+      "account_refused": "Twoje konto nie może zalogować się w aplikacji.",
+      "impersonating": "Przeglądasz NeoDesk jako inne konto. Najpierw to zakończ, a potem zezwól na logowanie własnym kontem.",
+      "browser_only": "Na logowanie może zezwolić tylko osoba zalogowana do konsoli w przeglądarce.",
+      "server_error": "To się nie udało. Spróbuj ponownie."
+    }
   }
 }

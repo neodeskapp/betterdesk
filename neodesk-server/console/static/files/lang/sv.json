@@ -10414,5 +10414,37 @@
     "updates_title": "Före uppdateringar",
     "where": "Var den ska sparas",
     "where_help": "NeoDesks datamapp, eller en egen mapp. En nätverksresurs måste först monteras av operativsystemet."
+  },
+  "device_authorize": {
+    "title": "Logga in i NeoDesk-appen",
+    "description": "En dator ber om att logga in i NeoDesk-appen med ditt konto, {account}.",
+    "facts_label": "Datorn som frågar",
+    "device_name": "Dator",
+    "device_os": "System",
+    "device_id": "NeoDesk-ID",
+    "ip": "IP-adress",
+    "asked": "Frågade",
+    "check": "Tillåt bara om du precis startade den här inloggningen på den datorn. Om inte, klicka på Neka: den som skickade länken till dig skulle komma in på ditt konto.",
+    "allow": "Tillåt",
+    "deny": "Neka",
+    "unnamed": "Namnlös dator",
+    "allowed_title": "Appen är inloggad",
+    "allowed_text": "{device} är nu inloggad som {account}. Gå tillbaka till NeoDesk-appen; du kan stänga den här fliken.",
+    "declined_title": "Inloggningen nekades",
+    "declined_text": "Datorn loggades inte in. Du kan stänga den här fliken.",
+    "ended_title": "Den här inloggningen har avslutats",
+    "ended_text": "Den gick ut efter fem minuter eller har redan besvarats. Starta inloggningen igen i NeoDesk-appen.",
+    "load_failed": "Inloggningsbegäran kunde inte läsas in.",
+    "errors": {
+      "already_decided": "Den här inloggningen har redan besvarats.",
+      "not_found": "Den här inloggningen har avslutats. Starta den igen i NeoDesk-appen.",
+      "account_disabled": "Ditt konto är inaktiverat och kan inte logga in i appen.",
+      "totp_setup_required": "Ditt konto måste först konfigurera tvåstegsinloggning. Konfigurera den under Ditt konto och klicka sedan på Tillåt igen.",
+      "password_change_required": "Ditt konto måste först välja ett nytt lösenord. Byt det under Ditt konto och klicka sedan på Tillåt igen.",
+      "account_refused": "Ditt konto kan inte logga in i appen.",
+      "impersonating": "Du ser NeoDesk som ett annat konto. Avsluta det först och tillåt sedan inloggningen med ditt eget konto.",
+      "browser_only": "Bara den som är inloggad i konsolen i en webbläsare kan tillåta en inloggning.",
+      "server_error": "Det fungerade inte. Försök igen."
+    }
   }
 }

@@ -10408,5 +10408,37 @@
     "updates_title": "Prima degli aggiornamenti",
     "where": "Dove salvare",
     "where_help": "La cartella dati di NeoDesk, o una cartella tua. Una condivisione di rete deve prima essere montata dal sistema operativo."
+  },
+  "device_authorize": {
+    "title": "Accedi all'app NeoDesk",
+    "description": "Un computer chiede di accedere all'app NeoDesk con il tuo account, {account}.",
+    "facts_label": "Il computer che lo chiede",
+    "device_name": "Computer",
+    "device_os": "Sistema",
+    "device_id": "ID NeoDesk",
+    "ip": "Indirizzo IP",
+    "asked": "Richiesto",
+    "check": "Consenti solo se hai appena avviato questo accesso su quel computer. Altrimenti fai clic su Nega: chi ti ha mandato questo link entrerebbe nel tuo account.",
+    "allow": "Consenti",
+    "deny": "Nega",
+    "unnamed": "Computer senza nome",
+    "allowed_title": "L'app ha effettuato l'accesso",
+    "allowed_text": "{device} ora ha effettuato l'accesso come {account}. Torna all'app NeoDesk; puoi chiudere questa scheda.",
+    "declined_title": "Accesso negato",
+    "declined_text": "Il computer non ha effettuato l'accesso. Puoi chiudere questa scheda.",
+    "ended_title": "Questo accesso è terminato",
+    "ended_text": "È scaduto dopo cinque minuti o ha già ricevuto una risposta. Avvia di nuovo l'accesso nell'app NeoDesk.",
+    "load_failed": "Non è stato possibile caricare la richiesta di accesso.",
+    "errors": {
+      "already_decided": "Questo accesso ha già ricevuto una risposta.",
+      "not_found": "Questo accesso è terminato. Avvialo di nuovo nell'app NeoDesk.",
+      "account_disabled": "Il tuo account è disattivato e non può accedere all'app.",
+      "totp_setup_required": "Il tuo account deve prima configurare l'accesso a due fattori. Configuralo in Il tuo account, poi fai di nuovo clic su Consenti.",
+      "password_change_required": "Il tuo account deve prima scegliere una nuova password. Cambiala in Il tuo account, poi fai di nuovo clic su Consenti.",
+      "account_refused": "Il tuo account non può accedere all'app.",
+      "impersonating": "Stai vedendo NeoDesk come un altro account. Interrompi prima, poi consenti l'accesso con il tuo account.",
+      "browser_only": "Solo chi ha effettuato l'accesso alla console in un browser può consentire un accesso.",
+      "server_error": "Non ha funzionato. Riprova."
+    }
   }
 }
