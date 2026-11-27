@@ -39,6 +39,10 @@
    },
    "volatile": [
     {
+     "path": "attachments[0].size",
+     "integer": true
+    },
+    {
      "path": "comments[*].created_at",
      "format": "9999-99-99 99:99:99"
     },
@@ -67,11 +71,11 @@
        "comment_id": null,
        "id": 16,
        "name": "computer-info.json",
-       "size": 1068,
+       "size": 0,
        "type": "application/json"
       },
       {
-       "comment_id": 32,
+       "comment_id": 30,
        "id": 17,
        "name": "note.txt",
        "size": 12,
@@ -80,18 +84,11 @@
      ],
      "comments": [
       {
-       "author_name": "e2e_admin",
-       "body": "Please restart the printer",
-       "created_at": "<volatile>",
-       "from": "staff",
-       "id": 30
-      },
-      {
        "author_name": "",
        "body": "It works again",
        "created_at": "<volatile>",
        "from": "device",
-       "id": 32
+       "id": 30
       }
      ],
      "ticket": {
@@ -105,7 +102,7 @@
       "id": 24,
       "last_reply_at": "<volatile>",
       "priority": "high",
-      "replies": 2,
+      "replies": 1,
       "reporter": null,
       "resolved_at": null,
       "sla_due_at": "<volatile>",

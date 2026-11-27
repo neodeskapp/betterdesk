@@ -272,23 +272,20 @@ func ticketsDeviceCases() []contract.Case {
 		{Name: "device-token-list-without-token", Path: "/api/tickets/nd", Roles: contract.Roles("signed-out", "admin")},
 
 		// The receiver app's routes (A277): the computer reads its ticket,
-		// staff answer in public and in an internal note, the computer
-		// sees the answer unread, replies with a file, fetches the file
-		// and marks the ticket read. The other computer gets 404 for all
-		// of it, as for a ticket that isn't there. In the turns before
-		// admin's there is no ticket: every route answers 404.
-		{Name: "device-token-read", Path: "/api/tickets/nd/{agentTicket}", Headers: device, Roles: contract.Roles("signed-out", "admin")},
+		// replies with a file, reads it again and fetches the file; staff
+		// answer in public and in an internal note, the computer sees the
+		// answer unread and marks the ticket read. The other computer gets
+		// 404 for all of it, as for a ticket that isn't there. In the turns
+		// before admin's there is no ticket: every route answers 404. The
+		// computer reads its ticket before staff answer, because the
+		// staff member's name in the answer is whatever earlier groups left
+		// on the account; and the size of computer-info.json depends on the
+		// telemetry the instance holds.
+		{
+			Name: "device-token-read", Path: "/api/tickets/nd/{agentTicket}", Headers: device,
+			Volatile: []string{"attachments[0].size"}, Roles: contract.Roles("signed-out", "admin"),
+		},
 		{Name: "device-token-read-other-device", Path: "/api/tickets/nd/{agentTicket}", Headers: other, Roles: contract.Roles("admin")},
-		{
-			Name: "device-token-staff-answer", Method: "POST", Path: "/api/tickets/{agentTicket}/comments", As: "admin",
-			Body: map[string]any{"body": "Please restart the printer"}, Roles: contract.Roles("admin"),
-		},
-		{
-			Name: "device-token-staff-note", Method: "POST", Path: "/api/tickets/{agentTicket}/comments", As: "admin",
-			Body: map[string]any{"body": "Toner is low, order more", "is_internal": true}, Roles: contract.Roles("admin"),
-		},
-		{Name: "device-token-list-unread", Path: "/api/tickets/nd", Headers: device, Roles: contract.Roles("admin")},
-		{Name: "device-token-staff-list-from-computers", Path: "/api/tickets", Query: url.Values{"source": {"device"}}, Roles: contract.Roles("admin")},
 		{
 			Name: "device-token-reply", Method: "POST", Path: "/api/tickets/nd/{agentTicket}/comments", Headers: device,
 			Body:  map[string]any{"body": "It works again", "files": []any{map[string]any{"name": "note.txt", "type": "text/plain", "data_b64": "aGVsbG8gdGlja2V0"}}},
@@ -300,10 +297,21 @@ func ticketsDeviceCases() []contract.Case {
 		},
 		{
 			Name: "device-token-read-after-reply", Path: "/api/tickets/nd/{agentTicket}", Headers: device,
-			Capture: map[string]string{"agentFile": "attachments[1].id"}, Roles: contract.Roles("admin"),
+			Capture:  map[string]string{"agentFile": "attachments[1].id"},
+			Volatile: []string{"attachments[0].size"}, Roles: contract.Roles("admin"),
 		},
 		{Name: "device-token-download", Path: "/api/tickets/nd/{agentTicket}/attachments/{agentFile}", Headers: device, Roles: contract.Roles("signed-out", "admin")},
 		{Name: "device-token-download-other-device", Path: "/api/tickets/nd/{agentTicket}/attachments/{agentFile}", Headers: other, Roles: contract.Roles("admin")},
+		{
+			Name: "device-token-staff-answer", Method: "POST", Path: "/api/tickets/{agentTicket}/comments", As: "admin",
+			Body: map[string]any{"body": "Please restart the printer"}, Roles: contract.Roles("admin"),
+		},
+		{
+			Name: "device-token-staff-note", Method: "POST", Path: "/api/tickets/{agentTicket}/comments", As: "admin",
+			Body: map[string]any{"body": "Toner is low, order more", "is_internal": true}, Roles: contract.Roles("admin"),
+		},
+		{Name: "device-token-list-unread", Path: "/api/tickets/nd", Headers: device, Roles: contract.Roles("admin")},
+		{Name: "device-token-staff-list-from-computers", Path: "/api/tickets", Query: url.Values{"source": {"device"}}, Roles: contract.Roles("admin")},
 		{Name: "device-token-mark-read", Method: "POST", Path: "/api/tickets/nd/{agentTicket}/read", Headers: device, Body: map[string]any{}, Roles: contract.Roles("signed-out", "admin")},
 		{Name: "device-token-mark-read-other-device", Method: "POST", Path: "/api/tickets/nd/{agentTicket}/read", Headers: other, Body: map[string]any{}, Roles: contract.Roles("admin")},
 		{Name: "device-token-list-read", Path: "/api/tickets/nd", Headers: device, Roles: contract.Roles("admin")},

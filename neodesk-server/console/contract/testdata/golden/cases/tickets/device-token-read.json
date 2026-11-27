@@ -34,6 +34,9 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    "attachments[0].size"
+   ],
    "body": {
     "kind": "json",
     "json": {
@@ -71,6 +74,10 @@
    },
    "volatile": [
     {
+     "path": "attachments[0].size",
+     "integer": true
+    },
+    {
      "path": "ticket.created_at",
      "format": "9999-99-99 99:99:99"
     },
@@ -91,7 +98,7 @@
        "comment_id": null,
        "id": 16,
        "name": "computer-info.json",
-       "size": 1068,
+       "size": 0,
        "type": "application/json"
       }
      ],
