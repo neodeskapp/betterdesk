@@ -6,10 +6,11 @@
 //
 // On Linux that is the systemd unit of neodesk-server, rewritten in
 // place and followed by a reload of the units through the privileged
-// helper. On Windows it is the NSSM service's parameters and environment,
-// and the billing clock keys of the console's .env are copied into the
-// server's environment there, because the server does not read that
-// file on Windows.
+// helper. On Windows, for a server that NSSM runs, it is the NSSM
+// service's parameters and environment, and the billing clock keys of the
+// console's .env are copied into the server's environment there. The
+// native Windows service (NEODESK_SUPERVISOR=windows-service) and the
+// scheduled task have no NSSM settings, so the check leaves them alone.
 package servicedef
 
 import (
@@ -43,6 +44,9 @@ type Options struct {
 	ServerService, ConsoleService string
 	// ConsoleEnvPath is the console's .env file (web-nodejs/.env).
 	ConsoleEnvPath string
+	// Supervisor is NEODESK_SUPERVISOR. On Windows only "nssm" and ""
+	// (an install that named none) mean an NSSM service.
+	Supervisor string
 	// Shell runs a command line through the system's shell and returns
 	// what it wrote to standard output (execSync, five seconds). Nil means
 	// RunShell.
@@ -206,8 +210,12 @@ func (s *Service) isAllowedUnit(path string) bool {
 	return allowedUnits[cleanPath(trimmed)]
 }
 
-// checkWindows is the Windows side: the NSSM services.
+// checkWindows is the Windows side: the NSSM services. A server that
+// NSSM does not run has none.
 func (s *Service) checkWindows(ctx context.Context, result *Result) error {
+	if supervisor := strings.ToLower(strings.TrimSpace(s.opts.Supervisor)); supervisor != "" && supervisor != "nssm" {
+		return nil
+	}
 	server := s.opts.ServerService
 	args, err := s.opts.Shell(ctx, `nssm get "`+server+`" AppParameters 2>nul`)
 	if err != nil {

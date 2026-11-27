@@ -217,12 +217,30 @@ func main() {
 	if code, handled := startedAsCLI(); handled {
 		os.Exit(code)
 	}
+	// Started by the Windows service manager: the server runs until the
+	// service is stopped, with its log in a file
+	if code, handled := runAsWindowsService(func(stop <-chan struct{}) int {
+		loadEnvFileFromOS()
+		return serverMain(stop)
+	}); handled {
+		os.Exit(code)
+	}
 	// NEODESK_ENV_FILE first: the flags and every setting read the
 	// environment it fills
 	loadEnvFileFromOS()
 	if code, handled := runSubcommand(os.Args[1:]); handled {
 		os.Exit(code)
 	}
+	if code := serverMain(nil); code != 0 {
+		os.Exit(code)
+	}
+}
+
+// serverMain runs the server until SIGINT or SIGTERM, a closed stop (the
+// Windows service's stop) or a restart the console asked for, and returns
+// the exit status once every part has stopped: updater.ExitRestart after a
+// restart request, 0 otherwise.
+func serverMain(stop <-chan struct{}) (exitCode int) {
 	// The env file gets the settings a new release added, as after the
 	// installers' update, also when the console's Updates page installed it
 	if !printsOnly(os.Args[1:]) {
@@ -235,18 +253,12 @@ func main() {
 		Logf: func(format string, args ...any) { log.Printf(format, args...) },
 	})
 	if pending.RolledBack() {
-		os.Exit(updater.ExitRestart)
+		return updater.ExitRestart
 	}
 
 	cfg := parseFlags()
-	// exitCode ends the process once every deferred stop below has run: a
-	// restart the console asked for exits with updater.ExitRestart.
-	exitCode := 0
-	defer func() {
-		if exitCode != 0 {
-			os.Exit(exitCode)
-		}
-	}()
+	// exitCode is returned once every deferred stop below has run: a
+	// restart the console asked for ends with updater.ExitRestart.
 
 	// Configure log format (must be before any log output)
 	logCleanup := logging.Setup(cfg.LogFormat, cfg.LogLevel)
@@ -768,6 +780,8 @@ func main() {
 	select {
 	case sig := <-sigCh:
 		log.Printf("Received signal %v, shutting down...", sig)
+	case <-stop:
+		log.Printf("Service stop requested, shutting down...")
 	case <-restartRequested:
 		log.Printf("Restart requested, shutting down so that the supervisor starts the server again...")
 		exitCode = updater.ExitRestart
@@ -778,6 +792,7 @@ func main() {
 	}
 	cancel()
 	log.Printf("Server stopped")
+	return exitCode
 }
 
 // reloadEnvConfig reads the environment again (SIGHUP, the admin command

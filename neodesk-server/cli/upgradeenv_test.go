@@ -281,7 +281,7 @@ func TestUpgradeEnvSupervisorByPlatform(t *testing.T) {
 		goos   string
 		docker string
 		want   string
-	}{{"linux", "", "systemd"}, {"windows", "", "nssm"}, {"linux", "true", "docker"}, {"windows", "true", "docker"},
+	}{{"linux", "", "systemd"}, {"windows", "", "windows-service"}, {"linux", "true", "docker"}, {"windows", "true", "docker"},
 		{"linux", "YES", "docker"}, {"linux", "1", "docker"}, {"linux", "off", "systemd"}} {
 		if err := os.WriteFile(file, nil, 0o600); err != nil {
 			t.Fatal(err)

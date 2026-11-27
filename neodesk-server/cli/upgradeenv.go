@@ -14,7 +14,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
-const upgradeEnvUsage = "Usage: neodesk-server upgrade-env --from FILE [--write] [--supervisor systemd|nssm|docker]"
+const upgradeEnvUsage = "Usage: neodesk-server upgrade-env --from FILE [--write] [--supervisor systemd|windows-service|docker]"
 
 // The groups of spec updater-installers.md 4.3 ("Env keys carried into the
 // Go server") that upgrade-env changes. Every other key is carried as it
@@ -220,7 +220,7 @@ func UpgradeEnv(args []string, env Env) int {
 	supervisor := "systemd"
 	switch env.GOOS {
 	case "windows":
-		supervisor = "nssm"
+		supervisor = "windows-service"
 	}
 	if envvar.SwitchOr(env.Getenv("DOCKER"), false) {
 		supervisor = "docker"
