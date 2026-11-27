@@ -1,7 +1,9 @@
 <!--
-  A control in the viewer's controls row that opens a menu: icon, label
+  A control in the viewer's session bar that opens a menu: icon, label
   (visually hidden in narrower windows, kept as the name and tooltip) and
-  a caret. Same keyboard as MenuButton: Enter, Space or the arrows open it,
+  a caret. iconOnly keeps the label for the name and tooltip only and
+  leaves out the caret (More). buttonId names the button, so a side sheet
+  opened from the menu can give focus back to it. Same keyboard as MenuButton: Enter, Space or the arrows open it,
   Escape closes and returns focus.
 -->
 <script lang="ts">
@@ -15,13 +17,16 @@
 		label: string;
 		icon: string;
 		menuClass?: string;
+		iconOnly?: boolean;
+		buttonId?: string;
 		onopen?: () => void;
 		children: Snippet;
 	}
 
-	let { label, icon, menuClass = '', onopen, children }: Props = $props();
+	let { label, icon, menuClass = '', iconOnly = false, buttonId, onopen, children }: Props = $props();
 
 	const uid = $props.id();
+	const btnId = $derived(buttonId ?? `${uid}-btn`);
 	let open = $state(false);
 	let button = $state<HTMLElement | null>(null);
 	let initialFocus = $state<'first' | 'last'>('first');
@@ -41,11 +46,10 @@
 
 <span class="tool-anchor">
 	<Button
-		size="sm"
-		class="toolbar-btn"
+		class={iconOnly ? 'toolbar-btn is-icon' : 'toolbar-btn'}
 		{icon}
 		bind:element={button}
-		id="{uid}-btn"
+		id={btnId}
 		title={label}
 		aria-haspopup="menu"
 		aria-expanded={open}
@@ -63,14 +67,17 @@
 			}
 		}}
 	>
-		<span class="tb-label">{label}</span><Icon name="expand_more" class="btn-caret" />
+		{#if iconOnly}<span class="sr-only">{label}</span>{:else}<span class="tb-label">{label}</span><Icon
+				name="expand_more"
+				class="btn-caret"
+			/>{/if}
 	</Button>
 	<Menu
 		bind:open
 		anchor={button}
 		{initialFocus}
 		id="{uid}-menu"
-		labelledby="{uid}-btn"
+		labelledby={btnId}
 		class={menuClass}
 		onclose={(returnFocus) => {
 			if (returnFocus) button?.focus();

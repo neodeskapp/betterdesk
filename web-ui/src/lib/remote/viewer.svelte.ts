@@ -426,8 +426,6 @@ export class Viewer {
 	sessions = $state.raw<ViewerSession[]>([]);
 	activeId = $state<string | null>(null);
 	sheet = $state<SheetName | null>(null);
-	controlsOpen = $state(false);
-	keepOpen = $state(false);
 	pickerOpen = $state(false);
 	fullscreen = $state(false);
 	httpWarning = $state(false);
@@ -472,13 +470,9 @@ export class Viewer {
 		return this.sessions.find((s) => s.deviceId === this.activeId) ?? null;
 	}
 
-	/** Controls and Full screen show only while the active tab shows a picture */
+	/** The session controls show only while the active tab shows a picture */
 	get chromeVisible(): boolean {
 		return this.active?.view === 'streaming';
-	}
-
-	get controlsShown(): boolean {
-		return this.chromeVisible && (this.controlsOpen || this.keepOpen);
 	}
 
 	/**
@@ -1123,9 +1117,6 @@ export class Viewer {
 			s.outcomeKind = '';
 			s.helpUrl = '';
 		}
-		if (view !== 'streaming' && this.isActive(s)) {
-			if (!this.keepOpen) this.controlsOpen = false;
-		}
 	}
 
 	/** Failed before or while connecting: what happened, what to try, details */
@@ -1670,7 +1661,7 @@ export class Viewer {
 	}
 
 	/**
-	 * Paste clipboard (Actions menu): reads this computer's clipboard (the
+	 * Paste clipboard (Keys menu): reads this computer's clipboard (the
 	 * browser may ask first) and sends it. Ctrl+V in the viewer does the same
 	 * without the menu.
 	 */

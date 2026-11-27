@@ -97,12 +97,14 @@ for (const role of ROLES) {
 			await expect(page.locator('.session-panel.streaming')).toBeVisible({ timeout: 60_000 });
 			await expect(page.getByRole('tab', { selected: true })).toHaveAccessibleName(/Connected/);
 			await expectNoAxeViolations(page, '.session-bar');
-			// F8 leaves the screen for the controls
-			await page.locator('.session-canvas').focus();
-			await page.keyboard.press('F8');
+			// The controls sit in the session bar; F8 leaves the screen for the first menu
 			const controls = page.getByRole('group', { name: 'Session controls' });
 			await expect(controls).toBeVisible();
-			for (const name of ['Actions', 'Display']) {
+			await expect(page.getByRole('button', { name: /^Controls/ })).toHaveCount(0);
+			await page.locator('.session-canvas').focus();
+			await page.keyboard.press('F8');
+			await expect(controls.locator('[aria-haspopup="menu"]').first()).toBeFocused();
+			for (const name of ['Keys', 'View', 'More']) {
 				await controls.getByRole('button', { name, exact: true }).click();
 				await expect(page.getByRole('menu')).toBeVisible();
 				await expectNoAxeViolations(page, '.session-bar, .controls, [role="menu"]');
@@ -110,11 +112,20 @@ for (const role of ROLES) {
 				await expect(page.getByRole('menu')).toHaveCount(0);
 				await expect(controls.getByRole('button', { name, exact: true })).toBeFocused();
 			}
-			await controls.getByRole('button', { name: 'Session info', exact: true }).click();
+			// Settings that are on show in the bar, and switch off from there
+			await controls.getByRole('button', { name: 'More', exact: true }).click();
+			await page.getByRole('menuitemcheckbox', { name: 'View only' }).click();
+			await page.keyboard.press('Escape');
+			const viewOnly = controls.getByRole('button', { name: 'View only', exact: true });
+			await expect(viewOnly).toHaveAttribute('aria-pressed', 'true');
+			await viewOnly.click();
+			await expect(viewOnly).toHaveCount(0);
+			await controls.getByRole('button', { name: 'More', exact: true }).click();
+			await page.getByRole('menuitem', { name: 'Session info' }).click();
 			await expect(page.locator('.rd-sheet')).toBeVisible();
 			await expectNoAxeViolations(page, '.rd-sheet');
 			await page.locator('.rd-sheet').getByRole('button', { name: 'Close session info' }).click();
-			await expect(controls.getByRole('button', { name: 'Session info', exact: true })).toBeFocused();
+			await expect(controls.getByRole('button', { name: 'More', exact: true })).toBeFocused();
 			await page.getByRole('button', { name: 'New connection' }).click();
 			await expect(page.getByRole('dialog')).toBeVisible();
 			await expect(page.getByRole('button', { name: /^Connect to / }).first()).toBeVisible();
@@ -122,7 +133,6 @@ for (const role of ROLES) {
 			await page.keyboard.press('Escape');
 			await expect(page.getByRole('dialog')).toHaveCount(0);
 			// Disconnect: the session ended by you, Reconnect has focus
-			await page.keyboard.press('F8');
 			await controls.getByRole('button', { name: 'Disconnect', exact: true }).click();
 			await expect(page.locator('.overlay-status')).toHaveText(/You ended the session/);
 			await expectNoAxeViolations(page, '.session-panel');

@@ -45,10 +45,9 @@ async function streaming(page: Page, scenario = 'ok'): Promise<void> {
 	await expect(page.locator('.session-panel.streaming')).toBeVisible({ timeout: 60_000 });
 }
 
-/** Opens the controls and the Displays menu */
+/** Opens the Displays menu in the session bar */
 async function displaysMenu(page: Page) {
 	const controls = page.getByRole('group', { name: 'Session controls' });
-	if (!(await controls.isVisible())) await page.getByRole('button', { name: /^Controls/ }).click();
 	await controls.getByRole('button', { name: 'Displays', exact: true }).click();
 	const menu = page.getByRole('menu');
 	await expect(menu).toBeVisible();
@@ -140,8 +139,9 @@ test.describe('several displays of one device', () => {
 		// The session info lists each display
 		await page
 			.getByRole('group', { name: 'Session controls' })
-			.getByRole('button', { name: 'Session info', exact: true })
+			.getByRole('button', { name: 'More', exact: true })
 			.click();
+		await page.getByRole('menuitem', { name: 'Session info' }).click();
 		const sheet = page.locator('.rd-sheet');
 		await expect(sheet.locator('dd[data-display]')).toHaveCount(3);
 		await expect(sheet.locator('dd[data-display="1"]')).toContainText('fps');
