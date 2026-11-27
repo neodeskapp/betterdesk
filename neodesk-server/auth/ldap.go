@@ -393,8 +393,8 @@ func (p *LDAPProvider) resolveGroups(conn *ldapv3.Conn, cfg *LDAPConfig, result 
 	}
 
 	// Parse group→role map
-	roleMap := parseGroupRoleMap(cfg.GroupRoleMap)
-	if len(roleMap) == 0 {
+	entries := parseGroupRoleEntries(cfg.GroupRoleMap)
+	if len(entries) == 0 {
 		return
 	}
 
@@ -445,27 +445,8 @@ func (p *LDAPProvider) resolveGroups(conn *ldapv3.Conn, cfg *LDAPConfig, result 
 		}
 	}
 
-	// Map groups to roles — highest-privilege match wins. A line names a
-	// group by its DN or CN, or by the value of the Group name attribute
-	// of a group the search found
-	bestLevel := -1
-	take := func(mapRole string) {
-		if level := RoleLevel(mapRole); level > bestLevel {
-			bestLevel = level
-			result.Role = mapRole
-		}
-	}
-	for mapKey, mapRole := range roleMap {
-		for _, groupDN := range result.Groups {
-			if ldapGroupMatches(mapKey, groupDN) {
-				take(mapRole)
-			}
-		}
-		for _, name := range result.GroupNames {
-			if strings.EqualFold(strings.TrimSpace(mapKey), name) {
-				take(mapRole)
-			}
-		}
+	if role, ok := ldapMappedRole(entries, result.Groups, result.GroupNames); ok {
+		result.Role = role
 	}
 
 	if len(result.Groups) > 0 {
@@ -518,10 +499,69 @@ func ldapGroupMatches(mapKey, groupDN string) bool {
 	return strings.EqualFold(mapKey, groupCN)
 }
 
+// ldapMappedRole is the role the map gives a person in the groups with
+// these DNs and names: the highest role of the matching entries. A line
+// names a group by its DN or CN, or by the value of the Group name
+// attribute of a group the search found. Of two matching roles on the same
+// level (server_admin and global_admin) the one whose entry comes first in
+// the map wins, so the role is the same at every sign-in. ok is false when
+// no entry matches.
+func ldapMappedRole(entries []groupRole, groups, names []string) (role string, ok bool) {
+	bestLevel := -1
+	for _, e := range entries {
+		matched := false
+		for _, groupDN := range groups {
+			if ldapGroupMatches(e.group, groupDN) {
+				matched = true
+				break
+			}
+		}
+		for _, name := range names {
+			if !matched && strings.EqualFold(strings.TrimSpace(e.group), name) {
+				matched = true
+			}
+		}
+		if level := RoleLevel(e.role); matched && level > bestLevel {
+			bestLevel, role, ok = level, e.role, true
+		}
+	}
+	return role, ok
+}
+
+// groupRole is one entry of a group to role map.
+type groupRole struct{ group, role string }
+
+// parseGroupRoleEntries is the group to role map's entries in the order
+// they are written. A group named twice keeps the role of its last entry,
+// at the place of its first.
+func parseGroupRoleEntries(raw string) []groupRole {
+	var entries []groupRole
+	at := map[string]int{}
+	for _, e := range splitGroupRoleMap(raw) {
+		if i, seen := at[e.group]; seen {
+			entries[i].role = e.role
+			continue
+		}
+		at[e.group] = len(entries)
+		entries = append(entries, e)
+	}
+	return entries
+}
+
 // parseGroupRoleMap parses a JSON-like group→role mapping string.
 // Format: "group_dn=role,group_dn=role" (simple) or JSON object.
 func parseGroupRoleMap(raw string) map[string]string {
 	result := make(map[string]string)
+	for _, e := range splitGroupRoleMap(raw) {
+		result[e.group] = e.role
+	}
+	return result
+}
+
+// splitGroupRoleMap is every readable entry of a group to role map, in
+// order.
+func splitGroupRoleMap(raw string) []groupRole {
+	var result []groupRole
 	if raw == "" {
 		return result
 	}
@@ -545,7 +585,7 @@ func parseGroupRoleMap(raw string) map[string]string {
 		dn := strings.TrimSpace(entry[:idx])
 		role := strings.TrimSpace(entry[idx+1:])
 		if dn != "" && role != "" && ValidRole(role) {
-			result[dn] = role
+			result = append(result, groupRole{dn, role})
 		}
 	}
 
