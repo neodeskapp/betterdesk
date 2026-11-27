@@ -120,6 +120,7 @@
        "AGENT_BUILD_POLL_MS",
        "AGENT_BUILD_WORKER",
        "ALLOW_SHARED_NAT_INITIATOR",
+       "API_ALLOW_FROM",
        "API_ENABLED",
        "API_HOST",
        "API_KEY_PATH",
