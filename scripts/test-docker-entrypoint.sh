@@ -94,7 +94,9 @@ test_cdap_port_is_published() (
 
 # L80: every compose file reads .env next to it (when there is one), so a
 # setting needs no edit of the compose file, and the host address the
-# console's ports are published on is a variable.
+# console's ports are published on is a variable. DOCKER-QUICK-3: without
+# NEODESK_CONSOLE_BIND the console is published on every address, IPv6
+# too, as the client ports are (0.0.0.0 would be IPv4 only).
 test_compose_reads_env_file() (
     local f
     for f in "$SCRIPT_ROOT"/install/docker-compose*.yml; do
@@ -102,8 +104,30 @@ test_compose_reads_env_file() (
         grep -A2 -E '^[[:space:]]+env_file:' "$f" | grep -qE 'required: false' || fail "$(basename "$f") needs a .env to start"
     done
     for f in install/docker-compose.quick.single.yml install/docker-compose.single.yml; do
-        grep -qF '"${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-3375}:3375"' "$SCRIPT_ROOT/$f" || fail "$f fixes the console's bind address"
+        grep -qF '"${NEODESK_CONSOLE_BIND:+${NEODESK_CONSOLE_BIND}:}${NEODESK_CONSOLE_PORT:-3375}:3375"' "$SCRIPT_ROOT/$f" || fail "$f fixes the console's bind address"
+        grep -qF '"${NEODESK_CONSOLE_BIND:+${NEODESK_CONSOLE_BIND}:}${NEODESK_CONSOLE_HTTPS_PORT:-5443}:5443"' "$SCRIPT_ROOT/$f" || fail "$f fixes the console's HTTPS bind address"
+        if grep -qE '^[^#]*0\.0\.0\.0:' "$SCRIPT_ROOT/$f"; then fail "$f publishes a port on IPv4 only"; fi
     done
+)
+
+# MIGRATE-CLIENT-3: tini runs as root and passes docker stop's SIGTERM on
+# to the server, which runs as neodesk; with cap_drop: ALL that needs
+# KILL, else tini dies with "Operation not permitted" and the server is
+# killed without its shutdown. The health check runs every 10 seconds
+# (DOCKER-QUICK-10).
+test_neodesk_service_keeps_kill() (
+    local f block
+    for f in "$SCRIPT_ROOT"/install/docker-compose*.yml; do
+        # The neodesk service: from its line to the next service
+        block=$(awk '/^  neodesk:/ { on = 1; next } on && /^  [a-z]/ { exit } on' "$f")
+        printf '%s
+' "$block" | grep -qE '^      - ALL$' || fail "$(basename "$f"): the neodesk service keeps its capabilities"
+        printf '%s
+' "$block" | grep -qE '^      - KILL$' || fail "$(basename "$f"): the neodesk service has no KILL, so tini cannot pass SIGTERM on"
+        printf '%s
+' "$block" | grep -qE '^      interval: 10s$' || fail "$(basename "$f"): the health check does not run every 10 seconds"
+    done
+    grep -qE '^HEALTHCHECK --interval=10s ' "$SCRIPT_ROOT/docker/Dockerfile" || fail "the image's health check does not run every 10 seconds"
 )
 
 # L81: the health check reaches the API over HTTPS when TLS_API=Y and the
@@ -222,6 +246,25 @@ test_credentials_hint_names_the_service() (
     grep -q 'docker compose logs neodesk' "$SCRIPT_ROOT/docker/show-admin-credentials.sh" || fail "show-admin-credentials.sh does not point at docker compose logs neodesk"
 )
 
+# DOCKER-QUICK-8, DOCKER-QUICK-9: after the password change the hints
+# work from any folder (the script by its full path) and keep a chosen
+# password out of the shell history (read -rs, no password in the line).
+test_credentials_hint_after_a_password_change() (
+    local dir out
+    dir=$(mktemp -d)
+    printf 'The first password was replaced.\n' > "$dir/.admin_credentials.removed"
+    if out=$(RUSTDESK_PATH="$dir" sh "$SCRIPT_ROOT/docker/show-admin-credentials.sh" 2>&1); then
+        fail "show-admin-credentials.sh succeeded without a password"
+    fi
+    printf '%s\n' "$out" | grep -qx '    sudo bash /opt/neodesk/docker/neodesk-docker.sh reset-password' \
+        || fail "the reset hint does not name the script by its full path: $out"
+    printf '%s\n' "$out" | grep -qx '    read -rs NEWPASS' || fail "the hint does not read the password silently: $out"
+    printf '%s\n' "$out" | grep -qF "printf '%s\\n' \"\$NEWPASS\" | docker compose exec -T -u neodesk neodesk neodesk-server reset-password admin" \
+        || fail "the hint does not pipe the password read: $out"
+    if printf '%s\n' "$out" | grep -q "'the new password'"; then fail "the hint puts a password into the command line: $out"; fi
+    rm -rf "$dir"
+)
+
 # L77: after the console removed the first password (it leaves
 # .admin_credentials.removed), the start makes no new credentials file,
 # with or without ADMIN_PASSWORD; without the note a fresh volume gets one.
@@ -292,11 +335,13 @@ test_enrollment_mode_is_not_forced
 test_quick_compose_pulls_the_published_image
 test_cdap_port_is_published
 test_compose_reads_env_file
+test_neodesk_service_keeps_kill
 test_healthcheck_follows_tls
 test_image_binary_knows_its_build
 test_images_keep_their_data_in_the_neodesk_folder
 test_old_data_mount_is_used_where_it_is
 test_credentials_hint_names_the_service
+test_credentials_hint_after_a_password_change
 test_bootstrap_keeps_a_replaced_first_password_away
 test_remote_targets_work_out_of_the_box
 test_relay_hint_names_the_env_file
