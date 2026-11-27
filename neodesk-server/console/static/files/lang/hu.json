@@ -4289,7 +4289,14 @@
     "attach_hint": "Legfeljebb 25 MB-os fájlok. Mindenki letöltheti őket, aki látja ezt a jegyet.",
     "attach_too_large": "Ez a fájl nagyobb 25 MB-nál.",
     "attach_uploading": "{name} feltöltése…",
-    "attach_done": "{name} csatolva."
+    "attach_done": "{name} csatolva.",
+    "source_label": "Forrás",
+    "source_all": "Minden jegy",
+    "source_device": "Számítógépekről",
+    "opened_at_computer": "{name} nyitotta a(z) {device} számítógépen",
+    "opened_at_computer_unnamed": "A(z) {device} számítógépen nyitották",
+    "at_computer_named": "{name}, a számítógépnél",
+    "at_computer": "A számítógépnél ülő személy"
   },
   "activity": {
     "title": "Tevékenységfigyelés",
@@ -8434,7 +8441,9 @@
     "unread": "Olvasatlan",
     "empty_hint": "Nincs segítségkérés, és egy eszköz sem kér csatlakozást.",
     "loading": "Értesítések betöltése…",
-    "load_failed": "Az értesítéseket nem sikerült betölteni."
+    "load_failed": "Az értesítéseket nem sikerült betölteni.",
+    "kind_ticket": "Új jegy egy számítógépről",
+    "kind_ticket_reply": "Válasz egy számítógépről"
   },
   "accessibility": {
     "title": "Akadálymentesség",

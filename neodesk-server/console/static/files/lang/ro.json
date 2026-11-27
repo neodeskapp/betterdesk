@@ -4289,7 +4289,14 @@
     "attach_hint": "Fișiere de până la 25 MB. Oricine vede acest tichet le poate descărca.",
     "attach_too_large": "Acest fișier depășește 25 MB.",
     "attach_uploading": "Se încarcă {name}…",
-    "attach_done": "{name} a fost atașat."
+    "attach_done": "{name} a fost atașat.",
+    "source_label": "Sursă",
+    "source_all": "Toate tichetele",
+    "source_device": "De pe calculatoare",
+    "opened_at_computer": "Deschis de {name} pe calculatorul {device}",
+    "opened_at_computer_unnamed": "Deschis pe calculatorul {device}",
+    "at_computer_named": "{name}, la calculator",
+    "at_computer": "Persoana de la calculator"
   },
   "activity": {
     "title": "Monitorizarea activității",
@@ -8434,7 +8441,9 @@
     "unread": "Necitit",
     "empty_hint": "Nu există cereri de ajutor sau dispozitive care cer să se alăture.",
     "loading": "Se încarcă notificările…",
-    "load_failed": "Notificările nu au putut fi încărcate."
+    "load_failed": "Notificările nu au putut fi încărcate.",
+    "kind_ticket": "Tichet nou de pe un calculator",
+    "kind_ticket_reply": "Răspuns de pe un calculator"
   },
   "accessibility": {
     "title": "Accesibilitate",

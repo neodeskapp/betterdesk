@@ -4289,7 +4289,14 @@
     "attach_hint": "Tệp tối đa 25 MB. Bất kỳ ai xem được phiếu này đều tải xuống được.",
     "attach_too_large": "Tệp này lớn hơn 25 MB.",
     "attach_uploading": "Đang tải lên {name}…",
-    "attach_done": "Đã đính kèm {name}."
+    "attach_done": "Đã đính kèm {name}.",
+    "source_label": "Nguồn",
+    "source_all": "Mọi phiếu",
+    "source_device": "Từ máy tính",
+    "opened_at_computer": "{name} tạo trên máy tính {device}",
+    "opened_at_computer_unnamed": "Tạo trên máy tính {device}",
+    "at_computer_named": "{name}, tại máy tính",
+    "at_computer": "Người dùng tại máy tính"
   },
   "activity": {
     "title": "Giám sát hoạt động",
@@ -8434,7 +8441,9 @@
     "unread": "Chưa đọc",
     "empty_hint": "Không có yêu cầu trợ giúp hoặc thiết bị nào xin tham gia.",
     "loading": "Đang tải thông báo…",
-    "load_failed": "Không tải được thông báo."
+    "load_failed": "Không tải được thông báo.",
+    "kind_ticket": "Phiếu mới từ máy tính",
+    "kind_ticket_reply": "Phản hồi từ máy tính"
   },
   "accessibility": {
     "title": "Trợ năng",

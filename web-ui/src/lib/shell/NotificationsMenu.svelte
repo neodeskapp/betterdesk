@@ -1,8 +1,9 @@
 <!--
   The bell (public/js/notif-center.js): a dot when something is unread
   (the number is in the button's name), and a menu with one row per help
-  request or device asking to join: the device's OS mark (or the kind's
-  icon), what happened, the device, details and age. Unread rows have an
+  request, device asking to join, or ticket a person opened or replied to
+  at their computer: the device's OS mark (or the kind's icon), what
+  happened, who and the device, details and age. Unread rows have an
   accent rule on the start side. "Mark all read" in the head, links to
   the full lists in the foot (by permission).
 
@@ -45,6 +46,20 @@
 		count > 0 ? `${t('notifications.title')} (${count > 99 ? '99+' : count})` : t('notifications.title')
 	);
 	const rows = $derived(notifications.items.map((item) => ({ item, view: describe(item) })));
+	const kindLabel = (kind: string): string =>
+		kind === 'registration'
+			? t('notifications.kind_registration')
+			: kind === 'ticket'
+				? t('notifications.kind_ticket')
+				: kind === 'ticket_reply'
+					? t('notifications.kind_ticket_reply')
+					: t('notifications.help_request');
+	const kindIcon = (kind: string): string =>
+		kind === 'registration'
+			? 'enrollment_request'
+			: kind === 'ticket' || kind === 'ticket_reply'
+				? 'confirmation_number'
+				: 'help_request';
 	const showHelpLink = $derived(can('device.view'));
 	const showRegLink = $derived(can('enrollment.approve'));
 
@@ -190,14 +205,10 @@
 									{#if view.platform && platformId(view.platform)}
 										<OsIcon platform={view.platform} />
 									{:else}
-										<Icon name={view.isRegistration ? 'enrollment_request' : 'help_request'} />
+										<Icon name={kindIcon(view.kind)} />
 									{/if}
 								</span>
-								<span class="notif-kind menu-item-label">
-									{view.isRegistration
-										? t('notifications.kind_registration')
-										: t('notifications.help_request')}
-								</span>
+								<span class="notif-kind menu-item-label">{kindLabel(view.kind)}</span>
 								{#if view.name || view.deviceId}
 									<span class="notif-device">
 										{#if view.name}<span class="notif-name">{view.name}</span>{/if}

@@ -4283,7 +4283,14 @@
     "attach_hint": "Bestanden tot 25 MB. Iedereen die dit ticket kan zien, kan ze downloaden.",
     "attach_too_large": "Dit bestand is groter dan 25 MB.",
     "attach_uploading": "{name} wordt geüpload…",
-    "attach_done": "{name} bijgevoegd."
+    "attach_done": "{name} bijgevoegd.",
+    "source_label": "Herkomst",
+    "source_all": "Alle tickets",
+    "source_device": "Van computers",
+    "opened_at_computer": "Aangemaakt door {name} op computer {device}",
+    "opened_at_computer_unnamed": "Aangemaakt op computer {device}",
+    "at_computer_named": "{name}, op de computer",
+    "at_computer": "De persoon achter de computer"
   },
   "activity": {
     "title": "Activiteitsmonitoring",
@@ -8428,7 +8435,9 @@
     "unread": "Ongelezen",
     "empty_hint": "Geen hulpverzoeken of apparaten die om toegang vragen.",
     "loading": "Meldingen laden…",
-    "load_failed": "Meldingen konden niet worden geladen."
+    "load_failed": "Meldingen konden niet worden geladen.",
+    "kind_ticket": "Nieuw ticket van een computer",
+    "kind_ticket_reply": "Antwoord van een computer"
   },
   "accessibility": {
     "title": "Toegankelijkheid",

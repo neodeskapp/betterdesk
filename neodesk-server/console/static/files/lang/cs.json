@@ -4283,7 +4283,14 @@
     "attach_hint": "Soubory do 25 MB. Stáhnout si je může každý, kdo tento tiket vidí.",
     "attach_too_large": "Tento soubor je větší než 25 MB.",
     "attach_uploading": "Nahrává se {name}…",
-    "attach_done": "Soubor {name} je přiložen."
+    "attach_done": "Soubor {name} je přiložen.",
+    "source_label": "Zdroj",
+    "source_all": "Všechny tikety",
+    "source_device": "Z počítačů",
+    "opened_at_computer": "Vytvořil(a) {name} na počítači {device}",
+    "opened_at_computer_unnamed": "Vytvořeno na počítači {device}",
+    "at_computer_named": "{name}, u počítače",
+    "at_computer": "Člověk u počítače"
   },
   "activity": {
     "title": "Monitoring aktivity",
@@ -8428,7 +8435,9 @@
     "unread": "Nepřečteno",
     "empty_hint": "Žádné žádosti o pomoc ani zařízení, která žádají o připojení.",
     "loading": "Načítání oznámení…",
-    "load_failed": "Oznámení se nepodařilo načíst."
+    "load_failed": "Oznámení se nepodařilo načíst.",
+    "kind_ticket": "Nový tiket z počítače",
+    "kind_ticket_reply": "Odpověď z počítače"
   },
   "accessibility": {
     "title": "Usnadnění",

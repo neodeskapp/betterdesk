@@ -4289,7 +4289,14 @@
     "attach_hint": "Enintään 25 Mt:n tiedostot. Kaikki, jotka näkevät tämän tiketin, voivat ladata ne.",
     "attach_too_large": "Tiedosto on suurempi kuin 25 Mt.",
     "attach_uploading": "Ladataan {name}…",
-    "attach_done": "{name} liitetty."
+    "attach_done": "{name} liitetty.",
+    "source_label": "Lähde",
+    "source_all": "Kaikki tiketit",
+    "source_device": "Tietokoneilta",
+    "opened_at_computer": "Avannut {name} tietokoneella {device}",
+    "opened_at_computer_unnamed": "Avattu tietokoneella {device}",
+    "at_computer_named": "{name}, tietokoneella",
+    "at_computer": "Tietokoneen käyttäjä"
   },
   "activity": {
     "title": "Toiminnan seuranta",
@@ -8434,7 +8441,9 @@
     "unread": "Lukematon",
     "empty_hint": "Ei avunpyyntöjä eikä liittymistä pyytäviä laitteita.",
     "loading": "Ladataan ilmoituksia…",
-    "load_failed": "Ilmoituksia ei voitu ladata."
+    "load_failed": "Ilmoituksia ei voitu ladata.",
+    "kind_ticket": "Uusi tiketti tietokoneelta",
+    "kind_ticket_reply": "Vastaus tietokoneelta"
   },
   "accessibility": {
     "title": "Saavutettavuus",

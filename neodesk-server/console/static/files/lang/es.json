@@ -4283,7 +4283,14 @@
     "attach_hint": "Archivos de hasta 25 MB. Cualquiera que pueda ver este ticket puede descargarlos.",
     "attach_too_large": "Este archivo supera los 25 MB.",
     "attach_uploading": "Subiendo {name}…",
-    "attach_done": "{name} adjuntado."
+    "attach_done": "{name} adjuntado.",
+    "source_label": "Origen",
+    "source_all": "Todos los tickets",
+    "source_device": "Desde equipos",
+    "opened_at_computer": "Abierto por {name} en el equipo {device}",
+    "opened_at_computer_unnamed": "Abierto en el equipo {device}",
+    "at_computer_named": "{name}, en el equipo",
+    "at_computer": "La persona en el equipo"
   },
   "activity": {
     "title": "Panel",
@@ -8428,7 +8435,9 @@
     "unread": "No leído",
     "empty_hint": "No hay solicitudes de ayuda ni dispositivos que pidan unirse.",
     "loading": "Cargando notificaciones…",
-    "load_failed": "No se pudieron cargar las notificaciones."
+    "load_failed": "No se pudieron cargar las notificaciones.",
+    "kind_ticket": "Nuevo ticket desde un equipo",
+    "kind_ticket_reply": "Respuesta desde un equipo"
   },
   "accessibility": {
     "title": "Accesibilidad",

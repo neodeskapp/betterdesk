@@ -4289,7 +4289,14 @@
     "attach_hint": "Filer på upp till 25 MB. Alla som kan se ärendet kan ladda ned dem.",
     "attach_too_large": "Filen är större än 25 MB.",
     "attach_uploading": "Laddar upp {name}…",
-    "attach_done": "{name} bifogad."
+    "attach_done": "{name} bifogad.",
+    "source_label": "Källa",
+    "source_all": "Alla ärenden",
+    "source_device": "Från datorer",
+    "opened_at_computer": "Skapat av {name} på datorn {device}",
+    "opened_at_computer_unnamed": "Skapat på datorn {device}",
+    "at_computer_named": "{name}, vid datorn",
+    "at_computer": "Personen vid datorn"
   },
   "activity": {
     "title": "Aktivitetsövervakning",
@@ -8434,7 +8441,9 @@
     "unread": "Oläst",
     "empty_hint": "Inga hjälpförfrågningar eller enheter som ber om att få ansluta.",
     "loading": "Läser in aviseringar…",
-    "load_failed": "Det gick inte att läsa in aviseringarna."
+    "load_failed": "Det gick inte att läsa in aviseringarna.",
+    "kind_ticket": "Nytt ärende från en dator",
+    "kind_ticket_reply": "Svar från en dator"
   },
   "accessibility": {
     "title": "Tillgänglighet",

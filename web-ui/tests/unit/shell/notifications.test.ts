@@ -202,8 +202,40 @@ describe('rows', () => {
 		link: '',
 		status: '',
 		read: false,
-		created_at: ''
+		created_at: '',
+		reporter: ''
 	};
+
+	test('a ticket from a computer names the person, the computer and the title, and opens the ticket', () => {
+		const ticket = describeRow({
+			...base,
+			id: 'ticket:24',
+			kind: 'ticket',
+			title: 'The printer is jammed',
+			message: 'Since this morning',
+			reporter: 'Erika Muster',
+			device_id: '900100001',
+			link: '/tickets?ticket=24'
+		});
+		expect(ticket).toMatchObject({
+			kind: 'ticket',
+			isRegistration: false,
+			name: 'Erika Muster',
+			deviceId: '900100001',
+			detail: 'The printer is jammed',
+			link: '/tickets?ticket=24'
+		});
+		const reply = describeRow({
+			...base,
+			id: 'ticket_reply:31',
+			kind: 'ticket_reply',
+			title: 'The printer is jammed',
+			message: 'It works again',
+			link: '//evil.example'
+		});
+		expect(reply).toMatchObject({ kind: 'ticket_reply', detail: 'It works again', link: '/tickets' });
+		expect(describeRow({ ...base, kind: 'help_request' }).kind).toBe('help_request');
+	});
 
 	test('a registration splits its message into platform and address, without dot separators', () => {
 		const v = describeRow({

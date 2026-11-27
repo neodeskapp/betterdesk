@@ -4289,7 +4289,14 @@
     "attach_hint": "ไฟล์ขนาดไม่เกิน 25 MB ทุกคนที่เห็นตั๋วนี้ดาวน์โหลดได้",
     "attach_too_large": "ไฟล์นี้ใหญ่กว่า 25 MB",
     "attach_uploading": "กำลังอัปโหลด {name}…",
-    "attach_done": "แนบ {name} แล้ว"
+    "attach_done": "แนบ {name} แล้ว",
+    "source_label": "แหล่งที่มา",
+    "source_all": "ตั๋วทั้งหมด",
+    "source_device": "จากคอมพิวเตอร์",
+    "opened_at_computer": "{name} เปิดจากคอมพิวเตอร์ {device}",
+    "opened_at_computer_unnamed": "เปิดจากคอมพิวเตอร์ {device}",
+    "at_computer_named": "{name} (ที่คอมพิวเตอร์)",
+    "at_computer": "ผู้ใช้ที่คอมพิวเตอร์"
   },
   "activity": {
     "title": "การตรวจสอบกิจกรรม",
@@ -8434,7 +8441,9 @@
     "unread": "ยังไม่ได้อ่าน",
     "empty_hint": "ไม่มีคำขอความช่วยเหลือหรืออุปกรณ์ที่ขอเข้าร่วม",
     "loading": "กำลังโหลดการแจ้งเตือน…",
-    "load_failed": "โหลดการแจ้งเตือนไม่ได้"
+    "load_failed": "โหลดการแจ้งเตือนไม่ได้",
+    "kind_ticket": "ตั๋วใหม่จากคอมพิวเตอร์",
+    "kind_ticket_reply": "การตอบกลับจากคอมพิวเตอร์"
   },
   "accessibility": {
     "title": "การช่วยการเข้าถึง",

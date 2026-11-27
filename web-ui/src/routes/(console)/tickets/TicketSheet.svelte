@@ -39,6 +39,8 @@
 	import User from '#lib/ui/User.svelte';
 	import { ICONS } from '#lib/util/display.ts';
 	import {
+		byComputer,
+		fromComputer,
 		isOverdue,
 		priorityTone,
 		safeKey,
@@ -191,6 +193,12 @@
 		}
 	}
 
+	/** "Erika Muster, at the computer", or "The person at the computer" without a name */
+	function computerName(reporter: string): string {
+		const name = reporter.trim();
+		return name ? t('tickets.at_computer_named', { name }) : t('tickets.at_computer');
+	}
+
 	function openDeviceFromSheet(deviceId: string) {
 		// The panel takes the sheet's place; closing it goes back to the list
 		openDevice(deviceId);
@@ -201,6 +209,9 @@
 		if (await ondelete(ticket)) onclose();
 	}
 </script>
+
+<!-- The person at the computer, who opened the ticket or wrote in it from the app -->
+{#snippet atComputer(reporter: string)}<span class="at-computer">{computerName(reporter)}</span>{/snippet}
 
 {#snippet deviceValue(deviceId: string)}{#if !deviceId}<Empty />{:else if canOpenDevice}<Button
 			variant="link"
@@ -243,7 +254,11 @@
 					<dt>{t('tickets.device')}</dt>
 					<dd>{@render deviceValue(ticket.device_id)}</dd>
 					<dt>{t('tickets.created_by')}</dt>
-					<dd><User user={ticket.created_by || null} /></dd>
+					<dd>
+						{#if fromComputer(ticket)}{@render atComputer(ticket.reporter)}{:else}<User
+								user={ticket.created_by || null}
+							/>{/if}
+					</dd>
 					<dt>{t('tickets.created_at')}</dt>
 					<dd><Time value={ticket.created_at} relative={false} /></dd>
 					<dt>{t('tickets.sla_due')}</dt>
@@ -313,7 +328,7 @@
 										chevron={false}
 										title={a.filename}
 										sub={a.uploaded_by
-											? `${formatBytes(a.size_bytes)}, ${a.uploaded_by}`
+											? `${formatBytes(a.size_bytes)}, ${byComputer(a.uploaded_by) ? computerName(ticket.reporter) : a.uploaded_by}`
 											: formatBytes(a.size_bytes)}
 									/>
 								{/each}
@@ -332,7 +347,12 @@
 								<li class={['comment', c.is_internal && 'is-internal']}>
 									<div class="comment-main">
 										<span class="comment-head">
-											<User user={c.author || null} avatar size="sm" />,
+											<!-- The comma sits with the author, not a gap away in the row -->
+											<span class="comment-author"
+												>{#if c.from === 'device' || byComputer(c.author)}{@render atComputer(
+														ticket.reporter
+													)}{:else}<User user={c.author || null} avatar size="sm" />{/if},</span
+											>
 											<Time value={c.created_at} />{#if c.is_internal}, <span class="internal-label"
 													>{t('tickets.internal_label')}</span
 												>{/if}
@@ -457,6 +477,10 @@
 		gap: 0 var(--space-1);
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+	}
+	.comment-author {
+		display: inline-flex;
+		align-items: center;
 	}
 	.internal-label {
 		color: var(--warning);

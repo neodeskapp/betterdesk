@@ -1,7 +1,10 @@
 <!--
   Tickets (/tickets): issues tracked until they are solved. The table
   lists every ticket the user may see (viewers: the ones assigned to
-  them); search, status and priority narrow it. A click on a row opens the
+  them); search, status, priority and "From computers" narrow it. A
+  ticket the person at a computer opened in the app says so under its
+  title, with their name and a link to the computer (A277). A click on a
+  row, or ?ticket=<id> (the bell's link), opens the
   ticket in a wide sheet (facts, status actions, attachments, comments);
   New ticket and Edit open the form sheet. Beside the table: tickets by
   status (each part filters), open tickets by priority, and the overdue
@@ -46,6 +49,7 @@
 	import { ICONS } from '#lib/util/display.ts';
 	import ShareFilter, { type ShareFilterPart } from '#lib/support/ShareFilter.svelte';
 	import {
+		computerMark,
 		countByStatus,
 		createdIsOld,
 		filterTickets,
@@ -57,6 +61,7 @@
 		safeKey,
 		statusTone,
 		type PriorityFilter,
+		type SourceFilter,
 		type StatusFilter
 	} from '#lib/support/tickets.ts';
 	import TicketFormSheet from './TicketFormSheet.svelte';
@@ -102,8 +107,12 @@
 	let search = $state('');
 	let status = $state<StatusFilter>('');
 	let priority = $state<PriorityFilter>('');
+	// ?source=device: the tickets people opened at their computers
+	let source = $state<SourceFilter>(
+		untrack(() => (page.url.searchParams.get('source') === 'device' ? 'device' : ''))
+	);
 	let sort = $state<SortState | null>(null);
-	const filters = $derived({ status, priority, search });
+	const filters = $derived({ status, priority, search, source });
 	const rows = $derived(filterTickets(tickets, filters));
 	const filtered = $derived(isFiltered(filters));
 
@@ -121,6 +130,14 @@
 		{ value: 'medium' as const, label: t('tickets.priority_medium') },
 		{ value: 'low' as const, label: t('tickets.priority_low') }
 	]);
+	const sourceOptions = $derived([
+		{ value: '' as const, label: t('tickets.source_all') },
+		{ value: 'device' as const, label: t('tickets.source_device') }
+	]);
+	const markText = $derived({
+		named: t('tickets.opened_at_computer'),
+		unnamed: t('tickets.opened_at_computer_unnamed')
+	});
 
 	/* ── Sheets ── */
 
@@ -133,7 +150,9 @@
 				prefill?: { title?: string; device?: string };
 		  }
 		| null;
-	// ?new=1&device=<id>&title=<text>: a new ticket for a computer, from its chat conversation (A242)
+	// ?new=1&device=<id>&title=<text>: a new ticket for a computer, from its chat conversation (A242);
+	// ?ticket=<id>: that ticket, from the bell
+	const askedTicket = untrack(() => page.url.searchParams.get('ticket') ?? '');
 	let sheet = $state<SheetState>(
 		untrack(() =>
 			page.url.searchParams.get('new') === '1' && can('device.edit')
@@ -146,7 +165,9 @@
 							device: page.url.searchParams.get('device') ?? ''
 						}
 					}
-				: null
+				: /^\d{1,10}$/.test(askedTicket)
+					? { kind: 'detail', id: Number(askedTicket) }
+					: null
 		)
 	);
 	let menuFor = $state<number | null>(null);
@@ -278,8 +299,18 @@
 		label={t(`tickets.priority_${safeKey(x.priority)}`)}
 	/>{/snippet}
 
-{#snippet titleCell(x: Ticket)}<span class="ticket-title">{x.title}</span>{#if isOverdue(x)}<span
-			class="cell-sub sla-overdue">{t('tickets.sla_overdue')}</span
+{#snippet titleCell(x: Ticket)}{@const mark = computerMark(x, markText)}<span class="ticket-title"
+		>{x.title}</span
+	>{#if isOverdue(x)}<span class="cell-sub sla-overdue">{t('tickets.sla_overdue')}</span>{/if}{#if mark}<span
+			class="cell-sub from-computer"
+			>{mark.before}{#if mark.device}{#if canOpenDevice}<Button
+						variant="link"
+						class="mono ticket-device"
+						onclick={(e: MouseEvent) => {
+							e.stopPropagation();
+							openDevice(mark.device);
+						}}>{mark.device}</Button
+					>{:else}<span class="mono">{mark.device}</span>{/if}{/if}{mark.after}</span
 		>{/if}<span class="narrow-meta"
 		>{@render priorityStatus(x)}, <User user={x.assigned_to || null} empty={t('tickets.unassigned')} /></span
 	>{/snippet}
@@ -350,6 +381,7 @@
 					</div>
 					<SegmentedFilter label={t('tickets.status')} options={statusOptions} bind:value={status} />
 					<div class="toolbar-end">
+						<Select aria-label={t('tickets.source_label')} options={sourceOptions} bind:value={source} />
 						<Select aria-label={t('tickets.priority')} options={priorityOptions} bind:value={priority} />
 					</div>
 				</div>
@@ -487,7 +519,14 @@
 		max-width: 320px;
 	}
 	.toolbar-end {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
 		margin-inline-start: auto;
+	}
+	/* The two pickers side by side, each as wide as its longest choice */
+	.toolbar-end :global(.form-select) {
+		width: auto;
 	}
 	/* Phone: the search over the full width, the rest from the start edge (as Toolbar) */
 	@media (max-width: 640px) {
@@ -524,6 +563,9 @@
 	.sla-overdue {
 		color: var(--warning);
 		font-weight: 600;
+	}
+	.from-computer {
+		overflow-wrap: anywhere;
 	}
 	.narrow-meta {
 		display: none;

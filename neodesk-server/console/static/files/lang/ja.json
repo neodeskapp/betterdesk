@@ -4283,7 +4283,14 @@
     "attach_hint": "25 MB までのファイル。このチケットを見られる人は誰でもダウンロードできます。",
     "attach_too_large": "このファイルは 25 MB を超えています。",
     "attach_uploading": "{name} をアップロードしています…",
-    "attach_done": "{name} を添付しました。"
+    "attach_done": "{name} を添付しました。",
+    "source_label": "作成元",
+    "source_all": "すべてのチケット",
+    "source_device": "コンピューターから",
+    "opened_at_computer": "{name} さんがコンピューター {device} で作成",
+    "opened_at_computer_unnamed": "コンピューター {device} で作成",
+    "at_computer_named": "{name} さん (コンピューター)",
+    "at_computer": "コンピューターの利用者"
   },
   "activity": {
     "title": "アクティビティの監視",
@@ -8428,7 +8435,9 @@
     "unread": "未読",
     "empty_hint": "ヘルプリクエストや参加を求めるデバイスはありません。",
     "loading": "通知を読み込んでいます…",
-    "load_failed": "通知を読み込めませんでした。"
+    "load_failed": "通知を読み込めませんでした。",
+    "kind_ticket": "コンピューターからの新しいチケット",
+    "kind_ticket_reply": "コンピューターからの返信"
   },
   "accessibility": {
     "title": "アクセシビリティ",

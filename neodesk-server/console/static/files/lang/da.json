@@ -4289,7 +4289,14 @@
     "attach_hint": "Filer på op til 25 MB. Alle, der kan se denne sag, kan hente dem.",
     "attach_too_large": "Filen er større end 25 MB.",
     "attach_uploading": "Uploader {name}…",
-    "attach_done": "{name} er vedhæftet."
+    "attach_done": "{name} er vedhæftet.",
+    "source_label": "Kilde",
+    "source_all": "Alle sager",
+    "source_device": "Fra computere",
+    "opened_at_computer": "Oprettet af {name} på computeren {device}",
+    "opened_at_computer_unnamed": "Oprettet på computeren {device}",
+    "at_computer_named": "{name}, ved computeren",
+    "at_computer": "Personen ved computeren"
   },
   "activity": {
     "title": "Aktivitetsovervågning",
@@ -8434,7 +8441,9 @@
     "unread": "Ulæst",
     "empty_hint": "Ingen anmodninger om hjælp eller enheder, der beder om at blive tilføjet.",
     "loading": "Indlæser meddelelser…",
-    "load_failed": "Meddelelserne kunne ikke indlæses."
+    "load_failed": "Meddelelserne kunne ikke indlæses.",
+    "kind_ticket": "Ny sag fra en computer",
+    "kind_ticket_reply": "Svar fra en computer"
   },
   "accessibility": {
     "title": "Tilgængelighed",
