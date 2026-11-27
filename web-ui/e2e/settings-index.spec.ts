@@ -15,10 +15,11 @@ import { PAGES, TABS, placeHref, type PlaceId } from '../src/lib/settings/tabs.t
  * whose element went away, fails here.
  */
 
-/** Elements that show only after a choice on the page, named with the choice that shows them */
+/** Elements that show only after a choice on the page or once there is something to act on, named with what shows them */
 const SHOWN_LATER: Readonly<Record<string, string>> = {
 	'font-upload-name': 'Fonts to search: Upload custom',
-	'font-upload-file': 'Fonts to search: Upload custom'
+	'font-upload-file': 'Fonts to search: Upload custom',
+	'backup-danger': 'Backups: the first update backup'
 };
 
 test.use({ role: 'super_admin' });
