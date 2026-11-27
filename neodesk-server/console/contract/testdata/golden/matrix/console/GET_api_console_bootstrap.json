@@ -629,7 +629,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=244dd46bcb9c0ddd"
+      "stringsUrl": "/api/console/strings/en?v=963da1274590380c"
      },
      "nav": [
       {
@@ -1417,7 +1417,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=244dd46bcb9c0ddd"
+      "stringsUrl": "/api/console/strings/en?v=963da1274590380c"
      },
      "nav": [
       {
@@ -2277,7 +2277,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=244dd46bcb9c0ddd"
+      "stringsUrl": "/api/console/strings/en?v=963da1274590380c"
      },
      "nav": [
       {
@@ -2380,6 +2380,16 @@
          "keywords": "help support requests",
          "page": "help-requests",
          "text": "Help requests"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/help-requests/feedback",
+         "keywords": "feedback quick support rating stars answers survey",
+         "page": "quick-support-feedback",
+         "text": "Feedback"
         },
         {
          "core": true,
@@ -3217,7 +3227,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=244dd46bcb9c0ddd"
+      "stringsUrl": "/api/console/strings/en?v=963da1274590380c"
      },
      "nav": [
       {
@@ -3330,6 +3340,16 @@
          "keywords": "help support requests",
          "page": "help-requests",
          "text": "Help requests"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/help-requests/feedback",
+         "keywords": "feedback quick support rating stars answers survey",
+         "page": "quick-support-feedback",
+         "text": "Feedback"
         },
         {
          "core": true,
@@ -4218,7 +4238,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=244dd46bcb9c0ddd"
+      "stringsUrl": "/api/console/strings/en?v=963da1274590380c"
      },
      "nav": [
       {
@@ -4596,6 +4616,16 @@
          "keywords": "meshcentral mesh meshagent",
          "page": "settings:meshcentral",
          "text": "MeshCentral"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "Console",
+         "href": "/settings?tab=quicksupport",
+         "keywords": "quick support feedback form questions survey",
+         "page": "settings:quicksupport",
+         "text": "Quick support"
         },
         {
          "core": false,
@@ -5282,7 +5312,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=244dd46bcb9c0ddd"
+      "stringsUrl": "/api/console/strings/en?v=963da1274590380c"
      },
      "nav": [
       {
@@ -5395,6 +5425,16 @@
          "keywords": "help support requests",
          "page": "help-requests",
          "text": "Help requests"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/help-requests/feedback",
+         "keywords": "feedback quick support rating stars answers survey",
+         "page": "quick-support-feedback",
+         "text": "Feedback"
         },
         {
          "core": true,
@@ -5750,6 +5790,16 @@
          "keywords": "meshcentral mesh meshagent",
          "page": "settings:meshcentral",
          "text": "MeshCentral"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "Console",
+         "href": "/settings?tab=quicksupport",
+         "keywords": "quick support feedback form questions survey",
+         "page": "settings:quicksupport",
+         "text": "Quick support"
         },
         {
          "core": false,
@@ -6487,7 +6537,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=244dd46bcb9c0ddd"
+      "stringsUrl": "/api/console/strings/en?v=963da1274590380c"
      },
      "nav": [
       {
@@ -6600,6 +6650,16 @@
          "keywords": "help support requests",
          "page": "help-requests",
          "text": "Help requests"
+        },
+        {
+         "core": true,
+         "countId": null,
+         "external": false,
+         "group": "",
+         "href": "/help-requests/feedback",
+         "keywords": "feedback quick support rating stars answers survey",
+         "page": "quick-support-feedback",
+         "text": "Feedback"
         },
         {
          "core": true,
@@ -6955,6 +7015,16 @@
          "keywords": "meshcentral mesh meshagent",
          "page": "settings:meshcentral",
          "text": "MeshCentral"
+        },
+        {
+         "core": false,
+         "countId": null,
+         "external": false,
+         "group": "Console",
+         "href": "/settings?tab=quicksupport",
+         "keywords": "quick support feedback form questions survey",
+         "page": "settings:quicksupport",
+         "text": "Quick support"
         },
         {
          "core": false,
