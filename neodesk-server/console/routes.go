@@ -19,6 +19,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/dashboard"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/dataguard"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/desktop"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/devicelogin"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/devices"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/filetransfer"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/fleet"
@@ -173,4 +174,5 @@ func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	apitokens.Register(d)                     // API tokens for scripts, the command line and its MCP server
 	setupguideroutes.Register(d)              // the first-install guide on the overview
 	accessibilityroutes.Register(d)           // the signed-in account's own accessibility settings
+	devicelogin.Register(d)                   // the desktop app's sign-in through the console (Allow page)
 }

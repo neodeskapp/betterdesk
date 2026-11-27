@@ -316,6 +316,24 @@ func (s *Service) GetPanelBaseURL() string {
 	if s.opts.PanelHost != nil {
 		host = publicHost(s.opts.PanelHost())
 	}
+	return s.consoleAt(host)
+}
+
+// PanelBaseURLFor is GetPanelBaseURL, but where that is "" the console at
+// host (an IP address or a host name; anything else gives "") with the
+// console's scheme and port. The desktop sign-in through the console
+// (DECISIONS A276) gives the host name the desktop app reached the server
+// at.
+func (s *Service) PanelBaseURLFor(host string) string {
+	if base := s.GetPanelBaseURL(); base != "" {
+		return base
+	}
+	return s.consoleAt(publicHost(host))
+}
+
+// consoleAt is the console's address at host, which publicHost checked,
+// with the scheme and port it serves; "" for no host.
+func (s *Service) consoleAt(host string) string {
 	if host == "" {
 		return ""
 	}

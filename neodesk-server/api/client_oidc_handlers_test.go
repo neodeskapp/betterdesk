@@ -11,6 +11,33 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
+// browserSignIns reads GET /api/login-options: the password entry first,
+// then the common-oidc list the stock client shows as buttons.
+func browserSignIns(t *testing.T, s *Server) []map[string]string {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodGet, "/api/login-options", nil)
+	rec := httptest.NewRecorder()
+	s.handleClientLoginOptions(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var opts []string
+	if err := json.Unmarshal(rec.Body.Bytes(), &opts); err != nil {
+		t.Fatal(err)
+	}
+	if len(opts) != 2 || opts[0] != "" || !strings.HasPrefix(opts[1], "common-oidc/") {
+		t.Fatalf("opts = %#v", opts)
+	}
+	var list []map[string]string
+	if err := json.Unmarshal([]byte(strings.TrimPrefix(opts[1], "common-oidc/")), &list); err != nil {
+		t.Fatalf("the common-oidc list %q: %v", opts[1], err)
+	}
+	return list
+}
+
+// The console sign-in is always offered first, with the NeoDesk mark; the
+// outside identity provider follows in the same list, because the stock
+// client reads only the first common-oidc entry.
 func TestHandleClientLoginOptionsOIDC(t *testing.T) {
 	s := &Server{
 		oidcProvider: auth.NewOIDCProvider(&auth.OIDCConfig{
@@ -19,33 +46,25 @@ func TestHandleClientLoginOptionsOIDC(t *testing.T) {
 			DisplayName: "Keycloak",
 		}),
 	}
-
-	req := httptest.NewRequest(http.MethodGet, "/api/login-options", nil)
-	rec := httptest.NewRecorder()
-	s.handleClientLoginOptions(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status %d", rec.Code)
+	list := browserSignIns(t, s)
+	if len(list) != 2 || list[0]["name"] != "NeoDesk" || list[0]["icon"] != neodeskMarkSVG || list[1]["name"] != "Keycloak" || list[1]["icon"] != "" {
+		t.Fatalf("list = %#v", list)
 	}
-	var opts []string
-	if err := json.Unmarshal(rec.Body.Bytes(), &opts); err != nil {
-		t.Fatal(err)
+	if !strings.HasPrefix(neodeskMarkSVG, "<svg ") || !strings.Contains(neodeskMarkSVG, `fill="#58a6ff"`) {
+		t.Errorf("the icon is not the NeoDesk mark: %s", neodeskMarkSVG)
 	}
-	if len(opts) != 2 || opts[0] != "" || opts[1] != "oidc/Keycloak" {
-		t.Fatalf("opts = %#v", opts)
+
+	// An identity provider called NeoDesk would take the console's op
+	s.oidcProvider = auth.NewOIDCProvider(&auth.OIDCConfig{Enabled: true, ClientID: "cid", DisplayName: "NeoDesk"})
+	if list := browserSignIns(t, s); len(list) != 2 || list[1]["name"] != "NeoDesk SSO" {
+		t.Fatalf("list with a provider called NeoDesk = %#v", list)
 	}
 }
 
-func TestHandleClientLoginOptionsPasswordOnly(t *testing.T) {
-	s := &Server{}
-	req := httptest.NewRequest(http.MethodGet, "/api/login-options", nil)
-	rec := httptest.NewRecorder()
-	s.handleClientLoginOptions(rec, req)
-
-	var opts []string
-	_ = json.Unmarshal(rec.Body.Bytes(), &opts)
-	if len(opts) != 1 || opts[0] != "" {
-		t.Fatalf("opts = %#v", opts)
+func TestHandleClientLoginOptionsWithoutIdentityProvider(t *testing.T) {
+	list := browserSignIns(t, &Server{})
+	if len(list) != 1 || list[0]["name"] != "NeoDesk" {
+		t.Fatalf("list = %#v", list)
 	}
 }
 

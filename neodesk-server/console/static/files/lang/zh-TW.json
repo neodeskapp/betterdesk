@@ -10412,5 +10412,37 @@
     "updates_title": "更新前",
     "where": "儲存位置",
     "where_help": "NeoDesk 資料資料夾，或您自己的資料夾。網路共用必須先由作業系統掛載。"
+  },
+  "device_authorize": {
+    "title": "登入 NeoDesk 應用程式",
+    "description": "一台電腦要求使用您的帳戶 {account} 登入 NeoDesk 應用程式。",
+    "facts_label": "提出要求的電腦",
+    "device_name": "電腦",
+    "device_os": "系統",
+    "device_id": "NeoDesk ID",
+    "ip": "IP 位址",
+    "asked": "要求時間",
+    "check": "只有在您剛剛於那台電腦上開始此登入時才允許。否則請按「拒絕」：傳送此連結給您的人將進入您的帳戶。",
+    "allow": "允許",
+    "deny": "拒絕",
+    "unnamed": "未命名的電腦",
+    "allowed_title": "應用程式已登入",
+    "allowed_text": "{device} 現已以 {account} 的身分登入。請回到 NeoDesk 應用程式；您可以關閉此分頁。",
+    "declined_title": "已拒絕登入",
+    "declined_text": "這台電腦未登入。您可以關閉此分頁。",
+    "ended_title": "此登入已結束",
+    "ended_text": "它已在五分鐘後過期或已有回應。請在 NeoDesk 應用程式中重新開始登入。",
+    "load_failed": "無法載入登入要求。",
+    "errors": {
+      "already_decided": "此登入已有回應。",
+      "not_found": "此登入已結束。請在 NeoDesk 應用程式中重新開始。",
+      "account_disabled": "您的帳戶已停用，因此無法登入應用程式。",
+      "totp_setup_required": "您的帳戶需要先設定兩步驟登入。請在「您的帳戶」中設定，然後再按一次「允許」。",
+      "password_change_required": "您的帳戶需要先選擇新密碼。請在「您的帳戶」中變更，然後再按一次「允許」。",
+      "account_refused": "您的帳戶無法登入應用程式。",
+      "impersonating": "您正以另一個帳戶的身分檢視 NeoDesk。請先停止，然後用您自己的帳戶允許登入。",
+      "browser_only": "只有在瀏覽器中登入主控台的人才能允許登入。",
+      "server_error": "操作未成功。請再試一次。"
+    }
   }
 }

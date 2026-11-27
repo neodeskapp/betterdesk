@@ -156,6 +156,13 @@ type Server struct {
 	// callerUses are the relay sessions whose quick support caller the
 	// server vouched for (support_caller.go), once each
 	callerUses signinUses
+	// consoleLogins are the desktop sign-ins through the web console
+	// (console_device_login.go)
+	consoleLogins consoleLogins
+	// consoleAddress is where people reach the console in this process
+	// (SetConsoleAddress); nil without one
+	consoleAddressMu sync.RWMutex
+	consoleAddress   func(host string) string
 	// signinLiveFn stands in for the relay's live sessions in tests
 	signinLiveFn func(uuid string) (relay.LivePair, bool)
 	httpSrv      *http.Server
@@ -725,6 +732,7 @@ func (s *Server) routes() *http.ServeMux {
 	s.connectAnswerRoutes(mux)
 	s.signinRoutes(mux)
 	s.supportCallerRoutes(mux)
+	s.consoleLoginRoutes(mux)
 
 	// CDAP device management (requires CDAP gateway to be enabled)
 	mux.HandleFunc("GET /api/cdap/status", s.requirePermission(auth.PermCDAPView, s.handleCDAPStatus))
