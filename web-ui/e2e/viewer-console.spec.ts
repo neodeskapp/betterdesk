@@ -205,7 +205,8 @@ test('Remote sessions in the sidebar opens inside the console: the open sessions
 	const list = page.locator('.session-list');
 	await expect(list.getByRole('link')).toHaveCount(1);
 	await expect(list).toContainText('Connected');
-	await expect(page.getByRole('navigation', { name: 'Open sessions' })).toHaveCount(0);
+	// The strip of open sessions stays on top, as on every other console page
+	await expect(page.getByRole('navigation', { name: 'Open sessions' }).getByRole('link')).toHaveCount(1);
 	await page.getByLabel('Device ID', { exact: true }).fill(B);
 	await page.locator('.quick').getByRole('button', { name: 'Connect', exact: true }).click();
 	await expect(page).toHaveURL(new RegExp(`/remote/session/${B}`));

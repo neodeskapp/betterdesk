@@ -76,8 +76,6 @@
 	// The route as text: the generated list of route ids is not needed to compare with it
 	const routeId = $derived<string | null>(page.route.id);
 	const sessionPage = $derived(routeId === SESSION_ROUTE);
-	// Remote sessions lists the open sessions itself: no strip above it
-	const sessionsPage = $derived(routeId === '/(console)/remote/sessions');
 	// The sidebar folded away on a session's page (the person's choice) and in full screen opens as a drawer
 	const drawer = $derived(narrow || cs.immersive || (sessionPage && cs.collapsed));
 	let drawerOpen = $state(false);
@@ -279,7 +277,7 @@
 					onsearch={() => (searchOpen = true)}
 					onhelp={() => (helpOpen = !helpOpen)}
 				/>
-				{#if !sessionPage && !sessionsPage}<SessionStrip />{/if}
+				{#if !sessionPage}<SessionStrip />{/if}
 			{/if}
 			<div class="shell-body">
 				<main
