@@ -73,7 +73,7 @@ FROM alpine:3.22
 LABEL maintainer="neodeskapp"
 LABEL description="NeoDesk — server and web console in one process"
 LABEL org.opencontainers.image.source="https://github.com/neodeskapp/neodesk"
-LABEL version="3.6.37"
+LABEL version="3.6.38"
 
 # Runtime packages (retry for transient DNS failures). sqlite stays for the
 # admin credential bootstrap, which counts users with the sqlite3 CLI.
