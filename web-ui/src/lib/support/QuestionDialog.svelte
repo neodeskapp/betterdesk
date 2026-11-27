@@ -124,7 +124,7 @@
 			</p>
 			<ListEditor
 				id="{uid}-options"
-				items={q.options.filter((o) => o.trim() !== '')}
+				items={q.options}
 				onchange={(list) => (q.options = list)}
 				itemLabel={(n) => tf('quick_support_feedback.option_n', 'Option {n}', { n })}
 				addLabel={tf('quick_support_feedback.add_option', 'Add an option')}
