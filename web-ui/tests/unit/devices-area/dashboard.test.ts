@@ -8,6 +8,7 @@ import {
 	listPendingAgents
 } from '../../../src/lib/api/dashboard.ts';
 import {
+	clientHostFixed,
 	configText,
 	deviceParts,
 	intuneScript,
@@ -143,6 +144,24 @@ describe('client values', () => {
 		config_uri: 'rustdesk://config/abc',
 		client_server_host: 'desk.example.com',
 		env_override_active: null
+	});
+
+	// Setup audit HTTPS-13: only a public ID server fixes the address field
+	test('the address field is fixed only while the ID server comes from the settings', () => {
+		const sources = (host: string) =>
+			v.parse(ClientConfig, {
+				env_override_active: true,
+				endpoint_sources: { host, relay: 'env', api: 'env' }
+			});
+		expect(clientHostFixed(sources('saved'))).toBe(true);
+		expect(clientHostFixed(sources('env'))).toBe(true);
+		for (const host of ['query', 'relay_servers', 'panel_host', 'config', 'request', 'default']) {
+			expect(clientHostFixed(sources(host))).toBe(false);
+		}
+		// An older server without sources
+		expect(clientHostFixed(v.parse(ClientConfig, { env_override_active: true }))).toBe(true);
+		expect(clientHostFixed(v.parse(ClientConfig, {}))).toBe(false);
+		expect(clientHostFixed(null)).toBe(false);
 	});
 
 	test('missing flags and text become false and empty', () => {

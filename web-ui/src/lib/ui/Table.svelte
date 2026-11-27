@@ -28,7 +28,7 @@
   also the box a sticky header sticks to.
 -->
 <script lang="ts" generics="T">
-	import { tick, untrack } from 'svelte';
+	import { tick, untrack, type Snippet } from 'svelte';
 	import type { ClassValue } from 'svelte/elements';
 	import { i18n, plural, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from './Button.svelte';
@@ -72,6 +72,8 @@
 		onretry?: () => void;
 		/** One sentence for no rows (after filtering too) */
 		emptyText?: string;
+		/** Links or buttons after the empty sentence: what to do next */
+		emptyActions?: Snippet;
 		/** Above this many rows only the rows in view are rendered */
 		virtualThreshold?: number;
 		overscan?: number;
@@ -104,6 +106,7 @@
 		error = null,
 		onretry,
 		emptyText = '',
+		emptyActions,
 		virtualThreshold = 200,
 		overscan = 10,
 		rowHeight,
@@ -497,7 +500,8 @@
 					<tr class="state-row">
 						<td class="state-cell" {colspan}
 							><span class="state" style:--table-box={boxWidth ? `${boxWidth}px` : undefined}
-								>{loading ? (loadingText ?? t('common.loading')) : emptyText}</span
+								>{#if loading}{loadingText ?? t('common.loading')}{:else}<span>{emptyText}</span
+									>{@render emptyActions?.()}{/if}</span
 							></td
 						>
 					</tr>
