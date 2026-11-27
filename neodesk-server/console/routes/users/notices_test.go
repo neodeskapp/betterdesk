@@ -44,11 +44,11 @@ func TestNewSignInNotice(t *testing.T) {
 	}
 	expect(t, "other browser", w.SignedOut().Do("POST", "/api/auth/login", login, "User-Agent", firefox, "X-Forwarded-For", "203.0.113.7"), 200, "")
 	got := mailsTo(box, "kim@example.test", 300*time.Millisecond)
-	if len(got) != 1 || got[0].Subject != "New sign-in to your account on NeoDesk" {
+	if len(got) != 1 || got[0].Subject != "New sign-in to your account kim" {
 		t.Fatalf("mails: %q", subjects(got))
 	}
 	text := *got[0].Text
-	for _, want := range []string{"Address: 203.0.113.7", "Browser: Firefox on Windows", "If it wasn't, change your password", "Open Your account: https://desk.example/account"} {
+	for _, want := range []string{"IP address: 203.0.113.7", "Browser: Firefox on Windows", "If it wasn't, change your password", "Open your account:\nhttps://desk.example/account"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("no %q in\n%s", want, text)
 		}
@@ -71,7 +71,7 @@ func TestPasswordChangedNotice(t *testing.T) {
 	expect(t, "sign in", lou.Do("POST", "/api/auth/login", `{"username":"lou","password":"Old-Pass-123!"}`), 200, "")
 	expect(t, "change", lou.Do("POST", "/api/auth/password", `{"currentPassword":"Old-Pass-123!","newPassword":"New-Pass-456!","confirmPassword":"New-Pass-456!"}`), 200, "")
 	got := mailsTo(box, "lou@example.test", 300*time.Millisecond)
-	if len(got) != 1 || got[0].Subject != "Your password on NeoDesk was changed" || !strings.Contains(*got[0].Text, "The password of your account lou") {
+	if len(got) != 1 || got[0].Subject != "The password of lou was changed" || !strings.Contains(*got[0].Text, "The password of your account lou") {
 		t.Fatalf("mails: %q", subjects(got))
 	}
 	if !strings.Contains(*got[0].HTML, "Your password was changed") {
@@ -83,8 +83,8 @@ func TestPasswordChangedNotice(t *testing.T) {
 		t.Fatal(err)
 	}
 	expect(t, "admin sets mia's password", admin.Do("POST", "/api/users/"+mia+"/reset-password", `{"newPassword":"Admin-Set-123!"}`), 200, "")
-	if got := mailsTo(box, "mia@example.test", 300*time.Millisecond); len(got) != 1 || got[0].Subject != "Dein Passwort auf NeoDesk wurde geändert" ||
-		!strings.Contains(*got[0].Text, "Ein Administrator hat ein neues Passwort") {
+	if got := mailsTo(box, "mia@example.test", 300*time.Millisecond); len(got) != 1 || got[0].Subject != "Das Passwort von mia wurde geändert" ||
+		!strings.Contains(*got[0].Text, "Ein Admin hat ein neues Passwort") {
 		t.Errorf("mia's mail: %q", subjects(got))
 	}
 

@@ -171,7 +171,7 @@ func TestTemporaryPassword(t *testing.T) {
 		t.Errorf("audit about carol:\n%s", rows)
 	}
 	mails := subjects(mailsTo(box, "carol@example.test", 300*time.Millisecond))
-	if len(mails) < 2 || mails[0] != "Your password on NeoDesk was changed" {
+	if len(mails) < 2 || mails[0] != "The password of carol was changed" {
 		t.Errorf("mails to carol: %q", mails)
 	}
 	if m := mailsTo(box, "carol@example.test", 0); !strings.Contains(*m[0].Text, "temporary password") || !strings.Contains(*m[0].Text, "tell your administrator") {

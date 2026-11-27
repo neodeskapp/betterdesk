@@ -3,6 +3,8 @@ package securitymail
 import (
 	"context"
 	"time"
+
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 )
 
 // SignIn is what the notice of a new sign-in says about it.
@@ -15,27 +17,35 @@ type SignIn struct {
 	Browser string
 }
 
-// NewSignIn tells the person that their account was signed in to from a
-// browser it had not used before (switch KeyNewSignIn).
-func (n *Notices) NewSignIn(ctx context.Context, userID int64, s SignIn) {
-	at := s.At
-	if at.IsZero() {
-		at = n.now()
-	}
-	n.send(ctx, userID, notice{
-		key: KeyNewSignIn, subject: "new_signin_subject", heading: "new_signin_heading", lead: "new_signin_lead",
-		notYou: "not_you_signin",
-		facts: func(t func(string, map[string]any) string, when func(time.Time) string) []string {
-			out := []string{t("security_notice.fact_time", map[string]any{"time": when(at)})}
-			if s.IP != "" {
-				out = append(out, t("security_notice.fact_address", map[string]any{"address": s.IP}))
-			}
+// factsFunc writes a notice's facts in the mail's language; when writes a
+// time in the recipient's time zone.
+type factsFunc func(t brandmail.Translate, when func(time.Time) string) []brandmail.Fact
+
+// signInNotice is the notice of a new sign-in.
+func signInNotice(s SignIn) notice {
+	return notice{
+		key: KeyNewSignIn, kind: "security-signin", subject: "subject_signin", preheader: "preheader_signin",
+		heading: "new_signin_heading", lead: "lead_signin", notYou: "not_you_signin",
+		facts: func(t brandmail.Translate, when func(time.Time) string) []brandmail.Fact {
+			out := []brandmail.Fact{{Label: t("mail.security.label_time", nil), Value: when(s.At)}}
 			if s.Browser != "" {
-				out = append(out, t("security_notice.fact_browser", map[string]any{"browser": s.Browser}))
+				out = append(out, brandmail.Fact{Label: t("mail.security.label_browser", nil), Value: s.Browser})
+			}
+			if s.IP != "" {
+				out = append(out, brandmail.Fact{Label: t("mail.security.label_address", nil), Value: s.IP})
 			}
 			return out
 		},
-	})
+	}
+}
+
+// NewSignIn tells the person that their account was signed in to from a
+// browser it had not used before (switch KeyNewSignIn).
+func (n *Notices) NewSignIn(ctx context.Context, userID int64, s SignIn) {
+	if s.At.IsZero() {
+		s.At = n.now()
+	}
+	n.send(ctx, userID, signInNotice(s))
 }
 
 // How a password changed.
@@ -54,22 +64,26 @@ const (
 	PasswordTemporary PasswordChange = "temporary"
 )
 
+func passwordNotice(how PasswordChange, at time.Time) notice {
+	lead := "lead_password_self"
+	switch how {
+	case PasswordByLink:
+		lead = "lead_password_link"
+	case PasswordByAdmin:
+		lead = "lead_password_admin"
+	case PasswordTemporary:
+		lead = "lead_password_temporary"
+	}
+	return notice{
+		key: KeyPasswordChanged, kind: "security-password", subject: "subject_password", preheader: "preheader",
+		heading: "password_heading", lead: lead, notYou: "not_you_password", facts: timeFact(at),
+	}
+}
+
 // PasswordChanged tells the person that their password changed (switch
 // KeyPasswordChanged).
 func (n *Notices) PasswordChanged(ctx context.Context, userID int64, how PasswordChange) {
-	lead := "password_lead_self"
-	switch how {
-	case PasswordByLink:
-		lead = "password_lead_link"
-	case PasswordByAdmin:
-		lead = "password_lead_admin"
-	case PasswordTemporary:
-		lead = "password_lead_temporary"
-	}
-	n.send(ctx, userID, notice{
-		key: KeyPasswordChanged, subject: "password_subject", heading: "password_heading", lead: lead,
-		notYou: "not_you_password", facts: n.timeFact(),
-	})
+	n.send(ctx, userID, passwordNotice(how, n.now()))
 }
 
 // What changed about two-factor sign-in.
@@ -85,13 +99,30 @@ const (
 	RecoveryCodesInvalidate TwoFactorChange = "codes_invalidated"
 )
 
+func twoFactorNotice(change TwoFactorChange, at time.Time) notice {
+	return notice{
+		key: KeyTwoFactorChanged, kind: "security-two-factor", subject: "subject_two_factor", preheader: "preheader",
+		heading: "two_factor_heading", lead: "lead_two_factor_" + string(change), notYou: "not_you_two_factor", facts: timeFact(at),
+	}
+}
+
 // TwoFactorChanged tells the person what changed about their two-factor
 // sign-in (switch KeyTwoFactorChanged).
 func (n *Notices) TwoFactorChanged(ctx context.Context, userID int64, change TwoFactorChange) {
-	n.send(ctx, userID, notice{
-		key: KeyTwoFactorChanged, subject: "two_factor_subject", heading: "two_factor_heading",
-		lead: "two_factor_lead_" + string(change), notYou: "not_you_two_factor", facts: n.timeFact(),
-	})
+	n.send(ctx, userID, twoFactorNotice(change, n.now()))
+}
+
+func emailNotice(oldAddress, newAddress string, at time.Time) notice {
+	return notice{
+		key: KeyEmailChanged, kind: "security-email", subject: "subject_email", preheader: "preheader",
+		heading: "email_heading", lead: "lead_email", notYou: "not_you_email", to: oldAddress,
+		facts: func(t brandmail.Translate, when func(time.Time) string) []brandmail.Fact {
+			return []brandmail.Fact{
+				{Label: t("mail.security.label_new_address", nil), Value: newAddress},
+				{Label: t("mail.security.label_time", nil), Value: when(at)},
+			}
+		},
+	}
 }
 
 // EmailChanged tells the old address that the account has a new one
@@ -100,22 +131,12 @@ func (n *Notices) EmailChanged(ctx context.Context, userID int64, oldAddress, ne
 	if oldAddress == "" {
 		return
 	}
-	n.send(ctx, userID, notice{
-		key: KeyEmailChanged, subject: "email_subject", heading: "email_heading", lead: "email_lead",
-		notYou: "not_you_email", to: oldAddress,
-		facts: func(t func(string, map[string]any) string, when func(time.Time) string) []string {
-			return []string{
-				t("security_notice.fact_new_address", map[string]any{"address": newAddress}),
-				t("security_notice.fact_time", map[string]any{"time": when(n.now())}),
-			}
-		},
-	})
+	n.send(ctx, userID, emailNotice(oldAddress, newAddress, n.now()))
 }
 
-// timeFact is the line that says when a change happened.
-func (n *Notices) timeFact() func(t func(string, map[string]any) string, when func(time.Time) string) []string {
-	at := n.now()
-	return func(t func(string, map[string]any) string, when func(time.Time) string) []string {
-		return []string{t("security_notice.fact_time", map[string]any{"time": when(at)})}
+// timeFact is the row that says when a change happened.
+func timeFact(at time.Time) factsFunc {
+	return func(t brandmail.Translate, when func(time.Time) string) []brandmail.Fact {
+		return []brandmail.Fact{{Label: t("mail.security.label_time", nil), Value: when(at)}}
 	}
 }
