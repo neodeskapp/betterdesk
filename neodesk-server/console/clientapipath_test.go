@@ -66,7 +66,7 @@ func TestClientAPIPathOnTheConsolePort(t *testing.T) {
 func TestClientAPIPathWithoutClientAPI(t *testing.T) {
 	seen := make(chan string, 1)
 	w := newWorld(t, setup{
-		listener: http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) { seen <- r.URL.Path }),
+		listener:  http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) { seen <- r.URL.Path }),
 		configure: func(cfg *config.Config) { cfg.APIEnabled = false },
 	})
 	w.s.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/client-api/api/health", nil))
