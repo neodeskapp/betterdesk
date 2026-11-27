@@ -70,7 +70,7 @@ there. Around that, the console has what a team needs to share a server:
 
 - **Enrollment requests:** when approval is required, a new RustDesk client waits until someone approves it.
 - **Users and roles:** each person signs in with their own account, and their role decides what they can do.
-- **Sign-in:** two-factor sign-in, LDAP or Active Directory, and OIDC.
+- **Sign-in:** two-factor sign-in, LDAP or Active Directory, and OIDC. The NeoDesk app on a computer can sign in through the console in the browser, without typing a password into the app.
 - **Activity:** a log of what people do in the console.
 
 ## Install
