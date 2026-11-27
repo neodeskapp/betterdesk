@@ -147,7 +147,7 @@ func TestNavSettingsTabs(t *testing.T) {
 			tabs = append(tabs, strings.TrimPrefix(page, "settings:"))
 		}
 	}
-	if got := strings.Join(tabs, ","); got != "general,auth,ldap,sso,joining,branding,brand,email,time,meshcentral" {
+	if got := strings.Join(tabs, ","); got != "general,auth,ldap,sso,joining,branding,brand,email,time,meshcentral,quicksupport" {
 		t.Errorf("settings tabs %s", got)
 	}
 	hrefs := map[string]NavPage{}
@@ -156,7 +156,7 @@ func TestNavSettingsTabs(t *testing.T) {
 			hrefs[page.Page] = page
 		}
 	}
-	for tab, label := range map[string]string{"ldap": "settings.ldap_title", "sso": "settings.oidc_title", "joining": "settings.enrollment_title", "meshcentral": "nav.meshcentral"} {
+	for tab, label := range map[string]string{"ldap": "settings.ldap_title", "sso": "settings.oidc_title", "joining": "settings.enrollment_title", "meshcentral": "nav.meshcentral", "quicksupport": "settings.tab_quicksupport"} {
 		p := hrefs["settings:"+tab]
 		if p.Href != "/settings?tab="+tab || p.Label != label {
 			t.Errorf("settings:%s: %+v", tab, p)
@@ -353,7 +353,7 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 		ids = append(ids, section.ID)
 		total += len(section.Pages)
 	}
-	if strings.Join(ids, ",") != "devices,support,people,activity,rules,server,settings" || total != 44 {
+	if strings.Join(ids, ",") != "devices,support,people,activity,rules,server,settings" || total != 46 {
 		t.Errorf("admin sees sections %v with %d pages", ids, total)
 	}
 	if nav.ActivePage != nil || nav.ActiveSection != nil {

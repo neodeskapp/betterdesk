@@ -1,10 +1,12 @@
 package onboard
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/onboard"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
@@ -18,6 +20,43 @@ type callerAnswer struct {
 	DeviceID string `json:"device_id"`
 	Session  string `json:"session"`
 	Helper   string `json:"helper"`
+	// HelperAvatar is the helper's console picture as a data URL, left
+	// out when the account has none or it does not fit
+	HelperAvatar string `json:"helper_avatar,omitempty"`
+}
+
+// The size of the helper's picture in the vouch answer.
+const (
+	helperAvatarSide   = 96
+	helperAvatarMaxLen = 48 << 10
+)
+
+// helperAvatar is the account's picture as a data URL of at most 96 by 96
+// pixels and 48 KB, "" when it has none or it can't be made that small.
+// The scaled picture is kept by the picture's version.
+func (h *handlers) helperAvatar(ctx context.Context, account int64) string {
+	if h.d.Avatars == nil {
+		return ""
+	}
+	pic, err := h.d.Avatars.GetAvatar(ctx, account)
+	if err != nil {
+		h.log.Warn("Quick support caller picture:", err)
+		return ""
+	}
+	if pic == nil {
+		return ""
+	}
+	h.thumbMu.Lock()
+	kept, ok := h.thumbs[account]
+	h.thumbMu.Unlock()
+	if ok && kept.version == pic.Version {
+		return kept.url
+	}
+	url, _ := avatars.Thumbnail(avatars.Image{MimeType: pic.MimeType, Data: pic.Data}, helperAvatarSide, helperAvatarMaxLen)
+	h.thumbMu.Lock()
+	h.thumbs[account] = thumb{version: pic.Version, url: url}
+	h.thumbMu.Unlock()
+	return url
 }
 
 // sessionLabel is the start of a relay session's id, for the audit log.
@@ -149,7 +188,10 @@ func (h *handlers) appCaller(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	h.callers.Note(relaySession, sess.DeviceID, onboard.CallerVouched)
-	kit.JSON(w, r, http.StatusOK, callerAnswer{Success: true, Vouched: true, DeviceID: sess.DeviceID, Session: relaySession, Helper: name})
+	kit.JSON(w, r, http.StatusOK, callerAnswer{
+		Success: true, Vouched: true, DeviceID: sess.DeviceID, Session: relaySession, Helper: name,
+		HelperAvatar: h.helperAvatar(ctx, account),
+	})
 }
 
 // deviceCallerAnswer is POST /api/support/devices/{id}/caller.

@@ -32,6 +32,8 @@ export function pageKey(path: string, search: { get(name: string): string | null
 	const tab = q.get('tab') ?? '';
 	if (first === '') return 'dashboard';
 	if (first === 'devices' && second === 'add') return 'devices-add';
+	// The answers after quick support are a page of their own below Help requests
+	if (first === 'help-requests' && second === 'feedback') return 'quick-support-feedback';
 	if (first === 'settings') return 'settings:' + (tab || 'general');
 	// Files and Services are tabs of Server status, one entry in the Server section
 	if (first === 'server-management') return 'server-management:overview';

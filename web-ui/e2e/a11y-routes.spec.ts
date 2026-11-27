@@ -34,6 +34,7 @@ const CONSOLE: Record<string, string> = {
 	'/(console)/devices/add': '/devices/add',
 	'/(console)/fleet': '/fleet',
 	'/(console)/help-requests': '/help-requests',
+	'/(console)/help-requests/feedback': '/help-requests/feedback',
 	'/(console)/inventory': '/inventory',
 	'/(console)/languages': '/languages',
 	'/(console)/network': '/network',

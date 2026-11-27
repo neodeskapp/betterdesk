@@ -10,6 +10,8 @@ All routes are on the console's address (`https://<console host>`), take
 and answer JSON, and need no console session or CSRF token. Every route
 but the redeem needs `Authorization: Bearer <session token>`; a token of a
 session that ended, or none, gets `401 {"success":false,"error":"invalid_session"}`.
+The feedback routes are the exception: they take the token for a day
+after the end (below, "Feedback after the session").
 
 | Route | Body | What it does |
 |---|---|---|
@@ -20,6 +22,8 @@ session that ended, or none, gets `401 {"success":false,"error":"invalid_session
 | `GET /api/support/session` | none | The session's state; the app polls it every few seconds. |
 | `POST /api/support/session/end` | `{}` | The app closed. |
 | `POST /api/support/session/caller` | `{session}` | Whether a connection that came without the password is a signed-in helper (below). |
+| `GET /api/support/session/feedback` | none | The feedback form, and whether the session has an answer (below). |
+| `POST /api/support/session/feedback` | `{answers}` | The person's answers to the feedback form (below). |
 
 The helper's viewer has one route of its own here, with the console
 session of a signed-in account: `POST /api/support/devices/{id}/caller`
@@ -74,11 +78,16 @@ The server vouches:
 
 ```
 200
-{"success":true,"vouched":true,"device_id":"523456781","session":"<the relay session's UUID>","helper":"Olga Operator"}
+{"success":true,"vouched":true,"device_id":"523456781","session":"<the relay session's UUID>","helper":"Olga Operator","helper_avatar":"data:image/jpeg;base64,/9j/4AAQ..."}
 ```
 
 `helper` is the helper's first and last name as the console knows them,
-else their user name. The audit log gets a `quick_support_caller` entry
+else their user name. `helper_avatar` is the helper account's console picture as
+`data:image/png;base64,...` (a picture with see-through parts) or
+`data:image/jpeg;base64,...`, scaled down to at most 96 by 96 pixels and
+at most 48 KB of text, the `data:` prefix included. It is left out when
+the account has no picture or it can't be made that small (a WebP picture
+among them, which the server does not decode). The audit log gets a `quick_support_caller` entry
 about the helper before the answer goes out; when it can't be written the
 answer is `500 {"error":"audit_failed"}` and nobody is vouched for.
 
@@ -150,3 +159,96 @@ session:
 
 The texts are in `docs/failure-reasons.md`. The console keeps the states
 in memory for 10 minutes.
+
+## Feedback after the session
+
+When a session the person allowed has ended, the app may ask the person
+the console's feedback questions. An admin sets the form up in the
+console (Settings, Quick support) and reads the answers there. Both
+routes take the session token.
+
+### When the token works
+
+| The session | Feedback routes | The other routes |
+|---|---|---|
+| `allowed` | work | work |
+| `ended` after it was `allowed`, at most 24 hours ago | work | `401 invalid_session` |
+| `ended` after it was `allowed`, more than 24 hours ago | `401 invalid_session` | `401 invalid_session` |
+| never `allowed`: `opened` or `asking`, `declined`, or `ended` before Allow | `409 {"success":false,"error":"wrong_state"}` (for 24 hours after the end, then `401`) | as before |
+
+The routes count against the console's rate limits like the other app
+routes. A call to them does not count as the app calling in: an open
+session still needs its polls of `GET /api/support/session`.
+
+### The form
+
+```
+GET /api/support/session/feedback
+
+200
+{"success":true,
+ "form":{"questions":[
+    {"id":"q1","kind":"rating","label":"How was the help?","required":true},
+    {"id":"q2","kind":"text","label":"Anything else?","required":false,"long":true},
+    {"id":"q3","kind":"choice","label":"Which part?","required":false,"options":["Mail","Printer"]},
+    {"id":"q4","kind":"yesno","label":"Solved?","required":false}]},
+ "given":false}
+
+404
+{"success":false,"error":"feedback_off"}
+```
+
+`404 feedback_off`: feedback is switched off or the form has no
+questions. The app asks nothing then.
+
+The questions come in the order the person sees them; there are at most
+10. Each has:
+
+| Field | |
+|---|---|
+| `id` | A short text, stable for the question: it stays through edits and moves, and an id never names another question later. |
+| `kind` | `rating` (1 to 5 stars), `text`, `choice` (one of `options`) or `yesno`. |
+| `label` | The question as the admin typed it, at most 200 characters. |
+| `required` | Whether the person must answer it. |
+| `long` | Only on `text`: a field of several lines instead of one. |
+| `options` | Only on `choice`: 2 to 8 texts, each at most 200 characters, none twice. |
+
+`given` is true when the session has an answer already; the app shows no
+form then. The form is the form at the moment of the request; an admin
+may change it between the GET and the POST.
+
+### The answers
+
+```
+POST /api/support/session/feedback
+{"answers":{"q1":5,"q2":"Thanks","q3":"Printer","q4":true}}
+
+200
+{"success":true}
+
+400
+{"success":false,"error":"invalid_answers"}
+
+409
+{"success":false,"error":"already_given"}
+```
+
+`answers` maps question ids to answers: a whole number from 1 to 5 for
+`rating`, text of at most 2000 characters for `text`, one of the
+`options` exactly for `choice`, `true` or `false` for `yesno`. A question
+left out, `null`, a text of only spaces and an empty choice count as not
+answered.
+
+The server checks the answers against the form as it is when the POST
+arrives. `400 invalid_answers` when an id is no question of the form, a
+value is of the wrong type, a rating is outside 1 to 5, a choice is not
+one of the options, a text is over 2000 characters, or a required
+question is not answered. The app may read the form again and ask anew.
+`404 feedback_off` when the form was switched off in between.
+
+A session takes one answer: a second POST is `409 already_given`. The
+console keeps each answer with the questions as they were asked, so a
+later edit of the form does not change old answers, and with the
+session's device ID and computer name, the helper, the person's name and
+email from the session, when the session started and ended, and when the
+answer came.

@@ -1,7 +1,12 @@
 package onboard_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
+	"image"
+	"image/color"
+	"image/png"
 	"net/http"
 	"strings"
 	"testing"
@@ -204,4 +209,71 @@ func TestTheViewerLearnsWhyThereIsNoAllow(t *testing.T) {
 	if res := operator.do(http.MethodPost, "/api/support/devices/"+fine+"/caller", `{}`); res.status != http.StatusBadRequest {
 		t.Fatalf("no relay session: %d %s, want 400", res.status, res.body)
 	}
+}
+
+// pictureOf is a PNG of w by h pixels: a colour gradient, see-through on
+// the left half when clear.
+func pictureOf(t *testing.T, w, h int, clear bool) []byte {
+	t.Helper()
+	img := image.NewNRGBA(image.Rect(0, 0, w, h))
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			a := uint8(255)
+			if clear && x < w/2 {
+				a = 0
+			}
+			img.SetNRGBA(x, y, color.NRGBA{R: uint8(x), G: uint8(y), B: uint8(x + y), A: a})
+		}
+	}
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		t.Fatal(err)
+	}
+	return buf.Bytes()
+}
+
+// TestTheVouchCarriesTheHelpersPicture: the vouch answer carries the
+// helper's console picture as a data URL of at most 96 by 96 pixels and
+// 48 KB, a PNG when it has see-through pixels and a JPEG otherwise; an
+// account without a picture gets no helper_avatar.
+func TestTheVouchCarriesTheHelpersPicture(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t))
+	const device = "523456786"
+	app, header := supportOnDevice(t, w, device, true)
+	vouch := func(name string) map[string]any {
+		t.Helper()
+		relaySession := name + "-" + t.Name()
+		liveRelay(t, relaySession, "panel-web-remote", device, 5, "console-1")
+		res := app.do(http.MethodPost, "/api/support/session/caller", `{"session":"`+relaySession+`"}`, header...)
+		if res.status != http.StatusOK {
+			t.Fatalf("%s: %d %s", name, res.status, res.body)
+		}
+		return res.json(t)
+	}
+	if got := vouch("none"); got["helper_avatar"] != nil {
+		t.Fatalf("an account without a picture: helper_avatar %v", got["helper_avatar"])
+	}
+	check := func(name, prefix string) {
+		t.Helper()
+		url := str(vouch(name), "helper_avatar")
+		if !strings.HasPrefix(url, prefix) || len(url) > 48<<10 {
+			t.Fatalf("%s: helper_avatar of %d characters starts %.40q, want %s and at most 48 KB", name, len(url), url, prefix)
+		}
+		data, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(url, prefix))
+		if err != nil {
+			t.Fatal(err)
+		}
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+		if err != nil || cfg.Width != 96 || cfg.Height != 64 {
+			t.Fatalf("%s: %dx%d %v, want 96x64", name, cfg.Width, cfg.Height, err)
+		}
+	}
+	if _, err := w.deps.Avatars.SetUploadedPicture(context.Background(), 5, "image/png", pictureOf(t, 600, 400, false)); err != nil {
+		t.Fatal(err)
+	}
+	check("opaque", "data:image/jpeg;base64,")
+	if _, err := w.deps.Avatars.SetUploadedPicture(context.Background(), 5, "image/png", pictureOf(t, 300, 200, true)); err != nil {
+		t.Fatal(err)
+	}
+	check("see-through", "data:image/png;base64,")
 }
