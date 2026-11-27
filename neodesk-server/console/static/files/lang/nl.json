@@ -1252,6 +1252,7 @@
       "branding_desc": "Hoe de console er voor iedereen uitziet: het thema en de kleuren, de lettertypen en de achtergrond.",
       "auth_desc": "Uw eigen wachtwoord en tweestapsaanmelding, en hoe iedereen zich aanmeldt bij deze server.",
       "auth_desc_viewer": "Uw wachtwoord en tweestapsaanmelding.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Download een kopie van alles wat deze server nodig heeft, maak kopieën volgens een schema of zet een kopie terug.",
       "updates_desc": "Controleren op een nieuwere NeoDesk-versie en deze installeren.",
       "email_desc": "De mailserver die de console gebruikt om waarschuwingen en meldingen te versturen.",
@@ -1389,7 +1390,11 @@
       "conn_no_effect_operator": "Al van kracht: Alleen accounts die met apparaten mogen verbinden, kunnen sessies starten omvat deze regel.",
       "conn_no_effect_signed_in": "Heeft geen effect zolang alleen ingelogde apps sessies kunnen starten.",
       "endpoint_auto_short": "Automatisch gevonden",
-      "endpoint_auto_note": "Een leeg veld geeft clients het automatisch gevonden adres, te zien onder Wat clients nu krijgen."
+      "endpoint_auto_note": "Een leeg veld geeft clients het automatisch gevonden adres, te zien onder Wat clients nu krijgen.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "De standaardweergave voor iedereen die deze console gebruikt.",
@@ -1853,7 +1858,8 @@
       "group_filter_help": "Hoe de groepen van een persoon worden gevonden, met {{dn}} voor de DN van de persoon. Bijvoorbeeld (member={{dn}}).",
       "group_attr_help": "Items in de roltoewijzing kunnen een groep met dit attribuut aanduiden, naast de DN of CN. Bijvoorbeeld cn.",
       "default_role_help": "De rol van mensen van wie de groepen bij geen enkel item van de toewijzing hieronder passen.",
-      "role_map_help": "Eén item per groep: de groep met zijn DN of naam, en de rol die de leden krijgen. Bijvoorbeeld CN=NeoDesk Admins,OU=Groups,DC=example,DC=com met Beheerder."
+      "role_map_help": "Eén item per groep: de groep met zijn DN of naam, en de rol die de leden krijgen. Bijvoorbeeld CN=NeoDesk Admins,OU=Groups,DC=example,DC=com met Beheerder.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Single sign-on",
@@ -1889,7 +1895,8 @@
       "roles_note": "Welke rol mensen krijgen, op basis van hun groepen bij de provider.",
       "roles_effect": "Een persoon krijgt de rol bij elke keer inloggen via de provider.",
       "default_role_help": "De rol van mensen van wie de groepen bij geen enkel item van de toewijzing hieronder passen.",
-      "role_map_help": "Eén item per groep: de groep zoals de provider hem noemt, en de rol die de leden krijgen. Bijvoorbeeld neodesk-admins met Beheerder."
+      "role_map_help": "Eén item per groep: de groep zoals de provider hem noemt, en de rol die de leden krijgen. Bijvoorbeeld neodesk-admins met Beheerder.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Een groep toevoegen, hernoemen en verwijderen wordt meteen opgeslagen. Apparaten die al geïnstalleerd zijn, blijven in hun groep.",

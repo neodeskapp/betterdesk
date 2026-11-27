@@ -1258,6 +1258,7 @@
       "branding_desc": "A konzol, a bejelentkezési oldal és a letöltési oldal megjelenése mindenki számára.",
       "auth_desc": "Az Ön saját jelszava és kétlépcsős bejelentkezése, valamint az, hogy mindenki hogyan jelentkezik be erre a szerverre.",
       "auth_desc_viewer": "Az Ön jelszava és kétlépcsős bejelentkezése.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Töltsön le egy másolatot mindarról, amire ennek a szervernek szüksége van, készítsen másolatokat ütemezetten, vagy állítson vissza egy másolatból.",
       "updates_desc": "Újabb NeoDesk-verzió keresése és telepítése.",
       "email_desc": "A levelezőszerver, amelyen keresztül a konzol a riasztásokat és értesítéseket küldi.",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "Már érvényben van: a Csak az eszközökhöz csatlakozni jogosult fiókok indíthatnak munkamenetet beállítás ezt a szabályt is magában foglalja.",
       "conn_no_effect_signed_in": "Nincs hatása, amíg csak bejelentkezett alkalmazások indíthatnak munkamenetet.",
       "endpoint_auto_short": "Automatikusan megtalálva",
-      "endpoint_auto_note": "Üres mező esetén a kliensek az automatikusan megtalált címet kapják, amely az Amit a kliensek most kapnak alatt látható."
+      "endpoint_auto_note": "Üres mező esetén a kliensek az automatikusan megtalált címet kapják, amely az Amit a kliensek most kapnak alatt látható.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Az alapértelmezett megjelenés mindenkinek, aki ezt a konzolt használja.",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "Hogyan találhatók meg egy személy csoportjai, a személy DN-je helyén {{dn}}. Például (member={{dn}}).",
       "group_attr_help": "A szereptérképezés bejegyzései a DN-en vagy CN-en kívül ezzel az attribútummal is megnevezhetnek egy csoportot. Például cn.",
       "default_role_help": "Azoknak a személyeknek a szerepköre, akiknek csoportjai nem egyeznek az alábbi térképezés egyik bejegyzésével sem.",
-      "role_map_help": "Csoportonként egy bejegyzés: a csoport DN-je vagy neve, és a szerepkör, amelyet a tagjai kapnak. Például CN=NeoDesk Admins,OU=Groups,DC=example,DC=com és Rendszergazda."
+      "role_map_help": "Csoportonként egy bejegyzés: a csoport DN-je vagy neve, és a szerepkör, amelyet a tagjai kapnak. Például CN=NeoDesk Admins,OU=Groups,DC=example,DC=com és Rendszergazda.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Egyszeri bejelentkezés",
@@ -1895,7 +1901,8 @@
       "roles_note": "Milyen szerepkört kapnak az emberek a szolgáltatónál lévő csoportjaik alapján.",
       "roles_effect": "A személy minden szolgáltatón keresztüli bejelentkezéskor megkapja a szerepkört.",
       "default_role_help": "Azoknak a személyeknek a szerepköre, akiknek csoportjai nem egyeznek az alábbi térképezés egyik bejegyzésével sem.",
-      "role_map_help": "Csoportonként egy bejegyzés: a csoport úgy, ahogy a szolgáltató nevezi, és a szerepkör, amelyet a tagjai kapnak. Például neodesk-admins és Rendszergazda."
+      "role_map_help": "Csoportonként egy bejegyzés: a csoport úgy, ahogy a szolgáltató nevezi, és a szerepkör, amelyet a tagjai kapnak. Például neodesk-admins és Rendszergazda.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Csoport hozzáadása, átnevezése és eltávolítása azonnal mentődik. A már telepített eszközök a csoportjukban maradnak.",

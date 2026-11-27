@@ -1252,6 +1252,7 @@
       "branding_desc": "Jak konzole, přihlašovací stránka a stránka ke stažení vypadají pro všechny.",
       "auth_desc": "Vaše vlastní heslo a dvoufázové přihlášení a způsob, jakým se k tomuto serveru přihlašují všichni.",
       "auth_desc_viewer": "Vaše heslo a dvoufázové přihlášení.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Stáhněte si kopii všeho, co tento server potřebuje, vytvářejte kopie podle plánu nebo z některé obnovte data.",
       "updates_desc": "Vyhledat novější verzi NeoDesk a nainstalovat ji.",
       "email_desc": "Poštovní server, přes který konzole odesílá upozornění a oznámení.",
@@ -1389,7 +1390,11 @@
       "conn_no_effect_operator": "Už platí: Relace mohou zahájit jen účty, které se smějí připojovat k zařízením zahrnuje toto pravidlo.",
       "conn_no_effect_signed_in": "Nemá žádný účinek, dokud relace mohou zahájit jen přihlášené aplikace.",
       "endpoint_auto_short": "Zjištěno automaticky",
-      "endpoint_auto_note": "Prázdné pole dá klientům automaticky zjištěnou adresu, zobrazenou v části Co teď klienti dostávají."
+      "endpoint_auto_note": "Prázdné pole dá klientům automaticky zjištěnou adresu, zobrazenou v části Co teď klienti dostávají.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Výchozí vzhled pro všechny, kdo tuto konzoli používají.",
@@ -1853,7 +1858,8 @@
       "group_filter_help": "Jak se najdou skupiny osoby, s {{dn}} pro DN osoby. Například (member={{dn}}).",
       "group_attr_help": "Položky mapování rolí mohou skupinu označit tímto atributem, kromě jejího DN nebo CN. Například cn.",
       "default_role_help": "Role osob, jejichž skupiny neodpovídají žádné položce mapování níže.",
-      "role_map_help": "Jedna položka na skupinu: skupina podle DN nebo názvu a role, kterou dostanou její členové. Například CN=NeoDesk Admins,OU=Groups,DC=example,DC=com s rolí Administrátor."
+      "role_map_help": "Jedna položka na skupinu: skupina podle DN nebo názvu a role, kterou dostanou její členové. Například CN=NeoDesk Admins,OU=Groups,DC=example,DC=com s rolí Administrátor.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Jednotné přihlášení",
@@ -1889,7 +1895,8 @@
       "roles_note": "Jakou roli lidé dostanou podle svých skupin u poskytovatele.",
       "roles_effect": "Osoba dostane roli při každém přihlášení přes poskytovatele.",
       "default_role_help": "Role osob, jejichž skupiny neodpovídají žádné položce mapování níže.",
-      "role_map_help": "Jedna položka na skupinu: skupina tak, jak ji pojmenuje poskytovatel, a role, kterou dostanou její členové. Například neodesk-admins s rolí Administrátor."
+      "role_map_help": "Jedna položka na skupinu: skupina tak, jak ji pojmenuje poskytovatel, a role, kterou dostanou její členové. Například neodesk-admins s rolí Administrátor.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Přidání, přejmenování a odebrání skupiny se uloží hned. Už nainstalovaná zařízení zůstanou ve své skupině.",

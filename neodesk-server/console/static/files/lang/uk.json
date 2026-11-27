@@ -1258,6 +1258,7 @@
       "branding_desc": "Як консоль, сторінка входу і сторінка завантаження виглядають для всіх.",
       "auth_desc": "Ваш власний пароль і двоетапний вхід, а також те, як усі входять на цей сервер.",
       "auth_desc_viewer": "Ваш пароль і двоетапний вхід.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Завантажте копію всього, що потрібно цьому серверу, створюйте копії за розкладом або відновлюйте з копії.",
       "updates_desc": "Перевірте наявність новішої версії NeoDesk і встановіть її.",
       "email_desc": "Поштовий сервер, через який консоль надсилає сповіщення та повідомлення.",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "Уже діє: Лише облікові записи, яким дозволено підключатися до пристроїв, можуть починати сеанси включає це правило.",
       "conn_no_effect_signed_in": "Не діє, поки сеанси можуть починати лише застосунки з виконаним входом.",
       "endpoint_auto_short": "Знайдено автоматично",
-      "endpoint_auto_note": "Порожнє поле дає клієнтам автоматично знайдену адресу, показану в розділі Що зараз отримують клієнти."
+      "endpoint_auto_note": "Порожнє поле дає клієнтам автоматично знайдену адресу, показану в розділі Що зараз отримують клієнти.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Стандартний вигляд для всіх, хто користується цією консоллю.",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "Як знайти групи людини, з {{dn}} на місці DN людини. Наприклад (member={{dn}}).",
       "group_attr_help": "Записи відображення ролей можуть називати групу цим атрибутом, окрім її DN або CN. Наприклад cn.",
       "default_role_help": "Роль людей, чиї групи не збігаються з жодним записом відображення нижче.",
-      "role_map_help": "Один запис на групу: група за DN або назвою і роль, яку отримують її учасники. Наприклад CN=NeoDesk Admins,OU=Groups,DC=example,DC=com з роллю Адміністратор."
+      "role_map_help": "Один запис на групу: група за DN або назвою і роль, яку отримують її учасники. Наприклад CN=NeoDesk Admins,OU=Groups,DC=example,DC=com з роллю Адміністратор.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Єдиний вхід",
@@ -1895,7 +1901,8 @@
       "roles_note": "Яку роль отримують люди залежно від своїх груп у постачальника.",
       "roles_effect": "Людина отримує роль під час кожного входу через постачальника.",
       "default_role_help": "Роль людей, чиї групи не збігаються з жодним записом відображення нижче.",
-      "role_map_help": "Один запис на групу: група так, як її називає постачальник, і роль, яку отримують її учасники. Наприклад neodesk-admins з роллю Адміністратор."
+      "role_map_help": "Один запис на групу: група так, як її називає постачальник, і роль, яку отримують її учасники. Наприклад neodesk-admins з роллю Адміністратор.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Додавання, перейменування й видалення групи зберігаються одразу. Уже встановлені пристрої залишаються у своїй групі.",

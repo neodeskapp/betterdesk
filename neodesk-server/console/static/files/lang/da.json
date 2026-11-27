@@ -1258,6 +1258,7 @@
       "branding_desc": "Hvordan konsollen, login-siden og downloadsiden ser ud for alle.",
       "auth_desc": "Din egen adgangskode og totrinslogin, og hvordan alle logger på denne server.",
       "auth_desc_viewer": "Din adgangskode og totrinslogin.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Download en kopi af alt, hvad denne server har brug for, lav kopier efter en tidsplan, eller gendan fra en kopi.",
       "updates_desc": "Søg efter en nyere version af NeoDesk, og installer den.",
       "email_desc": "Den mailserver, konsollen bruger til at sende advarsler og notifikationer.",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "Allerede gældende: Kun konti, der må oprette forbindelse til enheder, kan starte sessioner omfatter denne regel.",
       "conn_no_effect_signed_in": "Har ingen virkning, så længe kun indloggede apps kan starte sessioner.",
       "endpoint_auto_short": "Fundet automatisk",
-      "endpoint_auto_note": "Et tomt felt giver klienterne den adresse, der er fundet automatisk, vist under Hvad klienter får nu."
+      "endpoint_auto_note": "Et tomt felt giver klienterne den adresse, der er fundet automatisk, vist under Hvad klienter får nu.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Standardudseendet for alle, der bruger denne konsol.",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "Hvordan en persons grupper findes, med {{dn}} for personens DN. For eksempel (member={{dn}}).",
       "group_attr_help": "Poster i rollekortlægningen kan angive en gruppe med denne attribut ud over dens DN eller CN. For eksempel cn.",
       "default_role_help": "Rollen for personer, hvis grupper ikke passer med nogen post i kortlægningen nedenfor.",
-      "role_map_help": "Én post pr. gruppe: gruppen ved dens DN eller navn, og den rolle, dens medlemmer får. For eksempel CN=NeoDesk Admins,OU=Groups,DC=example,DC=com med Administrator."
+      "role_map_help": "Én post pr. gruppe: gruppen ved dens DN eller navn, og den rolle, dens medlemmer får. For eksempel CN=NeoDesk Admins,OU=Groups,DC=example,DC=com med Administrator.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Single sign-on",
@@ -1895,7 +1901,8 @@
       "roles_note": "Hvilken rolle folk får ud fra deres grupper hos udbyderen.",
       "roles_effect": "En person får rollen ved hvert login via udbyderen.",
       "default_role_help": "Rollen for personer, hvis grupper ikke passer med nogen post i kortlægningen nedenfor.",
-      "role_map_help": "Én post pr. gruppe: gruppen, som udbyderen kalder den, og den rolle, dens medlemmer får. For eksempel neodesk-admins med Administrator."
+      "role_map_help": "Én post pr. gruppe: gruppen, som udbyderen kalder den, og den rolle, dens medlemmer får. For eksempel neodesk-admins med Administrator.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "At tilføje, omdøbe og fjerne en gruppe gemmes med det samme. Enheder, der allerede er installeret, bliver i deres gruppe.",

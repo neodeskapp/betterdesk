@@ -1258,6 +1258,7 @@
       "branding_desc": "Konsolun, oturum açma sayfasının ve indirme sayfasının herkes için görünümü.",
       "auth_desc": "Kendi parolanız ve iki adımlı oturum açma ile herkesin bu sunucuda nasıl oturum açtığı.",
       "auth_desc_viewer": "Parolanız ve iki adımlı oturum açma.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Bu sunucunun ihtiyaç duyduğu her şeyin bir kopyasını indirin, zamanlanmış kopyalar oluşturun veya bir kopyadan geri yükleyin.",
       "updates_desc": "Daha yeni bir NeoDesk sürümü olup olmadığını denetleyin ve yükleyin.",
       "email_desc": "Konsolun uyarı ve bildirim göndermek için kullandığı posta sunucusu.",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "Zaten geçerli: Yalnızca cihazlara bağlanma izni olan hesaplar oturum başlatabilir bu kuralı da kapsar.",
       "conn_no_effect_signed_in": "Yalnızca oturum açmış uygulamalar oturum başlatabildiği sürece etkisi yok.",
       "endpoint_auto_short": "Otomatik bulundu",
-      "endpoint_auto_note": "Boş bir alan, istemcilere otomatik bulunan adresi verir. Bu adres İstemcilerin şu an aldıkları altında gösterilir."
+      "endpoint_auto_note": "Boş bir alan, istemcilere otomatik bulunan adresi verir. Bu adres İstemcilerin şu an aldıkları altında gösterilir.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Bu konsolu kullanan herkes için varsayılan görünüm.",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "Bir kişinin gruplarının nasıl bulunduğu; kişinin DN'i için {{dn}}. Örneğin (member={{dn}}).",
       "group_attr_help": "Rol eşleme kayıtları bir grubu DN'i veya CN'i dışında bu öznitelikle de belirtebilir. Örneğin cn.",
       "default_role_help": "Grupları aşağıdaki eşlemenin hiçbir kaydıyla eşleşmeyen kişilerin rolü.",
-      "role_map_help": "Grup başına bir kayıt: DN'i veya adıyla grup ve üyelerinin aldığı rol. Örneğin CN=NeoDesk Admins,OU=Groups,DC=example,DC=com ile Yönetici."
+      "role_map_help": "Grup başına bir kayıt: DN'i veya adıyla grup ve üyelerinin aldığı rol. Örneğin CN=NeoDesk Admins,OU=Groups,DC=example,DC=com ile Yönetici.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Çoklu oturum açma",
@@ -1895,7 +1901,8 @@
       "roles_note": "Kişilerin sağlayıcıdaki gruplarına göre hangi rolü aldığı.",
       "roles_effect": "Kişi, sağlayıcı üzerinden her oturum açışında rolü alır.",
       "default_role_help": "Grupları aşağıdaki eşlemenin hiçbir kaydıyla eşleşmeyen kişilerin rolü.",
-      "role_map_help": "Grup başına bir kayıt: sağlayıcının verdiği adla grup ve üyelerinin aldığı rol. Örneğin neodesk-admins ile Yönetici."
+      "role_map_help": "Grup başına bir kayıt: sağlayıcının verdiği adla grup ve üyelerinin aldığı rol. Örneğin neodesk-admins ile Yönetici.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Grup eklemek, yeniden adlandırmak ve kaldırmak hemen kaydedilir. Zaten kurulu cihazlar gruplarında kalır.",

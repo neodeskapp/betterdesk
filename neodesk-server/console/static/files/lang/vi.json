@@ -1258,6 +1258,7 @@
       "branding_desc": "Giao diện của bảng điều khiển, trang đăng nhập và trang tải xuống đối với mọi người.",
       "auth_desc": "Mật khẩu và đăng nhập hai bước của riêng bạn, cùng cách mọi người đăng nhập vào máy chủ này.",
       "auth_desc_viewer": "Mật khẩu và đăng nhập hai bước của bạn.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Tải xuống bản sao của mọi thứ máy chủ này cần, tạo bản sao theo lịch hoặc khôi phục từ một bản sao.",
       "updates_desc": "Kiểm tra phiên bản NeoDesk mới hơn và cài đặt.",
       "email_desc": "Máy chủ thư mà bảng điều khiển dùng để gửi cảnh báo và thông báo.",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "Đã có hiệu lực: Chỉ tài khoản được phép kết nối tới thiết bị mới bắt đầu được phiên đã bao gồm quy tắc này.",
       "conn_no_effect_signed_in": "Không có tác dụng khi chỉ ứng dụng đã đăng nhập mới bắt đầu được phiên.",
       "endpoint_auto_short": "Tìm tự động",
-      "endpoint_auto_note": "Để trống thì máy khách nhận địa chỉ tìm tự động, hiển thị trong Những gì máy khách nhận lúc này."
+      "endpoint_auto_note": "Để trống thì máy khách nhận địa chỉ tìm tự động, hiển thị trong Những gì máy khách nhận lúc này.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Giao diện mặc định cho mọi người dùng bảng điều khiển này.",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "Cách tìm nhóm của một người, với {{dn}} cho DN của người đó. Ví dụ (member={{dn}}).",
       "group_attr_help": "Mục ánh xạ vai trò có thể gọi tên nhóm bằng thuộc tính này, ngoài DN hoặc CN. Ví dụ cn.",
       "default_role_help": "Vai trò của những người có nhóm không khớp mục nào trong ánh xạ bên dưới.",
-      "role_map_help": "Mỗi nhóm một mục: nhóm theo DN hoặc tên, và vai trò mà thành viên nhận được. Ví dụ CN=NeoDesk Admins,OU=Groups,DC=example,DC=com với Quản trị viên."
+      "role_map_help": "Mỗi nhóm một mục: nhóm theo DN hoặc tên, và vai trò mà thành viên nhận được. Ví dụ CN=NeoDesk Admins,OU=Groups,DC=example,DC=com với Quản trị viên.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Đăng nhập một lần",
@@ -1895,7 +1901,8 @@
       "roles_note": "Mọi người nhận vai trò nào, dựa trên nhóm của họ ở nhà cung cấp.",
       "roles_effect": "Một người nhận vai trò ở mỗi lần đăng nhập qua nhà cung cấp.",
       "default_role_help": "Vai trò của những người có nhóm không khớp mục nào trong ánh xạ bên dưới.",
-      "role_map_help": "Mỗi nhóm một mục: nhóm theo tên nhà cung cấp đặt, và vai trò mà thành viên nhận được. Ví dụ neodesk-admins với Quản trị viên."
+      "role_map_help": "Mỗi nhóm một mục: nhóm theo tên nhà cung cấp đặt, và vai trò mà thành viên nhận được. Ví dụ neodesk-admins với Quản trị viên.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Thêm, đổi tên và xóa nhóm được lưu ngay. Thiết bị đã cài vẫn ở trong nhóm của chúng.",

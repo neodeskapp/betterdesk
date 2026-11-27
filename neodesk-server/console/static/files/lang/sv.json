@@ -1258,6 +1258,7 @@
       "branding_desc": "Hur konsolen, inloggningssidan och nedladdningssidan ser ut för alla.",
       "auth_desc": "Ditt eget lösenord och tvåstegsinloggning, och hur alla loggar in på den här servern.",
       "auth_desc_viewer": "Ditt lösenord och tvåstegsinloggning.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Ladda ner en kopia av allt servern behöver, gör kopior enligt ett schema eller återställ från en kopia.",
       "updates_desc": "Sök efter en nyare version av NeoDesk och installera den.",
       "email_desc": "E-postservern som konsolen använder för att skicka larm och aviseringar.",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "Gäller redan: Bara konton som får ansluta till enheter kan starta sessioner omfattar den här regeln.",
       "conn_no_effect_signed_in": "Har ingen effekt så länge bara inloggade appar kan starta sessioner.",
       "endpoint_auto_short": "Hittad automatiskt",
-      "endpoint_auto_note": "Ett tomt fält ger klienterna adressen som hittats automatiskt, som visas under Vad klienterna får nu."
+      "endpoint_auto_note": "Ett tomt fält ger klienterna adressen som hittats automatiskt, som visas under Vad klienterna får nu.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Standardutseendet för alla som använder den här konsolen.",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "Hur en persons grupper hittas, med {{dn}} för personens DN. Till exempel (member={{dn}}).",
       "group_attr_help": "Poster i rollkartläggningen kan ange en grupp med det här attributet, utöver dess DN eller CN. Till exempel cn.",
       "default_role_help": "Rollen för personer vars grupper inte matchar någon post i kartläggningen nedan.",
-      "role_map_help": "En post per grupp: gruppen med sitt DN eller namn, och rollen som dess medlemmar får. Till exempel CN=NeoDesk Admins,OU=Groups,DC=example,DC=com med Administratör."
+      "role_map_help": "En post per grupp: gruppen med sitt DN eller namn, och rollen som dess medlemmar får. Till exempel CN=NeoDesk Admins,OU=Groups,DC=example,DC=com med Administratör.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Enkel inloggning",
@@ -1895,7 +1901,8 @@
       "roles_note": "Vilken roll folk får, utifrån deras grupper hos leverantören.",
       "roles_effect": "En person får rollen vid varje inloggning via leverantören.",
       "default_role_help": "Rollen för personer vars grupper inte matchar någon post i kartläggningen nedan.",
-      "role_map_help": "En post per grupp: gruppen som leverantören kallar den, och rollen som dess medlemmar får. Till exempel neodesk-admins med Administratör."
+      "role_map_help": "En post per grupp: gruppen som leverantören kallar den, och rollen som dess medlemmar får. Till exempel neodesk-admins med Administratör.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Att lägga till, byta namn på och ta bort en grupp sparas direkt. Enheter som redan är installerade stannar i sin grupp.",

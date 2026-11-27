@@ -1252,6 +1252,7 @@
       "branding_desc": "控制台、登录页面和下载页面对所有人呈现的外观。",
       "auth_desc": "您自己的密码和两步验证登录，以及所有人登录此服务器的方式。",
       "auth_desc_viewer": "您的密码和两步验证登录。",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "下载此服务器所需全部内容的副本、按计划创建副本，或从副本恢复。",
       "updates_desc": "检查是否有更新的 NeoDesk 版本并安装。",
       "email_desc": "控制台用来发送警报和通知的邮件服务器。",
@@ -1389,7 +1390,11 @@
       "conn_no_effect_operator": "已经生效：“只有可以连接设备的账户才能发起会话”已包含这条规则。",
       "conn_no_effect_signed_in": "只要只有已登录的应用可以发起会话，此项就无效。",
       "endpoint_auto_short": "自动检测",
-      "endpoint_auto_note": "字段留空时，客户端会获得自动检测的地址，显示在“客户端当前获得的值”下。"
+      "endpoint_auto_note": "字段留空时，客户端会获得自动检测的地址，显示在“客户端当前获得的值”下。",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "所有使用此控制台的人默认看到的外观。",
@@ -1853,7 +1858,8 @@
       "group_filter_help": "如何找到用户的分组，用 {{dn}} 表示用户的 DN。例如 (member={{dn}})。",
       "group_attr_help": "角色映射的条目除了 DN 或 CN 外，还可以用此属性指定分组。例如 cn。",
       "default_role_help": "分组与下方映射中任何条目都不匹配的用户所获得的角色。",
-      "role_map_help": "每个分组一个条目：按 DN 或名称指定的分组，以及其成员获得的角色。例如 CN=NeoDesk Admins,OU=Groups,DC=example,DC=com 对应 管理员。"
+      "role_map_help": "每个分组一个条目：按 DN 或名称指定的分组，以及其成员获得的角色。例如 CN=NeoDesk Admins,OU=Groups,DC=example,DC=com 对应 管理员。",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "单点登录",
@@ -1889,7 +1895,8 @@
       "roles_note": "用户根据其在提供商处的分组获得哪个角色。",
       "roles_effect": "用户每次通过提供商登录时获得角色。",
       "default_role_help": "分组与下方映射中任何条目都不匹配的用户所获得的角色。",
-      "role_map_help": "每个分组一个条目：提供商命名的分组，以及其成员获得的角色。例如 neodesk-admins 对应 管理员。"
+      "role_map_help": "每个分组一个条目：提供商命名的分组，以及其成员获得的角色。例如 neodesk-admins 对应 管理员。",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "添加、重命名和删除分组会立即保存。已安装的设备留在原分组中。",

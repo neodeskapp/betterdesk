@@ -1258,6 +1258,7 @@
       "branding_desc": "Cum arată consola, pagina de conectare și pagina de descărcare pentru toată lumea.",
       "auth_desc": "Parola dumneavoastră și conectarea în doi pași, precum și modul în care se conectează toată lumea la acest server.",
       "auth_desc_viewer": "Parola dumneavoastră și conectarea în doi pași.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Descărcați o copie a tot ce are nevoie acest server, faceți copii programate sau restaurați dintr-o copie.",
       "updates_desc": "Căutați o versiune mai nouă de NeoDesk și instalați-o.",
       "email_desc": "Serverul de e-mail prin care consola trimite alerte și notificări.",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "Deja în vigoare: Doar conturile care se pot conecta la dispozitive pot porni sesiuni include această regulă.",
       "conn_no_effect_signed_in": "Nu are efect cât timp doar aplicațiile conectate pot porni sesiuni.",
       "endpoint_auto_short": "Găsită automat",
-      "endpoint_auto_note": "Un câmp gol le dă clienților adresa găsită automat, afișată sub Ce primesc acum clienții."
+      "endpoint_auto_note": "Un câmp gol le dă clienților adresa găsită automat, afișată sub Ce primesc acum clienții.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Aspectul implicit pentru toți cei care folosesc această consolă.",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "Cum sunt găsite grupurile unei persoane, cu {{dn}} pentru DN-ul persoanei. De exemplu (member={{dn}}).",
       "group_attr_help": "Intrările din maparea rolurilor pot numi un grup după acest atribut, pe lângă DN sau CN. De exemplu cn.",
       "default_role_help": "Rolul persoanelor ale căror grupuri nu se potrivesc cu nicio intrare din maparea de mai jos.",
-      "role_map_help": "O intrare pe grup: grupul după DN sau nume și rolul pe care îl primesc membrii lui. De exemplu CN=NeoDesk Admins,OU=Groups,DC=example,DC=com cu Administrator."
+      "role_map_help": "O intrare pe grup: grupul după DN sau nume și rolul pe care îl primesc membrii lui. De exemplu CN=NeoDesk Admins,OU=Groups,DC=example,DC=com cu Administrator.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Autentificare unică",
@@ -1895,7 +1901,8 @@
       "roles_note": "Ce rol primesc oamenii, după grupurile lor la furnizor.",
       "roles_effect": "O persoană primește rolul la fiecare conectare prin furnizor.",
       "default_role_help": "Rolul persoanelor ale căror grupuri nu se potrivesc cu nicio intrare din maparea de mai jos.",
-      "role_map_help": "O intrare pe grup: grupul așa cum îl numește furnizorul și rolul pe care îl primesc membrii lui. De exemplu neodesk-admins cu Administrator."
+      "role_map_help": "O intrare pe grup: grupul așa cum îl numește furnizorul și rolul pe care îl primesc membrii lui. De exemplu neodesk-admins cu Administrator.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Adăugarea, redenumirea și eliminarea unui grup se salvează imediat. Dispozitivele deja instalate rămân în grupul lor.",

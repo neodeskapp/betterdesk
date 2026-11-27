@@ -1258,6 +1258,7 @@
       "branding_desc": "Miltä konsoli, kirjautumissivu ja lataussivu näyttävät kaikille.",
       "auth_desc": "Oma salasanasi ja kaksivaiheinen kirjautuminen sekä se, miten kaikki kirjautuvat tälle palvelimelle.",
       "auth_desc_viewer": "Salasanasi ja kaksivaiheinen kirjautuminen.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Lataa kopio kaikesta, mitä tämä palvelin tarvitsee, tee kopioita aikataulun mukaan tai palauta kopiosta.",
       "updates_desc": "Tarkista, onko NeoDeskistä uudempaa versiota, ja asenna se.",
       "email_desc": "Sähköpostipalvelin, jonka kautta konsoli lähettää hälytykset ja ilmoitukset.",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "On jo voimassa: Vain tilit, joilla on oikeus muodostaa yhteys laitteisiin, voivat aloittaa istuntoja sisältää tämän säännön.",
       "conn_no_effect_signed_in": "Ei vaikutusta niin kauan kuin vain kirjautuneet sovellukset voivat aloittaa istuntoja.",
       "endpoint_auto_short": "Löydetty automaattisesti",
-      "endpoint_auto_note": "Tyhjä kenttä antaa asiakkaille automaattisesti löydetyn osoitteen, joka näkyy kohdassa Mitä asiakkaat saavat nyt."
+      "endpoint_auto_note": "Tyhjä kenttä antaa asiakkaille automaattisesti löydetyn osoitteen, joka näkyy kohdassa Mitä asiakkaat saavat nyt.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Oletusulkoasu kaikille tämän konsolin käyttäjille.",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "Miten henkilön ryhmät löydetään, {{dn}} henkilön DN:n paikalla. Esimerkiksi (member={{dn}}).",
       "group_attr_help": "Roolikartoituksen merkinnät voivat nimetä ryhmän tällä attribuutilla DN:n tai CN:n lisäksi. Esimerkiksi cn.",
       "default_role_help": "Niiden henkilöiden rooli, joiden ryhmät eivät vastaa mitään alla olevan kartoituksen merkintää.",
-      "role_map_help": "Yksi merkintä ryhmää kohden: ryhmä DN:n tai nimen mukaan ja rooli, jonka sen jäsenet saavat. Esimerkiksi CN=NeoDesk Admins,OU=Groups,DC=example,DC=com ja Järjestelmänvalvoja."
+      "role_map_help": "Yksi merkintä ryhmää kohden: ryhmä DN:n tai nimen mukaan ja rooli, jonka sen jäsenet saavat. Esimerkiksi CN=NeoDesk Admins,OU=Groups,DC=example,DC=com ja Järjestelmänvalvoja.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Kertakirjautuminen",
@@ -1895,7 +1901,8 @@
       "roles_note": "Minkä roolin ihmiset saavat palveluntarjoajan ryhmiensä perusteella.",
       "roles_effect": "Henkilö saa roolin jokaisella kirjautumisella palveluntarjoajan kautta.",
       "default_role_help": "Niiden henkilöiden rooli, joiden ryhmät eivät vastaa mitään alla olevan kartoituksen merkintää.",
-      "role_map_help": "Yksi merkintä ryhmää kohden: ryhmä palveluntarjoajan antamalla nimellä ja rooli, jonka sen jäsenet saavat. Esimerkiksi neodesk-admins ja Järjestelmänvalvoja."
+      "role_map_help": "Yksi merkintä ryhmää kohden: ryhmä palveluntarjoajan antamalla nimellä ja rooli, jonka sen jäsenet saavat. Esimerkiksi neodesk-admins ja Järjestelmänvalvoja.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Ryhmän lisääminen, nimeäminen uudelleen ja poistaminen tallentuu heti. Jo asennetut laitteet pysyvät ryhmässään.",

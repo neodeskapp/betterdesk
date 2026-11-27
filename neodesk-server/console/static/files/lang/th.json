@@ -1258,6 +1258,7 @@
       "branding_desc": "ลักษณะของคอนโซล หน้าลงชื่อเข้าใช้ และหน้าดาวน์โหลดสำหรับทุกคน",
       "auth_desc": "รหัสผ่านและการลงชื่อเข้าใช้แบบสองขั้นตอนของคุณเอง และวิธีที่ทุกคนลงชื่อเข้าใช้เซิร์ฟเวอร์นี้",
       "auth_desc_viewer": "รหัสผ่านและการลงชื่อเข้าใช้แบบสองขั้นตอนของคุณ",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "ดาวน์โหลดสำเนาของทุกสิ่งที่เซิร์ฟเวอร์นี้ต้องใช้ สร้างสำเนาตามกำหนดเวลา หรือกู้คืนจากสำเนา",
       "updates_desc": "ตรวจหา NeoDesk เวอร์ชันใหม่และติดตั้ง",
       "email_desc": "เซิร์ฟเวอร์อีเมลที่คอนโซลใช้ส่งการแจ้งเตือนและข้อความแจ้ง",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "มีผลอยู่แล้ว: เฉพาะบัญชีที่ได้รับอนุญาตให้เชื่อมต่ออุปกรณ์เท่านั้นที่เริ่มเซสชันได้ ครอบคลุมกฎนี้แล้ว",
       "conn_no_effect_signed_in": "ไม่มีผลตราบใดที่มีเพียงแอปที่ลงชื่อเข้าใช้แล้วเท่านั้นที่เริ่มเซสชันได้",
       "endpoint_auto_short": "พบโดยอัตโนมัติ",
-      "endpoint_auto_note": "ช่องที่เว้นว่างจะให้ไคลเอนต์ใช้ที่อยู่ที่พบโดยอัตโนมัติ ซึ่งแสดงอยู่ใต้ สิ่งที่ไคลเอนต์ได้รับตอนนี้"
+      "endpoint_auto_note": "ช่องที่เว้นว่างจะให้ไคลเอนต์ใช้ที่อยู่ที่พบโดยอัตโนมัติ ซึ่งแสดงอยู่ใต้ สิ่งที่ไคลเอนต์ได้รับตอนนี้",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "รูปลักษณ์เริ่มต้นสำหรับทุกคนที่ใช้คอนโซลนี้",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "วิธีค้นหากลุ่มของบุคคล โดยใช้ {{dn}} แทน DN ของบุคคลนั้น เช่น (member={{dn}})",
       "group_attr_help": "รายการในการแมปบทบาทระบุกลุ่มด้วยแอตทริบิวต์นี้ได้ นอกเหนือจาก DN หรือ CN เช่น cn",
       "default_role_help": "บทบาทของผู้ที่กลุ่มไม่ตรงกับรายการใดในการแมปด้านล่าง",
-      "role_map_help": "หนึ่งรายการต่อกลุ่ม: กลุ่มตาม DN หรือชื่อ และบทบาทที่สมาชิกได้รับ เช่น CN=NeoDesk Admins,OU=Groups,DC=example,DC=com กับ ผู้ดูแลระบบ"
+      "role_map_help": "หนึ่งรายการต่อกลุ่ม: กลุ่มตาม DN หรือชื่อ และบทบาทที่สมาชิกได้รับ เช่น CN=NeoDesk Admins,OU=Groups,DC=example,DC=com กับ ผู้ดูแลระบบ",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "การลงชื่อเข้าใช้ครั้งเดียว",
@@ -1895,7 +1901,8 @@
       "roles_note": "ผู้คนได้รับบทบาทใด ตามกลุ่มของตนที่ผู้ให้บริการ",
       "roles_effect": "บุคคลได้รับบทบาททุกครั้งที่ลงชื่อเข้าใช้ผ่านผู้ให้บริการ",
       "default_role_help": "บทบาทของผู้ที่กลุ่มไม่ตรงกับรายการใดในการแมปด้านล่าง",
-      "role_map_help": "หนึ่งรายการต่อกลุ่ม: กลุ่มตามชื่อที่ผู้ให้บริการตั้ง และบทบาทที่สมาชิกได้รับ เช่น neodesk-admins กับ ผู้ดูแลระบบ"
+      "role_map_help": "หนึ่งรายการต่อกลุ่ม: กลุ่มตามชื่อที่ผู้ให้บริการตั้ง และบทบาทที่สมาชิกได้รับ เช่น neodesk-admins กับ ผู้ดูแลระบบ",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "การเพิ่ม เปลี่ยนชื่อ และลบกลุ่มจะบันทึกทันที อุปกรณ์ที่ติดตั้งแล้วยังอยู่ในกลุ่มเดิม",

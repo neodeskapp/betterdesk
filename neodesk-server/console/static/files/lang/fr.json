@@ -1256,6 +1256,7 @@
       "branding_desc": "L'apparence de la console pour tous : le thème et ses couleurs, les polices et l'arrière-plan.",
       "auth_desc": "Votre mot de passe et votre connexion à deux facteurs, ainsi que la façon dont chacun se connecte à ce serveur.",
       "auth_desc_viewer": "Votre mot de passe et votre connexion à deux facteurs.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Téléchargez une copie de tout ce dont ce serveur a besoin, faites des copies selon un planning ou restaurez à partir d'une copie.",
       "updates_desc": "Rechercher une version plus récente de NeoDesk et l'installer.",
       "email_desc": "Le serveur de messagerie utilisé par la console pour envoyer les alertes et les notifications.",
@@ -1393,7 +1394,11 @@
       "conn_no_effect_operator": "Déjà en vigueur : Seuls les comptes autorisés à se connecter aux appareils peuvent lancer des sessions inclut cette règle.",
       "conn_no_effect_signed_in": "Sans effet tant que seules les applis connectées peuvent lancer des sessions.",
       "endpoint_auto_short": "Trouvée automatiquement",
-      "endpoint_auto_note": "Un champ vide donne aux clients l'adresse trouvée automatiquement, affichée sous Ce que reçoivent les clients."
+      "endpoint_auto_note": "Un champ vide donne aux clients l'adresse trouvée automatiquement, affichée sous Ce que reçoivent les clients.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "L'apparence par défaut pour tous ceux qui utilisent cette console.",
@@ -1857,7 +1862,8 @@
       "group_filter_help": "Comment les groupes d'une personne sont trouvés, avec {{dn}} pour le DN de la personne. Par exemple (member={{dn}}).",
       "group_attr_help": "Les entrées de la correspondance des rôles peuvent nommer un groupe par cet attribut, en plus de son DN ou CN. Par exemple cn.",
       "default_role_help": "Le rôle des personnes dont les groupes ne correspondent à aucune entrée ci-dessous.",
-      "role_map_help": "Une entrée par groupe : le groupe par son DN ou son nom, et le rôle que reçoivent ses membres. Par exemple CN=NeoDesk Admins,OU=Groups,DC=example,DC=com avec Administrateur."
+      "role_map_help": "Une entrée par groupe : le groupe par son DN ou son nom, et le rôle que reçoivent ses membres. Par exemple CN=NeoDesk Admins,OU=Groups,DC=example,DC=com avec Administrateur.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Authentification unique",
@@ -1893,7 +1899,8 @@
       "roles_note": "Quel rôle les gens reçoivent, selon leurs groupes chez le fournisseur.",
       "roles_effect": "Une personne reçoit le rôle à chaque connexion par le fournisseur.",
       "default_role_help": "Le rôle des personnes dont les groupes ne correspondent à aucune entrée ci-dessous.",
-      "role_map_help": "Une entrée par groupe : le groupe tel que le fournisseur le nomme, et le rôle que reçoivent ses membres. Par exemple neodesk-admins avec Administrateur."
+      "role_map_help": "Une entrée par groupe : le groupe tel que le fournisseur le nomme, et le rôle que reçoivent ses membres. Par exemple neodesk-admins avec Administrateur.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Ajouter, renommer et supprimer un groupe s'enregistre tout de suite. Les appareils déjà installés restent dans leur groupe.",

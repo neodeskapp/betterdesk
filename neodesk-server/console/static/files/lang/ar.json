@@ -1259,6 +1259,7 @@
       "branding_desc": "مظهر وحدة التحكم وصفحة تسجيل الدخول وصفحة التنزيل للجميع.",
       "auth_desc": "كلمة مرورك وتسجيل الدخول بخطوتين الخاصين بك، وطريقة تسجيل دخول الجميع إلى هذا الخادم.",
       "auth_desc_viewer": "كلمة مرورك وتسجيل الدخول بخطوتين.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "نزّل نسخة من كل ما يحتاجه هذا الخادم، أو أنشئ نسخًا وفق جدول زمني، أو استعد من إحداها.",
       "updates_desc": "تحقق من وجود إصدار أحدث من NeoDesk وثبّته.",
       "email_desc": "خادم البريد الذي تستخدمه وحدة التحكم لإرسال التنبيهات والإشعارات.",
@@ -1396,7 +1397,11 @@
       "conn_no_effect_operator": "ساري بالفعل: يمكن فقط للحسابات المسموح لها بالاتصال بالأجهزة بدء الجلسات يشمل هذه القاعدة.",
       "conn_no_effect_signed_in": "لا أثر له ما دامت تطبيقات RustDesk المسجّلة الدخول فقط يمكنها بدء الجلسات.",
       "endpoint_auto_short": "تم العثور عليه تلقائيًا",
-      "endpoint_auto_note": "الحقل الفارغ يعطي العملاء العنوان الذي تم العثور عليه تلقائيًا، والظاهر تحت ما يحصل عليه العملاء الآن."
+      "endpoint_auto_note": "الحقل الفارغ يعطي العملاء العنوان الذي تم العثور عليه تلقائيًا، والظاهر تحت ما يحصل عليه العملاء الآن.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "المظهر الافتراضي لكل من يستخدم وحدة التحكم هذه.",
@@ -1860,7 +1865,8 @@
       "group_filter_help": "كيف يُعثر على مجموعات الشخص، مع {{dn}} مكان DN الشخص. مثلًا (member={{dn}}).",
       "group_attr_help": "يمكن لإدخالات ربط الأدوار تسمية مجموعة بهذه السمة، إضافة إلى DN أو CN. مثلًا cn.",
       "default_role_help": "دور الأشخاص الذين لا تطابق مجموعاتهم أي إدخال في الربط أدناه.",
-      "role_map_help": "إدخال واحد لكل مجموعة: المجموعة بـ DN أو اسمها، والدور الذي يحصل عليه أعضاؤها. مثلًا CN=NeoDesk Admins,OU=Groups,DC=example,DC=com مع مسؤول."
+      "role_map_help": "إدخال واحد لكل مجموعة: المجموعة بـ DN أو اسمها، والدور الذي يحصل عليه أعضاؤها. مثلًا CN=NeoDesk Admins,OU=Groups,DC=example,DC=com مع مسؤول.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "تسجيل الدخول الموحد",
@@ -1896,7 +1902,8 @@
       "roles_note": "أي دور يحصل عليه الأشخاص بحسب مجموعاتهم لدى المزوّد.",
       "roles_effect": "يحصل الشخص على الدور عند كل تسجيل دخول عبر المزوّد.",
       "default_role_help": "دور الأشخاص الذين لا تطابق مجموعاتهم أي إدخال في الربط أدناه.",
-      "role_map_help": "إدخال واحد لكل مجموعة: المجموعة كما يسمّيها المزوّد، والدور الذي يحصل عليه أعضاؤها. مثلًا neodesk-admins مع مسؤول."
+      "role_map_help": "إدخال واحد لكل مجموعة: المجموعة كما يسمّيها المزوّد، والدور الذي يحصل عليه أعضاؤها. مثلًا neodesk-admins مع مسؤول.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "إضافة مجموعة وإعادة تسميتها وإزالتها تُحفظ فورًا. تبقى الأجهزة المثبّتة في مجموعتها.",

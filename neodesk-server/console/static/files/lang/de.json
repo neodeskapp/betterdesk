@@ -1252,6 +1252,7 @@
       "branding_desc": "Wie die Konsole für alle aussieht: das Farbschema und seine Farben, die Schriften und der Hintergrund.",
       "auth_desc": "Dein eigenes Passwort und die Zwei-Faktor-Anmeldung sowie die Anmelderegeln für alle.",
       "auth_desc_viewer": "Dein Passwort und die Zwei-Faktor-Anmeldung.",
+      "auth_rules_desc": "Wie lange RustDesk-Apps angemeldet bleiben, die Anmelderegeln für jedes Konto der Konsole und die Sicherheits-Mails, die Personen bekommen.",
       "backup_desc": "Lade eine Kopie von allem herunter, was dieser Server braucht, erstelle Kopien nach Zeitplan oder stelle aus einer Kopie wieder her.",
       "updates_desc": "Nach einer neueren NeoDesk-Version suchen und sie installieren.",
       "email_desc": "Der Mailserver, über den die Konsole Warnungen und Benachrichtigungen sendet.",
@@ -1389,7 +1390,11 @@
       "conn_no_effect_operator": "Gilt schon: Nur Konten, die sich mit Geräten verbinden dürfen, können Sitzungen starten schließt diese Regel ein.",
       "conn_no_effect_signed_in": "Hat keine Wirkung, solange nur angemeldete Apps Sitzungen starten können.",
       "endpoint_auto_short": "Automatisch gefunden",
-      "endpoint_auto_note": "Ein leeres Feld gibt Clients die automatisch gefundene Adresse, zu sehen unter Was Clients jetzt erhalten."
+      "endpoint_auto_note": "Ein leeres Feld gibt Clients die automatisch gefundene Adresse, zu sehen unter Was Clients jetzt erhalten.",
+      "endpoint_empty_auto": "Leer: Clients bekommen {value}, automatisch gefunden.",
+      "endpoint_empty_env": "Leer: Clients bekommen {value}, aus {name} in der Umgebung des Servers.",
+      "endpoint_empty_now": "Leer: Clients bekommen {value}.",
+      "endpoint_empty_unknown": "Leer: Clients bekommen die automatisch gefundene Adresse."
     },
     "appearance": {
       "theme_note": "Das Standard-Erscheinungsbild für alle, die diese Konsole verwenden.",
@@ -1853,7 +1858,8 @@
       "group_filter_help": "Wie die Gruppen einer Person gefunden werden, mit {{dn}} für den DN der Person. Zum Beispiel (member={{dn}}).",
       "group_attr_help": "Einträge der Rollenzuordnung können eine Gruppe über dieses Attribut nennen, neben ihrem DN oder CN. Zum Beispiel cn.",
       "default_role_help": "Die Rolle von Leuten, deren Gruppen zu keinem Eintrag der Zuordnung unten passen.",
-      "role_map_help": "Ein Eintrag pro Gruppe: die Gruppe mit ihrem DN oder Namen, und die Rolle, die ihre Leute bekommen. Zum Beispiel CN=NeoDesk Admins,OU=Groups,DC=example,DC=com mit Administrator."
+      "role_map_help": "Ein Eintrag pro Gruppe: die Gruppe mit ihrem DN oder Namen, und die Rolle, die ihre Leute bekommen. Zum Beispiel CN=NeoDesk Admins,OU=Groups,DC=example,DC=com mit Administrator.",
+      "off_note_page": "Die LDAP-Anmeldung ist aus, deshalb haben die Einstellungen auf dieser Seite noch keine Wirkung. Du kannst sie vorher ausfüllen und die Verbindung testen."
     },
     "sso": {
       "signin_title": "Single Sign-on",
@@ -1889,7 +1895,8 @@
       "roles_note": "Welche Rolle Leute bekommen, nach ihren Gruppen beim Anbieter.",
       "roles_effect": "Eine Person bekommt die Rolle bei jeder Anmeldung über den Anbieter.",
       "default_role_help": "Die Rolle von Leuten, deren Gruppen zu keinem Eintrag der Zuordnung unten passen.",
-      "role_map_help": "Ein Eintrag pro Gruppe: die Gruppe, wie der Anbieter sie nennt, und die Rolle, die ihre Leute bekommen. Zum Beispiel neodesk-admins mit Administrator."
+      "role_map_help": "Ein Eintrag pro Gruppe: die Gruppe, wie der Anbieter sie nennt, und die Rolle, die ihre Leute bekommen. Zum Beispiel neodesk-admins mit Administrator.",
+      "off_note_page": "Single Sign-on ist aus, deshalb haben die Einstellungen auf dieser Seite noch keine Wirkung. Du kannst sie vorher ausfüllen und die Discovery testen."
     },
     "mesh": {
       "groups_effect": "Hinzufügen, Umbenennen und Entfernen einer Gruppe wird sofort gespeichert. Schon installierte Geräte bleiben in ihrer Gruppe.",

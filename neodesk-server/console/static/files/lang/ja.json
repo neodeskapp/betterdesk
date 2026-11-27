@@ -1252,6 +1252,7 @@
       "branding_desc": "コンソール、サインインページ、ダウンロードページの全員向けの見た目です。",
       "auth_desc": "ご自身のパスワードと 2 段階サインイン、およびこのサーバーへの全員のサインイン方法です。",
       "auth_desc_viewer": "パスワードと 2 段階サインインです。",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "このサーバーに必要なものすべてのコピーをダウンロードしたり、スケジュールに沿ってコピーを作成したり、コピーから復元したりできます。",
       "updates_desc": "NeoDesk の新しいバージョンを確認してインストールします。",
       "email_desc": "コンソールがアラートや通知の送信に使うメールサーバーです。",
@@ -1389,7 +1390,11 @@
       "conn_no_effect_operator": "すでに有効です: 「デバイスへの接続が許可されたアカウントだけがセッションを開始できる」がこのルールを含んでいます。",
       "conn_no_effect_signed_in": "サインイン済みのアプリだけがセッションを開始できる間は効果がありません。",
       "endpoint_auto_short": "自動検出",
-      "endpoint_auto_note": "空欄の場合、クライアントには自動検出したアドレスが渡されます。このアドレスは「クライアントに今渡している値」に表示されます。"
+      "endpoint_auto_note": "空欄の場合、クライアントには自動検出したアドレスが渡されます。このアドレスは「クライアントに今渡している値」に表示されます。",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "このコンソールを使う全員に適用される既定の見た目です。",
@@ -1853,7 +1858,8 @@
       "group_filter_help": "ユーザーのグループを見つける方法。ユーザーの DN の位置に {{dn}} を入れます。例: (member={{dn}})。",
       "group_attr_help": "ロールのマッピングのエントリーでは、DN や CN に加えてこの属性でもグループを指定できます。例: cn。",
       "default_role_help": "どのグループも下のマッピングのエントリーに一致しないユーザーのロール。",
-      "role_map_help": "グループごとに 1 エントリー: DN または名前でのグループと、そのメンバーが受け取るロール。例: CN=NeoDesk Admins,OU=Groups,DC=example,DC=com と 管理者。"
+      "role_map_help": "グループごとに 1 エントリー: DN または名前でのグループと、そのメンバーが受け取るロール。例: CN=NeoDesk Admins,OU=Groups,DC=example,DC=com と 管理者。",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "シングルサインオン",
@@ -1889,7 +1895,8 @@
       "roles_note": "プロバイダーでのグループに応じて、ユーザーが受け取るロール。",
       "roles_effect": "プロバイダー経由でサインインするたびにロールが割り当てられます。",
       "default_role_help": "どのグループも下のマッピングのエントリーに一致しないユーザーのロール。",
-      "role_map_help": "グループごとに 1 エントリー: プロバイダーでの名前のグループと、そのメンバーが受け取るロール。例: neodesk-admins と 管理者。"
+      "role_map_help": "グループごとに 1 エントリー: プロバイダーでの名前のグループと、そのメンバーが受け取るロール。例: neodesk-admins と 管理者。",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "グループの追加、名前の変更、削除はすぐに保存されます。インストール済みのデバイスはグループに残ります。",

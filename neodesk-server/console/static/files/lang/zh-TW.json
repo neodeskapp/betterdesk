@@ -1256,6 +1256,7 @@
       "branding_desc": "主控台、登入頁面和下載頁面對所有人呈現的外觀。",
       "auth_desc": "您自己的密碼和兩步驟登入，以及所有人登入此伺服器的方式。",
       "auth_desc_viewer": "您的密碼和兩步驟登入。",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "下載此伺服器所需全部內容的副本、依排程建立副本，或從副本還原。",
       "updates_desc": "檢查是否有較新的 NeoDesk 版本並安裝。",
       "email_desc": "主控台用來傳送警示和通知的郵件伺服器。",
@@ -1393,7 +1394,11 @@
       "conn_no_effect_operator": "已經生效：「只有可連線到裝置的帳戶能開始工作階段」已包含這條規則。",
       "conn_no_effect_signed_in": "只要只有已登入的應用程式能開始工作階段，此項就沒有作用。",
       "endpoint_auto_short": "自動偵測",
-      "endpoint_auto_note": "欄位留空時，用戶端會取得自動偵測的位址，顯示在「用戶端目前取得的值」下。"
+      "endpoint_auto_note": "欄位留空時，用戶端會取得自動偵測的位址，顯示在「用戶端目前取得的值」下。",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "所有使用此主控台的人預設看到的外觀。",
@@ -1857,7 +1862,8 @@
       "group_filter_help": "如何找到使用者的群組，用 {{dn}} 代表使用者的 DN。例如 (member={{dn}})。",
       "group_attr_help": "角色映射的項目除了 DN 或 CN 外，也可以用此屬性指定群組。例如 cn。",
       "default_role_help": "群組與下方映射中任何項目都不相符的使用者所取得的角色。",
-      "role_map_help": "每個群組一個項目：以 DN 或名稱指定的群組，以及其成員取得的角色。例如 CN=NeoDesk Admins,OU=Groups,DC=example,DC=com 對應 管理員。"
+      "role_map_help": "每個群組一個項目：以 DN 或名稱指定的群組，以及其成員取得的角色。例如 CN=NeoDesk Admins,OU=Groups,DC=example,DC=com 對應 管理員。",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "單一登入",
@@ -1893,7 +1899,8 @@
       "roles_note": "使用者依其在提供者的群組取得哪個角色。",
       "roles_effect": "使用者每次透過提供者登入時取得角色。",
       "default_role_help": "群組與下方映射中任何項目都不相符的使用者所取得的角色。",
-      "role_map_help": "每個群組一個項目：提供者命名的群組，以及其成員取得的角色。例如 neodesk-admins 對應 管理員。"
+      "role_map_help": "每個群組一個項目：提供者命名的群組，以及其成員取得的角色。例如 neodesk-admins 對應 管理員。",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "新增、重新命名和移除群組會立即儲存。已安裝的裝置留在原群組中。",

@@ -1258,6 +1258,7 @@
       "branding_desc": "कंसोल, साइन-इन पेज और डाउनलोड पेज सभी के लिए कैसे दिखते हैं।",
       "auth_desc": "आपका अपना पासवर्ड और दो-चरणीय साइन-इन, और सभी लोग इस सर्वर में कैसे साइन इन करते हैं।",
       "auth_desc_viewer": "आपका पासवर्ड और दो-चरणीय साइन-इन।",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "इस सर्वर के लिए ज़रूरी हर चीज़ की कॉपी डाउनलोड करें, शेड्यूल के अनुसार कॉपी बनाएँ, या किसी कॉपी से रीस्टोर करें।",
       "updates_desc": "NeoDesk का नया संस्करण खोजें और उसे इंस्टॉल करें।",
       "email_desc": "वह मेल सर्वर जिससे कंसोल अलर्ट और सूचनाएँ भेजता है।",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "पहले से लागू: केवल वे खाते सत्र शुरू कर सकते हैं जिन्हें डिवाइस से कनेक्ट करने की अनुमति है में यह नियम शामिल है।",
       "conn_no_effect_signed_in": "जब तक केवल साइन-इन किए गए ऐप सत्र शुरू कर सकते हैं, इसका कोई असर नहीं।",
       "endpoint_auto_short": "अपने आप मिला",
-      "endpoint_auto_note": "खाली फ़ील्ड क्लाइंट को अपने आप मिला पता देता है, जो क्लाइंट को अभी क्या मिलता है के नीचे दिखता है।"
+      "endpoint_auto_note": "खाली फ़ील्ड क्लाइंट को अपने आप मिला पता देता है, जो क्लाइंट को अभी क्या मिलता है के नीचे दिखता है।",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "इस कंसोल का उपयोग करने वाले सभी लोगों के लिए डिफ़ॉल्ट रूप-रंग।",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "व्यक्ति के समूह कैसे मिलते हैं, व्यक्ति के DN के लिए {{dn}} के साथ। उदाहरण के लिए (member={{dn}})।",
       "group_attr_help": "भूमिका मानचित्रण की प्रविष्टियाँ DN या CN के अलावा इस एट्रिब्यूट से भी समूह बता सकती हैं। उदाहरण के लिए cn।",
       "default_role_help": "उन लोगों की भूमिका जिनके समूह नीचे के मानचित्रण की किसी प्रविष्टि से मेल नहीं खाते।",
-      "role_map_help": "हर समूह के लिए एक प्रविष्टि: DN या नाम से समूह, और उसके सदस्यों को मिलने वाली भूमिका। उदाहरण के लिए CN=NeoDesk Admins,OU=Groups,DC=example,DC=com के साथ व्यवस्थापक।"
+      "role_map_help": "हर समूह के लिए एक प्रविष्टि: DN या नाम से समूह, और उसके सदस्यों को मिलने वाली भूमिका। उदाहरण के लिए CN=NeoDesk Admins,OU=Groups,DC=example,DC=com के साथ व्यवस्थापक।",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "सिंगल साइन-ऑन",
@@ -1895,7 +1901,8 @@
       "roles_note": "प्रदाता पर उनके समूहों के आधार पर लोगों को कौन सी भूमिका मिलती है।",
       "roles_effect": "प्रदाता से हर साइन-इन पर व्यक्ति को भूमिका मिलती है।",
       "default_role_help": "उन लोगों की भूमिका जिनके समूह नीचे के मानचित्रण की किसी प्रविष्टि से मेल नहीं खाते।",
-      "role_map_help": "हर समूह के लिए एक प्रविष्टि: समूह जैसा प्रदाता उसे नाम देता है, और उसके सदस्यों को मिलने वाली भूमिका। उदाहरण के लिए neodesk-admins के साथ व्यवस्थापक।"
+      "role_map_help": "हर समूह के लिए एक प्रविष्टि: समूह जैसा प्रदाता उसे नाम देता है, और उसके सदस्यों को मिलने वाली भूमिका। उदाहरण के लिए neodesk-admins के साथ व्यवस्थापक।",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "समूह जोड़ना, नाम बदलना और हटाना तुरंत सहेजा जाता है। पहले से इंस्टॉल डिवाइस अपने समूह में रहते हैं।",

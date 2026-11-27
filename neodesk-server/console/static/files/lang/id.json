@@ -1258,6 +1258,7 @@
       "branding_desc": "Tampilan konsol, halaman masuk, dan halaman unduhan untuk semua orang.",
       "auth_desc": "Kata sandi dan masuk dua langkah Anda sendiri, serta cara semua orang masuk ke server ini.",
       "auth_desc_viewer": "Kata sandi dan masuk dua langkah Anda.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Unduh salinan semua yang diperlukan server ini, buat salinan sesuai jadwal, atau pulihkan dari salinan.",
       "updates_desc": "Periksa versi NeoDesk yang lebih baru dan instal.",
       "email_desc": "Server email yang digunakan konsol untuk mengirim peringatan dan notifikasi.",
@@ -1395,7 +1396,11 @@
       "conn_no_effect_operator": "Sudah berlaku: Hanya akun yang boleh terhubung ke perangkat yang dapat memulai sesi sudah mencakup aturan ini.",
       "conn_no_effect_signed_in": "Tidak berpengaruh selama hanya aplikasi yang sudah masuk yang dapat memulai sesi.",
       "endpoint_auto_short": "Ditemukan otomatis",
-      "endpoint_auto_note": "Kolom kosong memberi klien alamat yang ditemukan otomatis, yang tampil di bawah Yang diterima klien sekarang."
+      "endpoint_auto_note": "Kolom kosong memberi klien alamat yang ditemukan otomatis, yang tampil di bawah Yang diterima klien sekarang.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Tampilan default untuk semua orang yang menggunakan konsol ini.",
@@ -1859,7 +1864,8 @@
       "group_filter_help": "Cara grup seseorang ditemukan, dengan {{dn}} untuk DN orang itu. Misalnya (member={{dn}}).",
       "group_attr_help": "Entri pemetaan peran dapat menyebut grup dengan atribut ini, selain DN atau CN-nya. Misalnya cn.",
       "default_role_help": "Peran orang yang grupnya tidak cocok dengan entri mana pun di pemetaan di bawah.",
-      "role_map_help": "Satu entri per grup: grup menurut DN atau namanya, dan peran yang didapat anggotanya. Misalnya CN=NeoDesk Admins,OU=Groups,DC=example,DC=com dengan Administrator."
+      "role_map_help": "Satu entri per grup: grup menurut DN atau namanya, dan peran yang didapat anggotanya. Misalnya CN=NeoDesk Admins,OU=Groups,DC=example,DC=com dengan Administrator.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Masuk tunggal",
@@ -1895,7 +1901,8 @@
       "roles_note": "Peran yang didapat orang, dari grupnya di penyedia.",
       "roles_effect": "Seseorang mendapat peran setiap kali masuk lewat penyedia.",
       "default_role_help": "Peran orang yang grupnya tidak cocok dengan entri mana pun di pemetaan di bawah.",
-      "role_map_help": "Satu entri per grup: grup sesuai nama dari penyedia, dan peran yang didapat anggotanya. Misalnya neodesk-admins dengan Administrator."
+      "role_map_help": "Satu entri per grup: grup sesuai nama dari penyedia, dan peran yang didapat anggotanya. Misalnya neodesk-admins dengan Administrator.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Menambah, mengganti nama, dan menghapus grup langsung tersimpan. Perangkat yang sudah terpasang tetap di grupnya.",

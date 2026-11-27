@@ -1260,6 +1260,7 @@
             "branding_desc": "How the console looks for everyone: the theme and its colours, fonts and the background.",
             "auth_desc": "Your own password and two-factor sign-in, and the sign-in rules for everyone.",
             "auth_desc_viewer": "Your password and two-factor sign-in.",
+            "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
             "backup_desc": "Download a copy of everything this server needs, make copies on a schedule, or restore from one.",
             "updates_desc": "Check for a newer NeoDesk version and install it.",
             "email_desc": "The mail server the console uses to send alerts and notifications.",
@@ -1397,7 +1398,11 @@
             "conn_no_effect_operator": "Already in force: Only accounts that may connect to devices can start sessions includes this rule.",
             "conn_no_effect_signed_in": "Has no effect while only signed-in apps can start sessions.",
             "endpoint_auto_short": "Found automatically",
-            "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+            "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now.",
+            "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+            "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+            "endpoint_empty_now": "Empty: clients get {value}.",
+            "endpoint_empty_unknown": "Empty: clients get the address found automatically."
         },
         "appearance": {
             "theme_note": "The default look for everyone who uses this console.",
@@ -1861,7 +1866,8 @@
             "group_filter_help": "How a person's groups are found, with {{dn}} for the person's DN. For example (member={{dn}}).",
             "group_attr_help": "Role map entries can name a group by this attribute, besides its DN or CN. For example cn.",
             "default_role_help": "The role of people whose groups match no entry of the map below.",
-            "role_map_help": "One entry per group: the group by its DN or name, and the role its people get. For example CN=NeoDesk Admins,OU=Groups,DC=example,DC=com with Administrator."
+            "role_map_help": "One entry per group: the group by its DN or name, and the role its people get. For example CN=NeoDesk Admins,OU=Groups,DC=example,DC=com with Administrator.",
+            "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
         },
         "sso": {
             "signin_title": "Single sign-on",
@@ -1897,7 +1903,8 @@
             "roles_note": "Which role people get, from their groups at the provider.",
             "roles_effect": "A person gets the role at each sign-in through the provider.",
             "default_role_help": "The role of people whose groups match no entry of the map below.",
-            "role_map_help": "One entry per group: the group as the provider names it, and the role its people get. For example neodesk-admins with Administrator."
+            "role_map_help": "One entry per group: the group as the provider names it, and the role its people get. For example neodesk-admins with Administrator.",
+            "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
         },
         "mesh": {
             "groups_effect": "Adding, renaming and removing a group saves at once. Devices already installed stay in their group.",
