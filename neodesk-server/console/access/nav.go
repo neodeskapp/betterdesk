@@ -97,6 +97,7 @@ var NavSections = []NavSection{
 	}},
 	{ID: "support", Label: "nav.section_support", Icon: "support_agent", Pages: []NavPage{
 		navPage("help-requests", "help support requests", "/help-requests", "nav.help_requests", withPermission("device.view"), core),
+		navPage("quick-support-feedback", "feedback quick support rating stars answers survey", "/help-requests/feedback", "nav.quick_support_feedback", withPermission("device.connect"), core),
 		navPage("tickets", "issues", "/tickets", "nav.tickets", withPermission("device.view"), core),
 		navPage("chat", "messages", "/chat", "nav.chat", withPermission("chat.support", "chat.team"), core),
 		navPage("toolkit", "toolkit ping dns port ssl diagnostics", "/toolkit", "nav.toolkit", withPermission("device.connect")),
@@ -143,6 +144,7 @@ var NavSections = []NavSection{
 		navPage("settings:email", "email smtp mail", "/settings?tab=email", "settings.tab_email", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:time", "time zone timezone ntp clock", "/settings?tab=time", "settings.tab_time", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:meshcentral", "meshcentral mesh meshagent", "/settings?tab=meshcentral", "nav.meshcentral", withPermission("server.config"), inGroup(groupConsole)),
+		navPage("settings:quicksupport", "quick support feedback form questions survey", "/settings?tab=quicksupport", "settings.tab_quicksupport", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("languages", "languages translations i18n", "/languages", "nav.languages", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("cdap-studio", "sdk studio flows widgets", "/cdap-studio", "nav.sdk_studio", withRole("operator"), inGroup(groupDeveloper)),
 	}},

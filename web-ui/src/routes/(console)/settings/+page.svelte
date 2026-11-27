@@ -1,9 +1,9 @@
 <!--
   Settings (/settings). Each tab is a sub-page: ?tab=general (or none),
   auth, ldap, sso, joining, branding (Appearance), brand (Branding), email,
-  time, meshcentral, listed in
+  time, meshcentral, quicksupport, listed in
   the sidebar; an unknown tab is General. Directory (LDAP), Single sign-on,
-  Joining, Email, Time and MeshCentral need server.config; anyone else who
+  Joining, Email, Time, MeshCentral and Quick support need server.config; anyone else who
   opens one gets one sentence. Backup, Updates and Advanced are pages of the Server section
   now (/server/...); their old addresses lead there (lib/redirects.ts).
 
@@ -76,7 +76,8 @@
 		brand: () => import('#lib/settings/tabs/BrandingTab.svelte'),
 		email: () => import('#lib/settings/tabs/EmailTab.svelte'),
 		time: () => import('#lib/settings/tabs/TimeTab.svelte'),
-		meshcentral: () => import('#lib/settings/tabs/MeshCentralTab.svelte')
+		meshcentral: () => import('#lib/settings/tabs/MeshCentralTab.svelte'),
+		quicksupport: () => import('#lib/settings/tabs/QuickSupportTab.svelte')
 	};
 
 	/** Bumped by Retry when a tab's code could not be loaded */

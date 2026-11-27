@@ -11,7 +11,8 @@
   instead of a list that fails.
 
   Quick support (device.connect): a button that opens the Quick support
-  dialog, and the account's open quick support sessions above the list.
+  dialog, a link to the feedback people gave after it (help-requests/feedback),
+  and the account's open quick support sessions above the list.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -416,6 +417,7 @@
 		</p>
 		{#if can('device.connect')}
 			<div class="page-actions">
+				<Button href={link('/help-requests/feedback')}>{tf('nav.quick_support_feedback', 'Feedback')}</Button>
 				<Button
 					variant="primary"
 					icon={ICONS.help_request}

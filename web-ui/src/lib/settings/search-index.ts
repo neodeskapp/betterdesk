@@ -274,6 +274,30 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	['meshcentral', 'mesh-recordings', 'settings.general.rec_title', '', [], 'server.config'],
+	[
+		'quicksupport',
+		'qs-feedback-section',
+		'quick_support_feedback.title',
+		'',
+		['quick_support_feedback.description'],
+		'server.config'
+	],
+	[
+		'quicksupport',
+		'qs-feedback-enabled',
+		'quick_support_feedback.enabled',
+		'quick_support_feedback.title',
+		['quick_support_feedback.enabled_help'],
+		'server.config'
+	],
+	[
+		'quicksupport',
+		'qs-feedback-questions',
+		'quick_support_feedback.questions',
+		'quick_support_feedback.title',
+		['quick_support_feedback.questions_help'],
+		'server.config'
+	],
 	['general', 'server-info', 'settings.server_info', '', [], ''],
 	['general', 'server-info', 'settings.general.console_version', 'settings.server_info', [], ''],
 	['general', 'go-server-version', 'settings.general.server_version', 'settings.server_info', [], ''],
@@ -1603,6 +1627,7 @@ export const TAB_IDS: Readonly<Record<string, string>> = {
 	time: 'time-billing-month-hint time-billing-timezone time-billing-timezone-custom time-check-status time-clock-advanced time-clock-detail time-clock-last-error time-clock-max-skew time-clock-ntp-server time-clock-ntp-servers time-clock-offset time-clock-os-sync time-clock-require-sync time-clock-settings-form time-clock-trust-os time-custom-zone time-detect-timezone-btn time-ntp time-ntp-title time-save-clock-settings-btn time-side-title time-timesync-check-btn time-zone time-zone-now time-zone-title',
 	meshcentral:
 		'mesh-agents-online mesh-body mesh-cert-banner mesh-cert-state mesh-copy-server-id mesh-download-msh mesh-group-add mesh-groups-form mesh-groups-list mesh-groups-status mesh-groups-title mesh-install mesh-msh-name mesh-recordings mesh-recordings-table mesh-server-id mesh-settings-panel mesh-state mesh-status-enabled mesh-title',
+	quicksupport: 'qs-feedback-add qs-feedback-enabled qs-feedback-questions qs-feedback-section',
 	policies:
 		'pol-connection-idle-lock-timeout pol-connection-max-session-duration pol-connection-mode pol-connection-wallpaper pol-features-allow-audio pol-features-allow-clipboard pol-features-allow-file-transfer pol-features-allow-recording pol-network-allowed-relay-servers pol-network-block-direct-p2p pol-network-ip-allowlist pol-security-allowed-operators pol-security-password-max-age-days pol-security-password-min-length pol-security-password-require-special pol-security-require-2fa pol-update-auto-update pol-update-channel',
 	'server-backups':
