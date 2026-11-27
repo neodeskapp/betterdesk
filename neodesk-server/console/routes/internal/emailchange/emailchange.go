@@ -26,6 +26,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -33,6 +34,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/accountmail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
 // NoticeKey is the server_config key of the switch for the notice to the
@@ -269,11 +271,11 @@ func (c *Changer) issue(r *http.Request, t Target, email string, self bool) (*li
 	if err != nil {
 		return nil, err
 	}
-	lang := accountmail.LangOf(ctx, c.D, t.ID)
-	m := ConfirmMail(accountmail.In(c.D, lang), Facts{
+	tr, lang, zone := securitymail.ReaderOf(ctx, c.D, t.ID)
+	m := ConfirmMail(tr, Facts{
 		Base: base(r, c.D), Username: t.Username, Email: email, Sender: senderName(r, c.D), Self: self,
-		Expires: expires.UTC().Format("2006-01-02 15:04") + " UTC",
-	}, accountmail.Branding(c.D, base(r, c.D)), token)
+		Expires: expires, Lang: lang, Zone: zone,
+	}, token)
 	delivered, err := accountmail.Send(ctx, c.D, email, m)
 	if err != nil || !delivered {
 		if _, cancelErr := c.Life.CancelEmailChange(ctx, t.ID); cancelErr != nil {
@@ -289,22 +291,22 @@ func (c *Changer) issue(r *http.Request, t Target, email string, self bool) (*li
 
 // notice tells the old address that a change was asked for.
 func (c *Changer) notice(r *http.Request, t Target, email string) {
-	c.sendNotice(r, t, email, "email_change.notice_lead")
+	c.sendNotice(r, t, email, "")
 }
 
 // changedNotice tells the old address that the address changed.
 func (c *Changer) changedNotice(r *http.Request, t Target, email string) {
 	if email == "" {
-		c.sendNotice(r, t, email, "email_change.notice_removed_lead")
+		c.sendNotice(r, t, email, "removed")
 		return
 	}
-	c.sendNotice(r, t, email, "email_change.notice_changed_lead")
+	c.sendNotice(r, t, email, "changed")
 }
 
-func (c *Changer) sendNotice(r *http.Request, t Target, email, leadKey string) {
+func (c *Changer) sendNotice(r *http.Request, t Target, email, variant string) {
 	ctx := r.Context()
-	lang := accountmail.LangOf(ctx, c.D, t.ID)
-	m := NoticeMail(accountmail.In(c.D, lang), Facts{Base: base(r, c.D), Username: t.Username, Email: email}, accountmail.Branding(c.D, base(r, c.D)), leadKey)
+	tr, lang, zone := securitymail.ReaderOf(ctx, c.D, t.ID)
+	m := NoticeMail(tr, Facts{Base: base(r, c.D), Username: t.Username, Email: email, Lang: lang, Zone: zone}, variant)
 	if _, err := accountmail.Send(ctx, c.D, t.Email, m); err != nil {
 		c.D.Log.Error("Email change notice error:", err.Error())
 	}
@@ -342,34 +344,54 @@ func senderName(r *http.Request, d *kit.Deps) string {
 
 // Facts are what the mails say.
 type Facts struct {
-	Base, Username, Email, Sender, Expires string
-	Self                                   bool
+	Base, Username, Email, Sender string
+	Self                          bool
+	// Expires is when the link stops working; Lang and Zone are the
+	// reader's language and time zone.
+	Expires time.Time
+	Lang    string
+	Zone    *time.Location
 }
 
 // ConfirmMail is the mail to the new address with the link that confirms
 // it.
-func ConfirmMail(t accountmail.Translate, f Facts, b brandmail.Branding, token string) accountmail.Built {
-	vars := map[string]any{"server": b.Server, "sender": f.Sender, "username": f.Username, "email": f.Email, "expires": f.Expires, "host": accountmail.Host(f.Base)}
-	lead := t("email_change.confirm_lead", vars)
+func ConfirmMail(t brandmail.Translate, f Facts, token string) brandmail.Mail {
+	host := brandmail.HostOf(f.Base)
+	vars := map[string]any{"sender": f.Sender, "username": f.Username, "email": f.Email, "host": host, "expires": brandmail.DateTime(f.Expires, f.Lang, f.Zone)}
+	lead := t("mail.email_confirm.lead", vars)
 	if f.Self {
-		lead = t("email_change.confirm_lead_self", vars)
+		lead = t("mail.email_confirm.lead_self", vars)
 	}
-	return accountmail.Build(b, accountmail.Page{
-		Subject: t("email_change.confirm_subject", vars), Heading: t("email_change.confirm_heading", vars), Lead: lead,
-		Button: t("email_change.confirm_button", vars), Link: lifecycle.ConfirmEmailLink(f.Base, token),
-		LinkHint: t("password_link.mail_link_hint", vars),
-		Small:    []string{t("password_link.mail_username", vars), t("email_change.confirm_expires", vars), t("email_change.confirm_ignore", vars)},
-		Footer:   t("password_link.mail_footer", vars),
-	})
+	return brandmail.Mail{
+		Kind: "email-confirm", T: t, Lang: f.Lang, Host: host,
+		Subject: t("mail.email_confirm.subject", vars), Preheader: t("mail.email_confirm.preheader", vars),
+		Heading: t("mail.email_confirm.heading", vars), Lead: lead,
+		Button: t("mail.email_confirm.button", vars), Link: lifecycle.ConfirmEmailLink(f.Base, token),
+		Details: []string{t("mail.account_invite.username", vars), t("mail.email_confirm.expires", vars), t("mail.email_confirm.ignore", vars)},
+		Why:     t("mail.email_confirm.why", vars),
+	}
 }
 
-// NoticeMail is the notice to the old address.
-func NoticeMail(t accountmail.Translate, f Facts, b brandmail.Branding, leadKey string) accountmail.Built {
-	vars := map[string]any{"server": b.Server, "username": f.Username, "email": f.Email, "host": accountmail.Host(f.Base)}
-	return accountmail.Build(b, accountmail.Page{
-		Subject: t("email_change.notice_subject", vars), Heading: t("email_change.notice_heading", vars), Lead: t(leadKey, vars),
-		Button: t("email_change.notice_button", vars), Link: f.Base + "/login",
-		Small:  []string{t("email_change.notice_not_you", vars)},
-		Footer: t("password_link.mail_footer", vars),
-	})
+// NoticeMail is the notice to the old address: the address is being
+// changed (variant ""), was changed ("changed") or was removed
+// ("removed").
+func NoticeMail(t brandmail.Translate, f Facts, variant string) brandmail.Mail {
+	host := brandmail.HostOf(f.Base)
+	vars := map[string]any{"username": f.Username, "email": f.Email, "host": host}
+	suffix := ""
+	if variant != "" {
+		suffix = "_" + variant
+	}
+	heading := "email_change.notice_heading"
+	if variant != "" {
+		heading = "mail.email_notice.subject" + suffix
+	}
+	return brandmail.Mail{
+		Kind: "email-notice", T: t, Lang: f.Lang, Host: host, Automatic: true,
+		Subject: t("mail.email_notice.subject"+suffix, vars), Preheader: t("mail.email_notice.preheader", vars),
+		Heading: t(heading, vars), Lead: t("mail.email_notice.lead"+suffix, vars),
+		Button: t("mail.email_notice.button", vars), Link: f.Base + "/login",
+		Details: []string{t("mail.email_notice.not_you", vars)},
+		Why:     t("mail.email_notice.why", vars),
+	}
 }
