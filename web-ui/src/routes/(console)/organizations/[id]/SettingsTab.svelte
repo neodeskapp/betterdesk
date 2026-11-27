@@ -74,10 +74,11 @@
 		}
 	}
 
-	const policyState = (set: boolean) =>
+	/** A group with rules is marked set (said to screen readers); one without says so in its value column */
+	const policySource = (set: boolean) =>
 		set
-			? tf('organizations.policy_set', 'Set for this organization.')
-			: tf('organizations.policy_none', 'No rule: each device keeps its own setting.');
+			? { kind: 'here' as const, text: tf('organizations.policy_set', 'Set for this organization.') }
+			: null;
 
 	const rawColumns = $derived<Column<OrgSetting>[]>([
 		{ id: 'key', label: t('organizations.key'), cell: keyCell, sortValue: (r) => r.key, class: 'col-key' },
@@ -142,12 +143,15 @@
 					label={t(SECTION_TITLE[p.section])}
 					help={t(`policies.${p.section}_desc`)}
 					keyName={p.key}
+					source={policySource(p.set)}
 				>
 					{#snippet control(f)}
-						<output id={f.id} aria-describedby={f.describedby} class={['state', p.set && 'is-set']}
-							>{policyState(p.set)}</output
-						>
-						{#if p.values.length}{@render storedValues(p.values)}{/if}
+						<div id={f.id} aria-describedby={f.describedby} class={['state', p.set && 'is-set']}>
+							{#if p.values.length}{@render storedValues(p.values)}{:else if !p.set}{tf(
+									'policies.not_set_option',
+									'Not set (each device decides)'
+								)}{/if}
+						</div>
 					{/snippet}
 				</SettingRow>
 			{/each}
@@ -238,7 +242,7 @@
 		color: var(--text-muted);
 	}
 	.state {
-		font-weight: 600;
+		display: block;
 	}
 	.state:not(.is-set) {
 		color: var(--text-muted);
@@ -256,7 +260,7 @@
 		}
 	}
 	.stored {
-		margin: var(--space-2) 0 0;
+		margin: 0;
 		padding: 0;
 		list-style: none;
 		display: flex;
