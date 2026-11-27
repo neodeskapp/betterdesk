@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
 #
-#   NeoDesk Console Manager v3.6.24 (Docker)
+#   NeoDesk Console Manager v3.6.25 (Docker)
 #
 #   Installs, updates and removes NeoDesk on Docker: one container that
 #   runs the published image ghcr.io/neodeskapp/neodesk (signal,
@@ -20,7 +20,7 @@ fi
 
 set -Eeuo pipefail
 
-VERSION="3.6.24"
+VERSION="3.6.25"
 # Where people ask for help: the NeoDesk Discord
 NEODESK_HELP_URL="https://discord.gg/nwERSawufr"
 # The console's host port when .env names none: 3375 since 3.6.0-rc.5
@@ -229,10 +229,12 @@ Options:
                          a Traefik container gets a Let's Encrypt certificate
                          and renews it by itself. The name must point at this
                          server, and ports 80 and 443 must reach it.
-  --email ADDRESS        Let's Encrypt's contact for expiry notices
-                         (LETSENCRYPT_EMAIL); needed with --domain
+  --email ADDRESS        Optional: the contact address of the Let's Encrypt
+                         account (LETSENCRYPT_EMAIL). Let's Encrypt sends no
+                         expiry mails any more, Traefik renews by itself
   --letsencrypt-staging  Certificates from Let's Encrypt's staging server
-                         (not trusted by browsers; for tests)
+                         (not trusted by browsers; for tests). A later run
+                         without it gets a trusted certificate
   --no-traefik           Remove Traefik again; the console answers on its
                          own port as before
   --no-move              postgres: do not move the data; the install stays on
@@ -360,9 +362,9 @@ parse_args() {
     if [ -n "$LETSENCRYPT_EMAIL_SET" ] && ! valid_email "$LETSENCRYPT_EMAIL_SET"; then
         die "--email must be an e-mail address, not $LETSENCRYPT_EMAIL_SET"
     fi
-    if [ "$TRAEFIK_ACTION" = on ] && [ -z "$LETSENCRYPT_EMAIL_SET" ] && [ -z "$(env_get LETSENCRYPT_EMAIL)" ]; then
-        die "--domain needs --email: Let's Encrypt's contact for expiry notices." \
-            "sudo bash neodesk-docker.sh --domain $DOMAIN_SET --email admin@example.com"
+    if [ -n "$LETSENCRYPT_EMAIL_SET" ] && ! acme_email_allowed "$LETSENCRYPT_EMAIL_SET"; then
+        die "Let's Encrypt refuses addresses at ${LETSENCRYPT_EMAIL_SET#*@}, so no certificate would come." \
+            "Give your own address, or leave --email out: it is optional."
     fi
 }
 
@@ -372,6 +374,17 @@ valid_domain() {
 }
 
 valid_email() { [[ "$1" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]]; }
+
+# acme_email_allowed ADDRESS: not an address at a domain Let's Encrypt
+# refuses as a contact: the example domains and the reserved names
+acme_email_allowed() {
+    local domain="${1##*@}"
+    domain="${domain,,}"
+    case ".$domain" in
+        *.example.com|*.example.net|*.example.org|*.example|*.invalid|*.test|*.localhost|*.local) return 1 ;;
+    esac
+    return 0
+}
 
 # manager_cmd: how to run this manager from any folder: the install's own
 # copy by its full path (with --dir for another folder than the default),
@@ -1355,14 +1368,12 @@ write_settings() {
 # the profile, the domain and the contact, the console's own port on this
 # host only, the client's address from Traefik and the address in mails
 traefik_settings() {
-    local email old_domain
-    email="${LETSENCRYPT_EMAIL_SET:-$(env_get LETSENCRYPT_EMAIL)}"
-    [ -n "$email" ] || die "--domain needs --email: Let's Encrypt's contact for expiry notices." \
-        "sudo bash neodesk-docker.sh --domain $DOMAIN_SET --email admin@example.com"
+    local old_domain
     old_domain=$(env_get NEODESK_DOMAIN)
     check_domain_dns "$DOMAIN_SET"
     env_set NEODESK_DOMAIN "$DOMAIN_SET"
-    env_set LETSENCRYPT_EMAIL "$email"
+    # The contact is optional; one given before stays
+    [ -z "$LETSENCRYPT_EMAIL_SET" ] || env_set LETSENCRYPT_EMAIL "$LETSENCRYPT_EMAIL_SET"
     if [ "$LETSENCRYPT_STAGING" = true ]; then
         env_set LETSENCRYPT_CA_SERVER "$LETSENCRYPT_STAGING_CA"
     else
@@ -1397,46 +1408,144 @@ no_traefik_settings() {
     env_unset LETSENCRYPT_CA_SERVER
 }
 
-# check_domain_dns NAME: warns when NAME does not point at this server's
-# public address; Let's Encrypt checks the name over it
+# own_addresses: this server's addresses as Let's Encrypt may see them:
+# the IPv4 address clients use (RELAY_SERVERS, when it is one), its
+# global IPv6 addresses and its public IPv6 address
+own_addresses() {
+    local relay
+    relay="${RELAY_SERVERS_SET:-$(env_get RELAY_SERVERS)}"
+    relay="${relay%%:*}"
+    [[ ! "$relay" =~ ^[0-9.]+$ ]] || printf '%s\n' "$relay"
+    ip -6 addr show scope global 2>/dev/null | awk '/inet6/ { sub(/\/.*/, "", $2); print $2 }' || true
+    curl -6 -fsS --max-time 5 https://api64.ipify.org 2>/dev/null | tr -d '[:space:]' || true
+    printf '\n'
+}
+
+# check_domain_dns NAME: warns when no address of NAME is one of this
+# server's (own_addresses); Let's Encrypt checks the name over them
 check_domain_dns() {
-    local addrs relay
+    local addrs ours addr
     command -v getent >/dev/null 2>&1 || return 0
     addrs=$(getent ahosts "$1" 2>/dev/null | awk '{print $1}' | sort -u | tr '\n' ' ' || true)
     if [ -z "$addrs" ]; then
-        warn "$1 does not resolve yet. Let's Encrypt gives the certificate once it points at this server;"
-        warn "Traefik keeps trying. Its log: cd $NEODESK_DIR && docker compose logs -f traefik"
+        warn "$1 does not resolve yet. Let's Encrypt gives the certificate once it points at this server."
+        warn "Then run this script again, which makes Traefik ask again."
         return 0
     fi
-    relay="${RELAY_SERVERS_SET:-$(env_get RELAY_SERVERS)}"
-    relay="${relay%%:*}"
-    if [[ "$relay" =~ ^[0-9.]+$ ]] && [[ " $addrs" != *" $relay "* ]]; then
-        warn "$1 points at ${addrs% }, not at this server's address $relay."
-        warn "Let's Encrypt reaches the name over ports 80 and 443; check the DNS record (or ignore this behind NAT)."
+    ours=$(own_addresses | grep -v '^$' | sort -u | tr '\n' ' ')
+    [ -n "$ours" ] || return 0
+    for addr in $addrs; do
+        [[ " $ours" != *" $addr "* ]] || return 0
+    done
+    warn "$1 points at ${addrs% }, not at this server (${ours% })."
+    warn "Let's Encrypt reaches the name over ports 80 and 443; check the DNS record (or ignore this behind NAT)."
+}
+
+# cert_issuer DOMAIN: the issuer of the certificate Traefik serves for
+# DOMAIN on this machine
+cert_issuer() {
+    if command -v openssl >/dev/null 2>&1; then
+        openssl s_client -connect 127.0.0.1:443 -servername "$1" < /dev/null 2>/dev/null \
+            | openssl x509 -noout -issuer 2>/dev/null || true
+    else
+        curl -vsk --max-time 5 -o /dev/null --resolve "$1:443:127.0.0.1" "https://$1/" 2>&1 \
+            | sed -n 's/^\*[[:space:]]*issuer:[[:space:]]*//p' || true
     fi
 }
 
-# wait_certificate: the console answers over HTTPS at its domain with a
-# certificate this machine trusts (any certificate with the staging
-# server) within CERT_TIMEOUT seconds; a warning only when not, as
-# Traefik keeps trying
+# has_certificate DOMAIN: the console answers over HTTPS at DOMAIN with a
+# certificate this machine trusts; with the staging server, one of its
+# certificates (Traefik's own default certificate does not count)
+has_certificate() {
+    if [ "$(env_get LETSENCRYPT_CA_SERVER)" = "$LETSENCRYPT_STAGING_CA" ]; then
+        [[ "$(cert_issuer "$1")" == *"(STAGING)"* ]] || return 1
+        curl -fsSk --max-time 5 -o /dev/null --resolve "$1:443:127.0.0.1" "https://$1/health" 2>/dev/null
+    else
+        curl -fsS --max-time 5 -o /dev/null --resolve "$1:443:127.0.0.1" "https://$1/health" 2>/dev/null
+    fi
+}
+
+# traefik_acme_error: the cause in Traefik's last failed ACME try, empty
+# when its log has none
+traefik_acme_error() {
+    local line cause
+    # Without colours: Traefik writes them into its log unless
+    # --log.nocolor (the compose files of 3.6.22 and older)
+    line=$(compose logs --no-color --tail 300 traefik 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' \
+        | grep -iE 'acme|certificate' | grep -E ' ERR |level=error' | tail -n 1 || true)
+    [ -n "$line" ] || return 0
+    cause=$(printf '%s\n' "$line" | sed -nE 's/.*error="(([^"\\]|\\.)*)".*/\1/p')
+    cause="${cause:-$line}"
+    cause=$(printf '%s' "$cause" | sed -e 's/\\n/ /g' -e 's/\\"/"/g' -e 's/  */ /g')
+    printf '%s\n' "${cause:0:400}"
+}
+
+# wait_certificate: the console answers over HTTPS at its domain with its
+# certificate (has_certificate) within CERT_TIMEOUT seconds; when not, a
+# warning with Traefik's cause and how to try again
 wait_certificate() {
-    local domain waited=0 insecure=()
+    local domain waited=0 cause
     domain=$(console_domain)
     [ -n "$domain" ] || return 0
-    [ "$(env_get LETSENCRYPT_CA_SERVER)" != "$LETSENCRYPT_STAGING_CA" ] || insecure=(-k)
     step "Waiting for the Let's Encrypt certificate of $domain"
     while [ "$waited" -lt "$CERT_TIMEOUT" ]; do
-        if curl -fsS "${insecure[@]}" --max-time 5 -o /dev/null \
-            --resolve "$domain:443:127.0.0.1" "https://$domain/health" 2>/dev/null; then
-            ok "HTTPS: https://$domain has its certificate (Traefik renews it by itself)"
+        if has_certificate "$domain"; then
+            if [ "$(env_get LETSENCRYPT_CA_SERVER)" = "$LETSENCRYPT_STAGING_CA" ]; then
+                ok "HTTPS: https://$domain has a certificate of Let's Encrypt's staging server (browsers do not trust it; run again without --letsencrypt-staging for a trusted one)"
+            else
+                ok "HTTPS: https://$domain has its certificate (Traefik renews it by itself)"
+            fi
             return 0
         fi
         sleep 3
         waited=$((waited + 3))
     done
-    warn "https://$domain has no valid certificate yet. Let's Encrypt needs $domain to point at this server"
-    warn "and ports 80 and 443 to reach it; Traefik keeps trying. Its log: cd $NEODESK_DIR && docker compose logs traefik"
+    warn "https://$domain has no certificate from Let's Encrypt yet."
+    cause=$(traefik_acme_error)
+    [ -z "$cause" ] || warn "Traefik's last try failed: $cause"
+    warn "Let's Encrypt needs $domain to point at this server and ports 80 and 443 to reach it."
+    warn "Traefik does not try again soon after a failure: once DNS and the ports are right, run this script again"
+    warn "(or: cd $NEODESK_DIR && docker compose restart traefik). Its log: cd $NEODESK_DIR && docker compose logs traefik"
+}
+
+# acme_ca_host: the host of the ACME server Traefik uses
+acme_ca_host() {
+    local ca
+    ca=$(env_get LETSENCRYPT_CA_SERVER)
+    ca="${ca:-https://acme-v02.api.letsencrypt.org/directory}"
+    ca="${ca#*://}"
+    printf '%s\n' "${ca%%/*}"
+}
+
+# check_acme_storage: Traefik keeps one account and its certificates in
+# acme.json, whichever server they came from, and does not ask the new
+# one after a switch (staging to production): an acme.json of another
+# server moves aside, with Traefik stopped, and Traefik is made again.
+# Sets TRAEFIK_RECREATE then.
+TRAEFIK_RECREATE=false
+check_acme_storage() {
+    traefik_on || return 0
+    docker volume inspect "$TRAEFIK_VOLUME" >/dev/null 2>&1 || return 0
+    local host check='f=/le/acme.json; [ -s "$f" ] && grep -q "\"uri\"" "$f" && ! grep -q "://$1/" "$f"'
+    host=$(acme_ca_host)
+    docker run --rm --entrypoint sh --user 0 -v "$TRAEFIK_VOLUME:/le:ro" "$(image_ref)" -c "$check" sh "$host" >/dev/null 2>&1 \
+        || return 0
+    compose --profile traefik stop traefik >/dev/null 2>&1 || true
+    docker run --rm --entrypoint sh --user 0 -v "$TRAEFIK_VOLUME:/le" "$(image_ref)" \
+        -c 'mv /le/acme.json "/le/acme.json.other-server-$1"' sh "$(date +%Y%m%d-%H%M%S)" >/dev/null \
+        || die "Could not move the old acme.json aside in the volume $TRAEFIK_VOLUME."
+    say "Traefik's certificates came from another ACME server than $host; they are kept as acme.json.other-server-* in $TRAEFIK_VOLUME."
+    TRAEFIK_RECREATE=true
+}
+
+# renew_traefik: Traefik made again, so it reads its routing and asks
+# Let's Encrypt again: after --domain (a new name, or a try that failed
+# before) and after check_acme_storage moved its storage
+renew_traefik() {
+    traefik_on || return 0
+    [ "$TRAEFIK_ACTION" = on ] || [ "$TRAEFIK_RECREATE" = true ] || return 0
+    compose_quiet up -d --no-deps --force-recreate traefik || die "Traefik did not start (output above)." \
+        "Its log: cd $NEODESK_DIR && docker compose logs traefik"
 }
 
 # import_keys: the key pair of IMPORT_KEYS into the data volume, while the
@@ -1535,6 +1644,7 @@ do_install() {
         adopt_old_install
     fi
     import_keys
+    check_acme_storage
     sync_firewall
     step "Starting NeoDesk"
     export ADMIN_PASSWORD
@@ -1582,14 +1692,25 @@ do_update() {
     set_data_path
     new_image=$(image_id "$(image_ref)")
     applied=$(cat "$NEODESK_DIR/.applied.sha256" 2>/dev/null || true)
+    check_acme_storage
     sync_firewall
-    if [ -z "$IMPORT_KEYS" ] && [ -n "$old_image" ] && [ "$old_image" = "$new_image" ] && [ "$applied" = "$(settings_fingerprint)" ] \
-        && container_running && wait_healthy; then
-        rm -rf "$before"
-        ok "NeoDesk is up to date: $(server_version)"
-        update_manager_copy
-        print_summary
-        return 0
+    if [ -z "$IMPORT_KEYS" ] && [ -n "$old_image" ] && [ "$old_image" = "$new_image" ] && container_running; then
+        if [ "$applied" = "$(settings_fingerprint)" ] && [ "$TRAEFIK_ACTION" != on ] && [ "$TRAEFIK_RECREATE" != true ] && wait_healthy; then
+            rm -rf "$before"
+            ok "NeoDesk is up to date: $(server_version)"
+            update_manager_copy
+            print_summary
+            return 0
+        fi
+        # The same image with other settings (--domain, --no-traefik, a
+        # changed .env): Compose makes again what changed, without a stop
+        # and a backup
+        if apply_settings "$before"; then
+            update_manager_copy
+            print_summary
+            note_console_port_move "$moved_port"
+            return 0
+        fi
     fi
 
     step "Stopping NeoDesk for the backup"
@@ -1603,7 +1724,8 @@ do_update() {
         rm -rf "$before"
         remember_applied
         ok "Updated: $(server_version)"
-        [ "$TRAEFIK_ACTION" != on ] || wait_certificate
+        renew_traefik
+        [ "$TRAEFIK_ACTION" != on ] && [ "$TRAEFIK_RECREATE" != true ] || wait_certificate
         update_manager_copy
         print_summary
         note_console_port_move "$moved_port"
@@ -1642,6 +1764,34 @@ do_update() {
     fi
     die "NeoDesk does not start, also not with the previous version." \
         "The failed start's log: $log" "The data before the update: $backup" \
+        "Follow the log: cd $NEODESK_DIR && docker compose logs -f neodesk"
+}
+
+# apply_settings BEFORE: the settings of this run for the running image:
+# Compose makes again what they change, and Traefik is made again when
+# it is turned on (renew_traefik). When NeoDesk does not get healthy with
+# them, the settings BEFORE (keep_settings) go back and it fails.
+apply_settings() {
+    local log
+    step "Applying the settings"
+    compose_quiet up -d --remove-orphans || true
+    if wait_healthy; then
+        rm -rf "$1"
+        remember_applied
+        ok "Settings applied: $(server_version)"
+        renew_traefik
+        [ "$TRAEFIK_ACTION" != on ] && [ "$TRAEFIK_RECREATE" != true ] || wait_certificate
+        return 0
+    fi
+    log=$(save_failed_log)
+    warn "NeoDesk did not get healthy with the new settings within ${HEALTH_TIMEOUT}s; its log is in $log"
+    put_settings_back "$1"
+    rm -rf "$1"
+    compose_quiet up -d --remove-orphans || true
+    if wait_healthy; then
+        die "The settings were not applied; NeoDesk runs with the previous ones again." "The failed start's log: $log"
+    fi
+    die "NeoDesk does not start, also not with the previous settings." "The failed start's log: $log" \
         "Follow the log: cd $NEODESK_DIR && docker compose logs -f neodesk"
 }
 

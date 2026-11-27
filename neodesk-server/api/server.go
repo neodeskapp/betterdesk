@@ -166,10 +166,14 @@ type Server struct {
 	// signinLiveFn stands in for the relay's live sessions in tests
 	signinLiveFn func(uuid string) (relay.LivePair, bool)
 	httpSrv      *http.Server
-	mux          sharedMux // the route table, built once (internal_handler.go)
-	wg           sync.WaitGroup
-	version      string
-	now          func() time.Time // the clock of the export file names
+	// derivedPort is the port a RustDesk client with an empty API server
+	// setting calls (the ID server's port minus 2); 0 when the API port is
+	// that port or another listener has it (SetDerivedClientPort)
+	derivedPort int
+	mux         sharedMux // the route table, built once (internal_handler.go)
+	wg          sync.WaitGroup
+	version     string
+	now         func() time.Time // the clock of the export file names
 	// fleet is the fleet scheduler's state (fleet_queue.go)
 	fleet fleetState
 }
@@ -894,6 +898,7 @@ func (s *Server) Start(ctx context.Context) error {
 	}
 
 	s.startFleetScheduler()
+	s.startDerivedListener(useTLS)
 
 	s.wg.Add(1)
 	go func() {
@@ -912,6 +917,52 @@ func (s *Server) Start(ctx context.Context) error {
 	}()
 
 	return nil
+}
+
+// SetDerivedClientPort names the port a stock RustDesk client calls when
+// its API server setting is empty: the ID server's host at the ID
+// server's port minus 2 (21114 by default). When the API listens on
+// another port, as in Docker (21121), Start serves the API on this port
+// too, so such a client's heartbeat and system information arrive.
+// 0 turns that off. The caller passes 0 when another listener of this
+// process has the port.
+func (s *Server) SetDerivedClientPort(port int) {
+	if port == s.cfg.APIPort || port <= 0 || port > 65535 {
+		port = 0
+	}
+	s.derivedPort = port
+}
+
+// startDerivedListener serves the API on the derived client port as well.
+// A port that can't be opened leaves the API on its own port only.
+func (s *Server) startDerivedListener(useTLS bool) {
+	if s.derivedPort == 0 {
+		return
+	}
+	addr := fmt.Sprintf(":%d", s.derivedPort)
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Printf("[api] RustDesk clients without an API server setting call port %d, which can't be opened (%v); they need the API server set to port %d", s.derivedPort, err, s.cfg.APIPort)
+		return
+	}
+	var serveLn net.Listener = ln
+	if s.relay != nil {
+		serveLn = newProtocolSniffListener(ln, s.relay.ServeConn)
+	}
+	log.Printf("[api] Also listening on %s for RustDesk clients without an API server setting", addr)
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		var err error
+		if useTLS {
+			err = s.httpSrv.ServeTLS(serveLn, "", "")
+		} else {
+			err = s.httpSrv.Serve(serveLn)
+		}
+		if err != nil && err != http.ErrServerClosed {
+			log.Printf("[api] Server error on %s: %v", addr, err)
+		}
+	}()
 }
 
 // Stop gracefully shuts down the HTTP server.

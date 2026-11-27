@@ -731,7 +731,7 @@ test_install_sh_runs_the_manager() (
     rm -rf "$dir"
 )
 
-# --domain with --email: Traefik in front of the console with Let's
+# --domain (with --email): Traefik in front of the console with Let's
 # Encrypt. .env gets the profile, the domain, the contact, the console's
 # port on this host only and the proxy trust; the summary names the HTTPS
 # address and ports 80 and 443. --no-traefik takes all of it back and
@@ -740,10 +740,10 @@ test_traefik_with_letsencrypt() (
     load
     local out
     out=$(mgr 'getent() { return 2; }
-               DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=admin@example.com; TRAEFIK_ACTION=on
+               DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=ops@neodesk-test.de; TRAEFIK_ACTION=on
                COMMAND=install; do_install' 2>&1) || fail "an install with --domain failed: $out"
     local line
-    for line in COMPOSE_PROFILES=traefik NEODESK_DOMAIN=console.example.com LETSENCRYPT_EMAIL=admin@example.com \
+    for line in COMPOSE_PROFILES=traefik NEODESK_DOMAIN=console.example.com LETSENCRYPT_EMAIL=ops@neodesk-test.de \
         NEODESK_CONSOLE_BIND=127.0.0.1 TRUST_PROXY=1 PANEL_PUBLIC_URL=https://console.example.com; do
         grep -qx "$line" "$NEODESK_DIR/.env" || fail ".env has no $line: $(cat "$NEODESK_DIR/.env")"
     done
@@ -757,7 +757,7 @@ test_traefik_with_letsencrypt() (
                COMMAND=update; do_install' 2>&1) || fail "the switch to the staging server failed: $out"
     grep -qx 'LETSENCRYPT_CA_SERVER=https://acme-staging-v02.api.letsencrypt.org/directory' "$NEODESK_DIR/.env" \
         || fail ".env has not the staging server: $(cat "$NEODESK_DIR/.env")"
-    grep -qx 'LETSENCRYPT_EMAIL=admin@example.com' "$NEODESK_DIR/.env" || fail "the contact of the first run was lost"
+    grep -qx 'LETSENCRYPT_EMAIL=ops@neodesk-test.de' "$NEODESK_DIR/.env" || fail "the contact of the first run was lost"
 
     : > "$CALLS"
     out=$(mgr 'TRAEFIK_ACTION=off; COMMAND=update; do_install' 2>&1) || fail "--no-traefik failed: $out"
@@ -769,25 +769,30 @@ test_traefik_with_letsencrypt() (
     rm -rf "$TEST_DIR"
 )
 
-# --domain needs a DNS name and --email; ports 80 and 443 must be free
-# for Traefik, and the error says what to do.
+# --domain needs a DNS name; ports 80 and 443 must be free for Traefik,
+# and the error says what to do. HTTPS-11: --email is optional, but an
+# address Let's Encrypt refuses (example.com, the installer's old
+# example) stops the run before anything changes.
 test_traefik_errors_say_what_to_do() (
     load
     local out
-    if out=$(mgr 'parse_args --domain console.example.com' 2>&1); then fail "--domain without --email went on"; fi
-    printf '%s' "$out" | grep -q -- '--email' || fail "the error does not name --email: $out"
-    if out=$(mgr 'parse_args --domain 203.0.113.10 --email admin@example.com' 2>&1); then fail "an IP address passed as --domain"; fi
+    out=$(mgr 'parse_args --domain console.example.com; printf "%s\n" "$TRAEFIK_ACTION"' 2>&1) || fail "--domain without --email was refused: $out"
+    [ "$out" = on ] || fail "--domain without --email did not turn Traefik on: $out"
+    if out=$(mgr 'parse_args --domain console.example.com --email admin@example.com' 2>&1); then fail "an address at example.com went on"; fi
+    printf '%s' "$out" | grep -q 'refuses addresses at example.com' || fail "the error does not say why: $out"
+    if out=$(mgr 'parse_args --domain console.example.com --email me@mail.example.org' 2>&1); then fail "an address below example.org went on"; fi
+    if out=$(mgr 'parse_args --domain 203.0.113.10 --email ops@neodesk-test.de' 2>&1); then fail "an IP address passed as --domain"; fi
     printf '%s' "$out" | grep -q 'DNS name' || fail "the --domain error does not say what it needs: $out"
     if out=$(mgr 'parse_args --domain console.example.com --email nobody' 2>&1); then fail "a bad e-mail address passed"; fi
-    if out=$(mgr 'parse_args --domain console.example.com --email a@example.com --no-traefik' 2>&1); then
+    if out=$(mgr 'parse_args --domain console.example.com --email ops@neodesk-test.de --no-traefik' 2>&1); then
         fail "--domain with --no-traefik went on"
     fi
-    out=$(mgr 'parse_args --domain Console.Example.com --email a@example.com; printf "%s %s\n" "$DOMAIN_SET" "$TRAEFIK_ACTION"' 2>&1) \
+    out=$(mgr 'parse_args --domain Console.Example.com --email ops@neodesk-test.de; printf "%s %s\n" "$DOMAIN_SET" "$TRAEFIK_ACTION"' 2>&1) \
         || fail "a valid --domain was refused: $out"
     [ "$out" = "console.example.com on" ] || fail "--domain was read as: $out"
 
     printf 'apache2\n' > "$TEST_DIR/taken-80"
-    if out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=a@example.com; TRAEFIK_ACTION=on
+    if out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=ops@neodesk-test.de; TRAEFIK_ACTION=on
                   COMMAND=install; do_install' 2>&1); then fail "an install with port 80 taken went on"; fi
     printf '%s' "$out" | grep -q 'TCP 80: apache2' || fail "the port error does not name the program: $out"
     printf '%s' "$out" | grep -q 'Traefik needs ports 80 and 443' || fail "the port error does not say why: $out"
@@ -795,7 +800,7 @@ test_traefik_errors_say_what_to_do() (
 
     mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the plain install failed"
     printf 'nginx\n' > "$TEST_DIR/taken-443"
-    if out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=a@example.com; TRAEFIK_ACTION=on
+    if out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=ops@neodesk-test.de; TRAEFIK_ACTION=on
                   COMMAND=update; do_install' 2>&1); then fail "turning Traefik on with port 443 taken went on"; fi
     printf '%s' "$out" | grep -q 'TCP 443: nginx' || fail "the update's port error does not name the program: $out"
     if grep -q '^NEODESK_DOMAIN=' "$NEODESK_DIR/.env"; then fail "the refused switch changed .env"; fi
@@ -803,26 +808,175 @@ test_traefik_errors_say_what_to_do() (
 )
 
 # install.sh passes --domain, --letsencrypt-email and
-# --letsencrypt-staging to the manager.
+# --letsencrypt-staging to the manager; HTTPS-16: it takes the manager's
+# spellings --email and --no-traefik as well.
 test_install_sh_passes_the_domain() (
     local dir
     dir=$(mktemp -d)
-    (
-        INSTALL_DIR="$dir/opt"
-        # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/install/install.sh" --domain console.example.com --letsencrypt-email admin@example.com --letsencrypt-staging
-        require_root() { :; }
-        fetch_manager() {
-            mkdir -p "$(dirname "$2")"
-            printf '#!/bin/sh\n# NEODESK_DOCKER_SOURCED stand-in\nprintf "%%s\\n" "$*" > "%s/manager-args"\n' "$dir" > "$2"
-            chmod +x "$2"
-        }
-        main
-    ) > "$dir/out" 2>&1 || fail "install.sh with --domain failed: $(cat "$dir/out")"
-    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --domain console.example.com --email admin@example.com --letsencrypt-staging" ] \
+    # install_sh ARGS...: install.sh's main with ARGS and a stand-in manager
+    install_sh() {
+        (
+            INSTALL_DIR="$dir/opt"
+            # shellcheck disable=SC1091
+            source "$SCRIPT_ROOT/install/install.sh" "$@"
+            require_root() { :; }
+            fetch_manager() {
+                mkdir -p "$(dirname "$2")"
+                printf '#!/bin/sh\n# NEODESK_DOCKER_SOURCED stand-in\nprintf "%%s\\n" "$*" > "%s/manager-args"\n' "$dir" > "$2"
+                chmod +x "$2"
+            }
+            main
+        ) > "$dir/out" 2>&1
+    }
+    install_sh --domain console.example.com --letsencrypt-email ops@neodesk-test.de --letsencrypt-staging || fail "install.sh with --domain failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --domain console.example.com --email ops@neodesk-test.de --letsencrypt-staging" ] \
         || fail "the manager ran with the domain as: $(cat "$dir/manager-args")"
+    install_sh --domain console.example.com --email ops@neodesk-test.de || fail "install.sh with --email failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --domain console.example.com --email ops@neodesk-test.de" ] \
+        || fail "the manager ran with --email as: $(cat "$dir/manager-args")"
+    install_sh --no-traefik || fail "install.sh with --no-traefik failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --no-traefik" ] \
+        || fail "the manager ran with --no-traefik as: $(cat "$dir/manager-args")"
     rm -rf "$dir"
 )
+
+# traefik_docker ARGS...: the Docker stand-in, with the volume of
+# Traefik's certificates in $TEST_DIR/le: a script run on it (-c) runs
+# here on that folder, and compose logs prints $TEST_DIR/traefik-log
+traefik_docker() {
+    if [ "$1" = volume ] && [ "$2" = inspect ] && [ "${3:-}" = neodesk-traefik-letsencrypt ]; then
+        printf '%s\n' "$*" >> "$CALLS"
+        [ -d "$TEST_DIR/le" ]
+        return
+    fi
+    if [ "$1" = run ] && [[ " $* " == *" neodesk-traefik-letsencrypt:/le"* ]]; then
+        printf '%s\n' "$*" >> "$CALLS"
+        local arg script="" prev="" rest=()
+        for arg in "$@"; do
+            if [ "$prev" = -c ]; then script="$arg"; prev=""; rest=(); continue; fi
+            [ -z "$script" ] || rest+=("$arg")
+            prev="$arg"
+        done
+        sh -c "${script//\/le/$TEST_DIR/le}" "${rest[@]}"
+        return
+    fi
+    if [ "$1" = compose ] && [ "$2" = logs ]; then
+        cat "$TEST_DIR/traefik-log" 2>/dev/null || true
+        return 0
+    fi
+    command_docker "$@"
+}
+
+# HTTPS-1: with the staging server the certificate check wants one of its
+# certificates; Traefik's own default certificate is no success. HTTPS-4:
+# a missing certificate is told with Traefik's own cause and how to try
+# again.
+test_staging_needs_a_staging_certificate() (
+    load
+    local out
+    printf '%s\n' '2026-11-27T00:00:00Z ERR Unable to obtain ACME certificate for domains error="unable to generate a certificate for the domains [console.example.com]: acme: error: 400 :: urn:ietf:params:acme:error:invalidContact :: Error validating contact(s) :: contact email has forbidden domain \"example.com\"" ACME CA=https://acme-staging-v02.api.letsencrypt.org/directory' > "$TEST_DIR/traefik-log"
+    # With the colours Traefik writes into its log without --log.nocolor
+    sed -i 's/ ERR / \x1b[31mERR\x1b[0m /; s/error="/\x1b[36merror=\x1b[0m\x1b[31m\x1b[1m"/' "$TEST_DIR/traefik-log"
+    out=$(mgr "$(declare -f traefik_docker)"'
+              docker() { traefik_docker "$@"; }
+              openssl() { [ "$1" != s_client ] || { cat > /dev/null; return 0; }; cat > /dev/null; printf "issuer=CN = TRAEFIK DEFAULT CERT\n"; }
+              getent() { return 2; }
+              DOMAIN_SET=console.example.com; LETSENCRYPT_STAGING=true; TRAEFIK_ACTION=on
+              COMMAND=install; do_install' 2>&1) || fail "the staging install failed: $out"
+    if printf '%s' "$out" | grep -q 'has a certificate'; then fail "Traefik's default certificate passed as a staging one: $out"; fi
+    printf '%s' "$out" | grep -q 'no certificate from Let.s Encrypt yet' || fail "no warning without a certificate: $out"
+    printf '%s' "$out" | grep -qF 'contact email has forbidden domain "example.com"' || fail "the warning does not give Traefik's cause: $out"
+    printf '%s' "$out" | grep -q 'run this script again' || fail "the warning does not say how to try again: $out"
+    out=$(mgr "$(declare -f traefik_docker)"'
+              docker() { traefik_docker "$@"; }
+              openssl() { cat > /dev/null; [ "$1" = s_client ] || printf "issuer=C = US, O = (STAGING) Let'"'"'s Encrypt, CN = (STAGING) Ersatz Emmer YR2\n"; }
+              getent() { return 2; }
+              DOMAIN_SET=console.example.com; LETSENCRYPT_STAGING=true; TRAEFIK_ACTION=on
+              COMMAND=update; do_install' 2>&1) || fail "the staging run failed: $out"
+    printf '%s' "$out" | grep -q "certificate of Let's Encrypt's staging server" || fail "a staging certificate was not taken: $out"
+    rm -rf "$TEST_DIR"
+)
+
+# HTTPS-2: going from the staging server to the production one, the
+# staging account and certificate in acme.json move aside, with Traefik
+# stopped, and Traefik is made again, so it asks the production server.
+# An acme.json of the server in use stays.
+test_staging_to_production_renews() (
+    load
+    local out
+    mkdir -p "$TEST_DIR/le"
+    mgr "$(declare -f traefik_docker)"'
+         docker() { traefik_docker "$@"; }
+         getent() { return 2; }
+         DOMAIN_SET=console.example.com; LETSENCRYPT_STAGING=true; TRAEFIK_ACTION=on
+         COMMAND=install; do_install' > "$TEST_DIR/staging.out" 2>&1 || fail "the staging install failed: $(cat "$TEST_DIR/staging.out")"
+    printf '{"letsencrypt":{"Account":{"Registration":{"uri":"https://acme-staging-v02.api.letsencrypt.org/acme/acct/1"}}}}\n' > "$TEST_DIR/le/acme.json"
+    : > "$CALLS"
+    out=$(mgr "$(declare -f traefik_docker)"'
+         docker() { traefik_docker "$@"; }
+              getent() { return 2; }
+              DOMAIN_SET=console.example.com; TRAEFIK_ACTION=on
+              COMMAND=update; do_install' 2>&1) || fail "the switch to production failed: $out"
+    [ ! -e "$TEST_DIR/le/acme.json" ] || fail "the staging acme.json stayed: $(cat "$TEST_DIR/le/acme.json")"
+    ls "$TEST_DIR/le"/acme.json.other-server-* > /dev/null 2>&1 || fail "the staging acme.json was not kept aside: $(ls "$TEST_DIR/le")"
+    local stop move recreate
+    stop=$(grep -n '^compose --profile traefik stop traefik' "$CALLS" | head -n 1 | cut -d: -f1)
+    move=$(grep -n 'mv /le/acme.json' "$CALLS" | head -n 1 | cut -d: -f1)
+    recreate=$(grep -n '^compose up -d --no-deps --force-recreate traefik' "$CALLS" | head -n 1 | cut -d: -f1)
+    { [ -n "$stop" ] && [ -n "$move" ] && [ -n "$recreate" ] && [ "$stop" -lt "$move" ] && [ "$move" -lt "$recreate" ]; } \
+        || fail "Traefik was not stopped, its storage moved and Traefik made again, in that order: $(cat "$CALLS")"
+    printf '%s' "$out" | grep -q 'has its certificate' || fail "the production certificate was not checked: $out"
+
+    printf '{"letsencrypt":{"Account":{"Registration":{"uri":"https://acme-v02.api.letsencrypt.org/acme/acct/2"}}}}\n' > "$TEST_DIR/le/acme.json"
+    mgr "$(declare -f traefik_docker)"'
+         docker() { traefik_docker "$@"; }
+         COMMAND=update; do_install' > /dev/null 2>&1 || fail "the update on production failed"
+    [ -e "$TEST_DIR/le/acme.json" ] || fail "an acme.json of the production server was moved"
+    rm -rf "$TEST_DIR"
+)
+
+# HTTPS-3, HTTPS-17: --domain on an install that runs Traefik, with the
+# same image: Traefik is made again (it reads its routing only when it is
+# made, and asks Let's Encrypt again), and nothing is stopped or backed up.
+test_domain_change_remakes_traefik() (
+    load
+    local out
+    mgr 'getent() { return 2; }
+         DOMAIN_SET=console.example.com; TRAEFIK_ACTION=on
+         COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install with --domain failed"
+    : > "$CALLS"
+    out=$(mgr 'getent() { return 2; }
+               DOMAIN_SET=remote.example.net; TRAEFIK_ACTION=on
+               COMMAND=update; do_install' 2>&1) || fail "the domain change failed: $out"
+    grep -qx 'NEODESK_DOMAIN=remote.example.net' "$NEODESK_DIR/.env" || fail ".env has not the new domain: $(cat "$NEODESK_DIR/.env")"
+    grep -q '^compose up -d --no-deps --force-recreate traefik' "$CALLS" || fail "Traefik was not made again: $(cat "$CALLS")"
+    if grep -qE '^compose stop|^run .*czf' "$CALLS"; then fail "a change of the domain stopped NeoDesk or backed it up: $(cat "$CALLS")"; fi
+    printf '%s' "$out" | grep -q 'Web console: *https://remote.example.net' || fail "the summary does not name the new domain: $out"
+    # The same --domain again: Traefik is made again, so it tries once more
+    : > "$CALLS"
+    mgr 'getent() { return 2; }
+         DOMAIN_SET=remote.example.net; TRAEFIK_ACTION=on
+         COMMAND=update; do_install' > /dev/null 2>&1 || fail "the second run with the domain failed"
+    grep -q '^compose up -d --no-deps --force-recreate traefik' "$CALLS" || fail "a second --domain did not make Traefik try again: $(cat "$CALLS")"
+    rm -rf "$TEST_DIR"
+)
+
+# HTTPS-10: the DNS check knows this server's IPv6 addresses: a name with
+# only an AAAA record of the server gives no warning, another one does.
+test_dns_check_knows_ipv6() (
+    load
+    local out
+    out=$(mgr 'getent() { printf "2001:db8:5::2e STREAM name\n"; }
+               ip() { [ "$1" = -6 ] && printf "    inet6 2001:db8:5::2e/128 scope global\n"; }
+               RELAY_SERVERS_SET=203.0.113.10; check_domain_dns console.example.com' 2>&1) || fail "the DNS check failed: $out"
+    [ -z "$out" ] || fail "a name with the server's IPv6 address gave a warning: $out"
+    out=$(mgr 'getent() { printf "2001:db8:9::1 STREAM name\n"; }
+               ip() { [ "$1" = -6 ] && printf "    inet6 2001:db8:5::2e/128 scope global\n"; }
+               RELAY_SERVERS_SET=203.0.113.10; check_domain_dns console.example.com' 2>&1)
+    printf '%s' "$out" | grep -q 'not at this server' || fail "a name elsewhere gave no warning: $out"
+    rm -rf "$TEST_DIR"
+)
+
 
 # The compose file and the manager's own copy come from the release the
 # image tag names, checked against the release's SHA256SUMS: v<version>
@@ -1072,7 +1226,7 @@ test_firewall_with_traefik_and_old_rules() (
     printf '%-26s ALLOW       Anywhere                   # web server\n' 443/tcp > "$TEST_DIR/fw-rules"
     printf '%-26s ALLOW       Anywhere                   # NeoDesk signal UDP\n' 21116/udp >> "$TEST_DIR/fw-rules"
     out=$(mgr 'getent() { return 2; }
-               DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=admin@example.com; TRAEFIK_ACTION=on
+               DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=ops@neodesk-test.de; TRAEFIK_ACTION=on
                COMMAND=install; do_install' 2>&1) || fail "the install with --domain failed: $out"
     case " $(fw_rules) " in *" 80/tcp "*) ;; *) fail "Traefik's 80 is not open: $(fw_rules)" ;; esac
     case " $(fw_rules) " in *" 3375/tcp "*) fail "the console's own port is open behind Traefik: $(fw_rules)" ;; esac
@@ -1166,6 +1320,10 @@ test_import_keys
 test_traefik_with_letsencrypt
 test_traefik_errors_say_what_to_do
 test_install_sh_passes_the_domain
+test_staging_needs_a_staging_certificate
+test_staging_to_production_renews
+test_domain_change_remakes_traefik
+test_dns_check_knows_ipv6
 test_files_come_from_the_release
 test_install_sh_takes_the_release_files
 test_update_moves_the_default_console_port
