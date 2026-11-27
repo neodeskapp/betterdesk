@@ -1,5 +1,21 @@
 [
  {
+  "vector": 9,
+  "bug": "FL10",
+  "request": "POST /api/nd/fleet/task-result",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/task-result",
+    "type": "application/json",
+    "body": "{\"task_id\":\"t-1\",\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
   "vector": 13,
   "bug": "DV4",
   "request": "POST /api/nd/fleet/task-result",
@@ -27,6 +43,54 @@
   "calls": []
  },
  {
+  "vector": 16,
+  "bug": "FL10",
+  "request": "POST /api/nd/fleet/task-result",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/task-result",
+    "type": "application/json",
+    "body": "{\"0\":\"device-a\",\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
+  "vector": 17,
+  "bug": "FL10",
+  "request": "POST /api/nd/fleet/task-result",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/task-result",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
+  "vector": 18,
+  "bug": "FL10",
+  "request": "POST /api/nd/fleet/task-result",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/task-result",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
   "vector": 19,
   "bug": "FL6",
   "request": "POST /api/nd/fleet/task-result",
@@ -39,6 +103,22 @@
     "url": "/api/fleet/task-result",
     "type": "application/json",
     "body": "{\"device_id\":\"device-a\",\"__proto__\":{\"x\":1},\"constructor\":2,\"nested\":{\"prototype\":3,\"keep\":4},\"list\":[{\"__proto__\":5}]}"
+   }
+  ]
+ },
+ {
+  "vector": 31,
+  "bug": "FL10",
+  "request": "POST /api/nd/fleet/software",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/software",
+    "type": "application/json",
+    "body": "{\"task_id\":\"t-1\",\"device_id\":\"device-a\"}"
    }
   ]
  },
@@ -70,6 +150,54 @@
   "calls": []
  },
  {
+  "vector": 38,
+  "bug": "FL10",
+  "request": "POST /api/nd/fleet/software",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/software",
+    "type": "application/json",
+    "body": "{\"0\":\"device-a\",\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
+  "vector": 39,
+  "bug": "FL10",
+  "request": "POST /api/nd/fleet/software",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/software",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
+  "vector": 40,
+  "bug": "FL10",
+  "request": "POST /api/nd/fleet/software",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/software",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
   "vector": 41,
   "bug": "FL6",
   "request": "POST /api/nd/fleet/software",
@@ -82,6 +210,22 @@
     "url": "/api/fleet/software",
     "type": "application/json",
     "body": "{\"device_id\":\"device-a\",\"__proto__\":{\"x\":1},\"constructor\":2,\"nested\":{\"prototype\":3,\"keep\":4},\"list\":[{\"__proto__\":5}]}"
+   }
+  ]
+ },
+ {
+  "vector": 53,
+  "bug": "FL10",
+  "request": "POST /api/nd/api/nd/fleet/task-result",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/task-result",
+    "type": "application/json",
+    "body": "{\"task_id\":\"t-1\",\"device_id\":\"device-a\"}"
    }
   ]
  },
@@ -113,6 +257,54 @@
   "calls": []
  },
  {
+  "vector": 60,
+  "bug": "FL10",
+  "request": "POST /api/nd/api/nd/fleet/task-result",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/task-result",
+    "type": "application/json",
+    "body": "{\"0\":\"device-a\",\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
+  "vector": 61,
+  "bug": "FL10",
+  "request": "POST /api/nd/api/nd/fleet/task-result",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/task-result",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
+  "vector": 62,
+  "bug": "FL10",
+  "request": "POST /api/nd/api/nd/fleet/task-result",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/task-result",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
   "vector": 63,
   "bug": "FL6",
   "request": "POST /api/nd/api/nd/fleet/task-result",
@@ -125,6 +317,22 @@
     "url": "/api/fleet/task-result",
     "type": "application/json",
     "body": "{\"device_id\":\"device-a\",\"__proto__\":{\"x\":1},\"constructor\":2,\"nested\":{\"prototype\":3,\"keep\":4},\"list\":[{\"__proto__\":5}]}"
+   }
+  ]
+ },
+ {
+  "vector": 75,
+  "bug": "FL10",
+  "request": "POST /api/nd/api/nd/fleet/software",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/software",
+    "type": "application/json",
+    "body": "{\"task_id\":\"t-1\",\"device_id\":\"device-a\"}"
    }
   ]
  },
@@ -154,6 +362,54 @@
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
   "calls": []
+ },
+ {
+  "vector": 82,
+  "bug": "FL10",
+  "request": "POST /api/nd/api/nd/fleet/software",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/software",
+    "type": "application/json",
+    "body": "{\"0\":\"device-a\",\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
+  "vector": 83,
+  "bug": "FL10",
+  "request": "POST /api/nd/api/nd/fleet/software",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/software",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\"}"
+   }
+  ]
+ },
+ {
+  "vector": 84,
+  "bug": "FL10",
+  "request": "POST /api/nd/api/nd/fleet/software",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "body": "{\"ok\":true}",
+  "calls": [
+   {
+    "method": "POST",
+    "url": "/api/fleet/software",
+    "type": "application/json",
+    "body": "{\"device_id\":\"device-a\"}"
+   }
+  ]
  },
  {
   "vector": 85,

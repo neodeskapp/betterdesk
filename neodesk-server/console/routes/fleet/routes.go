@@ -1,7 +1,8 @@
 // Package fleet holds the fleet management routes of the console:
 // resource mapping, scheduled tasks, workflows and compliance, and the two
 // routes agents report to. Every route passes its call on to the API
-// server and answers with what it said.
+// server and answers with what it said. The agents' routes name the
+// device of the agent's token as device_id.
 package fleet
 
 import (
@@ -59,10 +60,24 @@ func Register(d *kit.Deps) {
 	r.Post("/api/panel/fleet/compliance/{deviceId}/scan", h.pass("POST", "/fleet/compliance/{deviceId}/scan"), manage...)
 	r.Post("/api/panel/fleet/compliance/{deviceId}/remediate", h.passBody("POST", "/fleet/compliance/{deviceId}/remediate"), manage...)
 
-	// Agents report back with their device token; the body goes on as it came
+	// Agents report back with their device token: the body goes on with
+	// the token's device as device_id, whatever the body named
 	device := []kit.Middleware{d.RequireDeviceToken, d.RequireTokenDeviceMatch}
-	r.Post("/api/nd/fleet/task-result", h.passBody("POST", "/fleet/task-result"), device...)
-	r.Post("/api/nd/fleet/software", h.passBody("POST", "/fleet/software"), device...)
+	r.Post("/api/nd/fleet/task-result", h.fromDevice("/fleet/task-result"), device...)
+	r.Post("/api/nd/fleet/software", h.fromDevice("/fleet/software"), device...)
+}
+
+// fromDevice is a POST route of an agent: the body goes to the API server
+// with device_id set to the device of the request's token, so the API
+// server stores what the agent reports for that device only.
+func (h *handlers) fromDevice(path string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := spread(goapipath.RequestBody(r))
+		if device := kit.Device(r); device != nil {
+			body.Set("device_id", device.DeviceID)
+		}
+		goapipath.ProxyToGo(h.api, w, r, http.MethodPost, goapipath.Fixed(path), goapipath.Body(body))
+	}
 }
 
 type availability struct {
