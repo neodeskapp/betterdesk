@@ -512,6 +512,7 @@
     "strategy_deleted": "Sääntö poistettu",
     "strategy_not_found": "Tätä sääntöä ei ole enää olemassa.",
     "no_strategies": "Ei vielä sääntöjä. Lisää sääntö, jos haluat kytkeä asiakkaan toimintoja päälle tai pois valituilta käyttäjiltä ja laitteilta.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Ladataan sääntöjä…",
     "groups_saved": "Laiteryhmät tallennettu",
     "group_membership_added": "Lisätty ryhmään",
@@ -1088,7 +1089,8 @@
       "alert_n": "Hälytysosoite {n}",
       "alert_add": "Lisää osoite",
       "err_address": "Tämä ei ole sähköpostiosoite. Esimerkiksi ops@example.com.",
-      "err_host_alone": "Anna vain isäntänimi tai IP-osoite ilman porttia. Esimerkiksi smtp.example.com."
+      "err_host_alone": "Anna vain isäntänimi tai IP-osoite ilman porttia. Esimerkiksi smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Hae asetuksista…",
@@ -1258,6 +1260,7 @@
       "branding_desc": "Miltä konsoli, kirjautumissivu ja lataussivu näyttävät kaikille.",
       "auth_desc": "Oma salasanasi ja kaksivaiheinen kirjautuminen sekä se, miten kaikki kirjautuvat tälle palvelimelle.",
       "auth_desc_viewer": "Salasanasi ja kaksivaiheinen kirjautuminen.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Lataa kopio kaikesta, mitä tämä palvelin tarvitsee, tee kopioita aikataulun mukaan tai palauta kopiosta.",
       "updates_desc": "Tarkista, onko NeoDeskistä uudempaa versiota, ja asenna se.",
       "email_desc": "Sähköpostipalvelin, jonka kautta konsoli lähettää hälytykset ja ilmoitukset.",
@@ -1395,7 +1398,11 @@
       "conn_no_effect_operator": "On jo voimassa: Vain tilit, joilla on oikeus muodostaa yhteys laitteisiin, voivat aloittaa istuntoja sisältää tämän säännön.",
       "conn_no_effect_signed_in": "Ei vaikutusta niin kauan kuin vain kirjautuneet sovellukset voivat aloittaa istuntoja.",
       "endpoint_auto_short": "Löydetty automaattisesti",
-      "endpoint_auto_note": "Tyhjä kenttä antaa asiakkaille automaattisesti löydetyn osoitteen, joka näkyy kohdassa Mitä asiakkaat saavat nyt."
+      "endpoint_auto_note": "Tyhjä kenttä antaa asiakkaille automaattisesti löydetyn osoitteen, joka näkyy kohdassa Mitä asiakkaat saavat nyt.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Oletusulkoasu kaikille tämän konsolin käyttäjille.",
@@ -1708,7 +1715,8 @@
       "tools_console": "Konsolin lataamat",
       "tools_missing": "Ei asennettu",
       "channel_now": "Nyt: {channel}. {installs}.",
-      "channel_applies": "Koskee seuraavaa päivitysten tarkistusta. Mitään ei asenneta ennen kuin napsautat Asenna."
+      "channel_applies": "Koskee seuraavaa päivitysten tarkistusta. Mitään ei asenneta ennen kuin napsautat Asenna.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Valitse tiedosto, jota haluat tarkastella ja muokata. Jokainen tallennus säilyttää kopion edellisestä versiosta.",
@@ -1736,6 +1744,7 @@
       "local_warning": "Nämä osoitteet toimivat vain tällä tietokoneella. Muut tietokoneet ja puhelimet eivät tavoita niitä. Anna palvelimen osoite kohdassa Julkiset asiakaspäätepisteet.",
       "preview_title": "Esikatselu",
       "preview_note": "Konsoli tämän sivun valinnoilla. Ota ne käyttöön tallentamalla.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Vastaanoton tietokone",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Teema: {theme}. Korostusväri: {accent}.",
@@ -1815,7 +1824,8 @@
       "rdclient_bg_help": "Mitä laiteluettelon takana näkyy. \"{inherit}\" käyttää konsolin taustaa.",
       "picture_kb": "Kuva, {kb} kt",
       "website_help": "Koko osoite, esimerkiksi https://example.com.",
-      "console_preview": "Konsolin esikatselu"
+      "console_preview": "Konsolin esikatselu",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Mitkä uudet laitteet saavat liittyä tälle palvelimelle ja miten.",
@@ -1859,7 +1869,8 @@
       "group_filter_help": "Miten henkilön ryhmät löydetään, {{dn}} henkilön DN:n paikalla. Esimerkiksi (member={{dn}}).",
       "group_attr_help": "Roolikartoituksen merkinnät voivat nimetä ryhmän tällä attribuutilla DN:n tai CN:n lisäksi. Esimerkiksi cn.",
       "default_role_help": "Niiden henkilöiden rooli, joiden ryhmät eivät vastaa mitään alla olevan kartoituksen merkintää.",
-      "role_map_help": "Yksi merkintä ryhmää kohden: ryhmä DN:n tai nimen mukaan ja rooli, jonka sen jäsenet saavat. Esimerkiksi CN=NeoDesk Admins,OU=Groups,DC=example,DC=com ja Järjestelmänvalvoja."
+      "role_map_help": "Yksi merkintä ryhmää kohden: ryhmä DN:n tai nimen mukaan ja rooli, jonka sen jäsenet saavat. Esimerkiksi CN=NeoDesk Admins,OU=Groups,DC=example,DC=com ja Järjestelmänvalvoja.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Kertakirjautuminen",
@@ -1895,12 +1906,16 @@
       "roles_note": "Minkä roolin ihmiset saavat palveluntarjoajan ryhmiensä perusteella.",
       "roles_effect": "Henkilö saa roolin jokaisella kirjautumisella palveluntarjoajan kautta.",
       "default_role_help": "Niiden henkilöiden rooli, joiden ryhmät eivät vastaa mitään alla olevan kartoituksen merkintää.",
-      "role_map_help": "Yksi merkintä ryhmää kohden: ryhmä palveluntarjoajan antamalla nimellä ja rooli, jonka sen jäsenet saavat. Esimerkiksi neodesk-admins ja Järjestelmänvalvoja."
+      "role_map_help": "Yksi merkintä ryhmää kohden: ryhmä palveluntarjoajan antamalla nimellä ja rooli, jonka sen jäsenet saavat. Esimerkiksi neodesk-admins ja Järjestelmänvalvoja.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Ryhmän lisääminen, nimeäminen uudelleen ja poistaminen tallentuu heti. Jo asennetut laitteet pysyvät ryhmässään.",
       "install_note": "Lataa ryhmän .msh-tiedosto ja asenna MeshAgent sen avulla laitteelle.",
-      "msh_name_help": "MeshAgent näyttää tämän nimen palvelimelle. Se menee vain ladattuun tiedostoon eikä sitä tallenneta. Tiedosto on ryhmälle, jonka tunnus on default; käytä muissa ryhmissä niiden rivin valikkoa."
+      "msh_name_help": "MeshAgent näyttää tämän nimen palvelimelle. Se menee vain ladattuun tiedostoon eikä sitä tallenneta. Tiedosto on ryhmälle, jonka tunnus on default; käytä muissa ryhmissä niiden rivin valikkoa.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4441,7 +4456,13 @@
     "section_alert": "Hälytys",
     "saving": "Tallennetaan…",
     "rules_checked": "Säännöt tarkistetaan arvojen saapuessa: suoritin ja muisti jokaisen laitteen käyttöraportin yhteydessä, levyn käyttö sen inventaarion yhteydessä, joutoaika sen aktiivisuusraportin yhteydessä ja offline-aika kerran minuutissa. Mukautettuja sääntöjä ei tarkisteta.",
-    "custom_not_checked": "Mukautetulla säännöllä ei ole arvoa, jonka palvelin voisi mitata, joten se ei itse nosta hälytyksiä."
+    "custom_not_checked": "Mukautetulla säännöllä ei ole arvoa, jonka palvelin voisi mitata, joten se ei itse nosta hälytyksiä.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Tiedoston siirto",
@@ -4756,7 +4777,13 @@
     "section_covers": "Mitä se koskee",
     "policy_sheet_desc": "Mitä siirtoja käytäntö koskee ja estävätkö laitteet ne, kirjaavatko ne vai sallivatko ne.",
     "saving": "Tallennetaan…",
-    "older_events": "Vanhemmat tapahtumat"
+    "older_events": "Vanhemmat tapahtumat",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Raportit",
@@ -6010,6 +6037,7 @@
     "max_session_invalid": "Anna kokonainen minuuttimäärä, 0 tai enemmän.",
     "policy_none": "Ei sääntöä: jokainen laite pitää oman asetuksensa.",
     "settings_tab_note": "Mitä tähän organisaatioon nyt sovelletaan. Jokainen arvo muutetaan siellä, missä se asetetaan: käytännöt Käytännöt-sivulla, jaettu osoitekirja Osoitekirja-välilehdellä.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Miten etäistunnot toimivat tämän organisaation laitteilla.",
     "policies_group_effect": "Laitteet saavat muutoksen, kun ne seuraavan kerran pyytävät palvelimelta käytäntöään.",
     "open_org_policies": "Avaa tämän organisaation käytännöt",
@@ -6024,7 +6052,8 @@
     "danger_zone": "Vaaravyöhyke",
     "name_hint": "Näkyy tämän organisaation sivulla, luetteloissa ja sen jäsenille.",
     "slug_changed": "Kirjautumiset, jotka nimeävät organisaation lyhyellä nimellä, tarvitsevat tallennuksen jälkeen uuden nimen.",
-    "policy_set": "Asetettu tälle organisaatiolle."
+    "policy_set": "Asetettu tälle organisaatiolle.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Päästä päähän salattu",
@@ -6639,7 +6668,13 @@
     "sound_today": "Jos haluat mykistää istunnot jo nyt, käytä käyttösääntöä, jossa Ääni on pois, kohdassa Laitteet, tai kytke Ääni pois henkilön konsolipääsystä.",
     "open_access_rules": "Avaa käyttösäännöt",
     "remove_group": "Poista kaikki tämän ryhmän säännöt",
-    "row_not_applied": "Mikään NeoDesk-sovellus ei vielä sovella tätä."
+    "row_not_applied": "Mikään NeoDesk-sovellus ei vielä sovella tätä.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Laitteen todistus",
@@ -7685,7 +7720,18 @@
     "fact_id": "Laitteen tunnus",
     "tabs_save_hint": "Jokaisella sääntötyypillä on oma Tallenna-painike, ja se tallennetaan erikseen.",
     "save_rules": "Tallenna säännöt",
-    "save_all_hint": "Tallenna tallentaa jokaisen muuttamasi sääntötyypin. Jokainen tyyppi tallennetaan erikseen."
+    "save_all_hint": "Tallenna tallentaa jokaisen muuttamasi sääntötyypin. Jokainen tyyppi tallennetaan erikseen.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8743,6 +8789,7 @@
       "fallback_hint": "Kun yksikään operaattori ei saa sähköpostia, se menee hälytysosoitteeseen kohdassa Asetukset › Email.",
       "folder_subject_hint": "Aihe mainitsee laitteen kansion, jotta sähköpostit voi lajitella sen mukaan.",
       "no_smtp_effect": "Ei vaikutusta, ennen kuin sähköpostin lähetys on määritetty kohdassa Asetukset › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Ei vaikutusta: kukaan ei saa sähköpostia niin kauan kuin molemmat alla olevat vaihtoehdot ovat pois päältä."
     },
     "targets": {
@@ -10418,7 +10465,10 @@
     "updates_consequence": "Uusi määrä tulee voimaan seuraavan päivityksen jälkeen.",
     "updates_title": "Ennen päivityksiä",
     "where": "Mihin tallennetaan",
-    "where_help": "NeoDeskin datakansio tai oma kansio. Käyttöjärjestelmän on ensin liitettävä verkkojako."
+    "where_help": "NeoDeskin datakansio tai oma kansio. Käyttöjärjestelmän on ensin liitettävä verkkojako.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Kirjaudu NeoDesk-sovellukseen",

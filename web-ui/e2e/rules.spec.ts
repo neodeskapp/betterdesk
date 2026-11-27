@@ -83,7 +83,9 @@ for (const role of ROLES) {
 				await expect(page.getByText('You can view this page but not change it.')).toBeVisible();
 				await expect(page.getByLabel('Longest session (minutes)', { exact: true })).toBeDisabled();
 				await expect(
-					page.getByRole('button', { name: 'Set for this organization: Allow sound from the device' })
+					page
+						.getByRole('radiogroup', { name: 'Allow sound from the device' })
+						.getByRole('radio', { name: 'Off' })
 				).toBeDisabled();
 				await expect(page.getByRole('button', { name: /^Remove all rules of / })).toHaveCount(0);
 				await expectNoAxeViolations(page);

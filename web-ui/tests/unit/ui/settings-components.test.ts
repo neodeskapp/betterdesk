@@ -19,6 +19,7 @@ import SummaryPageFixture from './fixtures/SummaryPageFixture.svelte';
 import ListEditor from '../../../src/lib/ui/settings/ListEditor.svelte';
 import KeepCount from '../../../src/lib/ui/settings/KeepCount.svelte';
 import InheritedValue from '../../../src/lib/ui/settings/InheritedValue.svelte';
+import ChoiceSegments from '../../../src/lib/ui/settings/ChoiceSegments.svelte';
 import RecordPicker from '../../../src/lib/ui/settings/RecordPicker.svelte';
 import SettingRow from '../../../src/lib/ui/settings/SettingRow.svelte';
 import { relayOptions, roleOptions } from '../../../src/lib/ui/settings/pickers.ts';
@@ -62,10 +63,11 @@ describe('a keep count in a setting row', () => {
 });
 
 describe('the settings page template', () => {
-	test('title, purpose and save model come first, the scope picker before the groups', () => {
+	test('title and purpose come first, no save-model sentence, the scope picker before the groups', () => {
 		render(SettingsFixture);
 		expect(screen.getByRole('heading', { level: 1, name: 'Roles' })).toBeInTheDocument();
-		expect(screen.getByText(/Changes are saved when you press Save/)).toBeInTheDocument();
+		// The save bar says it once there is a change (settings-pass-2.md rule H)
+		expect(screen.queryByText(/Changes are saved when you press Save/)).toBeNull();
 		const role = screen.getByLabelText('Role');
 		const firstGroup = screen.getByRole('heading', { level: 2, name: 'Devices' });
 		expect(role.compareDocumentPosition(firstGroup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -83,14 +85,47 @@ describe('the settings page template', () => {
 });
 
 describe('a setting row', () => {
-	test('the name labels the switch; help and source describe it; the key is there but secondary', () => {
+	test('the name labels the switch; help and source describe it; the key is not on screen', () => {
 		render(SettingsFixture);
 		const view = screen.getByRole('checkbox', { name: 'View devices' });
 		expect(view).toBeChecked();
 		expect(view).toHaveAccessibleDescription(/See the device list\..*Built-in default for this role/);
 		const row = view.closest('.setting-row') as HTMLElement;
-		expect(within(row).getByText('device.view').closest('.setting-key')).not.toBeNull();
-		expect((view as HTMLInputElement).labels?.[0]?.textContent).not.toContain('device.view');
+		// The key is the row's data-setting and the name's title, never text (rule E)
+		expect(row).not.toHaveTextContent('device.view');
+		expect(row).toHaveAttribute('data-setting', 'device.view');
+		expect(view).toHaveAttribute('title', 'device.view');
+	});
+
+	test('a source line shows only when it says where else the value comes from (rule C)', () => {
+		const { rerender } = render(SettingRow, {
+			id: 'r',
+			label: 'Session length',
+			source: { kind: 'default', text: 'Built-in default' }
+		});
+		// The control's own state: kept for screen readers, not drawn
+		expect(screen.getByText('Built-in default')).toHaveClass('sr-only');
+		rerender({
+			id: 'r',
+			label: 'Session length',
+			source: { kind: 'here', text: 'Set here' }
+		});
+		expect(screen.getByText('Set here')).toHaveClass('sr-only');
+		expect(document.getElementById('r')).toHaveClass('is-set');
+		rerender({
+			id: 'r',
+			label: 'Session length',
+			source: { kind: 'environment', text: 'Set in the environment file (SESSION_HOURS)' }
+		});
+		expect(screen.getByText('Set in the environment file (SESSION_HOURS)')).not.toHaveClass('sr-only');
+		expect(document.getElementById('r')).not.toHaveClass('is-set');
+	});
+
+	test('Reset sits beside the control, in the control column', () => {
+		const control = createRawSnippet(() => ({ render: () => '<input id="rr-control">' }));
+		render(SettingRow, { id: 'rr', label: 'Port', control, onreset: () => {}, resetLabel: 'Reset' });
+		const reset = screen.getByRole('button', { name: 'Reset: Port' });
+		expect(reset.closest('.setting-control')).toContainElement(document.getElementById('rr-control'));
 	});
 
 	test('a switch that shows other fields points at them and says whether they show', () => {
@@ -231,8 +266,7 @@ describe('an inherited value', () => {
 		render: () => '<input aria-label="Relay only" type="checkbox">'
 	}));
 
-	test('says what applies and where; setting it here and going back are buttons', async () => {
-		const onoverride = vi.fn();
+	test('the control is always there; beside it what applies and where, or the way back', async () => {
 		const oninherit = vi.fn();
 		const props = {
 			id: 'iv',
@@ -240,26 +274,50 @@ describe('an inherited value', () => {
 			inherited: 'From the server: Direct first.',
 			href: '/settings#connection',
 			linkLabel: 'Settings, General',
-			overrideLabel: 'Set for this organization',
 			inheritLabel: "Use the server's value",
-			onoverride,
 			oninherit,
 			children: control
 		};
 		const { rerender } = render(InheritedValue, props);
+		// No "Set here" step before the control (settings-pass-2.md rule B)
+		expect(screen.getByRole('checkbox', { name: 'Relay only' })).toBeInTheDocument();
 		expect(screen.getByText(/From the server: Direct first\./)).toBeInTheDocument();
 		expect(screen.getByRole('link', { name: 'Settings, General' })).toHaveAttribute(
 			'href',
 			'/settings#connection'
 		);
-		expect(screen.queryByRole('checkbox', { name: 'Relay only' })).toBeNull();
-		await userEvent.click(screen.getByRole('button', { name: 'Set for this organization' }));
-		expect(onoverride).toHaveBeenCalledOnce();
+		expect(screen.queryByRole('button')).toBeNull();
 		await rerender({ ...props, overridden: true });
 		flushSync();
 		expect(screen.getByRole('checkbox', { name: 'Relay only' })).toBeInTheDocument();
+		expect(screen.queryByText(/From the server/)).toBeNull();
 		await userEvent.click(screen.getByRole('button', { name: "Use the server's value" }));
 		expect(oninherit).toHaveBeenCalledOnce();
+	});
+});
+
+describe('choice segments', () => {
+	test('one click picks a choice; arrow keys move it; the group is named and the first radio has the id', async () => {
+		const onchange = vi.fn();
+		const { rerender } = render(ChoiceSegments, {
+			id: 'seg',
+			label: 'Allow sound',
+			options: [
+				{ value: '', label: 'Not set' },
+				{ value: 'on', label: 'On' },
+				{ value: 'off', label: 'Off' }
+			],
+			value: '',
+			onchange
+		});
+		const group = screen.getByRole('radiogroup', { name: 'Allow sound' });
+		expect(within(group).getByRole('radio', { name: 'Not set' })).toBeChecked();
+		expect(within(group).getByRole('radio', { name: 'Not set' })).toHaveAttribute('id', 'seg');
+		await userEvent.click(within(group).getByRole('radio', { name: 'Off' }));
+		expect(onchange).toHaveBeenLastCalledWith('off');
+		await rerender({ value: 'off' });
+		expect(within(group).getByRole('radio', { name: 'Off' })).toBeChecked();
+		expect(within(group).getByRole('radio', { name: 'Not set' })).not.toBeChecked();
 	});
 });
 

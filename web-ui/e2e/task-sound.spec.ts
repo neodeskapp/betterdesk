@@ -34,13 +34,15 @@ test('the search finds the sound setting and its group says where sound is turne
 	await expect(page).toHaveURL(/\/policies(\/[^#]*)?#pol-features-allow-audio$/, { timeout: 30_000 });
 	// Policies belong to one organization: with several, the page asks which first and keeps the setting
 	const firstOrg = page.locator('a[href*="/policies/"][href$="#pol-features-allow-audio"]').first();
-	if (await firstOrg.isVisible({ timeout: 10_000 }).catch(() => false)) {
+	const row = page.locator('#pol-features-allow-audio');
+	// isVisible does not wait: wait for the list or the setting, whichever the page shows
+	await expect(firstOrg.or(row)).toBeVisible({ timeout: 30_000 });
+	if (await firstOrg.isVisible()) {
 		for (let i = 0; i < 100 && !(await firstOrg.evaluate((el) => el === document.activeElement)); i++)
 			await page.keyboard.press('Tab');
 		await expect(firstOrg).toBeFocused();
 		await page.keyboard.press('Enter');
 	}
-	const row = page.locator('#pol-features-allow-audio');
 	await expect(row).toBeVisible({ timeout: 30_000 });
 	await expect(row).toBeInViewport();
 
@@ -50,10 +52,11 @@ test('the search finds the sound setting and its group says where sound is turne
 	await expect(features.getByText(NOT_APPLIED)).toBeVisible();
 	await expect(features.getByText(/To turn sound off in sessions today/)).toBeVisible();
 
-	// The link to where it works today is reachable by keyboard and opens Devices
+	// The link to where it works today is reachable by keyboard and opens Devices.
+	// It sits in the group's note above the setting, so it is a few Shift+Tabs back.
 	const link = features.getByRole('link', { name: 'Open access rules' });
 	for (let i = 0; i < 250 && !(await link.evaluate((el) => el === document.activeElement)); i++)
-		await page.keyboard.press('Tab');
+		await page.keyboard.press('Shift+Tab');
 	await expect(link).toBeFocused();
 	await page.keyboard.press('Enter');
 	await expect(page).toHaveURL(/\/devices/);

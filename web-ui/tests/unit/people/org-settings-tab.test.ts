@@ -52,10 +52,14 @@ afterEach(() => {
 });
 
 describe('stored values in words', () => {
-	test('a saved policy group names each value in words; an unsaved one says no rule applies', async () => {
+	test('a saved policy group names each value in words; an unsaved one says it is not set', async () => {
 		render(SettingsTab, { org, canPolicies: true });
 		const connection = await row('policy_connection');
-		expect(connection.textContent).toContain('Set for this organization.');
+		// Said to screen readers and marked on the row; the values say it on screen
+		expect(within(connection).getByText('Set for this organization.')).toHaveClass('sr-only');
+		expect(connection).toHaveClass('is-set');
+		// No internal key on screen
+		expect(connection.textContent).not.toContain('policy_connection');
 		expect(connection.textContent).not.toContain('4 values');
 		// In the Policies page's order, with its names and words for the values
 		expect([...connection.querySelectorAll('li')].map((li) => li.textContent?.trim())).toEqual([
@@ -65,7 +69,9 @@ describe('stored values in words', () => {
 			'policies.wallpaper_policy: policies.wallpaper_show'
 		]);
 		const features = await row('policy_features');
-		expect(features.textContent).toContain('No rule: each device keeps its own setting.');
+		expect(features.textContent).toContain('Not set (each device decides)');
+		expect(features.textContent).not.toContain('No rule');
+		expect(features).not.toHaveClass('is-set');
 	});
 
 	test('the policies group links to this organization’s Policies page', async () => {

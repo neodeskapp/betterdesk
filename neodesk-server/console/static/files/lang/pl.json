@@ -482,6 +482,7 @@
     "strategy_assign_counts": "Urządzenia: {peers}, użytkownicy: {users}, grupy: {groups}",
     "strategy_assign_none": "Jeszcze nigdzie nie zastosowano",
     "no_strategies": "Brak reguł. Dodaj regułę, aby włączać lub wyłączać funkcje klienta dla wybranych użytkowników i urządzeń.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Wczytywanie reguł…",
     "groups_saved": "Grupy urządzenia zapisane",
     "group_membership_added": "Dodano do grupy",
@@ -1082,7 +1083,8 @@
       "alert_n": "E-mail alertów {n}",
       "alert_add": "Dodaj adres",
       "err_address": "To nie jest adres e-mail. Na przykład ops@example.com.",
-      "err_host_alone": "Wpisz tylko nazwę hosta lub adres IP, bez portu. Na przykład smtp.example.com."
+      "err_host_alone": "Wpisz tylko nazwę hosta lub adres IP, bez portu. Na przykład smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Szukaj w ustawieniach…",
@@ -1252,6 +1254,7 @@
       "branding_desc": "Jak konsola wygląda dla wszystkich: motyw i jego kolory, czcionki i tło.",
       "auth_desc": "Twoje hasło i logowanie dwuskładnikowe oraz zasady logowania dla wszystkich.",
       "auth_desc_viewer": "Hasło i logowanie dwuetapowe.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Pobieranie kopii wszystkiego, czego potrzebuje ten serwer, tworzenie kopii według harmonogramu i przywracanie z kopii.",
       "updates_desc": "Sprawdzanie nowszej wersji NeoDesk i jej instalacja.",
       "email_desc": "Serwer poczty, przez który konsola wysyła alerty i powiadomienia.",
@@ -1389,7 +1392,11 @@
       "conn_no_effect_operator": "Już obowiązuje: Sesje mogą rozpoczynać tylko konta, które mogą łączyć się z urządzeniami obejmuje tę zasadę.",
       "conn_no_effect_signed_in": "Nie ma znaczenia, dopóki sesje mogą rozpoczynać tylko zalogowane aplikacje.",
       "endpoint_auto_short": "Wykryty automatycznie",
-      "endpoint_auto_note": "Puste pole daje klientom adres wykryty automatycznie, widoczny w sekcji Co teraz dostają klienci."
+      "endpoint_auto_note": "Puste pole daje klientom adres wykryty automatycznie, widoczny w sekcji Co teraz dostają klienci.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Domyślny wygląd dla wszystkich użytkowników tej konsoli.",
@@ -1702,7 +1709,8 @@
       "tools_console": "Pobrane przez konsolę",
       "tools_missing": "Nie zainstalowano",
       "channel_now": "Teraz: {channel}. {installs}.",
-      "channel_applies": "Dotyczy następnego sprawdzenia aktualizacji. Nic nie zostanie zainstalowane, dopóki nie klikniesz Zainstaluj."
+      "channel_applies": "Dotyczy następnego sprawdzenia aktualizacji. Nic nie zostanie zainstalowane, dopóki nie klikniesz Zainstaluj.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Wybierz plik, aby go wyświetlić i edytować. Każde zapisanie zachowuje kopię poprzedniej wersji.",
@@ -1730,6 +1738,7 @@
       "local_warning": "Te adresy działają tylko na tym komputerze. Inne komputery i telefony ich nie osiągną. Wpisz adres serwera w sekcji Publiczne endpointy klienta.",
       "preview_title": "Podgląd",
       "preview_note": "Konsola z wyborami z tej strony. Zapisz, aby je zastosować.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Komputer w recepcji",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Motyw: {theme}. Kolor akcentu: {accent}.",
@@ -1809,7 +1818,8 @@
       "rdclient_bg_help": "Co widać za listą urządzeń. „{inherit}” używa tła konsoli.",
       "picture_kb": "Obraz, {kb} KB",
       "website_help": "Pełny adres, na przykład https://example.com.",
-      "console_preview": "Podgląd konsoli"
+      "console_preview": "Podgląd konsoli",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Które nowe urządzenia mogą dołączyć do tego serwera i jak.",
@@ -1853,7 +1863,8 @@
       "group_filter_help": "Jak są znajdowane grupy osoby, z {{dn}} w miejscu DN osoby. Na przykład (member={{dn}}).",
       "group_attr_help": "Wpisy mapowania ról mogą wskazywać grupę tym atrybutem, oprócz jej DN lub CN. Na przykład cn.",
       "default_role_help": "Rola osób, których grupy nie pasują do żadnego wpisu mapowania poniżej.",
-      "role_map_help": "Jeden wpis na grupę: grupa po DN lub nazwie i rola, którą dostają jej członkowie. Na przykład CN=NeoDesk Admins,OU=Groups,DC=example,DC=com z rolą Administrator."
+      "role_map_help": "Jeden wpis na grupę: grupa po DN lub nazwie i rola, którą dostają jej członkowie. Na przykład CN=NeoDesk Admins,OU=Groups,DC=example,DC=com z rolą Administrator.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Logowanie jednokrotne",
@@ -1889,12 +1900,16 @@
       "roles_note": "Jaką rolę dostają ludzie na podstawie swoich grup u dostawcy.",
       "roles_effect": "Osoba dostaje rolę przy każdym logowaniu przez dostawcę.",
       "default_role_help": "Rola osób, których grupy nie pasują do żadnego wpisu mapowania poniżej.",
-      "role_map_help": "Jeden wpis na grupę: grupa tak, jak nazywa ją dostawca, i rola, którą dostają jej członkowie. Na przykład neodesk-admins z rolą Administrator."
+      "role_map_help": "Jeden wpis na grupę: grupa tak, jak nazywa ją dostawca, i rola, którą dostają jej członkowie. Na przykład neodesk-admins z rolą Administrator.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Dodanie, zmiana nazwy i usunięcie grupy zapisuje się od razu. Zainstalowane już urządzenia zostają w swojej grupie.",
       "install_note": "Pobierz plik .msh grupy i zainstaluj z nim MeshAgent na urządzeniu.",
-      "msh_name_help": "MeshAgent pokazuje tę nazwę serwera. Trafia tylko do pobranego pliku i nie jest zapisywana. Plik jest dla grupy o ID default; dla innej grupy użyj menu w jej wierszu."
+      "msh_name_help": "MeshAgent pokazuje tę nazwę serwera. Trafia tylko do pobranego pliku i nie jest zapisywana. Plik jest dla grupy o ID default; dla innej grupy użyj menu w jej wierszu.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4453,7 +4468,13 @@
     "section_alert": "Alert",
     "saving": "Zapisywanie…",
     "rules_checked": "Reguły są sprawdzane, gdy przychodzą wartości: procesor i pamięć przy każdym raporcie użycia z urządzenia, użycie dysku przy jego inwentarzu, czas bezczynności przy raporcie aktywności, a czas offline raz na minutę. Reguły niestandardowe nie są sprawdzane.",
-    "custom_not_checked": "Reguła niestandardowa nie ma wartości, którą serwer mógłby zmierzyć, więc sama nie wywołuje alertów."
+    "custom_not_checked": "Reguła niestandardowa nie ma wartości, którą serwer mógłby zmierzyć, więc sama nie wywołuje alertów.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Przesyłanie plików",
@@ -4768,7 +4789,13 @@
     "section_covers": "Czego dotyczy",
     "policy_sheet_desc": "Których transferów dotyczy polityka i czy urządzenia je blokują, rejestrują czy zezwalają na nie.",
     "saving": "Zapisywanie…",
-    "older_events": "Starsze zdarzenia"
+    "older_events": "Starsze zdarzenia",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Raporty",
@@ -6290,6 +6317,7 @@
     "max_session_invalid": "Wpisz całkowitą liczbę minut, 0 lub więcej.",
     "policy_none": "Brak zasady: każde urządzenie zachowuje własne ustawienie.",
     "settings_tab_note": "Co teraz dotyczy tej organizacji. Każdą wartość zmienia się tam, gdzie jest ustawiona: polityki na stronie Polityki, wspólną książkę adresową na karcie Książka adresowa.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Jak działają sesje zdalne na urządzeniach tej organizacji.",
     "policies_group_effect": "Urządzenia dostają zmianę, gdy następnym razem poproszą serwer o swoją politykę.",
     "open_org_policies": "Otwórz polityki tej organizacji",
@@ -6304,7 +6332,8 @@
     "danger_zone": "Strefa zagrożenia",
     "name_hint": "Widoczna na stronie tej organizacji, na listach i dla jej członków.",
     "slug_changed": "Logowania, które wskazują organizację jej krótką nazwą, po zapisaniu potrzebują nowej.",
-    "policy_set": "Ustawione dla tej organizacji."
+    "policy_set": "Ustawione dla tej organizacji.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Szyfrowanie end-to-end",
@@ -6919,7 +6948,13 @@
     "sound_today": "Aby już teraz wyłączyć dźwięk w sesjach, użyj reguły dostępu z wyłączonym Dźwiękiem w Urządzenia albo wyłącz Dźwięk w dostępie do konsoli danej osoby.",
     "open_access_rules": "Otwórz reguły dostępu",
     "remove_group": "Usuń wszystkie zasady tej grupy",
-    "row_not_applied": "Żadna aplikacja NeoDesk jeszcze tego nie stosuje."
+    "row_not_applied": "Żadna aplikacja NeoDesk jeszcze tego nie stosuje.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Atestacja urządzeń",
@@ -7965,7 +8000,18 @@
     "fact_id": "ID urządzenia",
     "tabs_save_hint": "Każdy rodzaj reguły ma własny przycisk Zapisz i zapisuje się osobno.",
     "save_rules": "Zapisz reguły",
-    "save_all_hint": "Zapisz zapisuje każdy rodzaj reguł, który został zmieniony. Każdy rodzaj zapisuje się osobno."
+    "save_all_hint": "Zapisz zapisuje każdy rodzaj reguł, który został zmieniony. Każdy rodzaj zapisuje się osobno.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8737,6 +8783,7 @@
       "fallback_hint": "Gdy żaden operator nie dostaje e-maila, trafia on na adres alertów w Ustawienia › E-mail.",
       "folder_subject_hint": "Temat podaje folder urządzenia, aby e-maile można było według niego sortować.",
       "no_smtp_effect": "Nie ma znaczenia, dopóki wysyłanie e-maili nie jest skonfigurowane w Ustawienia › E-mail.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Nie ma znaczenia: nikt nie dostaje e-maila, dopóki obie opcje poniżej są wyłączone."
     },
     "targets": {
@@ -10412,7 +10459,10 @@
     "updates_consequence": "Nowa liczba działa od następnej aktualizacji.",
     "updates_title": "Przed aktualizacjami",
     "where": "Gdzie zapisywać",
-    "where_help": "Folder danych NeoDesk lub własny folder. Udział sieciowy musi najpierw zamontować system operacyjny."
+    "where_help": "Folder danych NeoDesk lub własny folder. Udział sieciowy musi najpierw zamontować system operacyjny.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Zaloguj się w aplikacji NeoDesk",

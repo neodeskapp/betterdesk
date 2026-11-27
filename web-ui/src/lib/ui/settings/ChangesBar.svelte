@@ -37,6 +37,27 @@
 			: tf('settings_ui.n_changes', '{count} unsaved changes', { count: changes.length })
 	);
 
+	/* The bar's height, for base.css: a control that gets focus scrolls
+	   clear of it (WCAG 2.4.11). It grows with the listed changes. */
+	let height = $state(0);
+	let bar = $state<HTMLElement | undefined>();
+	/* Measured with a guarded observer: test DOMs have none, and
+	   bind:offsetHeight would create one without asking */
+	$effect(() => {
+		if (!bar || typeof ResizeObserver === 'undefined') return;
+		const el = bar;
+		const ro = new ResizeObserver(() => (height = el.offsetHeight));
+		ro.observe(el);
+		height = el.offsetHeight;
+		return () => ro.disconnect();
+	});
+	$effect(() => {
+		if (!show || !height) return;
+		const root = document.documentElement.style;
+		root.setProperty('--changes-bar-h', `${height}px`);
+		return () => root.removeProperty('--changes-bar-h');
+	});
+
 	$effect(() => {
 		if (!show) return;
 		const onKey = (e: KeyboardEvent) => {
@@ -51,7 +72,12 @@
 </script>
 
 {#if show}
-	<div class="changes-bar" role="region" aria-label={tf('settings_ui.unsaved_region', 'Unsaved changes')}>
+	<div
+		class="changes-bar"
+		bind:this={bar}
+		role="region"
+		aria-label={tf('settings_ui.unsaved_region', 'Unsaved changes')}
+	>
 		<div class="changes-text" aria-live="polite">
 			{#if draft.error}
 				<p class="changes-error">{tf('settings_ui.not_saved', 'Not saved:')} {draft.error}</p>

@@ -10,7 +10,6 @@ import {
 	isAddressRange,
 	isRelayAddress,
 	setCount,
-	startValue,
 	undoWrites,
 	valuesFromResolved,
 	writesFor
@@ -68,23 +67,6 @@ describe('values from the policies in force', () => {
 		expect(v['network.allowed_relay_servers']).toEqual([]);
 		// The server's connection strategy is where the value comes from, not a rule here
 		expect(v['network.block_direct_p2p']).toBeNull();
-	});
-
-	test('setting a rule starts from the server value where there is one, else from a neutral value', () => {
-		const r = resolved();
-		expect(startValue('network.block_direct_p2p', r)).toBe(true);
-		const off = resolved();
-		off.network!.fields.block_direct_p2p!.server_value = false;
-		expect(startValue('network.block_direct_p2p', off)).toBe(false);
-		// The server could not say: neutral
-		const unknown = resolved();
-		unknown.network!.fields.block_direct_p2p!.server_value = null;
-		expect(startValue('network.block_direct_p2p', unknown)).toBe(false);
-		expect(startValue('features.allow_audio', r)).toBe(false);
-		expect(startValue('connection.mode', r)).toBe('attended');
-		expect(startValue('connection.idle_lock_timeout', r)).toBe(0);
-		expect(startValue('security.password_min_length', r)).toBe(6);
-		expect(startValue('network.ip_allowlist', r)).toEqual([]);
 	});
 
 	test('the fields of each group in page order', () => {

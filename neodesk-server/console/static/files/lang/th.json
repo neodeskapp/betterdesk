@@ -512,6 +512,7 @@
     "strategy_deleted": "ลบกฎแล้ว",
     "strategy_not_found": "กฎนี้ไม่มีอยู่แล้ว",
     "no_strategies": "ยังไม่มีกฎ เพิ่มกฎเพื่อเปิดหรือปิดฟีเจอร์ของไคลเอนต์สำหรับผู้ใช้และอุปกรณ์ที่เลือก",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "กำลังโหลดกฎ…",
     "groups_saved": "บันทึกกลุ่มอุปกรณ์แล้ว",
     "group_membership_added": "เพิ่มในกลุ่มแล้ว",
@@ -1088,7 +1089,8 @@
       "alert_n": "อีเมลแจ้งเตือน {n}",
       "alert_add": "เพิ่มที่อยู่",
       "err_address": "นี่ไม่ใช่ที่อยู่อีเมล เช่น ops@example.com",
-      "err_host_alone": "ป้อนเฉพาะชื่อโฮสต์หรือที่อยู่ IP โดยไม่มีพอร์ต เช่น smtp.example.com"
+      "err_host_alone": "ป้อนเฉพาะชื่อโฮสต์หรือที่อยู่ IP โดยไม่มีพอร์ต เช่น smtp.example.com",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "ค้นหาการตั้งค่า…",
@@ -1258,6 +1260,7 @@
       "branding_desc": "ลักษณะของคอนโซล หน้าลงชื่อเข้าใช้ และหน้าดาวน์โหลดสำหรับทุกคน",
       "auth_desc": "รหัสผ่านและการลงชื่อเข้าใช้แบบสองขั้นตอนของคุณเอง และวิธีที่ทุกคนลงชื่อเข้าใช้เซิร์ฟเวอร์นี้",
       "auth_desc_viewer": "รหัสผ่านและการลงชื่อเข้าใช้แบบสองขั้นตอนของคุณ",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "ดาวน์โหลดสำเนาของทุกสิ่งที่เซิร์ฟเวอร์นี้ต้องใช้ สร้างสำเนาตามกำหนดเวลา หรือกู้คืนจากสำเนา",
       "updates_desc": "ตรวจหา NeoDesk เวอร์ชันใหม่และติดตั้ง",
       "email_desc": "เซิร์ฟเวอร์อีเมลที่คอนโซลใช้ส่งการแจ้งเตือนและข้อความแจ้ง",
@@ -1395,7 +1398,11 @@
       "conn_no_effect_operator": "มีผลอยู่แล้ว: เฉพาะบัญชีที่ได้รับอนุญาตให้เชื่อมต่ออุปกรณ์เท่านั้นที่เริ่มเซสชันได้ ครอบคลุมกฎนี้แล้ว",
       "conn_no_effect_signed_in": "ไม่มีผลตราบใดที่มีเพียงแอปที่ลงชื่อเข้าใช้แล้วเท่านั้นที่เริ่มเซสชันได้",
       "endpoint_auto_short": "พบโดยอัตโนมัติ",
-      "endpoint_auto_note": "ช่องที่เว้นว่างจะให้ไคลเอนต์ใช้ที่อยู่ที่พบโดยอัตโนมัติ ซึ่งแสดงอยู่ใต้ สิ่งที่ไคลเอนต์ได้รับตอนนี้"
+      "endpoint_auto_note": "ช่องที่เว้นว่างจะให้ไคลเอนต์ใช้ที่อยู่ที่พบโดยอัตโนมัติ ซึ่งแสดงอยู่ใต้ สิ่งที่ไคลเอนต์ได้รับตอนนี้",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "รูปลักษณ์เริ่มต้นสำหรับทุกคนที่ใช้คอนโซลนี้",
@@ -1708,7 +1715,8 @@
       "tools_console": "คอนโซลดาวน์โหลดมา",
       "tools_missing": "ยังไม่ได้ติดตั้ง",
       "channel_now": "ตอนนี้: {channel} {installs}",
-      "channel_applies": "มีผลกับการตรวจหาอัปเดตครั้งถัดไป จะไม่มีการติดตั้งใดๆ จนกว่าคุณจะคลิก ติดตั้ง"
+      "channel_applies": "มีผลกับการตรวจหาอัปเดตครั้งถัดไป จะไม่มีการติดตั้งใดๆ จนกว่าคุณจะคลิก ติดตั้ง",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "เลือกไฟล์เพื่อดูและแก้ไข ทุกครั้งที่บันทึกจะเก็บสำเนาของเวอร์ชันก่อนหน้าไว้",
@@ -1736,6 +1744,7 @@
       "local_warning": "ที่อยู่เหล่านี้ใช้ได้เฉพาะบนคอมพิวเตอร์เครื่องนี้ คอมพิวเตอร์และโทรศัพท์เครื่องอื่นเข้าถึงไม่ได้ ใส่ที่อยู่ของเซิร์ฟเวอร์ในส่วนจุดปลายทางไคลเอนต์สาธารณะ",
       "preview_title": "ตัวอย่าง",
       "preview_note": "คอนโซลตามตัวเลือกในหน้านี้ บันทึกเพื่อใช้งาน",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "คอมพิวเตอร์แผนกต้อนรับ",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "ธีม: {theme} สีเน้น: {accent}",
@@ -1815,7 +1824,8 @@
       "rdclient_bg_help": "สิ่งที่แสดงอยู่หลังรายการอุปกรณ์ \"{inherit}\" ใช้พื้นหลังของคอนโซล",
       "picture_kb": "รูปภาพ {kb} KB",
       "website_help": "ที่อยู่เต็ม เช่น https://example.com",
-      "console_preview": "ตัวอย่างแผงควบคุม"
+      "console_preview": "ตัวอย่างแผงควบคุม",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "อุปกรณ์ใหม่ใดเข้าร่วมเซิร์ฟเวอร์นี้ได้ และเข้าร่วมอย่างไร",
@@ -1859,7 +1869,8 @@
       "group_filter_help": "วิธีค้นหากลุ่มของบุคคล โดยใช้ {{dn}} แทน DN ของบุคคลนั้น เช่น (member={{dn}})",
       "group_attr_help": "รายการในการแมปบทบาทระบุกลุ่มด้วยแอตทริบิวต์นี้ได้ นอกเหนือจาก DN หรือ CN เช่น cn",
       "default_role_help": "บทบาทของผู้ที่กลุ่มไม่ตรงกับรายการใดในการแมปด้านล่าง",
-      "role_map_help": "หนึ่งรายการต่อกลุ่ม: กลุ่มตาม DN หรือชื่อ และบทบาทที่สมาชิกได้รับ เช่น CN=NeoDesk Admins,OU=Groups,DC=example,DC=com กับ ผู้ดูแลระบบ"
+      "role_map_help": "หนึ่งรายการต่อกลุ่ม: กลุ่มตาม DN หรือชื่อ และบทบาทที่สมาชิกได้รับ เช่น CN=NeoDesk Admins,OU=Groups,DC=example,DC=com กับ ผู้ดูแลระบบ",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "การลงชื่อเข้าใช้ครั้งเดียว",
@@ -1895,12 +1906,16 @@
       "roles_note": "ผู้คนได้รับบทบาทใด ตามกลุ่มของตนที่ผู้ให้บริการ",
       "roles_effect": "บุคคลได้รับบทบาททุกครั้งที่ลงชื่อเข้าใช้ผ่านผู้ให้บริการ",
       "default_role_help": "บทบาทของผู้ที่กลุ่มไม่ตรงกับรายการใดในการแมปด้านล่าง",
-      "role_map_help": "หนึ่งรายการต่อกลุ่ม: กลุ่มตามชื่อที่ผู้ให้บริการตั้ง และบทบาทที่สมาชิกได้รับ เช่น neodesk-admins กับ ผู้ดูแลระบบ"
+      "role_map_help": "หนึ่งรายการต่อกลุ่ม: กลุ่มตามชื่อที่ผู้ให้บริการตั้ง และบทบาทที่สมาชิกได้รับ เช่น neodesk-admins กับ ผู้ดูแลระบบ",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "การเพิ่ม เปลี่ยนชื่อ และลบกลุ่มจะบันทึกทันที อุปกรณ์ที่ติดตั้งแล้วยังอยู่ในกลุ่มเดิม",
       "install_note": "ดาวน์โหลดไฟล์ .msh ของกลุ่ม แล้วใช้ติดตั้ง MeshAgent บนอุปกรณ์",
-      "msh_name_help": "MeshAgent แสดงชื่อนี้ให้เซิร์ฟเวอร์ ชื่อนี้อยู่เฉพาะในไฟล์ที่ดาวน์โหลดและไม่ถูกบันทึก ไฟล์นี้สำหรับกลุ่มที่มี ID เป็น default สำหรับกลุ่มอื่น ใช้เมนูในแถวของกลุ่มนั้น"
+      "msh_name_help": "MeshAgent แสดงชื่อนี้ให้เซิร์ฟเวอร์ ชื่อนี้อยู่เฉพาะในไฟล์ที่ดาวน์โหลดและไม่ถูกบันทึก ไฟล์นี้สำหรับกลุ่มที่มี ID เป็น default สำหรับกลุ่มอื่น ใช้เมนูในแถวของกลุ่มนั้น",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4441,7 +4456,13 @@
     "section_alert": "การแจ้งเตือน",
     "saving": "กำลังบันทึก…",
     "rules_checked": "กฎจะถูกตรวจเมื่อค่ามาถึง: CPU และหน่วยความจำทุกครั้งที่อุปกรณ์รายงานการใช้งาน การใช้ดิสก์พร้อมรายการทรัพย์สิน เวลาว่างพร้อมรายงานกิจกรรม และเวลาออฟไลน์นาทีละครั้ง กฎแบบกำหนดเองจะไม่ถูกตรวจ",
-    "custom_not_checked": "กฎแบบกำหนดเองไม่มีค่าที่เซิร์ฟเวอร์วัดได้ จึงไม่สร้างการแจ้งเตือนเอง"
+    "custom_not_checked": "กฎแบบกำหนดเองไม่มีค่าที่เซิร์ฟเวอร์วัดได้ จึงไม่สร้างการแจ้งเตือนเอง",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "การถ่ายโอนไฟล์",
@@ -4756,7 +4777,13 @@
     "section_covers": "สิ่งที่ครอบคลุม",
     "policy_sheet_desc": "การโอนที่นโยบายครอบคลุม และอุปกรณ์จะบล็อก บันทึก หรืออนุญาต",
     "saving": "กำลังบันทึก…",
-    "older_events": "เหตุการณ์ที่เก่ากว่า"
+    "older_events": "เหตุการณ์ที่เก่ากว่า",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "รายงาน",
@@ -6010,6 +6037,7 @@
     "max_session_invalid": "ป้อนจำนวนนาทีเป็นจำนวนเต็ม ตั้งแต่ 0 ขึ้นไป",
     "policy_none": "ไม่มีกฎ: แต่ละอุปกรณ์ใช้การตั้งค่าของตัวเอง",
     "settings_tab_note": "สิ่งที่มีผลกับองค์กรนี้ตอนนี้ แต่ละค่าเปลี่ยนได้ตรงที่ตั้งค่าไว้: นโยบายในหน้า นโยบาย สมุดที่อยู่ที่แชร์ในแท็บ สมุดที่อยู่",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "เซสชันระยะไกลทำงานอย่างไรบนอุปกรณ์ขององค์กรนี้",
     "policies_group_effect": "อุปกรณ์จะได้รับการเปลี่ยนแปลงในครั้งถัดไปที่ขอนโยบายจากเซิร์ฟเวอร์",
     "open_org_policies": "เปิดนโยบายขององค์กรนี้",
@@ -6024,7 +6052,8 @@
     "danger_zone": "โซนอันตราย",
     "name_hint": "แสดงในหน้าขององค์กรนี้ ในรายการ และต่อสมาชิก",
     "slug_changed": "การลงชื่อเข้าใช้ที่ระบุองค์กรด้วยชื่อย่อจะต้องใช้ชื่อใหม่หลังจากบันทึก",
-    "policy_set": "ตั้งค่าสำหรับองค์กรนี้แล้ว"
+    "policy_set": "ตั้งค่าสำหรับองค์กรนี้แล้ว",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "เข้ารหัสตั้งแต่ต้นทางถึงปลายทาง",
@@ -6639,7 +6668,13 @@
     "sound_today": "หากต้องการปิดเสียงในเซสชันตั้งแต่วันนี้ ให้ใช้กฎการเข้าถึงที่ปิด เสียง ไว้ใน อุปกรณ์ หรือปิด เสียง ในสิทธิ์เข้าถึงคอนโซลของบุคคลนั้น",
     "open_access_rules": "เปิดกฎการเข้าถึง",
     "remove_group": "ลบกฎทั้งหมดของกลุ่มนี้",
-    "row_not_applied": "ยังไม่มีแอป NeoDesk ใดนำสิ่งนี้ไปใช้"
+    "row_not_applied": "ยังไม่มีแอป NeoDesk ใดนำสิ่งนี้ไปใช้",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "การรับรองอุปกรณ์",
@@ -7685,7 +7720,18 @@
     "fact_id": "รหัสอุปกรณ์",
     "tabs_save_hint": "กฎแต่ละประเภทมีปุ่มบันทึกของตัวเองและบันทึกแยกกัน",
     "save_rules": "บันทึกกฎ",
-    "save_all_hint": "บันทึกจะเก็บกฎทุกประเภทที่คุณเปลี่ยน แต่ละประเภทจะบันทึกแยกกัน"
+    "save_all_hint": "บันทึกจะเก็บกฎทุกประเภทที่คุณเปลี่ยน แต่ละประเภทจะบันทึกแยกกัน",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8743,6 +8789,7 @@
       "fallback_hint": "เมื่อไม่มีผู้ปฏิบัติงานคนใดได้รับอีเมล อีเมลจะส่งไปยังที่อยู่แจ้งเตือนใน การตั้งค่า › Email",
       "folder_subject_hint": "หัวเรื่องระบุโฟลเดอร์ของอุปกรณ์ เพื่อให้จัดเรียงอีเมลตามโฟลเดอร์ได้",
       "no_smtp_effect": "ไม่มีผลจนกว่าจะตั้งค่าการส่งอีเมลใน การตั้งค่า › Email",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "ไม่มีผล: ไม่มีใครได้รับอีเมลขณะที่ทั้งสองตัวเลือกด้านล่างปิดอยู่"
     },
     "targets": {
@@ -10418,7 +10465,10 @@
     "updates_consequence": "จำนวนใหม่มีผลหลังการอัปเดตครั้งถัดไป",
     "updates_title": "ก่อนการอัปเดต",
     "where": "บันทึกที่ไหน",
-    "where_help": "โฟลเดอร์ข้อมูลของ NeoDesk หรือโฟลเดอร์ของคุณเอง ต้องให้ระบบปฏิบัติการเมานต์การแชร์เครือข่ายก่อน"
+    "where_help": "โฟลเดอร์ข้อมูลของ NeoDesk หรือโฟลเดอร์ของคุณเอง ต้องให้ระบบปฏิบัติการเมานต์การแชร์เครือข่ายก่อน",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "ลงชื่อเข้าใช้แอป NeoDesk",

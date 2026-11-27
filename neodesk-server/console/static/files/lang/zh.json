@@ -506,6 +506,7 @@
     "strategy_deleted": "规则已删除",
     "strategy_not_found": "此规则已不存在。",
     "no_strategies": "还没有规则。添加规则后，可为所选用户和设备开启或关闭客户端功能。",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "正在加载规则…",
     "groups_saved": "设备分组已保存",
     "group_membership_added": "已添加到分组",
@@ -1082,7 +1083,8 @@
       "alert_n": "告警邮箱 {n}",
       "alert_add": "添加地址",
       "err_address": "这不是电子邮件地址。例如 ops@example.com。",
-      "err_host_alone": "只输入主机名或 IP 地址，不带端口。例如 smtp.example.com。"
+      "err_host_alone": "只输入主机名或 IP 地址，不带端口。例如 smtp.example.com。",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "搜索设置…",
@@ -1252,6 +1254,7 @@
       "branding_desc": "控制台、登录页面和下载页面对所有人呈现的外观。",
       "auth_desc": "您自己的密码和两步验证登录，以及所有人登录此服务器的方式。",
       "auth_desc_viewer": "您的密码和两步验证登录。",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "下载此服务器所需全部内容的副本、按计划创建副本，或从副本恢复。",
       "updates_desc": "检查是否有更新的 NeoDesk 版本并安装。",
       "email_desc": "控制台用来发送警报和通知的邮件服务器。",
@@ -1389,7 +1392,11 @@
       "conn_no_effect_operator": "已经生效：“只有可以连接设备的账户才能发起会话”已包含这条规则。",
       "conn_no_effect_signed_in": "只要只有已登录的应用可以发起会话，此项就无效。",
       "endpoint_auto_short": "自动检测",
-      "endpoint_auto_note": "字段留空时，客户端会获得自动检测的地址，显示在“客户端当前获得的值”下。"
+      "endpoint_auto_note": "字段留空时，客户端会获得自动检测的地址，显示在“客户端当前获得的值”下。",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "所有使用此控制台的人默认看到的外观。",
@@ -1702,7 +1709,8 @@
       "tools_console": "由控制台下载",
       "tools_missing": "未安装",
       "channel_now": "当前：{channel}。{installs}。",
-      "channel_applies": "从下次检查更新起生效。在您点击“安装”之前不会安装任何内容。"
+      "channel_applies": "从下次检查更新起生效。在您点击“安装”之前不会安装任何内容。",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "选择文件即可查看和编辑。每次保存都会保留上一版本的副本。",
@@ -1730,6 +1738,7 @@
       "local_warning": "这些地址只在本机有效，其他电脑和手机无法访问。请在“公共客户端端点”中填写服务器地址。",
       "preview_title": "预览",
       "preview_note": "按本页选项显示的控制台。保存后生效。",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "前台电脑",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "主题：{theme}。强调色：{accent}。",
@@ -1809,7 +1818,8 @@
       "rdclient_bg_help": "设备列表后面显示的内容。“{inherit}”使用控制台的背景。",
       "picture_kb": "图片，{kb} KB",
       "website_help": "完整地址，例如 https://example.com。",
-      "console_preview": "面板预览"
+      "console_preview": "面板预览",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "哪些新设备可以加入此服务器，以及如何加入。",
@@ -1853,7 +1863,8 @@
       "group_filter_help": "如何找到用户的分组，用 {{dn}} 表示用户的 DN。例如 (member={{dn}})。",
       "group_attr_help": "角色映射的条目除了 DN 或 CN 外，还可以用此属性指定分组。例如 cn。",
       "default_role_help": "分组与下方映射中任何条目都不匹配的用户所获得的角色。",
-      "role_map_help": "每个分组一个条目：按 DN 或名称指定的分组，以及其成员获得的角色。例如 CN=NeoDesk Admins,OU=Groups,DC=example,DC=com 对应 管理员。"
+      "role_map_help": "每个分组一个条目：按 DN 或名称指定的分组，以及其成员获得的角色。例如 CN=NeoDesk Admins,OU=Groups,DC=example,DC=com 对应 管理员。",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "单点登录",
@@ -1889,12 +1900,16 @@
       "roles_note": "用户根据其在提供商处的分组获得哪个角色。",
       "roles_effect": "用户每次通过提供商登录时获得角色。",
       "default_role_help": "分组与下方映射中任何条目都不匹配的用户所获得的角色。",
-      "role_map_help": "每个分组一个条目：提供商命名的分组，以及其成员获得的角色。例如 neodesk-admins 对应 管理员。"
+      "role_map_help": "每个分组一个条目：提供商命名的分组，以及其成员获得的角色。例如 neodesk-admins 对应 管理员。",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "添加、重命名和删除分组会立即保存。已安装的设备留在原分组中。",
       "install_note": "下载分组的 .msh 文件，并用它在设备上安装 MeshAgent。",
-      "msh_name_help": "MeshAgent 用这个名称显示服务器。它只写入下载的文件，不会保存。该文件用于 ID 为 default 的分组；其他分组请使用其所在行的菜单。"
+      "msh_name_help": "MeshAgent 用这个名称显示服务器。它只写入下载的文件，不会保存。该文件用于 ID 为 default 的分组；其他分组请使用其所在行的菜单。",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4435,7 +4450,13 @@
     "section_alert": "警报",
     "saving": "正在保存…",
     "rules_checked": "数值一到就会检查规则：CPU 和内存在设备每次报告使用情况时检查，磁盘使用随其清单检查，空闲时间随其活动报告检查，离线时间每分钟检查一次。自定义规则不会检查。",
-    "custom_not_checked": "自定义规则没有服务器能测量的数值，因此本身不会发出警报。"
+    "custom_not_checked": "自定义规则没有服务器能测量的数值，因此本身不会发出警报。",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "文件传输",
@@ -4750,7 +4771,13 @@
     "section_covers": "适用范围",
     "policy_sheet_desc": "策略涵盖哪些传输，以及设备是阻止、记录还是允许。",
     "saving": "正在保存…",
-    "older_events": "较早的事件"
+    "older_events": "较早的事件",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "报表",
@@ -6272,6 +6299,7 @@
     "max_session_invalid": "请输入 0 或以上的整数分钟数。",
     "policy_none": "无规则：每台设备保留自己的设置。",
     "settings_tab_note": "当前适用于此组织的内容。每个值在设置它的地方更改：策略在“策略”页面，共享通讯录在“通讯录”标签页。",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "此组织的设备上远程会话如何工作。",
     "policies_group_effect": "设备下次向服务器请求策略时获得更改。",
     "open_org_policies": "打开此组织的策略",
@@ -6286,7 +6314,8 @@
     "danger_zone": "危险区域",
     "name_hint": "显示在此组织的页面、列表中，并向其成员显示。",
     "slug_changed": "用短名称指定组织的登录方式在保存后需要使用新名称。",
-    "policy_set": "已为此组织设置。"
+    "policy_set": "已为此组织设置。",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "端到端加密",
@@ -6901,7 +6930,13 @@
     "sound_today": "如果现在就要关闭会话中的声音，请在“设备”下使用关闭了“声音”的访问规则，或在某人的控制台访问中关闭“声音”。",
     "open_access_rules": "打开访问规则",
     "remove_group": "删除此分组的所有规则",
-    "row_not_applied": "还没有 NeoDesk 应用应用此项。"
+    "row_not_applied": "还没有 NeoDesk 应用应用此项。",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "设备认证",
@@ -7947,7 +7982,18 @@
     "fact_id": "设备 ID",
     "tabs_save_hint": "每种规则都有自己的保存按钮，会分别保存。",
     "save_rules": "保存规则",
-    "save_all_hint": "保存会存储您更改的每一类规则。每一类单独保存。"
+    "save_all_hint": "保存会存储您更改的每一类规则。每一类单独保存。",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8737,6 +8783,7 @@
       "fallback_hint": "如果没有操作员收到邮件，邮件会发到“设置 › Email”中的告警地址。",
       "folder_subject_hint": "邮件主题包含设备的文件夹，方便按文件夹整理邮件。",
       "no_smtp_effect": "在“设置 › Email”中设置邮件发送之前，此项无效。",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "无效：只要下面两个选项都关闭，就没有人会收到邮件。"
     },
     "targets": {
@@ -10412,7 +10459,10 @@
     "updates_consequence": "新数量在下一次更新后生效。",
     "updates_title": "更新前",
     "where": "保存位置",
-    "where_help": "NeoDesk 数据文件夹，或您自己的文件夹。网络共享必须先由操作系统挂载。"
+    "where_help": "NeoDesk 数据文件夹，或您自己的文件夹。网络共享必须先由操作系统挂载。",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "登录 NeoDesk 应用",

@@ -512,6 +512,7 @@
     "strategy_deleted": "Regulă ștearsă",
     "strategy_not_found": "Această regulă nu mai există.",
     "no_strategies": "Nu există încă reguli. Adăugați una pentru a activa sau dezactiva funcții ale clientului pentru utilizatorii și dispozitivele alese.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Se încarcă regulile…",
     "groups_saved": "Grupuri de dispozitive salvate",
     "group_membership_added": "Adăugat la grup",
@@ -1088,7 +1089,8 @@
       "alert_n": "E-mail pentru alerte {n}",
       "alert_add": "Adăugați o adresă",
       "err_address": "Aceasta nu este o adresă de e-mail. De exemplu ops@example.com.",
-      "err_host_alone": "Introduceți doar numele de gazdă sau adresa IP, fără port. De exemplu smtp.example.com."
+      "err_host_alone": "Introduceți doar numele de gazdă sau adresa IP, fără port. De exemplu smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Căutați în setări…",
@@ -1258,6 +1260,7 @@
       "branding_desc": "Cum arată consola, pagina de conectare și pagina de descărcare pentru toată lumea.",
       "auth_desc": "Parola dumneavoastră și conectarea în doi pași, precum și modul în care se conectează toată lumea la acest server.",
       "auth_desc_viewer": "Parola dumneavoastră și conectarea în doi pași.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Descărcați o copie a tot ce are nevoie acest server, faceți copii programate sau restaurați dintr-o copie.",
       "updates_desc": "Căutați o versiune mai nouă de NeoDesk și instalați-o.",
       "email_desc": "Serverul de e-mail prin care consola trimite alerte și notificări.",
@@ -1395,7 +1398,11 @@
       "conn_no_effect_operator": "Deja în vigoare: Doar conturile care se pot conecta la dispozitive pot porni sesiuni include această regulă.",
       "conn_no_effect_signed_in": "Nu are efect cât timp doar aplicațiile conectate pot porni sesiuni.",
       "endpoint_auto_short": "Găsită automat",
-      "endpoint_auto_note": "Un câmp gol le dă clienților adresa găsită automat, afișată sub Ce primesc acum clienții."
+      "endpoint_auto_note": "Un câmp gol le dă clienților adresa găsită automat, afișată sub Ce primesc acum clienții.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Aspectul implicit pentru toți cei care folosesc această consolă.",
@@ -1708,7 +1715,8 @@
       "tools_console": "Descărcate de consolă",
       "tools_missing": "Neinstalate",
       "channel_now": "Acum: {channel}. {installs}.",
-      "channel_applies": "Se aplică la următoarea verificare a actualizărilor. Nu se instalează nimic până nu dați clic pe Instalați."
+      "channel_applies": "Se aplică la următoarea verificare a actualizărilor. Nu se instalează nimic până nu dați clic pe Instalați.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Alegeți un fișier pentru a-l vedea și edita. Fiecare salvare păstrează o copie a versiunii anterioare.",
@@ -1736,6 +1744,7 @@
       "local_warning": "Aceste adrese funcționează doar pe acest computer. Alte computere și telefoane nu le pot accesa. Introduceți adresa serverului la Endpoint-uri publice client.",
       "preview_title": "Previzualizare",
       "preview_note": "Consola cu alegerile de pe această pagină. Salvați pentru a le aplica.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "PC recepție",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Temă: {theme}. Culoare de accent: {accent}.",
@@ -1815,7 +1824,8 @@
       "rdclient_bg_help": "Ce se vede în spatele listei de dispozitive. „{inherit}” folosește fundalul consolei.",
       "picture_kb": "Imagine, {kb} KB",
       "website_help": "O adresă completă, de exemplu https://example.com.",
-      "console_preview": "Previzualizare consolă"
+      "console_preview": "Previzualizare consolă",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Ce dispozitive noi se pot alătura acestui server și cum.",
@@ -1859,7 +1869,8 @@
       "group_filter_help": "Cum sunt găsite grupurile unei persoane, cu {{dn}} pentru DN-ul persoanei. De exemplu (member={{dn}}).",
       "group_attr_help": "Intrările din maparea rolurilor pot numi un grup după acest atribut, pe lângă DN sau CN. De exemplu cn.",
       "default_role_help": "Rolul persoanelor ale căror grupuri nu se potrivesc cu nicio intrare din maparea de mai jos.",
-      "role_map_help": "O intrare pe grup: grupul după DN sau nume și rolul pe care îl primesc membrii lui. De exemplu CN=NeoDesk Admins,OU=Groups,DC=example,DC=com cu Administrator."
+      "role_map_help": "O intrare pe grup: grupul după DN sau nume și rolul pe care îl primesc membrii lui. De exemplu CN=NeoDesk Admins,OU=Groups,DC=example,DC=com cu Administrator.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Autentificare unică",
@@ -1895,12 +1906,16 @@
       "roles_note": "Ce rol primesc oamenii, după grupurile lor la furnizor.",
       "roles_effect": "O persoană primește rolul la fiecare conectare prin furnizor.",
       "default_role_help": "Rolul persoanelor ale căror grupuri nu se potrivesc cu nicio intrare din maparea de mai jos.",
-      "role_map_help": "O intrare pe grup: grupul așa cum îl numește furnizorul și rolul pe care îl primesc membrii lui. De exemplu neodesk-admins cu Administrator."
+      "role_map_help": "O intrare pe grup: grupul așa cum îl numește furnizorul și rolul pe care îl primesc membrii lui. De exemplu neodesk-admins cu Administrator.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Adăugarea, redenumirea și eliminarea unui grup se salvează imediat. Dispozitivele deja instalate rămân în grupul lor.",
       "install_note": "Descărcați fișierul .msh al unui grup și instalați cu el MeshAgent pe dispozitiv.",
-      "msh_name_help": "MeshAgent afișează acest nume pentru server. Ajunge doar în fișierul descărcat și nu se salvează. Fișierul este pentru grupul cu ID-ul default; pentru alt grup, folosiți meniul din rândul lui."
+      "msh_name_help": "MeshAgent afișează acest nume pentru server. Ajunge doar în fișierul descărcat și nu se salvează. Fișierul este pentru grupul cu ID-ul default; pentru alt grup, folosiți meniul din rândul lui.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4441,7 +4456,13 @@
     "section_alert": "Alertă",
     "saving": "Se salvează…",
     "rules_checked": "Regulile sunt verificate pe măsură ce sosesc valorile: procesorul și memoria la fiecare raport de utilizare de la un dispozitiv, utilizarea discului cu inventarul său, timpul de inactivitate cu raportul de activitate și timpul offline o dată pe minut. Regulile personalizate nu sunt verificate.",
-    "custom_not_checked": "O regulă personalizată nu are o valoare pe care serverul să o poată măsura, deci nu declanșează singură alerte."
+    "custom_not_checked": "O regulă personalizată nu are o valoare pe care serverul să o poată măsura, deci nu declanșează singură alerte.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Transfer de fișiere",
@@ -4756,7 +4777,13 @@
     "section_covers": "Ce acoperă",
     "policy_sheet_desc": "Ce transferuri acoperă politica și dacă dispozitivele le blochează, le înregistrează sau le permit.",
     "saving": "Se salvează…",
-    "older_events": "Evenimente mai vechi"
+    "older_events": "Evenimente mai vechi",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Rapoarte",
@@ -6010,6 +6037,7 @@
     "max_session_invalid": "Introduceți un număr întreg de minute, 0 sau mai mult.",
     "policy_none": "Nicio regulă: fiecare dispozitiv își păstrează propria setare.",
     "settings_tab_note": "Ce se aplică acum acestei organizații. Fiecare valoare se modifică acolo unde este setată: politicile pe pagina Politici, agenda de adrese comună în fila Agendă de adrese.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Cum funcționează sesiunile la distanță pe dispozitivele acestei organizații.",
     "policies_group_effect": "Dispozitivele primesc o modificare data viitoare când cer serverului politica lor.",
     "open_org_policies": "Deschideți politicile acestei organizații",
@@ -6024,7 +6052,8 @@
     "danger_zone": "Zonă periculoasă",
     "name_hint": "Afișat pe pagina acestei organizații, în liste și membrilor ei.",
     "slug_changed": "Conectările care numesc organizația după numele scurt au nevoie de cel nou după salvare.",
-    "policy_set": "Setat pentru această organizație."
+    "policy_set": "Setat pentru această organizație.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Criptat de la capăt la capăt",
@@ -6639,7 +6668,13 @@
     "sound_today": "Pentru a opri sunetul în sesiuni de pe acum, folosiți o regulă de acces cu Sunet dezactivat în Dispozitive sau dezactivați Sunet în accesul la consolă al unei persoane.",
     "open_access_rules": "Deschideți regulile de acces",
     "remove_group": "Eliminați toate regulile acestui grup",
-    "row_not_applied": "Nicio aplicație NeoDesk nu aplică încă acest lucru."
+    "row_not_applied": "Nicio aplicație NeoDesk nu aplică încă acest lucru.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Atestarea dispozitivului",
@@ -7685,7 +7720,18 @@
     "fact_id": "ID dispozitiv",
     "tabs_save_hint": "Fiecare tip de regulă are propriul buton Salvare și se salvează separat.",
     "save_rules": "Salvează regulile",
-    "save_all_hint": "Salvarea păstrează fiecare tip de regulă pe care l-ați modificat. Fiecare tip se salvează separat."
+    "save_all_hint": "Salvarea păstrează fiecare tip de regulă pe care l-ați modificat. Fiecare tip se salvează separat.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8743,6 +8789,7 @@
       "fallback_hint": "Când niciun operator nu primește e-mailul, acesta merge la adresa de alerte din Setări › Email.",
       "folder_subject_hint": "Subiectul numește dosarul dispozitivului, ca e-mailurile să poată fi sortate după el.",
       "no_smtp_effect": "Nu are efect până nu este configurată trimiterea de e-mailuri în Setări › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Nu are efect: nimeni nu primește e-mailul cât timp ambele opțiuni de mai jos sunt dezactivate."
     },
     "targets": {
@@ -10418,7 +10465,10 @@
     "updates_consequence": "Un număr nou se aplică după următoarea actualizare.",
     "updates_title": "Înainte de actualizări",
     "where": "Unde se salvează",
-    "where_help": "Dosarul de date NeoDesk sau un dosar propriu. O partajare de rețea trebuie montată mai întâi de sistemul de operare."
+    "where_help": "Dosarul de date NeoDesk sau un dosar propriu. O partajare de rețea trebuie montată mai întâi de sistemul de operare.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Conectare la aplicația NeoDesk",

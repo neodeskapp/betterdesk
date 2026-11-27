@@ -513,6 +513,7 @@
     "strategy_deleted": "تم حذف القاعدة",
     "strategy_not_found": "هذه القاعدة لم تعد موجودة.",
     "no_strategies": "لا توجد قواعد بعد. أضف قاعدة لتشغيل ميزات العميل أو إيقافها لمستخدمين وأجهزة محددة.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "جارٍ تحميل القواعد…",
     "groups_saved": "تم حفظ مجموعات الأجهزة",
     "group_membership_added": "تمت الإضافة إلى المجموعة",
@@ -1089,7 +1090,8 @@
       "alert_n": "بريد التنبيهات {n}",
       "alert_add": "إضافة عنوان",
       "err_address": "هذا ليس عنوان بريد إلكتروني. مثلًا ops@example.com.",
-      "err_host_alone": "أدخل اسم المضيف أو عنوان IP فقط، بدون منفذ. مثلًا smtp.example.com."
+      "err_host_alone": "أدخل اسم المضيف أو عنوان IP فقط، بدون منفذ. مثلًا smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "البحث في الإعدادات…",
@@ -1259,6 +1261,7 @@
       "branding_desc": "مظهر وحدة التحكم وصفحة تسجيل الدخول وصفحة التنزيل للجميع.",
       "auth_desc": "كلمة مرورك وتسجيل الدخول بخطوتين الخاصين بك، وطريقة تسجيل دخول الجميع إلى هذا الخادم.",
       "auth_desc_viewer": "كلمة مرورك وتسجيل الدخول بخطوتين.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "نزّل نسخة من كل ما يحتاجه هذا الخادم، أو أنشئ نسخًا وفق جدول زمني، أو استعد من إحداها.",
       "updates_desc": "تحقق من وجود إصدار أحدث من NeoDesk وثبّته.",
       "email_desc": "خادم البريد الذي تستخدمه وحدة التحكم لإرسال التنبيهات والإشعارات.",
@@ -1396,7 +1399,11 @@
       "conn_no_effect_operator": "ساري بالفعل: يمكن فقط للحسابات المسموح لها بالاتصال بالأجهزة بدء الجلسات يشمل هذه القاعدة.",
       "conn_no_effect_signed_in": "لا أثر له ما دامت تطبيقات RustDesk المسجّلة الدخول فقط يمكنها بدء الجلسات.",
       "endpoint_auto_short": "تم العثور عليه تلقائيًا",
-      "endpoint_auto_note": "الحقل الفارغ يعطي العملاء العنوان الذي تم العثور عليه تلقائيًا، والظاهر تحت ما يحصل عليه العملاء الآن."
+      "endpoint_auto_note": "الحقل الفارغ يعطي العملاء العنوان الذي تم العثور عليه تلقائيًا، والظاهر تحت ما يحصل عليه العملاء الآن.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "المظهر الافتراضي لكل من يستخدم وحدة التحكم هذه.",
@@ -1709,7 +1716,8 @@
       "tools_console": "نزّلتها وحدة التحكم",
       "tools_missing": "غير مثبتة",
       "channel_now": "الآن: {channel}. {installs}.",
-      "channel_applies": "يسري على الفحص التالي للتحديثات. لا يُثبَّت شيء حتى تنقر على تثبيت."
+      "channel_applies": "يسري على الفحص التالي للتحديثات. لا يُثبَّت شيء حتى تنقر على تثبيت.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "اختر ملفًا لعرضه وتحريره. يحتفظ كل حفظ بنسخة من الإصدار السابق.",
@@ -1737,6 +1745,7 @@
       "local_warning": "هذه العناوين تعمل على هذا الحاسوب فقط، ولا تصل إليها الحواسيب والهواتف الأخرى. أدخل عنوان الخادم تحت نقاط نهاية العملاء العامة.",
       "preview_title": "معاينة",
       "preview_note": "شكل لوحة التحكم مع اختيارات هذه الصفحة. احفظ لتطبيقها.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "حاسوب الاستقبال",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "السمة: {theme}. لون التمييز: {accent}.",
@@ -1816,7 +1825,8 @@
       "rdclient_bg_help": "ما يظهر خلف قائمة الأجهزة. \"{inherit}\" يستخدم خلفية وحدة التحكم.",
       "picture_kb": "صورة، {kb} كيلوبايت",
       "website_help": "عنوان كامل، مثلًا https://example.com.",
-      "console_preview": "معاينة اللوحة"
+      "console_preview": "معاينة اللوحة",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "ما الأجهزة الجديدة التي يمكنها الانضمام إلى هذا الخادم، وكيف.",
@@ -1860,7 +1870,8 @@
       "group_filter_help": "كيف يُعثر على مجموعات الشخص، مع {{dn}} مكان DN الشخص. مثلًا (member={{dn}}).",
       "group_attr_help": "يمكن لإدخالات ربط الأدوار تسمية مجموعة بهذه السمة، إضافة إلى DN أو CN. مثلًا cn.",
       "default_role_help": "دور الأشخاص الذين لا تطابق مجموعاتهم أي إدخال في الربط أدناه.",
-      "role_map_help": "إدخال واحد لكل مجموعة: المجموعة بـ DN أو اسمها، والدور الذي يحصل عليه أعضاؤها. مثلًا CN=NeoDesk Admins,OU=Groups,DC=example,DC=com مع مسؤول."
+      "role_map_help": "إدخال واحد لكل مجموعة: المجموعة بـ DN أو اسمها، والدور الذي يحصل عليه أعضاؤها. مثلًا CN=NeoDesk Admins,OU=Groups,DC=example,DC=com مع مسؤول.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "تسجيل الدخول الموحد",
@@ -1896,12 +1907,16 @@
       "roles_note": "أي دور يحصل عليه الأشخاص بحسب مجموعاتهم لدى المزوّد.",
       "roles_effect": "يحصل الشخص على الدور عند كل تسجيل دخول عبر المزوّد.",
       "default_role_help": "دور الأشخاص الذين لا تطابق مجموعاتهم أي إدخال في الربط أدناه.",
-      "role_map_help": "إدخال واحد لكل مجموعة: المجموعة كما يسمّيها المزوّد، والدور الذي يحصل عليه أعضاؤها. مثلًا neodesk-admins مع مسؤول."
+      "role_map_help": "إدخال واحد لكل مجموعة: المجموعة كما يسمّيها المزوّد، والدور الذي يحصل عليه أعضاؤها. مثلًا neodesk-admins مع مسؤول.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "إضافة مجموعة وإعادة تسميتها وإزالتها تُحفظ فورًا. تبقى الأجهزة المثبّتة في مجموعتها.",
       "install_note": "نزّل ملف .msh لمجموعة وثبّت به MeshAgent على الجهاز.",
-      "msh_name_help": "يعرض MeshAgent هذا الاسم للخادم. يدخل في الملف المنزَّل فقط ولا يُحفظ. الملف للمجموعة ذات المعرّف default؛ لمجموعة أخرى استخدم القائمة في صفها."
+      "msh_name_help": "يعرض MeshAgent هذا الاسم للخادم. يدخل في الملف المنزَّل فقط ولا يُحفظ. الملف للمجموعة ذات المعرّف default؛ لمجموعة أخرى استخدم القائمة في صفها.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4442,7 +4457,13 @@
     "section_alert": "التنبيه",
     "saving": "جارٍ الحفظ…",
     "rules_checked": "تُفحص القواعد عند وصول القيم: المعالج والذاكرة مع كل تقرير استخدام من الجهاز، واستخدام القرص مع جرده، ووقت الخمول مع تقرير نشاطه، ووقت عدم الاتصال مرة كل دقيقة. القواعد المخصصة لا تُفحص.",
-    "custom_not_checked": "القاعدة المخصصة ليس لها قيمة يستطيع الخادم قياسها، لذلك لا تُطلق تنبيهات بنفسها."
+    "custom_not_checked": "القاعدة المخصصة ليس لها قيمة يستطيع الخادم قياسها، لذلك لا تُطلق تنبيهات بنفسها.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "نقل الملفات",
@@ -4757,7 +4778,13 @@
     "section_covers": "ما الذي تشمله",
     "policy_sheet_desc": "أي عمليات النقل تشملها السياسة، وهل تحظرها الأجهزة أم تسجلها أم تسمح بها.",
     "saving": "جارٍ الحفظ…",
-    "older_events": "الأحداث الأقدم"
+    "older_events": "الأحداث الأقدم",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "التقارير",
@@ -6011,6 +6038,7 @@
     "max_session_invalid": "أدخل عددًا صحيحًا من الدقائق، 0 أو أكثر.",
     "policy_none": "لا قاعدة: يحتفظ كل جهاز بإعداده الخاص.",
     "settings_tab_note": "ما يسري على هذه المؤسسة الآن. تُغيَّر كل قيمة حيث ضُبطت: السياسات في صفحة السياسات، ودفتر العناوين المشترك في تبويب دفتر العناوين.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "كيف تعمل الجلسات عن بُعد على أجهزة هذه المؤسسة.",
     "policies_group_effect": "تحصل الأجهزة على التغيير في المرة التالية التي تطلب فيها سياستها من الخادم.",
     "open_org_policies": "فتح سياسات هذه المؤسسة",
@@ -6025,7 +6053,8 @@
     "danger_zone": "منطقة الخطر",
     "name_hint": "يظهر في صفحة هذه المؤسسة وفي القوائم ولأعضائها.",
     "slug_changed": "عمليات تسجيل الدخول التي تسمّي المؤسسة باسمها المختصر تحتاج إلى الاسم الجديد بعد الحفظ.",
-    "policy_set": "مضبوط لهذه المؤسسة."
+    "policy_set": "مضبوط لهذه المؤسسة.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "مشفرة من طرف إلى طرف",
@@ -6640,7 +6669,13 @@
     "sound_today": "لإيقاف الصوت في الجلسات من الآن، استخدم قاعدة وصول مع إيقاف الصوت تحت الأجهزة، أو أوقف الصوت في وصول الشخص إلى وحدة التحكم.",
     "open_access_rules": "فتح قواعد الوصول",
     "remove_group": "إزالة كل قواعد هذه المجموعة",
-    "row_not_applied": "لا يطبّق أي تطبيق من NeoDesk هذا بعد."
+    "row_not_applied": "لا يطبّق أي تطبيق من NeoDesk هذا بعد.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "شهادة الجهاز",
@@ -7686,7 +7721,18 @@
     "fact_id": "معرف الجهاز",
     "tabs_save_hint": "لكل نوع من القواعد زر حفظ خاص به ويُحفظ بمفرده.",
     "save_rules": "حفظ القواعد",
-    "save_all_hint": "يحفظ زر الحفظ كل نوع من القواعد غيّرته. يُحفظ كل نوع وحده."
+    "save_all_hint": "يحفظ زر الحفظ كل نوع من القواعد غيّرته. يُحفظ كل نوع وحده.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8744,6 +8790,7 @@
       "fallback_hint": "عندما لا يتلقى أي مشغّل البريد، يذهب إلى عنوان التنبيهات في إعدادات › Email.",
       "folder_subject_hint": "يذكر الموضوع مجلد الجهاز، حتى يمكن فرز الرسائل حسبه.",
       "no_smtp_effect": "لا أثر له حتى يُعد إرسال البريد في إعدادات › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "لا أثر له: لا أحد يتلقى البريد ما دام الخياران أدناه متوقفين."
     },
     "targets": {
@@ -10419,7 +10466,10 @@
     "updates_consequence": "يسري العدد الجديد بعد التحديث التالي.",
     "updates_title": "قبل التحديثات",
     "where": "مكان الحفظ",
-    "where_help": "مجلد بيانات NeoDesk، أو مجلد من اختيارك. يجب أن يركّب نظام التشغيل مشاركة الشبكة أولًا."
+    "where_help": "مجلد بيانات NeoDesk، أو مجلد من اختيارك. يجب أن يركّب نظام التشغيل مشاركة الشبكة أولًا.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "تسجيل الدخول إلى تطبيق NeoDesk",

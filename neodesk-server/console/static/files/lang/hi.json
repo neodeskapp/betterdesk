@@ -512,6 +512,7 @@
     "strategy_deleted": "नियम हटाया गया",
     "strategy_not_found": "यह नियम अब मौजूद नहीं है।",
     "no_strategies": "अभी कोई नियम नहीं है। चुने गए उपयोगकर्ताओं और डिवाइसों के लिए क्लाइंट सुविधाएँ चालू या बंद करने के लिए एक नियम जोड़ें।",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "नियम लोड हो रहे हैं…",
     "groups_saved": "डिवाइस समूह सहेजे गए",
     "group_membership_added": "समूह में जोड़ा गया",
@@ -1088,7 +1089,8 @@
       "alert_n": "अलर्ट ईमेल {n}",
       "alert_add": "पता जोड़ें",
       "err_address": "यह ईमेल पता नहीं है। उदाहरण के लिए ops@example.com।",
-      "err_host_alone": "केवल होस्ट नाम या IP पता दर्ज करें, पोर्ट के बिना। उदाहरण के लिए smtp.example.com।"
+      "err_host_alone": "केवल होस्ट नाम या IP पता दर्ज करें, पोर्ट के बिना। उदाहरण के लिए smtp.example.com।",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "सेटिंग्स खोजें…",
@@ -1258,6 +1260,7 @@
       "branding_desc": "कंसोल, साइन-इन पेज और डाउनलोड पेज सभी के लिए कैसे दिखते हैं।",
       "auth_desc": "आपका अपना पासवर्ड और दो-चरणीय साइन-इन, और सभी लोग इस सर्वर में कैसे साइन इन करते हैं।",
       "auth_desc_viewer": "आपका पासवर्ड और दो-चरणीय साइन-इन।",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "इस सर्वर के लिए ज़रूरी हर चीज़ की कॉपी डाउनलोड करें, शेड्यूल के अनुसार कॉपी बनाएँ, या किसी कॉपी से रीस्टोर करें।",
       "updates_desc": "NeoDesk का नया संस्करण खोजें और उसे इंस्टॉल करें।",
       "email_desc": "वह मेल सर्वर जिससे कंसोल अलर्ट और सूचनाएँ भेजता है।",
@@ -1395,7 +1398,11 @@
       "conn_no_effect_operator": "पहले से लागू: केवल वे खाते सत्र शुरू कर सकते हैं जिन्हें डिवाइस से कनेक्ट करने की अनुमति है में यह नियम शामिल है।",
       "conn_no_effect_signed_in": "जब तक केवल साइन-इन किए गए ऐप सत्र शुरू कर सकते हैं, इसका कोई असर नहीं।",
       "endpoint_auto_short": "अपने आप मिला",
-      "endpoint_auto_note": "खाली फ़ील्ड क्लाइंट को अपने आप मिला पता देता है, जो क्लाइंट को अभी क्या मिलता है के नीचे दिखता है।"
+      "endpoint_auto_note": "खाली फ़ील्ड क्लाइंट को अपने आप मिला पता देता है, जो क्लाइंट को अभी क्या मिलता है के नीचे दिखता है।",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "इस कंसोल का उपयोग करने वाले सभी लोगों के लिए डिफ़ॉल्ट रूप-रंग।",
@@ -1708,7 +1715,8 @@
       "tools_console": "कंसोल द्वारा डाउनलोड",
       "tools_missing": "इंस्टॉल नहीं",
       "channel_now": "अभी: {channel}। {installs}।",
-      "channel_applies": "अपडेट की अगली जाँच पर लागू होता है। जब तक आप इंस्टॉल पर क्लिक न करें, कुछ इंस्टॉल नहीं होता।"
+      "channel_applies": "अपडेट की अगली जाँच पर लागू होता है। जब तक आप इंस्टॉल पर क्लिक न करें, कुछ इंस्टॉल नहीं होता।",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "देखने और संपादित करने के लिए कोई फ़ाइल चुनें। हर बार सहेजने पर पिछले संस्करण की एक कॉपी रखी जाती है।",
@@ -1736,6 +1744,7 @@
       "local_warning": "ये पते सिर्फ़ इसी कंप्यूटर पर काम करते हैं। दूसरे कंप्यूटर और फ़ोन इन तक नहीं पहुँच सकते। सर्वर का पता 'सार्वजनिक क्लाइंट एंडपॉइंट' में डालें।",
       "preview_title": "पूर्वावलोकन",
       "preview_note": "इस पेज के विकल्पों के साथ कंसोल। लागू करने के लिए सेव करें।",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "रिसेप्शन पीसी",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "थीम: {theme}। मुख्य रंग: {accent}।",
@@ -1815,7 +1824,8 @@
       "rdclient_bg_help": "डिवाइस सूची के पीछे क्या दिखता है। \"{inherit}\" कंसोल का बैकग्राउंड इस्तेमाल करता है।",
       "picture_kb": "तस्वीर, {kb} KB",
       "website_help": "पूरा पता, उदाहरण के लिए https://example.com।",
-      "console_preview": "पैनल पूर्वावलोकन"
+      "console_preview": "पैनल पूर्वावलोकन",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "कौन से नए डिवाइस इस सर्वर से जुड़ सकते हैं, और कैसे।",
@@ -1859,7 +1869,8 @@
       "group_filter_help": "व्यक्ति के समूह कैसे मिलते हैं, व्यक्ति के DN के लिए {{dn}} के साथ। उदाहरण के लिए (member={{dn}})।",
       "group_attr_help": "भूमिका मानचित्रण की प्रविष्टियाँ DN या CN के अलावा इस एट्रिब्यूट से भी समूह बता सकती हैं। उदाहरण के लिए cn।",
       "default_role_help": "उन लोगों की भूमिका जिनके समूह नीचे के मानचित्रण की किसी प्रविष्टि से मेल नहीं खाते।",
-      "role_map_help": "हर समूह के लिए एक प्रविष्टि: DN या नाम से समूह, और उसके सदस्यों को मिलने वाली भूमिका। उदाहरण के लिए CN=NeoDesk Admins,OU=Groups,DC=example,DC=com के साथ व्यवस्थापक।"
+      "role_map_help": "हर समूह के लिए एक प्रविष्टि: DN या नाम से समूह, और उसके सदस्यों को मिलने वाली भूमिका। उदाहरण के लिए CN=NeoDesk Admins,OU=Groups,DC=example,DC=com के साथ व्यवस्थापक।",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "सिंगल साइन-ऑन",
@@ -1895,12 +1906,16 @@
       "roles_note": "प्रदाता पर उनके समूहों के आधार पर लोगों को कौन सी भूमिका मिलती है।",
       "roles_effect": "प्रदाता से हर साइन-इन पर व्यक्ति को भूमिका मिलती है।",
       "default_role_help": "उन लोगों की भूमिका जिनके समूह नीचे के मानचित्रण की किसी प्रविष्टि से मेल नहीं खाते।",
-      "role_map_help": "हर समूह के लिए एक प्रविष्टि: समूह जैसा प्रदाता उसे नाम देता है, और उसके सदस्यों को मिलने वाली भूमिका। उदाहरण के लिए neodesk-admins के साथ व्यवस्थापक।"
+      "role_map_help": "हर समूह के लिए एक प्रविष्टि: समूह जैसा प्रदाता उसे नाम देता है, और उसके सदस्यों को मिलने वाली भूमिका। उदाहरण के लिए neodesk-admins के साथ व्यवस्थापक।",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "समूह जोड़ना, नाम बदलना और हटाना तुरंत सहेजा जाता है। पहले से इंस्टॉल डिवाइस अपने समूह में रहते हैं।",
       "install_note": "किसी समूह की .msh फ़ाइल डाउनलोड करें और उससे डिवाइस पर MeshAgent इंस्टॉल करें।",
-      "msh_name_help": "MeshAgent सर्वर के लिए यह नाम दिखाता है। यह केवल डाउनलोड की गई फ़ाइल में जाता है और सहेजा नहीं जाता। फ़ाइल default ID वाले समूह के लिए है; दूसरे समूह के लिए उसकी पंक्ति का मेनू इस्तेमाल करें।"
+      "msh_name_help": "MeshAgent सर्वर के लिए यह नाम दिखाता है। यह केवल डाउनलोड की गई फ़ाइल में जाता है और सहेजा नहीं जाता। फ़ाइल default ID वाले समूह के लिए है; दूसरे समूह के लिए उसकी पंक्ति का मेनू इस्तेमाल करें।",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4441,7 +4456,13 @@
     "section_alert": "अलर्ट",
     "saving": "सहेजा जा रहा है…",
     "rules_checked": "मान आते ही नियम जाँचे जाते हैं: डिवाइस की हर उपयोग रिपोर्ट के साथ CPU और मेमोरी, उसकी इन्वेंटरी के साथ डिस्क उपयोग, उसकी गतिविधि रिपोर्ट के साथ निष्क्रिय समय, और ऑफ़लाइन समय हर मिनट एक बार। कस्टम नियम नहीं जाँचे जाते।",
-    "custom_not_checked": "कस्टम नियम का कोई ऐसा मान नहीं होता जिसे सर्वर माप सके, इसलिए वह अपने आप कोई अलर्ट नहीं बनाता।"
+    "custom_not_checked": "कस्टम नियम का कोई ऐसा मान नहीं होता जिसे सर्वर माप सके, इसलिए वह अपने आप कोई अलर्ट नहीं बनाता।",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "दस्तावेज हस्तांतरण",
@@ -4756,7 +4777,13 @@
     "section_covers": "यह किस पर लागू होती है",
     "policy_sheet_desc": "नीति किन ट्रांसफ़र पर लागू होती है और डिवाइस उन्हें रोकते, दर्ज करते या अनुमति देते हैं।",
     "saving": "सहेजा जा रहा है…",
-    "older_events": "पुराने इवेंट"
+    "older_events": "पुराने इवेंट",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "रिपोर्ट",
@@ -6010,6 +6037,7 @@
     "max_session_invalid": "मिनटों की पूर्ण संख्या दर्ज करें, 0 या अधिक।",
     "policy_none": "कोई नियम नहीं: हर डिवाइस अपनी सेटिंग रखता है।",
     "settings_tab_note": "अभी इस संगठन पर क्या लागू है। हर मान वहीं बदलता है जहाँ उसे सेट किया गया है: नीतियाँ नीतियों पेज पर, साझा पता पुस्तिका पता पुस्तिका टैब पर।",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "इस संगठन के डिवाइस पर रिमोट सत्र कैसे काम करते हैं।",
     "policies_group_effect": "डिवाइस अगली बार सर्वर से अपनी नीति माँगने पर बदलाव पाते हैं।",
     "open_org_policies": "इस संगठन की नीतियाँ खोलें",
@@ -6024,7 +6052,8 @@
     "danger_zone": "खतरे का क्षेत्र",
     "name_hint": "इस संगठन के पेज पर, सूचियों में और उसके सदस्यों को दिखता है।",
     "slug_changed": "जो साइन-इन संगठन को उसके छोटे नाम से बताते हैं, उन्हें सहेजने के बाद नया नाम चाहिए।",
-    "policy_set": "इस संगठन के लिए सेट।"
+    "policy_set": "इस संगठन के लिए सेट।",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "एंड-टू-एंड एन्क्रिप्टेड",
@@ -6639,7 +6668,13 @@
     "sound_today": "आज ही सत्रों में आवाज़ बंद करने के लिए, उपकरण के नीचे ध्वनि बंद वाला एक्सेस नियम इस्तेमाल करें, या किसी व्यक्ति के कंसोल एक्सेस में ध्वनि बंद करें।",
     "open_access_rules": "एक्सेस नियम खोलें",
     "remove_group": "इस समूह के सभी नियम हटाएँ",
-    "row_not_applied": "अभी कोई NeoDesk ऐप इसे लागू नहीं करता।"
+    "row_not_applied": "अभी कोई NeoDesk ऐप इसे लागू नहीं करता।",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "डिवाइस सत्यापन",
@@ -7685,7 +7720,18 @@
     "fact_id": "डिवाइस आईडी",
     "tabs_save_hint": "हर तरह के नियम का अपना सहेजें बटन है और वह अलग से सहेजा जाता है।",
     "save_rules": "नियम सहेजें",
-    "save_all_hint": "सहेजें आपके बदले हर प्रकार के नियम को सहेजता है। हर प्रकार अलग से सहेजा जाता है।"
+    "save_all_hint": "सहेजें आपके बदले हर प्रकार के नियम को सहेजता है। हर प्रकार अलग से सहेजा जाता है।",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8743,6 +8789,7 @@
       "fallback_hint": "जब किसी ऑपरेटर को मेल नहीं मिलता, तो यह सेटिंग्स › Email के अलर्ट पते पर जाता है।",
       "folder_subject_hint": "विषय में डिवाइस का फ़ोल्डर होता है, ताकि मेल उसके हिसाब से छाँटे जा सकें।",
       "no_smtp_effect": "जब तक सेटिंग्स › Email में ईमेल भेजना सेट नहीं होता, इसका कोई असर नहीं।",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "कोई असर नहीं: जब तक नीचे के दोनों विकल्प बंद हैं, किसी को मेल नहीं मिलता।"
     },
     "targets": {
@@ -10418,7 +10465,10 @@
     "updates_consequence": "नई संख्या अगले अपडेट के बाद लागू होती है।",
     "updates_title": "अपडेट से पहले",
     "where": "कहाँ सहेजें",
-    "where_help": "NeoDesk डेटा फ़ोल्डर, या आपका अपना फ़ोल्डर। नेटवर्क शेयर पहले ऑपरेटिंग सिस्टम से माउंट होना चाहिए।"
+    "where_help": "NeoDesk डेटा फ़ोल्डर, या आपका अपना फ़ोल्डर। नेटवर्क शेयर पहले ऑपरेटिंग सिस्टम से माउंट होना चाहिए।",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "NeoDesk ऐप में साइन इन करें",

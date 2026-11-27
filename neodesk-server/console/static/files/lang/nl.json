@@ -506,6 +506,7 @@
     "strategy_deleted": "Regel verwijderd",
     "strategy_not_found": "Deze regel bestaat niet meer.",
     "no_strategies": "Nog geen regels. Voeg er een toe om clientfuncties aan of uit te zetten voor gekozen gebruikers en apparaten.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Regels laden…",
     "groups_saved": "Apparaatgroepen opgeslagen",
     "group_membership_added": "Toegevoegd aan groep",
@@ -1082,7 +1083,8 @@
       "alert_n": "Meldingsadres {n}",
       "alert_add": "Adres toevoegen",
       "err_address": "Dit is geen e-mailadres. Bijvoorbeeld ops@example.com.",
-      "err_host_alone": "Voer alleen de hostnaam of het IP-adres in, zonder poort. Bijvoorbeeld smtp.example.com."
+      "err_host_alone": "Voer alleen de hostnaam of het IP-adres in, zonder poort. Bijvoorbeeld smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Instellingen zoeken…",
@@ -1252,6 +1254,7 @@
       "branding_desc": "Hoe de console er voor iedereen uitziet: het thema en de kleuren, de lettertypen en de achtergrond.",
       "auth_desc": "Uw eigen wachtwoord en tweestapsaanmelding, en hoe iedereen zich aanmeldt bij deze server.",
       "auth_desc_viewer": "Uw wachtwoord en tweestapsaanmelding.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Download een kopie van alles wat deze server nodig heeft, maak kopieën volgens een schema of zet een kopie terug.",
       "updates_desc": "Controleren op een nieuwere NeoDesk-versie en deze installeren.",
       "email_desc": "De mailserver die de console gebruikt om waarschuwingen en meldingen te versturen.",
@@ -1389,7 +1392,11 @@
       "conn_no_effect_operator": "Al van kracht: Alleen accounts die met apparaten mogen verbinden, kunnen sessies starten omvat deze regel.",
       "conn_no_effect_signed_in": "Heeft geen effect zolang alleen ingelogde apps sessies kunnen starten.",
       "endpoint_auto_short": "Automatisch gevonden",
-      "endpoint_auto_note": "Een leeg veld geeft clients het automatisch gevonden adres, te zien onder Wat clients nu krijgen."
+      "endpoint_auto_note": "Een leeg veld geeft clients het automatisch gevonden adres, te zien onder Wat clients nu krijgen.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "De standaardweergave voor iedereen die deze console gebruikt.",
@@ -1702,7 +1709,8 @@
       "tools_console": "Gedownload door de console",
       "tools_missing": "Niet geïnstalleerd",
       "channel_now": "Nu: {channel}. {installs}.",
-      "channel_applies": "Geldt voor de volgende controle op updates. Er wordt niets geïnstalleerd voordat u op Installeren klikt."
+      "channel_applies": "Geldt voor de volgende controle op updates. Er wordt niets geïnstalleerd voordat u op Installeren klikt.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Kies een bestand om het te bekijken en te bewerken. Bij elke keer opslaan wordt een kopie van de vorige versie bewaard.",
@@ -1730,6 +1738,7 @@
       "local_warning": "Deze adressen werken alleen op deze computer. Andere computers en telefoons kunnen ze niet bereiken. Vul het adres van de server in onder Openbare client-eindpunten.",
       "preview_title": "Voorbeeld",
       "preview_note": "De console met de keuzes op deze pagina. Sla op om ze toe te passen.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Receptie-pc",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Thema: {theme}. Accentkleur: {accent}.",
@@ -1809,7 +1818,8 @@
       "rdclient_bg_help": "Wat achter de apparatenlijst te zien is. \"{inherit}\" gebruikt de achtergrond van de console.",
       "picture_kb": "Afbeelding, {kb} KB",
       "website_help": "Een volledig adres, bijvoorbeeld https://example.com.",
-      "console_preview": "Voorbeeld van de console"
+      "console_preview": "Voorbeeld van de console",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Welke nieuwe apparaten aan deze server mogen deelnemen, en hoe.",
@@ -1853,7 +1863,8 @@
       "group_filter_help": "Hoe de groepen van een persoon worden gevonden, met {{dn}} voor de DN van de persoon. Bijvoorbeeld (member={{dn}}).",
       "group_attr_help": "Items in de roltoewijzing kunnen een groep met dit attribuut aanduiden, naast de DN of CN. Bijvoorbeeld cn.",
       "default_role_help": "De rol van mensen van wie de groepen bij geen enkel item van de toewijzing hieronder passen.",
-      "role_map_help": "Eén item per groep: de groep met zijn DN of naam, en de rol die de leden krijgen. Bijvoorbeeld CN=NeoDesk Admins,OU=Groups,DC=example,DC=com met Beheerder."
+      "role_map_help": "Eén item per groep: de groep met zijn DN of naam, en de rol die de leden krijgen. Bijvoorbeeld CN=NeoDesk Admins,OU=Groups,DC=example,DC=com met Beheerder.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Single sign-on",
@@ -1889,12 +1900,16 @@
       "roles_note": "Welke rol mensen krijgen, op basis van hun groepen bij de provider.",
       "roles_effect": "Een persoon krijgt de rol bij elke keer inloggen via de provider.",
       "default_role_help": "De rol van mensen van wie de groepen bij geen enkel item van de toewijzing hieronder passen.",
-      "role_map_help": "Eén item per groep: de groep zoals de provider hem noemt, en de rol die de leden krijgen. Bijvoorbeeld neodesk-admins met Beheerder."
+      "role_map_help": "Eén item per groep: de groep zoals de provider hem noemt, en de rol die de leden krijgen. Bijvoorbeeld neodesk-admins met Beheerder.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Een groep toevoegen, hernoemen en verwijderen wordt meteen opgeslagen. Apparaten die al geïnstalleerd zijn, blijven in hun groep.",
       "install_note": "Download het .msh-bestand van een groep en installeer daarmee MeshAgent op het apparaat.",
-      "msh_name_help": "MeshAgent toont deze naam voor de server. Hij komt alleen in het gedownloade bestand en wordt niet opgeslagen. Het bestand is voor de groep met de ID default; gebruik voor een andere groep het menu in de rij ervan."
+      "msh_name_help": "MeshAgent toont deze naam voor de server. Hij komt alleen in het gedownloade bestand en wordt niet opgeslagen. Het bestand is voor de groep met de ID default; gebruik voor een andere groep het menu in de rij ervan.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4435,7 +4450,13 @@
     "section_alert": "Melding",
     "saving": "Opslaan…",
     "rules_checked": "Regels worden gecontroleerd zodra waarden binnenkomen: CPU en geheugen bij elk gebruiksrapport van een apparaat, schijfgebruik bij de inventaris, inactieve tijd bij het activiteitenrapport en tijd offline één keer per minuut. Aangepaste regels worden niet gecontroleerd.",
-    "custom_not_checked": "Een aangepaste regel heeft geen waarde die de server kan meten, dus hij geeft zelf geen meldingen."
+    "custom_not_checked": "Een aangepaste regel heeft geen waarde die de server kan meten, dus hij geeft zelf geen meldingen.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Bestandsoverdracht",
@@ -4750,7 +4771,13 @@
     "section_covers": "Waar het voor geldt",
     "policy_sheet_desc": "Welke overdrachten het beleid dekt en of apparaten ze blokkeren, vastleggen of toestaan.",
     "saving": "Opslaan…",
-    "older_events": "Oudere gebeurtenissen"
+    "older_events": "Oudere gebeurtenissen",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Rapporten",
@@ -6004,6 +6031,7 @@
     "max_session_invalid": "Voer een geheel aantal minuten in, 0 of meer.",
     "policy_none": "Geen regel: elk apparaat houdt zijn eigen instelling.",
     "settings_tab_note": "Wat nu voor deze organisatie geldt. Elke waarde wijzigt u waar die wordt ingesteld: beleid op de pagina Beleid, het gedeelde adresboek op het tabblad Adresboek.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Hoe externe sessies werken op de apparaten van deze organisatie.",
     "policies_group_effect": "Apparaten krijgen een wijziging de volgende keer dat ze de server om hun beleid vragen.",
     "open_org_policies": "Beleid van deze organisatie openen",
@@ -6018,7 +6046,8 @@
     "danger_zone": "Gevarenzone",
     "name_hint": "Getoond op de pagina van deze organisatie, in lijsten en aan de leden.",
     "slug_changed": "Inlogs die de organisatie met haar korte naam aanduiden, hebben na het opslaan de nieuwe nodig.",
-    "policy_set": "Ingesteld voor deze organisatie."
+    "policy_set": "Ingesteld voor deze organisatie.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "End-to-end versleuteld",
@@ -6633,7 +6662,13 @@
     "sound_today": "Om het geluid in sessies nu al uit te zetten, gebruikt u een toegangsregel met Geluid uit onder Apparaten, of zet u Geluid uit in iemands consoletoegang.",
     "open_access_rules": "Toegangsregels openen",
     "remove_group": "Alle regels van deze groep verwijderen",
-    "row_not_applied": "Nog geen NeoDesk-app past dit toe."
+    "row_not_applied": "Nog geen NeoDesk-app past dit toe.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Apparaatattestatie",
@@ -7679,7 +7714,18 @@
     "fact_id": "Apparaat-ID",
     "tabs_save_hint": "Elk soort regel heeft een eigen knop Opslaan en wordt apart opgeslagen.",
     "save_rules": "Regels opslaan",
-    "save_all_hint": "Opslaan bewaart elk soort regel dat u hebt gewijzigd. Elk soort wordt apart opgeslagen."
+    "save_all_hint": "Opslaan bewaart elk soort regel dat u hebt gewijzigd. Elk soort wordt apart opgeslagen.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8737,6 +8783,7 @@
       "fallback_hint": "Als geen operator de mail krijgt, gaat hij naar het meldingsadres in Instellingen › Email.",
       "folder_subject_hint": "Het onderwerp noemt de map van het apparaat, zodat mails erop gesorteerd kunnen worden.",
       "no_smtp_effect": "Heeft geen effect totdat het versturen van e-mail is ingesteld in Instellingen › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Heeft geen effect: niemand krijgt de mail zolang beide opties hieronder uit staan."
     },
     "targets": {
@@ -10412,7 +10459,10 @@
     "updates_consequence": "Een nieuw aantal geldt na de volgende update.",
     "updates_title": "Vóór updates",
     "where": "Waar opslaan",
-    "where_help": "De NeoDesk-gegevensmap, of een eigen map. Een netwerkshare moet eerst door het besturingssysteem worden gekoppeld."
+    "where_help": "De NeoDesk-gegevensmap, of een eigen map. Een netwerkshare moet eerst door het besturingssysteem worden gekoppeld.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Aanmelden bij de NeoDesk-app",
