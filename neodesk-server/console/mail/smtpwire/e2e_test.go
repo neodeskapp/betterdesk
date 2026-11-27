@@ -376,7 +376,7 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 		}, mail.AlertRule{
 			Name: rule.Member("name"), Description: rule.Member("description"),
 			ConditionType: rule.Member("condition_type"), ConditionOp: rule.Member("condition_op"),
-			ConditionValue: rule.Member("condition_value"), NotifyEmails: rule.Member("notify_emails"),
+			ConditionValue: rule.Member("condition_value"), NotifyEmails: firstOnly(sess, rule.Member("notify_emails")),
 		})
 		result = sent
 	case "sendHelpRequestEmail":
@@ -388,6 +388,13 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 			FolderName:  values.Member("folderName"),
 		}
 		email.To, email.ToList = recipients(t, m["to"])
+		if len(email.To) > 0 {
+			first := jsbind.String(email.To[0])
+			if email.ToList {
+				first = jsbind.String(strings.Join(email.To, ","))
+			}
+			email.To, email.ToList = []string{firstOnly(sess, first).Str()}, false
+		}
 		sent, threw = svc.SendHelpRequestEmail(ctx, email)
 		result = sent
 	case "testConnection":
@@ -461,6 +468,37 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 		}
 	}
 	return qpLineEnds
+}
+
+// firstOnly is the first address of a branded session's recipients. The
+// mail service sends alert and help request mails to each recipient on
+// its own connection, where Node sent one message to all; the scripted
+// server of a recording takes one connection. The session then expects
+// that one mail: the other RCPT lines go, and the log counts one
+// recipient.
+func firstOnly(sess *e2eSession, v jsbind.Value) jsbind.Value {
+	if !v.IsString() {
+		return v
+	}
+	parts := strings.Split(v.Str(), ",")
+	if len(parts) < 2 {
+		return v
+	}
+	first := strings.TrimSpace(parts[0])
+	var client []smtpwire.SinkEvent
+	for _, e := range sess.Client {
+		if e.E == "line" && strings.HasPrefix(e.S, "RCPT TO:") && !strings.Contains(e.S, "<"+first+">") {
+			continue
+		}
+		client = append(client, e)
+	}
+	sess.Client = client
+	for i := range sess.Logs {
+		if strings.HasPrefix(sess.Logs[i].Text, "[Email] Sent message to ") {
+			sess.Logs[i].Text = "[Email] Sent message to 1 recipient(s)"
+		}
+	}
+	return jsbind.String(first)
 }
 
 func stringOr(s *string) string {
