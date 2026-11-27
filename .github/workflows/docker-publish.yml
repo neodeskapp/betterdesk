@@ -217,6 +217,9 @@ jobs:
             type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' && github.event.inputs.tag != 'latest' && github.event.inputs.tag != 'dev' }}
             type=sha,prefix=sha-,enable=${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.tag == 'dev') }}
 
+      # The layer cache lives in the image's own package as the
+      # buildcache-<arch> tag, not in the Actions cache: its blobs filled the
+      # repository's 10 GB there and pushed out the Go test caches CI needs.
       - id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
@@ -228,8 +231,8 @@ jobs:
             NEODESK_COMMIT_SHA=${{ github.sha }}
             NEODESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
             NEODESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
-          cache-from: type=gha,scope=neodesk-server-amd64
-          cache-to: type=gha,mode=max,scope=neodesk-server-amd64
+          cache-from: type=registry,ref=${{ needs.read-version.outputs.image_prefix }}/neodesk-server:buildcache-amd64
+          cache-to: type=registry,ref=${{ needs.read-version.outputs.image_prefix }}/neodesk-server:buildcache-amd64,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
           platforms: linux/amd64
 
       - name: Export image digest
@@ -313,9 +316,9 @@ jobs:
             NEODESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
             NEODESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
           cache-from: |
-            type=gha,scope=neodesk-aio-amd64
-            type=gha,scope=neodesk-server-amd64
-          cache-to: type=gha,mode=max,scope=neodesk-aio-amd64
+            type=registry,ref=${{ needs.read-version.outputs.image_prefix }}/neodesk:buildcache-amd64
+            type=registry,ref=${{ needs.read-version.outputs.image_prefix }}/neodesk-server:buildcache-amd64
+          cache-to: type=registry,ref=${{ needs.read-version.outputs.image_prefix }}/neodesk:buildcache-amd64,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
           platforms: ${{ steps.plats.outputs.platforms }}
 
       - name: Export image digest
@@ -383,8 +386,8 @@ jobs:
             NEODESK_COMMIT_SHA=${{ github.sha }}
             NEODESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
             NEODESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
-          cache-from: type=gha,scope=neodesk-${{ matrix.name }}-arm64
-          cache-to: type=gha,mode=max,scope=neodesk-${{ matrix.name }}-arm64
+          cache-from: type=registry,ref=${{ needs.read-version.outputs.image_prefix }}/${{ matrix.image }}:buildcache-arm64
+          cache-to: type=registry,ref=${{ needs.read-version.outputs.image_prefix }}/${{ matrix.image }}:buildcache-arm64,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
           platforms: linux/arm64
 
       - name: Export image digest
@@ -402,7 +405,7 @@ jobs:
           path: /tmp/digests/${{ matrix.image }}
           if-no-files-found: error
 
-  # Last ARM job: AIO after the server ARM image (warm GHA cache) and amd64 AIO.
+  # Last ARM job: AIO after the server ARM image (warm layer cache) and amd64 AIO.
   build-aio-arm64:
     needs: [read-version, ghcr-preflight, build-allinone, build-arm64]
     if: |
@@ -446,9 +449,9 @@ jobs:
             NEODESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
             NEODESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
           cache-from: |
-            type=gha,scope=neodesk-aio-arm64
-            type=gha,scope=neodesk-server-arm64
-          cache-to: type=gha,mode=max,scope=neodesk-aio-arm64
+            type=registry,ref=${{ needs.read-version.outputs.image_prefix }}/neodesk:buildcache-arm64
+            type=registry,ref=${{ needs.read-version.outputs.image_prefix }}/neodesk-server:buildcache-arm64
+          cache-to: type=registry,ref=${{ needs.read-version.outputs.image_prefix }}/neodesk:buildcache-arm64,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
           platforms: linux/arm64
 
       - name: Export image digest
