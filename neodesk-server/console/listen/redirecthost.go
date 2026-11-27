@@ -10,9 +10,11 @@ import (
 
 // The redirect to HTTPS names one host, chosen when its listener is made
 // (lib/redirectHost.js of the old console, audit H5): the configured
-// public host, else the address the console binds, else "localhost".
-// Nothing of a request reaches the host, so the plain port cannot send a
-// browser to another site.
+// public host, else the address the console binds, else "localhost". A
+// request sent to the IP address the connection reached, or to localhost
+// over a loopback connection, keeps that host (ownHost in redirect.go).
+// Nothing else of a request reaches the host, so the plain port cannot
+// send a browser to another machine.
 
 // hostnamePattern is the host name syntax the redirect writes: labels of
 // ASCII letters, digits and inner hyphens, joined by dots. It is tested

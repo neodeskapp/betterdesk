@@ -290,6 +290,20 @@ var knownRedirect = map[string]func(t *testing.T, got []reply, closed bool) stri
 	// body) and a broken escape (Node redirected to it encoded)
 	`redirect target "/a b"`: statusIs(http.StatusBadRequest),
 	`redirect target "/%zz"`: statusIs(http.StatusBadRequest),
+	// The recording's connections reach 127.0.0.1: a request sent to that
+	// address stays on it, where Node sent it to PANEL_PUBLIC_HOST (setup
+	// audit LINUX-NATIVE-5, WD-4)
+	`redirect host "127.0.0.1:99"`: locationIs("https://127.0.0.1:25443/x"),
+}
+
+// locationIs checks for one redirect to want.
+func locationIs(want string) func(t *testing.T, got []reply, closed bool) string {
+	return func(_ *testing.T, got []reply, _ bool) string {
+		if len(got) != 1 || got[0].status != http.StatusTemporaryRedirect || got[0].header.Get("Location") != want {
+			return fmt.Sprintf("want one redirect to %s, got %v", want, statuses(got))
+		}
+		return ""
+	}
 }
 
 // loadRedirectOracle is listen/testdata/node_redirect.json: the plain
@@ -337,7 +351,8 @@ func publicHostPage(method string) func(t *testing.T, got []reply, closed bool) 
 // TestRedirectAgainstNode replays the redirect recording: the plain port
 // sends every request to the host chosen at the start (PANEL_PUBLIC_HOST
 // from the environment, else from the public endpoints file), whatever
-// Host header and target the request had. Without a PANEL_PUBLIC_HOST
+// Host header and target the request had, unless the Host header names
+// the address the connection reached (locationIs above). Without a PANEL_PUBLIC_HOST
 // that names a host it redirects to the address the console binds, as
 // Node did; a console that binds every address, where Node used
 // localhost, answers a page that asks to set it.
