@@ -9475,6 +9475,7 @@
       "command_hint_join": "Open a terminal, paste this command and press Enter. It asks for your password, installs NeoDesk and adds this computer to {server}.",
       "command_hint_support": "Open a terminal, paste this command and press Enter. It starts the support app without installing it.",
       "open_app": "Open NeoDesk",
+      "open_support_app": "Avaa NeoDesk Quick Supportissa",
       "code_hint_join": "Onko sinulla jo NeoDesk? Avaa Asetukset, Palvelin, Liity palvelimeen ja anna tämä koodi ja alla oleva palvelimen osoite:",
       "server_address": "Palvelimen osoite: {address}",
       "code_hint_support": "If the app asks for a code, enter:",

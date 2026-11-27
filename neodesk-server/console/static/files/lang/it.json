@@ -9469,6 +9469,7 @@
       "command_hint_join": "Open a terminal, paste this command and press Enter. It asks for your password, installs NeoDesk and adds this computer to {server}.",
       "command_hint_support": "Open a terminal, paste this command and press Enter. It starts the support app without installing it.",
       "open_app": "Open NeoDesk",
+      "open_support_app": "Apri in NeoDesk Quick Support",
       "code_hint_join": "Hai già NeoDesk? Apri Impostazioni, Server, Unisciti a un server e inserisci questo codice e l'indirizzo del server qui sotto:",
       "server_address": "Indirizzo del server: {address}",
       "code_hint_support": "If the app asks for a code, enter:",

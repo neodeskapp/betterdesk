@@ -5231,6 +5231,7 @@
         "mail_myself": "Link an mich mailen",
         "no_release": "Gerade gibt es keinen Download. Versuche es später noch einmal oder frag die Person, die dir den Link geschickt hat.",
         "open_app": "NeoDesk öffnen",
+        "open_support_app": "In NeoDesk Quick Support öffnen",
         "other_systems": "Andere Systeme",
         "phone_lead_join": "{server} hat dich eingeladen, einen Computer hinzuzufügen. NeoDesk läuft auf Windows, Mac und Linux, nicht auf Handys.",
         "phone_lead_support": "Die Hilfe-App läuft auf Windows, Mac und Linux, nicht auf Handys.",
