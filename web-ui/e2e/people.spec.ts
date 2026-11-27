@@ -318,7 +318,7 @@ for (const role of ROLES) {
 			await page.getByRole('tab', { name: 'Settings' }).click();
 			// A154: the stored settings are read-only; connection rules are on this organization's
 			// Policies page, linked for the roles that may open it
-			await expect(page.locator('[data-setting="policy_connection"] output')).toBeVisible();
+			await expect(page.locator('[data-setting="policy_connection"] .state')).toBeVisible();
 			await expect(page.getByRole('link', { name: 'Open this organization’s policies' })).toHaveCount(
 				['super_admin', 'admin', 'global_admin', 'server_admin'].includes(me.role) ? 1 : 0
 			);
