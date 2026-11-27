@@ -26,12 +26,6 @@ const ROLES = {
 	'GET /api/panel/roles': { roles: [{ name: 'viewer' }, { name: 'operator' }, { name: 'admin' }] }
 };
 
-/** The closed disclosure an element sits in, or null */
-const closedDetails = (id: string) => {
-	const d = document.getElementById(id)?.closest('details');
-	return d && !d.open ? d : null;
-};
-
 const ldapRaw = (o: Record<string, unknown> = {}) => ({
 	enabled: true,
 	host: 'ldap.example.com',
@@ -162,20 +156,24 @@ describe('Single sign-on', () => {
 		...o
 	});
 
-	test('the endpoints and the private networks behind Advanced; its own settings only', async () => {
+	test('every setting at once, not behind a fold; the default role is a select; its own settings only', async () => {
 		const server = serve({ ...ROLES, [`GET ${OIDC}`]: new Reply(oidc()) });
 		render(SsoTab);
 		await screen.findByRole('textbox', { name: 'settings.oidc_issuer_url' });
-		expect(closedDetails('oidc-issuer-url')).toBeNull();
-		for (const id of [
-			'oidc-allowed-private-cidrs',
-			'oidc-auto-discovery',
-			'oidc-authorization-url',
-			'oidc-token-url',
-			'oidc-userinfo-url'
-		])
-			expect(closedDetails(id), id).not.toBeNull();
+		for (const id of ['oidc-allowed-private-cidrs', 'oidc-auto-discovery', 'oidc-claim-email'])
+			expect(document.getElementById(id)?.closest('details'), id).toBeNull();
+		expect(screen.getByRole('checkbox', { name: /settings\.oidc_auto_discovery/ })).toBeVisible();
+		expect(screen.getByRole('combobox', { name: 'settings.oidc_default_role' })).toBeVisible();
 		expect(server.calls.map((c) => c.path)).not.toContain(LDAP);
+	});
+
+	test('while it is off, the page says it once', async () => {
+		serve({ ...ROLES, [`GET ${OIDC}`]: new Reply(oidc({ enabled: false })) });
+		render(SsoTab);
+		await screen.findByRole('textbox', { name: 'settings.oidc_issuer_url' });
+		expect(
+			screen.getAllByText(/Single sign-on is off, so the settings on this page do nothing yet/)
+		).toHaveLength(1);
 	});
 
 	test('a public network is refused on its row; the lists go back as the server stores them', async () => {
@@ -201,15 +199,24 @@ describe('Single sign-on', () => {
 		});
 	});
 
+	test('stored endpoints stay on the page with auto-discovery on, since they are its fallback', async () => {
+		serve({ ...ROLES, [`GET ${OIDC}`]: new Reply(oidc({ token_url: 'https://idp.example.com/token' })) });
+		render(SsoTab);
+		await screen.findByRole('textbox', { name: 'settings.oidc_issuer_url' });
+		expect(screen.getByRole('textbox', { name: 'settings.oidc_token_url' })).toHaveValue(
+			'https://idp.example.com/token'
+		);
+	});
+
 	test('without auto-discovery the endpoints are needed, said at their fields', async () => {
 		const server = serve({ ...ROLES, [`GET ${OIDC}`]: new Reply(oidc()) });
 		const user = userEvent.setup();
 		render(SsoTab);
 		await screen.findByRole('textbox', { name: 'settings.oidc_issuer_url' });
-		expect(document.getElementById('oidc-token-url')).toHaveTextContent(
-			/Used only while Auto-discovery is off/
-		);
+		// With auto-discovery the endpoints are not used, so they don't show
+		expect(screen.queryByRole('textbox', { name: 'settings.oidc_token_url' })).toBeNull();
 		await user.click(screen.getByRole('checkbox', { name: /settings\.oidc_auto_discovery/ }));
+		expect(screen.getByRole('textbox', { name: 'settings.oidc_token_url' })).toBeVisible();
 		expect(document.getElementById('oidc-token-url-error')?.textContent).toBeTruthy();
 		await user.click(screen.getByRole('button', { name: 'Save changes' }));
 		expect(server.sent('PUT', OIDC)).toEqual([]);
