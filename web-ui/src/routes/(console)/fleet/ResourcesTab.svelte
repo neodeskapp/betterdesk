@@ -179,7 +179,9 @@
 {#snippet statusCell(r: Resource)}<Status
 		tone={resourceActive(r) ? 'good' : 'neutral'}
 		label={resourceActive(r) ? t('fleet.active') : t('fleet.inactive')}
-	/>{/snippet}
+	/>{#if resourceActive(r) && Number(r.devices ?? 0) > 0}<span class="cell-sub"
+			>{t('fleet.applied_count', { applied: Number(r.applied ?? 0), devices: Number(r.devices) })}</span
+		>{/if}{/snippet}
 
 {#snippet actionsCell(r: Resource)}{#if canEdit}<MenuButton
 			kebab

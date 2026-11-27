@@ -51,6 +51,11 @@ var deviceFixes = slices.Concat(proxytest.Fixes("DV3",
 	// The body goes to the API server with every member, also __proto__,
 	// constructor and prototype.
 	19, 41, 63, 85,
+), proxytest.Fixes("FL10",
+	// The API server stores what an agent reports for the device of its
+	// token: the body goes on with that device as device_id, also when
+	// it named none, and a list goes on as an object.
+	9, 16, 17, 18, 31, 38, 39, 40, 53, 60, 61, 62, 75, 82, 83, 84,
 ))
 
 // TestDeviceVectors replays what the device routes of the Node file

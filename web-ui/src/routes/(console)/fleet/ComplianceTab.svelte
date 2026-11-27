@@ -1,8 +1,11 @@
 <!--
   Fleet > Compliance: how well each device meets the software rules, for
-  all organizations or one. A summary line, then a table: a click on a row
-  opens the device panel (device.view); Scan per row, Fix automatically in
-  the row menu (asks first), Scan all devices above the table.
+  all organizations or one. A summary line of the scanned devices, then a
+  table of every device of the organizations (one never scanned has no
+  score yet): a click on a row opens the device panel (device.view); Scan
+  per row, Checks and software and Fix automatically in the row menu (the
+  fix asks first), Scan all devices above the table. A scan waits for its
+  device's next check-in.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -14,7 +17,7 @@
 		type ComplianceRow
 	} from '#lib/api/fleet.ts';
 	import type { Organization } from '#lib/api/orgs.ts';
-	import { complianceSummary, deviceOf, score, scoreLevel } from '#lib/canvas/fleet.ts';
+	import { complianceSummary, deviceOf, scanned, score, scoreLevel } from '#lib/canvas/fleet.ts';
 	import { formatNumber, formatPercent } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { openDevice } from '#lib/state/devicePanel.svelte.ts';
@@ -33,6 +36,7 @@
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
+	import ComplianceSheet from './ComplianceSheet.svelte';
 	import Filter from './Filter.svelte';
 
 	interface Props {
@@ -97,6 +101,7 @@
 	/* ── Actions ── */
 
 	let menuFor = $state<string | null>(null);
+	let details = $state<ComplianceRow | null>(null);
 	let scanStatus = $state<{ text: string; tone: 'neutral' | 'ok' | 'error' }>({ text: '', tone: 'neutral' });
 	let scanning = $state(false);
 
@@ -184,16 +189,19 @@
 
 {#snippet osCell(d: ComplianceRow)}{d.os || d.platform || '–'}{/snippet}
 
-{#snippet scoreCell(d: ComplianceRow)}{@const s = score(d)}{@const level = scoreLevel(s)}<span class="score"
-		><Meter value={s} high={101} full={101} text={formatPercent(s)} /><Status
-			tone={level}
-			label={t(LEVEL_LABEL[level])}
-		/></span
-	>{/snippet}
+{#snippet scoreCell(d: ComplianceRow)}{#if scanned(d)}{@const s = score(d)}{@const level = scoreLevel(s)}<span
+			class="score"
+			><Meter value={s} high={101} full={101} text={formatPercent(s)} /><Status
+				tone={level}
+				label={t(LEVEL_LABEL[level])}
+			/></span
+		>{:else}<Status tone="neutral" label={t('fleet.not_scanned')} />{/if}{/snippet}
 
-{#snippet issuesCell(d: ComplianceRow)}{formatNumber(d.issues ?? 0)}{/snippet}
+{#snippet issuesCell(d: ComplianceRow)}{scanned(d) ? formatNumber(d.issues ?? 0) : '–'}{/snippet}
 
-{#snippet lastScanCell(d: ComplianceRow)}<Time value={d.last_scan} />{/snippet}
+{#snippet lastScanCell(d: ComplianceRow)}<Time value={d.last_scan} />{#if d.status === 'pending'}<span
+			class="cell-sub">{t('fleet.scan_waiting')}</span
+		>{/if}{/snippet}
 
 {#snippet actionsCell(d: ComplianceRow)}{#if canEdit}<Button
 			size="sm"
@@ -207,6 +215,7 @@
 				(v) => (menuFor = v ? deviceOf(d) : menuFor === deviceOf(d) ? null : menuFor)
 			}
 		>
+			<MenuItem icon={ICONS.view} onselect={() => (details = d)}>{t('fleet.comp_details')}</MenuItem>
 			<MenuItem icon={ICONS.remediate} onselect={() => void remediate(deviceOf(d))}
 				>{t('fleet.remediate_ellipsis')}</MenuItem
 			>
@@ -228,8 +237,11 @@
 	{/snippet}
 </Toolbar>
 <p class="count-line" aria-live="polite">
-	{#if list.length}
+	{#if summary.count}
 		<CountLine text={t('fleet.compliance_summary')} values={summary} />
+	{/if}
+	{#if summary.unscanned}
+		<CountLine text={t('fleet.compliance_unscanned')} values={{ count: summary.unscanned }} />
 	{/if}
 </p>
 <div class="fleet-table">
@@ -246,6 +258,14 @@
 		emptyText={unavailable ? t('fleet.unavailable_table') : t('fleet.no_compliance_data')}
 	/>
 </div>
+
+{#if details}
+	<ComplianceSheet
+		deviceId={deviceOf(details)}
+		title={t('fleet.details_of', { device: details.hostname || deviceOf(details) })}
+		onclose={() => (details = null)}
+	/>
+{/if}
 
 <style>
 	.note {

@@ -107,9 +107,10 @@ func init() {
 		contract.Case{Name: "compliance-org-without-text", Path: "/api/panel/fleet/compliance", Query: url.Values{"orgId[toString]": {"acme"}}},
 		contract.Case{Name: "compliance-device", Path: "/api/panel/fleet/compliance/900100001"},
 		contract.Case{Name: "compliance-device-bad-id", Path: "/api/panel/fleet/compliance/bad%20id"},
-		contract.Case{Name: "compliance-scan", Method: "POST", Path: "/api/panel/fleet/compliance/900100001/scan", Body: map[string]any{}},
+		// command_id counts every command queued before, the daily scan's too
+		contract.Case{Name: "compliance-scan", Method: "POST", Path: "/api/panel/fleet/compliance/900100001/scan", Body: map[string]any{}, Volatile: []string{"command_id"}},
 		contract.Case{Name: "compliance-scan-bad-id", Method: "POST", Path: "/api/panel/fleet/compliance/bad%20id/scan", Body: map[string]any{}},
-		contract.Case{Name: "compliance-remediate", Method: "POST", Path: "/api/panel/fleet/compliance/900100001/remediate", Body: body},
+		contract.Case{Name: "compliance-remediate", Method: "POST", Path: "/api/panel/fleet/compliance/900100001/remediate", Body: body, Volatile: []string{"command_id"}},
 		contract.Case{Name: "compliance-remediate-bad-id", Method: "POST", Path: "/api/panel/fleet/compliance/bad%20id/remediate", Body: body},
 
 		// The second mount. Under /api/nd a write without a session is

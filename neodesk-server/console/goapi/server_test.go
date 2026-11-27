@@ -395,7 +395,7 @@ func TestAgainstAPIServer(t *testing.T) {
 
 	t.Run("direct calls", func(t *testing.T) {
 		// A path the API server does not have.
-		resp, err := c.Get(ctx, "/fleet/tasks")
+		resp, err := c.Get(ctx, "/no-such-path")
 		if e := AsError(err); resp == nil || e == nil || e.Status() != 404 || toJSON(t, e.Data()) != `{"error":"not found"}` {
 			t.Errorf("GET of a path that does not exist: %+v, %+v", resp, e)
 		}

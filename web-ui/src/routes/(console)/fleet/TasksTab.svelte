@@ -1,8 +1,10 @@
 <!--
   Fleet > Tasks: one job on many devices, now or on a schedule. Search (name
   and devices, in the page) and a status filter (asks the server); Create
-  task opens the form sheet. A click on a row shows the task's output in a
-  sheet; Retry for failed tasks; the row menu has Output, Edit and Delete.
+  task opens the form sheet. A click on a row shows the task's last run in
+  a sheet, device by device, with the output; Retry for failed tasks; the
+  row menu has Output, Edit and Delete. Devices take a task when they next
+  check in, so a run can wait for an offline device.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -12,7 +14,6 @@
 		listTasks,
 		retryTask,
 		TASK_STATUSES,
-		taskOutput,
 		type Task
 	} from '#lib/api/fleet.ts';
 	import { filterTasks, taskSchedule, taskTargets, taskType } from '#lib/canvas/fleet.ts';
@@ -36,7 +37,7 @@
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
 	import Filter from './Filter.svelte';
-	import OutputSheet from './OutputSheet.svelte';
+	import TaskOutputSheet from './TaskOutputSheet.svelte';
 	import TaskSheet from './TaskSheet.svelte';
 
 	interface Props {
@@ -207,7 +208,7 @@
 		{/if}
 	</MenuButton>{/snippet}
 
-<p class="note">{t('fleet.tasks_note')}</p>
+<p class="note">{t('fleet.tasks_note')} {t('fleet.tasks_wait')}</p>
 <Toolbar>
 	{#snippet search()}<SearchField label={t('fleet.search_tasks')} bind:value={query} />{/snippet}
 	<Filter label={t('fleet.col_status')} options={statusOptions} bind:value={status} />
@@ -255,9 +256,9 @@
 	/>
 {:else if sheet?.kind === 'output'}
 	{@const task = sheet.task}
-	<OutputSheet
+	<TaskOutputSheet
+		taskId={task.id}
 		title={t('fleet.output_of', { name: task.name || task.id })}
-		load={(signal) => taskOutput(task.id, signal)}
 		onclose={() => (sheet = null)}
 	>
 		{#snippet actions()}
@@ -265,7 +266,7 @@
 				<Button icon={ICONS.retry} onclick={() => void retry(task)}>{t('fleet.task_retry')}</Button>
 			{/if}
 		{/snippet}
-	</OutputSheet>
+	</TaskOutputSheet>
 {/if}
 
 <style>

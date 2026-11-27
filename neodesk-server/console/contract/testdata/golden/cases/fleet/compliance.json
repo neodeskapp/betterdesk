@@ -83,9 +83,10 @@
     "super_admin",
     "admin"
    ],
-   "status": 404,
+   "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -100,6 +101,7 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
+    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -107,10 +109,198 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "devices[*].org_id",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "not found"
+     "devices": [
+      {
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
+       "id": "900100001",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Windows 11 Pro",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100002",
+       "hostname": "demo-reception-02",
+       "id": "900100002",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Windows 11 Pro",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100003",
+       "hostname": "demo-accounts-01",
+       "id": "900100003",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Windows 10 Pro",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100004",
+       "hostname": "demo-accounts-02",
+       "id": "900100004",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Windows 10 Pro",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100005",
+       "hostname": "demo-ceo-macbook",
+       "id": "900100005",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "macOS 15.1",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100006",
+       "hostname": "demo-design-imac",
+       "id": "900100006",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "macOS 14.6",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100008",
+       "hostname": "demo-warehouse-pc",
+       "id": "900100008",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Windows 10 IoT",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100009",
+       "hostname": "demo-warehouse-scan-1",
+       "id": "900100009",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Android 14",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100010",
+       "hostname": "demo-warehouse-scan-2",
+       "id": "900100010",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Android 13",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100011",
+       "hostname": "demo-warehouse-scan-3",
+       "id": "900100011",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Android 14",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100017",
+       "hostname": "demo-sales-laptop-01",
+       "id": "900100017",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Windows 11 Home",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100024",
+       "hostname": "demo-lab-rpi-01",
+       "id": "900100024",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Linux 6.6 (Raspberry Pi)",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100025",
+       "hostname": "demo-lab-rpi-02",
+       "id": "900100025",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Linux 6.6 (Raspberry Pi)",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100026",
+       "hostname": "demo-lab-win-vm",
+       "id": "900100026",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Windows Server 2022",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      },
+      {
+       "device_id": "900100031",
+       "hostname": "demo-noted-pc",
+       "id": "900100031",
+       "issues": null,
+       "last_scan": "",
+       "org_id": "<volatile>",
+       "os": "Windows 11 Pro",
+       "platform": "",
+       "score": null,
+       "status": "pending"
+      }
+     ],
+     "success": true
     }
    }
   }

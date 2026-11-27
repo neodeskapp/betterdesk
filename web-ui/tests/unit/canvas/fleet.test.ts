@@ -9,11 +9,18 @@ import {
 	listTasks,
 	Resource,
 	Task,
-	taskOutput
+	taskOutput,
+	taskRuns
 } from '../../../src/lib/api/fleet.ts';
 import {
 	addressFor,
+	checkKey,
 	complianceSummary,
+	onceToInput,
+	onceToServer,
+	runStatusKey,
+	runTone,
+	scanned,
 	filterResources,
 	filterTasks,
 	resourceActive,
@@ -129,8 +136,54 @@ describe('compliance', () => {
 
 	test('the summary line', () => {
 		const rows = [90, 85, 60, 10].map((s) => v.parse(ComplianceRow, { device_id: 'd' + s, score: s }));
-		expect(complianceSummary(rows)).toEqual({ count: 4, compliant: 2, warning: 1, critical: 1, score: 61 });
-		expect(complianceSummary([])).toEqual({ count: 0, compliant: 0, warning: 0, critical: 0, score: 0 });
+		expect(complianceSummary(rows)).toEqual({
+			count: 4,
+			compliant: 2,
+			warning: 1,
+			critical: 1,
+			score: 61,
+			unscanned: 0
+		});
+		expect(complianceSummary([])).toEqual({
+			count: 0,
+			compliant: 0,
+			warning: 0,
+			critical: 0,
+			score: 0,
+			unscanned: 0
+		});
+	});
+
+	test('a device never scanned has no score and stays out of the summary', () => {
+		const rows = [
+			v.parse(ComplianceRow, { device_id: 'a', score: 90 }),
+			v.parse(ComplianceRow, { device_id: 'b', score: null })
+		];
+		expect(rows.map(scanned)).toEqual([true, false]);
+		expect(complianceSummary(rows)).toEqual({
+			count: 1,
+			compliant: 1,
+			warning: 0,
+			critical: 0,
+			score: 90,
+			unscanned: 1
+		});
+		// 0 is a score
+		expect(scanned(v.parse(ComplianceRow, { device_id: 'c', score: 0 }))).toBe(true);
+	});
+
+	test('checks and run states have their words', () => {
+		expect(checkKey('firewall')).toBe('fleet.check_firewall');
+		expect(checkKey('usb_ports')).toBeNull();
+		expect(runStatusKey('pending')).toBe('fleet.run_waiting');
+		expect(runStatusKey('timeout')).toBe('fleet.status_timeout');
+		expect(runStatusKey('success')).toBe('fleet.status_success');
+		expect([runTone('timeout'), runTone('unsupported'), runTone('success'), runTone('')]).toEqual([
+			'failed',
+			'warning',
+			'success',
+			'pending'
+		]);
 	});
 });
 
@@ -182,6 +235,43 @@ describe('fleet API', () => {
 			vi.fn(async () => reply(403, { error: 'Permission denied: org.manage_devices' }))
 		);
 		await expect(fleetAvailability()).rejects.toBeInstanceOf(ApiError);
+	});
+
+	test('a "once" time goes to the server as a moment and comes back as local time', () => {
+		const local = '2026-11-27T14:30';
+		const sent = onceToServer(local);
+		expect(sent).toBe(new Date(local).toISOString());
+		expect(onceToInput(sent)).toBe(local);
+		expect(onceToServer('soon')).toBe('soon');
+		expect(onceToInput('')).toBe('');
+		expect(onceToInput('soon')).toBe('');
+	});
+
+	test("a task's runs come with its output", async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () =>
+				reply(200, {
+					output: '[d1] success\nok\n',
+					runs: [{ id: 3, device_id: 'd1', hostname: 'pc', status: 'success', exit_code: 0, attempt: 1 }]
+				})
+			)
+		);
+		const out = await taskRuns('7');
+		expect(out.output).toBe('[d1] success\nok\n');
+		expect(out.runs).toHaveLength(1);
+		expect(out.runs[0]).toMatchObject({
+			id: '3',
+			device_id: 'd1',
+			status: 'success',
+			exit_code: 0,
+			finished_at: ''
+		});
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => reply(200, { log: 'old' }))
+		);
+		expect(await taskRuns('7')).toEqual({ output: 'old', runs: [], next_run: '' });
 	});
 
 	test('task output is output or log', async () => {

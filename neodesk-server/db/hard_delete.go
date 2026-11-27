@@ -32,6 +32,8 @@ var deviceRowTables = []struct{ table, column string }{
 	{"device_telemetry_snapshots", "device_id"},
 	{"device_telemetry_commands", "device_id"},
 	{"peer_metrics", "peer_id"},
+	{"fleet_device_resources", "device_id"},
+	{"fleet_compliance", "device_id"},
 }
 
 // deviceConfigKeys are the server_config keys of the device id.
