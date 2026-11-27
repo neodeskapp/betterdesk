@@ -112,6 +112,7 @@
     "kind": "json",
     "json": {
      "data": {
+      "docker": true,
       "steps": [
        {
         "done": false,
@@ -165,6 +166,7 @@
     "kind": "json",
     "json": {
      "data": {
+      "docker": true,
       "steps": [
        {
         "done": false,
