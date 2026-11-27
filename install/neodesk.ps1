@@ -1,7 +1,8 @@
 ﻿#Requires -RunAsAdministrator
+
 <#
 .SYNOPSIS
-    NeoDesk Console Manager v3.6.20 - All-in-One Interactive Tool for Windows
+    NeoDesk Console Manager v3.6.26 - All-in-One Interactive Tool for Windows
 
 .DESCRIPTION
     Features:
@@ -73,9 +74,21 @@
     Force a fixed relay server address (IP or host[:port]). Always overrides
     -RelayMode. Equivalent to the RELAY_SERVERS environment variable.
 
+.PARAMETER ResetPassword
+    Give the account admin of the web console a new password without
+    questions: ADMIN_PASSWORD, else a random one, shown once.
+
+.PARAMETER ResetTwoFactor
+    With -ResetPassword (implied): also turn off two-factor sign-in of admin
+    and delete its authenticator secret and recovery codes, for an admin
+    who lost both. Where two-factor sign-in is required, admin sets it up
+    again at the next sign-in. Needs a neodesk-server that has
+    reset-password --reset-two-factor.
+
 .PARAMETER RunAsRoot
-    Run the Windows services as LocalSystem (legacy). By default the services
-    run under low-privilege per-service virtual accounts (privilege separation).
+    With NSSM, run the Windows service as LocalSystem instead of its own
+    low-privilege account NT SERVICE\NeoDeskServer. Without NSSM the server
+    is a scheduled task that always runs as SYSTEM, with or without this.
 
 .PARAMETER CheckPermissions
     Report whether NeoDesk can update files, change configuration and control services.
@@ -125,6 +138,16 @@
 .EXAMPLE
     .\neodesk.ps1 -SkipVerify
     Skip binary verification
+
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File C:\NeoDesk\neodesk.ps1 -ResetPassword
+    A new password for admin, from any elevated window whatever the
+    machine's execution policy
+
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File C:\NeoDesk\neodesk.ps1 -ResetTwoFactor
+    A new password for admin and its two-factor sign-in off, for an admin
+    who lost the authenticator and the recovery codes
 #>
 
 param(
@@ -146,6 +169,8 @@ param(
     [ValidateSet('auto', 'local', 'lan', 'public', 'wan', '')]
     [string]$RelayMode = "",
     [string]$RelayServers = "",
+    [switch]$ResetPassword,
+    [switch]$ResetTwoFactor,
     [switch]$RunAsRoot,
     [switch]$CheckPermissions,
     [switch]$RepairPermissions,
@@ -163,7 +188,7 @@ if ($Help) {
 # Configuration
 #===============================================================================
 
-$script:VERSION = "3.6.20"
+$script:VERSION = "3.6.26"
 # Where people ask for help: the NeoDesk Discord
 $script:HELP_URL = "https://discord.gg/nwERSawufr"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -191,6 +216,13 @@ $script:CHECK_PERMISSIONS = $CheckPermissions
 $script:REPAIR_PERMISSIONS = $RepairPermissions
 $script:MANAGED_CONFIG_CHANGES = @($SetConfig)
 $script:UPDATE_MODE = $Update
+# -ResetTwoFactor is a reset of the password that also turns two-factor
+# sign-in off, so it means -ResetPassword too
+$script:RESET_PASSWORD_MODE = $ResetPassword -or $ResetTwoFactor
+$script:RESET_TWO_FACTOR = [bool]$ResetTwoFactor
+# Windows PowerShell 5.1 downloads many times slower while it draws
+# Invoke-WebRequest's progress bar
+$ProgressPreference = 'SilentlyContinue'
 # Where the server binary comes from: a file (-Binary), a build of this
 # checkout (-FromSource), else the release of the update channel.
 $script:BINARY_FILE = if ($Binary) { (Resolve-Path $Binary -ErrorAction Stop).Path } else { "" }
@@ -199,10 +231,10 @@ $script:STAGED_SERVER_DIR = ""
 $script:STAGED_SERVER_BINARY = ""
 $script:STAGED_SERVER_VERSION = ""
 
-# Privilege separation (default). The installer needs Administrator, but the
-# services run under low-privilege per-service virtual accounts (NT SERVICE\...)
-# instead of LocalSystem. Use -RunAsRoot or NEODESK_RUN_AS_ROOT=1 to keep the
-# legacy behavior of running services as LocalSystem.
+# The installer needs Administrator. With NSSM the server is a Windows
+# service under its own virtual account (NT SERVICE\NeoDeskServer), or
+# LocalSystem with -RunAsRoot or NEODESK_RUN_AS_ROOT=1. Without NSSM it is
+# a scheduled task that runs as SYSTEM.
 $script:RUN_AS_ROOT = $RunAsRoot -or ($env:NEODESK_RUN_AS_ROOT -eq "1") -or ($env:NEODESK_RUN_AS_ROOT -eq "true")
 
 if ($NodeJs -or $Flask) {
@@ -423,7 +455,7 @@ function Print-Header {
         Write-Host ''
     }
     Write-Status '[!]' warning 'Windows support is experimental.'
-    Write-Host '    Linux is the main platform. Report problems on GitHub.'
+    Write-Host '    Linux is the main platform. Report problems at https://github.com/neodeskapp/neodesk/issues'
     Write-Host ''
 }
 
@@ -942,6 +974,70 @@ function Get-ServerBinaryPath {
     return (Join-Path $script:RUSTDESK_PATH "neodesk-server.exe")
 }
 
+# Get-ManagerCommand ARGS: the command that runs the install's copy of
+# this script with ARGS from any elevated PowerShell or cmd window. It
+# passes the execution policy, so it also works where scripts are off
+# (Windows 10 and 11) and in a new window; a Group Policy still wins.
+function Get-ManagerCommand {
+    param([string]$Arguments = "")
+    $cmd = "powershell -NoProfile -ExecutionPolicy Bypass -File `"$(Join-Path $script:RUSTDESK_PATH 'neodesk.ps1')`""
+    if ($Arguments) { $cmd += " $Arguments" }
+    return $cmd
+}
+
+# True when NeoDeskServer is a Windows service (NSSM), false when it is the
+# scheduled task.
+function Test-ServerIsService {
+    return [bool](Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)
+}
+
+# The command that restarts the server after a change of .env: the
+# service's restart, or for the scheduled task the end of the server,
+# which its launcher starts again.
+function Get-RestartCommand {
+    if (Test-ServerIsService) { return "Restart-Service $($script:SERVER_SERVICE)" }
+    return "Stop-Process -Name neodesk-server -Force (the task starts it again)"
+}
+
+# How the server runs, for the summary and the warnings.
+function Get-ServerAccountText {
+    if (Test-ServerIsService) {
+        if ($script:RUN_AS_ROOT) { return "Windows service $($script:SERVER_SERVICE), as LocalSystem (-RunAsRoot)" }
+        return "Windows service $($script:SERVER_SERVICE), as NT SERVICE\$($script:SERVER_SERVICE)"
+    }
+    return "scheduled task $($script:SERVER_SERVICE), as SYSTEM (full rights on this machine)"
+}
+
+# Protect-Folder PATH [-ServiceAccount]: only Administrators and SYSTEM
+# (and with -ServiceAccount the server's NT SERVICE account, while the
+# service exists) get into PATH and what it holds. A folder at the drive
+# root inherits C:\'s ACL otherwise, which lets every user read it on
+# Windows Server and change it on Windows 10 and 11. The SIDs work in
+# every Windows language. Returns $false when icacls refused.
+function Protect-Folder {
+    param([string]$Path, [switch]$ServiceAccount)
+    if (-not $Path -or -not (Test-Path $Path -PathType Container)) { return $true }
+    & icacls $Path /inheritance:r /grant:r "*S-1-5-32-544:(OI)(CI)F" "*S-1-5-18:(OI)(CI)F" /C /Q 2>$null | Out-Null
+    $ok = ($LASTEXITCODE -eq 0)
+    if ($ServiceAccount -and (Test-ServerIsService)) {
+        & icacls $Path /grant "NT SERVICE\$($script:SERVER_SERVICE):(OI)(CI)M" /C /Q 2>$null | Out-Null
+    }
+    if (-not $ok) { Print-Warning "Could not limit who can read $Path (icacls failed); check its permissions" }
+    return $ok
+}
+
+# The install's folders hold the server's keys, the API key, the database,
+# .env and the certificate's key, and the backups hold copies of them:
+# only Administrators, SYSTEM and the server's service account get in.
+function Protect-InstallFolders {
+    $ok = $true
+    foreach ($path in @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)) {
+        if (-not (Protect-Folder -Path $path -ServiceAccount)) { $ok = $false }
+    }
+    if (-not (Protect-Folder -Path $script:BACKUP_DIR)) { $ok = $false }
+    return $ok
+}
+
 # True when the binary carries the commands of the release with the console
 # inside (upgrade-env, env merge, config, reset-password, check, update).
 # Read from the file: an older binary would take an unknown command for its
@@ -953,6 +1049,14 @@ function Test-BinaryHasSubcommands {
 }
 
 # True when the binary can make the install's certificate (cert).
+# True when the binary's reset-password can turn off the account's
+# two-factor sign-in (--reset-two-factor).
+function Test-BinaryResetsTwoFactor {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'reset-password [--reset-two-factor]' -SimpleMatch -Quiet)
+}
+
 function Test-BinaryHasCertCommand {
     param([string]$Path = (Get-ServerBinaryPath))
     if (-not $Path -or -not (Test-Path $Path)) { return $false }
@@ -1109,7 +1213,7 @@ function Get-ReleaseBinary {
                 $script:RELEASE_TAG = $prerelease
             } elseif ($fallback) {
                 Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release or pre-release yet: installing the development build (-Channel dev) instead"
-                Print-Info "Updates follow the development channel; once a stable release is out: & '$(Join-Path $script:RUSTDESK_PATH 'neodesk.ps1')' -Update -Channel stable"
+                Print-Info "Updates follow the development channel; once a stable release is out: $(Get-ManagerCommand '-Update -Channel stable')"
                 $script:UPDATE_GITHUB_BRANCH = "dev"
                 $script:UPDATE_GITHUB_BRANCH_GIVEN = "dev"
                 $env:UPDATE_GITHUB_BRANCH = "dev"
@@ -1148,7 +1252,7 @@ function Get-ReleaseBinary {
         }
         if ($failure -and $status -eq 404 -and $fallback -and -not $script:RELEASE_TAG -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
             Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release or pre-release yet: installing the development build (-Channel dev) instead"
-            Print-Info "Updates follow the development channel; once a stable release is out: & '$(Join-Path $script:RUSTDESK_PATH 'neodesk.ps1')' -Update -Channel stable"
+            Print-Info "Updates follow the development channel; once a stable release is out: $(Get-ManagerCommand '-Update -Channel stable')"
             $script:UPDATE_GITHUB_BRANCH = "dev"
             $script:UPDATE_GITHUB_BRANCH_GIVEN = "dev"
             $env:UPDATE_GITHUB_BRANCH = "dev"
@@ -1431,7 +1535,8 @@ function Set-NssmServerService {
     & $Nssm set $script:SERVER_SERVICE Application $serverExe | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppParameters $Arguments | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppDirectory $script:RUSTDESK_PATH | Out-Null
-    & $Nssm set $script:SERVER_SERVICE DisplayName "NeoDesk Server $($script:VERSION)" | Out-Null
+    # No version: the console's own updates replace the binary, not the service
+    & $Nssm set $script:SERVER_SERVICE DisplayName "NeoDesk Server" | Out-Null
     & $Nssm set $script:SERVER_SERVICE Description "NeoDesk server and web console (signal, relay, API, panel)" | Out-Null
     & $Nssm set $script:SERVER_SERVICE Start SERVICE_AUTO_START | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppEnvironmentExtra $Environment | Out-Null
@@ -1453,7 +1558,8 @@ function Set-NssmServerService {
 # The scheduled-task launcher of the server. Task Scheduler does not start a
 # task again after a clean exit, so the launcher loops: when the server ends
 # (exit code 3 is its restart request) it starts it again after two
-# seconds. Only this loop makes NEODESK_SUPERVISOR true.
+# seconds. Only this loop makes NEODESK_SUPERVISOR true. Before each start
+# a log over 10 MB becomes server.log.1, as NSSM rotates the service's.
 function Write-ServerLauncher {
     param([string]$Arguments, [string[]]$Environment)
     $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
@@ -1466,6 +1572,7 @@ function Write-ServerLauncher {
     $log = Get-ServerLogPath
     New-Item -ItemType Directory -Path (Split-Path -Parent $log) -Force | Out-Null
     $lines += ":run"
+    $lines += "if exist `"$log`" for %%F in (`"$log`") do if %%~zF GTR 10485760 move /y `"$log`" `"$log.1`" >nul"
     $lines += "`"$(Get-ServerBinaryPath)`" $Arguments >> `"$log`" 2>&1"
     $lines += "timeout /t 2 /nobreak >nul"
     $lines += "goto run"
@@ -1596,7 +1703,7 @@ function Show-ConsolePortMove {
     param([bool]$Named)
     if ($Named -or (Get-ConsoleHttpPort) -ne "3375") { return }
     try { Configure-Firewall } catch { }
-    Print-Warning "The console now answers on port 3375; it was 5000. To keep 5000 set CONSOLE_PORT=5000 in $(Join-Path $script:CONSOLE_PATH '.env'), then: Restart-Service $($script:SERVER_SERVICE)"
+    Print-Warning "The console now answers on port 3375; it was 5000. To keep 5000 set CONSOLE_PORT=5000 in $(Join-Path $script:CONSOLE_PATH '.env'), then: $(Get-RestartCommand)"
 }
 
 function Update-GoInstall {
@@ -1646,6 +1753,9 @@ function Update-GoInstall {
 
     Merge-ConsoleEnv -FreshInstall $false | Out-Null
     Update-ServerServiceDefinition
+    # Installs made before the folders were locked keep their keys
+    # readable to every user otherwise
+    Protect-InstallFolders | Out-Null
     Start-ServerService
     if (-not (Test-GoInstall -TimeoutSeconds 90)) {
         if ($before -ne $after -and (Test-Path "$serverExe.prev")) {
@@ -1668,7 +1778,8 @@ function Update-GoInstall {
 
 # Writes NeoDeskServer's settings again from the template, keeping its
 # arguments and its other environment; rewrites the scheduled-task launcher
-# (a launcher written before held CONSOLE_PORT=0 and no restart loop).
+# (a launcher written before held CONSOLE_PORT=0 and no restart loop), or
+# makes the task an NSSM service once NSSM is there.
 function Update-ServerServiceDefinition {
     $nssm = Get-NssmPath
     if ($nssm -and (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
@@ -1685,6 +1796,15 @@ function Update-ServerServiceDefinition {
         if (-not $serverArgs) { $serverArgs = Get-ServerArguments -ServerIP (Resolve-RelayIp) }
         if ($serverArgs -match '-relay-servers\s+"?([^"\s]+)') { Set-PanelPublicHost -Address $Matches[1] }
         $current = Move-PortsToEnvFile (Get-LauncherEnvironment | Where-Object { $_ -notlike 'CONSOLE_PORT=0' })
+        if ($nssm) {
+            # NSSM is there now: the task becomes the Windows service under
+            # its own account, with the task's arguments and settings
+            Unregister-ScheduledTask -TaskName $script:SERVER_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
+            $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $current)
+            Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
+            Print-Success "The scheduled task $($script:SERVER_SERVICE) is now a Windows service: $(Get-ServerAccountText)"
+            return
+        }
         $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "task"), $current)
         $launcherPath = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
         Register-ServerTask -Launcher $launcherPath
@@ -1708,32 +1828,29 @@ function Invoke-ManagementCli {
 function Repair-ManagementPermissions {
     Print-Step "Repairing NeoDesk management permissions..."
     foreach ($path in @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)) {
-        if (Test-Path $path) {
-            & icacls $path /inheritance:e /grant "Administrators:(OI)(CI)F" /grant "SYSTEM:(OI)(CI)F" /T /C /Q 2>$null | Out-Null
-        } else {
-            New-Item -ItemType Directory -Path $path -Force | Out-Null
-        }
+        if (-not (Test-Path $path)) { New-Item -ItemType Directory -Path $path -Force | Out-Null }
     }
-    # The server's account writes both folders: its data and keys, the
-    # console's .env and data
-    $account = "NT SERVICE\$($script:SERVER_SERVICE)"
-    foreach ($path in @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)) {
-        if (Test-Path $path) {
-            & icacls $path /grant "${account}:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
-        }
-    }
+    # The folders: Administrators, SYSTEM and the server's account, which
+    # writes both (its data and keys, the console's .env and data)
+    Protect-InstallFolders | Out-Null
+    $account = @()
+    if (Test-ServerIsService) { $account = @("NT SERVICE\$($script:SERVER_SERVICE):M") }
     foreach ($path in @(
         (Join-Path $script:CONSOLE_PATH ".env"),
         (Join-Path $script:RUSTDESK_PATH ".api_key"),
-        (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3")
+        (Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"),
+        (Join-Path $script:RUSTDESK_PATH "id_ed25519"),
+        (Join-Path $script:RUSTDESK_PATH "ssl\neodesk.key")
     )) {
         if (Test-Path $path) {
-            & icacls $path /inheritance:r /grant:r "Administrators:F" "SYSTEM:F" "${account}:M" 2>$null | Out-Null
+            & icacls $path /inheritance:r /grant:r "*S-1-5-32-544:F" "*S-1-5-18:F" @account 2>$null | Out-Null
         }
     }
     $seed = Join-Path $script:CONSOLE_PATH "data\modules\neodesk-support-generator\custom-client-signing.seed"
     if (Test-Path $seed) {
-        & icacls $seed /inheritance:r /grant:r "SYSTEM:F" "${account}:R" 2>$null | Out-Null
+        $reader = @()
+        if (Test-ServerIsService) { $reader = @("NT SERVICE\$($script:SERVER_SERVICE):R") }
+        & icacls $seed /inheritance:r /grant:r "*S-1-5-18:F" @reader 2>$null | Out-Null
     }
     Test-ManagementCapabilities | Out-Null
 }
@@ -1747,6 +1864,7 @@ function Set-ManagedConfiguration {
     if (-not (Invoke-ManagementCli -Action "set" -Arguments $script:MANAGED_CONFIG_CHANGES)) {
         return $false
     }
+    if (Test-BehindProxy) { Remove-ConsoleFirewallRules }
     Stop-ServerService
     return (Start-ServicesWithVerification)
 }
@@ -1866,8 +1984,9 @@ function Setup-Services {
 
     $nssm = Get-NssmPath
     if (-not $nssm) {
-        Print-Warning "NSSM not found. The server runs as a scheduled task."
-        Print-Info "For a Windows service, install NSSM from https://nssm.cc"
+        Print-Warning "NSSM not found: the server runs as a scheduled task under SYSTEM, with full rights on this machine."
+        Print-Info "For a Windows service under its own low-privilege account, put nssm.exe on the Path or in $(Join-Path $script:RUSTDESK_PATH 'tools'),"
+        Print-Info "then run Repair installation, Repair services: $(Get-ManagerCommand)"
         $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "task"), $extra)
         $launcher = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
         Register-ServerTask -Launcher $launcher
@@ -1880,6 +1999,9 @@ function Setup-Services {
         & $nssm stop $svc 2>$null | Out-Null
         & $nssm remove $svc confirm 2>$null | Out-Null
     }
+    # A scheduled task of an install without NSSM would start a second
+    # server next to the service
+    Unregister-ScheduledTask -TaskName $script:SERVER_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
 
     $current = @()
     if (Test-GoOnlyInstall) {
@@ -2045,34 +2167,57 @@ function Do-ResetPassword {
     if (Test-NodeEraInstall) {
         Stop-NodeEraInstall
         Press-Enter
-        return
+        return $false
     }
 
-    $items = @(
-        "Generate random password`tCreate a strong random admin password",
-        "Set custom password`tType a new password (min. 8 characters)",
-        "Back`tReturn to the main menu"
-    )
-    $returns = @("1", "2", "0")
-    Invoke-MenuChoose -Title "Admin Password Reset" -Subtitle "The account admin of the web console" -Items $items -Returns $returns
     $newPassword = $null
-    switch ($script:MENU_CHOICE) {
-        "1" { $newPassword = Generate-RandomPassword }
-        "2" {
-            $secure = Read-Host "Enter new password (min. 8 characters)" -AsSecureString
-            $newPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure))
+    if ($script:RESET_PASSWORD_MODE) {
+        # -ResetPassword: ADMIN_PASSWORD, else a random one
+        if ($env:ADMIN_PASSWORD) {
+            $newPassword = $env:ADMIN_PASSWORD
             if ($newPassword.Length -lt 8) {
-                Print-Error "Password must be at least 8 characters!"
-                Press-Enter
-                return
+                Print-Error "ADMIN_PASSWORD must be at least 8 characters"
+                return $false
             }
+        } else {
+            $newPassword = Generate-RandomPassword
         }
-        default { return }
+    } else {
+        $items = @(
+            "Generate random password`tCreate a strong random admin password",
+            "Set custom password`tType a new password (min. 8 characters)",
+            "Back`tReturn to the main menu"
+        )
+        $returns = @("1", "2", "0")
+        Invoke-MenuChoose -Title "Admin Password Reset" -Subtitle "The account admin of the web console" -Items $items -Returns $returns
+        switch ($script:MENU_CHOICE) {
+            "1" { $newPassword = Generate-RandomPassword }
+            "2" {
+                $secure = Read-Host "Enter new password (min. 8 characters)" -AsSecureString
+                $newPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure))
+                if ($newPassword.Length -lt 8) {
+                    Print-Error "Password must be at least 8 characters!"
+                    Press-Enter
+                    return $false
+                }
+            }
+            default { return $true }
+        }
     }
 
     # The server sets it on the console's database (SQLite or PostgreSQL);
     # the password goes in on standard input, never in the arguments
-    $code = Invoke-ServerCommand -Arguments @("reset-password", "admin") -InputText $newPassword
+    $resetArgs = @("reset-password")
+    if ($script:RESET_TWO_FACTOR) {
+        # An older binary takes the switch for a second name and refuses
+        if (-not (Test-BinaryResetsTwoFactor)) {
+            Print-Error "The installed neodesk-server cannot turn off two-factor sign-in; update it first: $(Get-ManagerCommand '-Update')"
+            return $false
+        }
+        $resetArgs += "--reset-two-factor"
+    }
+    $resetArgs += "admin"
+    $code = Invoke-ServerCommand -Arguments $resetArgs -InputText $newPassword
     Write-Host ""
     if ($code -eq 0) {
         # DEFAULT_ADMIN_PASSWORD in .env must match, or the next start with a
@@ -2086,6 +2231,9 @@ function Do-ResetPassword {
         Write-Host "  Login:    " -NoNewline; Write-Host "admin" -ForegroundColor White
         Write-Host "  Password: " -NoNewline; Write-Host $newPassword -ForegroundColor White
         Write-Host "============================================================" -ForegroundColor Green
+        if ($script:RESET_TWO_FACTOR) {
+            Print-Info "Two-factor sign-in of admin is off; where it is required, admin sets it up again at the next sign-in"
+        }
         if ($script:STORE_ADMIN_CREDENTIALS) {
             "admin:$newPassword" | Out-File -FilePath (Join-Path $script:RUSTDESK_PATH ".admin_credentials") -Encoding UTF8
         }
@@ -2094,37 +2242,29 @@ function Do-ResetPassword {
         Print-Info "Check the database settings in $(Join-Path $script:CONSOLE_PATH '.env')"
     }
     Press-Enter
+    return ($code -eq 0)
 }
 
-# Shows the admin's first password, once: only when this run made the
-# console's .env. The server makes the admin at its first start from
-# DEFAULT_ADMIN_PASSWORD.
+# The admin's first password, only when this run made the console's .env;
+# the summary at the end of the install shows it, once. The server makes
+# the admin at its first start from DEFAULT_ADMIN_PASSWORD.
 function Create-AdminUser {
     Print-Step "Admin account..."
 
     if (-not $script:FRESH_CONSOLE_ENV) {
         Print-Info "The admin account and its password stay as they are."
-        Print-Info "Forgot it? Reset admin password in the menu of $(Join-Path $script:RUSTDESK_PATH 'neodesk.ps1')"
+        Print-Info "Forgot it? $(Get-ManagerCommand '-ResetPassword')"
         return $null
     }
     $adminPassword = $env:ADMIN_PASSWORD
     if (-not $adminPassword) { $adminPassword = Get-ConsoleEnvValue -Key "DEFAULT_ADMIN_PASSWORD" }
 
     if ($adminPassword) {
-        Write-Host ""
-        Write-Host "============================================================" -ForegroundColor Green
-        Write-Host "             PANEL LOGIN CREDENTIALS                        " -ForegroundColor Green
-        Write-Host "============================================================" -ForegroundColor Green
-        Write-Host "  Login:    " -NoNewline; Write-Host "admin" -ForegroundColor White
-        Write-Host "  Password: " -NoNewline; Write-Host $adminPassword -ForegroundColor White
-        Write-Host "============================================================" -ForegroundColor Green
-        Write-Host ""
+        Print-Info "The admin's password is in the summary at the end"
         if ($script:STORE_ADMIN_CREDENTIALS) {
             $mainCredsFile = Join-Path $script:RUSTDESK_PATH ".admin_credentials"
             "admin:$adminPassword" | Out-File -FilePath $mainCredsFile -Encoding UTF8
             Print-Info "Credentials saved in: $mainCredsFile"
-        } else {
-            Print-Warning "Credentials are not persisted by default (security hardening)."
         }
         return $adminPassword
     }
@@ -2240,7 +2380,12 @@ function Install-ManagerScript {
                 if (-not (Test-Path $target)) { throw "no installer copy" }
             }
         }
-        Print-Info "Manage this install with: & '$target'"
+        Print-Info "Manage this install with: $(Get-ManagerCommand)"
+        # An elevated PowerShell starts in System32, where a download
+        # with a bare file name lands
+        if ($script:SELF_PATH -and $env:windir -and (Split-Path -Parent $script:SELF_PATH) -like "$env:windir\*") {
+            Print-Info "The downloaded $($script:SELF_PATH) is no longer needed: Remove-Item '$($script:SELF_PATH)'"
+        }
     } catch {
         if (-not (Test-Path $target)) { Print-Warning "Could not keep a copy of the installer at ${target}: run this installer again for updates" }
     }
@@ -2277,7 +2422,7 @@ function Install-CommandLine {
     $entries = @((Get-MachinePath) -split ';' | Where-Object { $_ })
     if ($entries -notcontains $binDir) { Set-MachinePath (($entries + $binDir) -join ';') }
     if (@($env:Path -split ';') -notcontains $binDir) { $env:Path = "$env:Path;$binDir" }
-    Print-Info "The command line: neodesk --help (in a new terminal)"
+    Print-Info "The command line: neodesk --help (in a new window run as administrator)"
 }
 
 # Remove-CommandLine: the link bin\neodesk.exe and its folder in the
@@ -2292,19 +2437,29 @@ function Remove-CommandLine {
     $env:Path = (@($env:Path -split ';' | Where-Object { $_ -and $_ -ne $binDir }) -join ';')
 }
 
-# What the admin needs after an install, and no password: the console's
-# address, the first sign-in, what RustDesk clients are given, the log,
-# the settings file and the commands for later.
+# What the admin needs after an install: the console's address, also the
+# one on this machine's network, the first sign-in with the password when
+# this run made it (-AdminPassword; it is not shown again), what RustDesk
+# clients are given, how the server runs, the log, the settings file and
+# the commands for later.
 function Show-InstallSummary {
+    param([string]$AdminPassword = "")
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
-    $manager = Join-Path $script:RUSTDESK_PATH "neodesk.ps1"
     $hostName = Get-ConsoleEnvValue -Key "PANEL_PUBLIC_HOST"
     if (-not $hostName) { $hostName = Get-PublicIP }
     $pubKeyPath = Join-Path $script:RUSTDESK_PATH "id_ed25519.pub"
     $key = if (Test-Path $pubKeyPath) { (Get-Content $pubKeyPath -Raw).Trim() } else { "" }
     $console = "off (set CONSOLE_PORT in $envFile to turn it on)"
+    $lanConsole = ""
     $healthUrl = Get-ConsoleHealthUrl
-    if (-not $script:MINIMAL_MODE -and $healthUrl) { $console = ($healthUrl -replace '/health$', '') -replace '127\.0\.0\.1', $hostName }
+    if (-not $script:MINIMAL_MODE -and $healthUrl) {
+        $base = $healthUrl -replace '/health$', ''
+        $console = $base -replace '127\.0\.0\.1', $hostName
+        # Behind NAT the public address works from this network only with
+        # port forwarding that loops back, so the LAN address goes with it
+        $lanIP = Get-LocalIP
+        if ($lanIP -and $lanIP -ne "127.0.0.1" -and $lanIP -ne $hostName) { $lanConsole = $base -replace '127\.0\.0\.1', $lanIP }
+    }
     $signal = Get-SignalPort
     $relay = Get-RelayPort
     $idServer = if ($signal -eq "21116") { $hostName } else { "${hostName}:$signal" }
@@ -2313,10 +2468,13 @@ function Show-InstallSummary {
     Write-Host "NeoDesk is installed" -ForegroundColor Green
     Write-Host ""
     Write-Host "  Web console:   " -NoNewline; Write-Host $console -ForegroundColor White
-    if ($script:FRESH_CONSOLE_ENV) {
-        Write-Host "  First sign-in: user admin, with the password shown above (it is not shown again)"
+    if ($lanConsole) { Write-Host "  On your LAN:   " -NoNewline; Write-Host $lanConsole -ForegroundColor White }
+    if ($AdminPassword) {
+        Write-Host "  First sign-in: user " -NoNewline; Write-Host "admin" -ForegroundColor White -NoNewline
+        Write-Host ", password " -NoNewline; Write-Host $AdminPassword -ForegroundColor White
+        Write-Host "                 Copy the password now: it is not shown again."
     } else {
-        Write-Host "  Sign in:       user admin; forgot the password? Reset admin password in the menu of $manager"
+        Write-Host "  Sign in:       user admin; forgot the password? $(Get-ManagerCommand '-ResetPassword')"
     }
     Write-Host "  RustDesk clients (Settings > Network > ID/Relay server):"
     Write-Host "    ID server:     " -NoNewline; Write-Host $idServer -ForegroundColor White
@@ -2326,11 +2484,18 @@ function Show-InstallSummary {
     $apiScheme = if ((Get-ConsoleEnvValue -Key "RUSTDESK_API_TLS") -match '^(?i)(true|1|on|https)$') { "https" } else { "http" }
     Write-Host "    API server:    " -NoNewline; Write-Host "${apiScheme}://${hostName}:$apiPort" -ForegroundColor White
     Write-Host "    Key:           " -NoNewline; Write-Host $key -ForegroundColor White
+    Write-Host "  Runs as:       $(Get-ServerAccountText)"
     Write-Host "  Log:           $(Get-ServerLogPath)"
-    Write-Host "  Settings:      $envFile (then: Restart-Service $($script:SERVER_SERVICE))"
-    Write-Host "  Update:        & '$manager' -Update"
-    Write-Host "  Uninstall:     & '$manager' -Uninstall"
-    Write-Host "  Command line:  neodesk --help (in a new terminal)"
+    Write-Host "  Settings:      $envFile (then: $(Get-RestartCommand))"
+    Write-Host "  Commands for later, in a PowerShell or cmd window run as administrator:"
+    Write-Host "    Update:          $(Get-ManagerCommand '-Update')"
+    Write-Host "    Reset password:  $(Get-ManagerCommand '-ResetPassword')"
+    Write-Host "    Uninstall:       $(Get-ManagerCommand '-Uninstall')"
+    Write-Host "    Menu:            $(Get-ManagerCommand)"
+    Write-Host "    Command line:    neodesk --help (in a new window)"
+    if ("$healthUrl" -like 'https://*' -and (Get-ConsoleEnvValue -Key "SSL_CERT_PATH") -eq (Join-Path $script:RUSTDESK_PATH "ssl\neodesk.crt")) {
+        Write-Host "  Certificate:   self-signed, so the browser warns once; your own: Configure SSL certificates, Custom certificate in the menu"
+    }
     Write-Host "  Help:          $($script:HELP_URL)"
     Write-Host ""
 }
@@ -2995,7 +3160,7 @@ function Generate-SSLCertificates {
                 & openssl req -x509 -nodes -days 3650 -newkey rsa:2048 `
                     -keyout $keyPath `
                     -out $certPath `
-                    -subj "/CN=$serverIP/O=NeoDesk/C=US" `
+                    -subj "/CN=$serverIP/O=NeoDesk" `
                     -addext "subjectAltName=IP:$serverIP,IP:127.0.0.1,DNS:localhost" 2>$null
                 
                 if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
@@ -3136,6 +3301,9 @@ function Do-Install {
     
     if (-not (Install-Binaries)) { Print-Error "Binary installation failed"; return }
     if (-not (Setup-ConsoleHome)) { Print-Error "Setting up the console folder failed"; return }
+    # Before the keys and certificates are made, which then take the
+    # folders' permissions
+    Protect-InstallFolders | Out-Null
 
     # Generate self-signed TLS certificates (default for fresh installs)
     Generate-SSLCertificates | Out-Null
@@ -3167,24 +3335,18 @@ function Do-Install {
     }
     Write-Host ""
     
-    Show-InstallSummary
+    # The summary is the last thing on the screen: the password in it is
+    # not shown again, and the menu clears the screen after Enter
     $ports = (Get-FirewallPorts | ForEach-Object { "$($_.Port)/$($_.Proto)" }) -join ' '
-    Write-Host "  A firewall outside this machine (your network's or cloud provider's) needs these ports: $ports"
-    Write-Host ""
-    
-    # Offer HTTPS Enterprise configuration for fresh installs
-    if (-not $script:AUTO_MODE -and $installOk -and -not $script:MINIMAL_MODE) {
-        Write-Host ""
-        Print-Info "Enterprise TLS enables HTTPS for panel/signal/relay; Go API stays HTTP for compatibility"
-        Print-Info "Recommended for production deployments behind trusted operator access"
-        Write-Host ""
-        if (Confirm-Action "Would you like to configure HTTPS Enterprise now? (Option 5 in SSL menu)") {
-            Do-ConfigureSSL
-        }
-    }
+    Write-Host "A firewall outside this machine (your network's or cloud provider's) needs these ports: $ports"
+    Show-InstallSummary -AdminPassword $adminPassword
 
     if (-not $script:AUTO_MODE) {
-        Press-Enter
+        if ($adminPassword) {
+            $null = Read-Host "Copy the admin password above, then press Enter"
+        } else {
+            Press-Enter
+        }
     }
     return $installOk
 }
@@ -3532,7 +3694,9 @@ function Do-BackupSilent {
     if (-not (Test-Path $script:BACKUP_DIR)) {
         New-Item -ItemType Directory -Path $script:BACKUP_DIR -Force | Out-Null
     }
-    
+    # The backups hold the database, the keys and .env
+    Protect-Folder -Path $script:BACKUP_DIR | Out-Null
+
     New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
     
     Print-Step "Creating backup: $backupName"
@@ -3651,7 +3815,7 @@ function Get-FirewallPorts {
     if ((Get-ConsoleEnvValue -Key "CDAP_ENABLED") -notmatch '^(?i)(n|no|0|false|off)$') {
         $ports += @{Port = 21122; Proto = "TCP"; Name = "NeoDesk CDAP gateway"}
     }
-    if ((Get-ConsoleEnvValue -Key "TRUST_PROXY") -match '^(?i)(y|yes|1|true|on)$') { return $ports }
+    if (Test-BehindProxy) { return $ports }
     $http = Get-ConsoleEnvValue -Key "CONSOLE_PORT"
     if (-not $http) { $http = "3375" }
     if ($http -ne "0") { $ports += @{Port = [int]$http; Proto = "TCP"; Name = "NeoDesk web console"} }
@@ -3705,9 +3869,34 @@ function Check-FirewallRules {
     return $missingRules
 }
 
+# True when TLS ends at a reverse proxy (TRUST_PROXY), which reaches the
+# console on this machine.
+function Test-BehindProxy {
+    return ((Get-ConsoleEnvValue -Key "TRUST_PROXY") -match '^(?i)(y|yes|1|true|on)$')
+}
+
+# The rules this installer made for the console's ports go again: TLS ends
+# at a reverse proxy, which reaches the console on this machine.
+function Remove-ConsoleFirewallRules {
+    $rules = @(Get-NetFirewallRule -DisplayName "NeoDesk - NeoDesk web console*" -ErrorAction SilentlyContinue)
+    if ($rules.Count -eq 0) { return }
+    $rules | Remove-NetFirewallRule -ErrorAction SilentlyContinue
+    Print-Info "Closed the console's ports in Windows Firewall: the reverse proxy reaches the console on this machine"
+}
+
+# Every rule this installer made (NeoDesk - ...), for the uninstall.
+function Remove-NeoDeskFirewallRules {
+    $rules = @(Get-NetFirewallRule -DisplayName "NeoDesk - *" -ErrorAction SilentlyContinue)
+    if ($rules.Count -eq 0) { return }
+    $rules | Remove-NetFirewallRule -ErrorAction SilentlyContinue
+    Print-Info "Removed $($rules.Count) NeoDesk rules from Windows Firewall"
+}
+
 function Configure-Firewall {
     param([array]$MissingRules = @())
-    
+
+    if (Test-BehindProxy) { Remove-ConsoleFirewallRules }
+
     if ($MissingRules.Count -eq 0) {
         $requiredPorts = Get-FirewallPorts
         foreach ($p in $requiredPorts) {
@@ -4019,23 +4208,38 @@ function Do-Uninstall {
     Unregister-ScheduledTask -TaskName $script:HBBS_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $script:HBBR_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $script:CONSOLE_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
-    
+
+    # Without the server, its firewall rules and the command line go too,
+    # also when the data stays
+    Remove-NeoDeskFirewallRules
+    Remove-CommandLine
+
+    $kept = @()
     if ($script:PURGE_MODE -or (-not $script:AUTO_MODE -and (Confirm-Action "Remove installation files ($script:RUSTDESK_PATH)?"))) {
-        Remove-CommandLine
         Remove-Item -Path $script:RUSTDESK_PATH -Recurse -Force -ErrorAction SilentlyContinue
         Print-Info "Removed: $script:RUSTDESK_PATH"
-    } else {
-        Print-Info "Preserved server data: $script:RUSTDESK_PATH"
+    } elseif (Test-Path $script:RUSTDESK_PATH) {
+        $kept += "$($script:RUSTDESK_PATH) (keys, database)"
     }
-    
+
     if ($script:PURGE_MODE -or (-not $script:AUTO_MODE -and (Confirm-Action "Remove Web Console ($script:CONSOLE_PATH)?"))) {
         Remove-Item -Path $script:CONSOLE_PATH -Recurse -Force -ErrorAction SilentlyContinue
         Print-Info "Removed: $script:CONSOLE_PATH"
-    } else {
-        Print-Info "Preserved console data: $script:CONSOLE_PATH"
+    } elseif (Test-Path $script:CONSOLE_PATH) {
+        $kept += "$($script:CONSOLE_PATH) (.env, the console's data)"
     }
-    
+
+    if ((Test-Path $script:BACKUP_DIR) -and ($script:PURGE_MODE -or (-not $script:AUTO_MODE -and (Confirm-Action "Remove the backups ($script:BACKUP_DIR)? They hold the database, the keys and .env")))) {
+        Remove-Item -Path $script:BACKUP_DIR -Recurse -Force -ErrorAction SilentlyContinue
+        Print-Info "Removed: $script:BACKUP_DIR"
+    } elseif (Test-Path $script:BACKUP_DIR) {
+        $kept += "$($script:BACKUP_DIR) (backups)"
+    }
+
     Print-Success "NeoDesk has been uninstalled"
+    if ($kept.Count -gt 0) {
+        Print-Info "Kept on this machine: $($kept -join ', '); -Uninstall -Purge removes them"
+    }
     Press-Enter
 }
 
@@ -4373,11 +4577,11 @@ function Do-ConfigureSSL {
     }
     
     $items = @(
-        "Let's Encrypt`tACME certificate (manual on Windows)",
+        "Let's Encrypt`tNot built in on Windows: how to get a trusted certificate",
         "Custom certificate`tProvide your own cert + key files",
         "Self-signed certificate`tQuick HTTPS for testing",
         "Disable SSL`tRevert the panel back to HTTP",
-        "Enterprise TLS`tPanel + signal + relay (API stays HTTP)",
+        "Self-signed, client API too`tPanel, signal, relay and the client API (clients must trust it)",
         "Back`tReturn to the main menu"
     )
     $returns = @("1", "2", "3", "4", "5", "0")
@@ -4392,8 +4596,9 @@ function Do-ConfigureSSL {
         "0" { return }
         "1" {
             # Let's Encrypt
-            Print-Warning "Let's Encrypt is not yet supported on Windows via this script."
-            Print-Info "Please use Certbot manually or option 2 (custom certificate)."
+            Print-Warning "This script does not get Let's Encrypt certificates on Windows."
+            Print-Info "For a trusted certificate: get one for your domain (for example with an ACME client such as win-acme),"
+            Print-Info "then choose Custom certificate here with its PEM files, or put a reverse proxy with its own certificate in front."
             Press-Enter
             return
         }
@@ -4474,14 +4679,14 @@ function Do-ConfigureSSL {
                 $sanArg = "subjectAltName=$sanList"
                 & openssl req -x509 -nodes -days 3650 -newkey rsa:2048 `
                     -keyout $keyPath -out $certPath `
-                    -subj "/CN=$cn/O=NeoDesk/C=PL" `
+                    -subj "/CN=$cn/O=NeoDesk" `
                     -addext $sanArg 2>&1 | Out-Null
                     
                 if (-not (Test-Path $certPath)) {
                     # Fallback for older openssl without -addext
                     & openssl req -x509 -nodes -days 3650 -newkey rsa:2048 `
                         -keyout $keyPath -out $certPath `
-                        -subj "/CN=$cn/O=NeoDesk/C=PL" 2>&1 | Out-Null
+                        -subj "/CN=$cn/O=NeoDesk" 2>&1 | Out-Null
                 }
             } else {
                 # PowerShell self-signed cert
@@ -4583,12 +4788,12 @@ function Do-ConfigureSSL {
             Print-Success "SSL disabled. Running in HTTP mode."
         }
         "5" {
-            # Enterprise TLS - HTTPS for panel/signal/relay, Go API remains HTTP
+            # Self-signed for the panel, signal, relay and the client API
             Print-Header
-            Write-Host "========== ENTERPRISE TLS CONFIGURATION ==========" -ForegroundColor Yellow
+            Write-Host "========== SELF-SIGNED TLS, CLIENT API TOO ==========" -ForegroundColor Yellow
             Write-Host ""
-            Write-Host "  WARNING: Go API :$($script:GO_API_PORT) and compat :$($script:CLIENT_API_PORT) stay HTTP for RustDesk clients." -ForegroundColor Yellow
-            Write-Host "  Panel, signal and relay channels can still use TLS." -ForegroundColor Yellow
+            Write-Host "  The client API :$($script:CLIENT_API_PORT) uses this self-signed certificate too: RustDesk clients refuse it" -ForegroundColor Yellow
+            Write-Host "  unless their machine trusts the certificate. The internal API :$($script:GO_API_PORT) stays HTTP." -ForegroundColor Yellow
             Write-Host ""
             
             New-Item -ItemType Directory -Path $sslDir -Force | Out-Null
@@ -4618,7 +4823,7 @@ function Do-ConfigureSSL {
             
             $cn = if ($certDomain) { $certDomain } else { $serverIp }
             
-            Print-Step "Generating Enterprise certificate..."
+            Print-Step "Generating the certificate..."
             Print-Info "SANs: $sanList"
             
             $openssl = Get-Command openssl -ErrorAction SilentlyContinue
@@ -4626,13 +4831,13 @@ function Do-ConfigureSSL {
                 $sanArg = "subjectAltName=$sanList"
                 & openssl req -x509 -nodes -days 3650 -newkey rsa:4096 `
                     -keyout $keyPath -out $certPath `
-                    -subj "/CN=$cn/O=NeoDesk Enterprise/C=PL" `
+                    -subj "/CN=$cn/O=NeoDesk" `
                     -addext $sanArg 2>&1 | Out-Null
                     
                 if (-not (Test-Path $certPath)) {
                     & openssl req -x509 -nodes -days 3650 -newkey rsa:4096 `
                         -keyout $keyPath -out $certPath `
-                        -subj "/CN=$cn/O=NeoDesk Enterprise/C=PL" 2>&1 | Out-Null
+                        -subj "/CN=$cn/O=NeoDesk" 2>&1 | Out-Null
                 }
             } else {
                 $dnsNames = @("localhost")
@@ -4711,7 +4916,7 @@ function Do-ConfigureSSL {
                 } catch { }
             }
             
-            Print-Success "Enterprise TLS configured successfully!"
+            Print-Success "TLS configured"
             Write-Host ""
             Print-Info "Certificate: $certPath"
             Print-Info "Valid: 10 years (RSA 4096-bit)"
@@ -4723,7 +4928,8 @@ function Do-ConfigureSSL {
             Print-Info "  - Panel HTTPS: :5443 (or configured port)"
             Print-Info "  - Signal TLS: :21116"
             Print-Info "  - Relay TLS: :21117"
-            Print-Info "  - Go API HTTP: :$($script:GO_API_PORT) (compat proxy :$($script:CLIENT_API_PORT))"
+            Print-Info "  - Client API HTTPS: :$($script:CLIENT_API_PORT)"
+            Print-Info "  - Internal API HTTP: :$($script:GO_API_PORT)"
             Write-Host ""
             Print-Warning "For browsers/clients, you may need to import $certPath as trusted CA"
         }
@@ -4740,8 +4946,7 @@ function Do-ConfigureSSL {
     $envContent = Get-Content $envFile -Raw
     
     if ($sslChoice -eq "5") {
-        # === Enterprise TLS compatibility mode: Go API stays HTTP ===
-        Print-Info "Enterprise TLS mode: panel/signal/relay use TLS; Go API stays HTTP"
+        Print-Info "Panel, signal and relay use TLS; the internal Go API stays HTTP"
         $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
         $envContent = $envContent -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
         
@@ -4814,11 +5019,10 @@ function Do-ConfigureSSL {
     
     Write-Host ""
     if (Confirm-Action "Restart NeoDesk to apply changes?") {
-        $serverService = $script:SERVER_SERVICE
-        if (Get-Service -Name $serverService -ErrorAction SilentlyContinue) {
-            Restart-Service -Name $serverService -Force -ErrorAction SilentlyContinue
-        }
-        Print-Success "NeoDesk services restarted"
+        # The service or the scheduled task
+        Stop-ServerService
+        Start-ServerService
+        Print-Success "NeoDesk restarted"
     }
     
     Press-Enter
@@ -4953,7 +5157,7 @@ function Do-ToggleProtocol {
 
                     & openssl req -x509 -nodes -days 3650 -newkey rsa:4096 `
                         -keyout $keyFile -out $certFile `
-                        -subj "/CN=$serverIp/O=NeoDesk/C=PL" 2>$null
+                        -subj "/CN=$serverIp/O=NeoDesk" 2>$null
 
                     if (Test-Path $certFile) {
                         Print-Success "Self-signed certificate generated"
@@ -5362,6 +5566,12 @@ function Main {
         exit 0
     }
 
+    # A new admin password without questions
+    if ($script:RESET_PASSWORD_MODE) {
+        $script:AUTO_MODE = $true
+        exit ([int](-not (Do-ResetPassword)))
+    }
+
     # An update runs without questions
     if ($script:UPDATE_MODE) {
         $script:AUTO_MODE = $true
@@ -5421,7 +5631,7 @@ function Main {
             "3" { Do-Repair }
             "4" { Do-Validate }
             "5" { Do-Backup }
-            "6" { Do-ResetPassword }
+            "6" { Do-ResetPassword | Out-Null }
             "7" { Do-Build }
             "8" { Do-Diagnostics }
             "9" { Do-Uninstall }

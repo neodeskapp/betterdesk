@@ -3,7 +3,9 @@ package listen
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/netip"
 	"strconv"
 	"strings"
 
@@ -14,9 +16,12 @@ import (
 // whatever its method, is answered 307 to https://<host>:<httpsPort>
 // (the port left out when it is 443) and the request target when that is
 // a path (see SafeRedirectURL). host is the one RedirectHost chose when
-// the listener was made; the request's Host header never reaches the
-// answer. The answer is res.redirect(307) of a bare Express app without
-// its X-Powered-By: Cache-Control: no-store, a short body in the type the
+// the listener was made, unless the request was sent to this machine
+// itself (ownHost): then the browser stays on the address it used, such
+// as the LAN address or localhost of a server whose public host only
+// works from outside. Any other Host header never reaches the answer.
+// The answer is res.redirect(307) of a bare Express app without its
+// X-Powered-By: Cache-Control: no-store, a short body in the type the
 // Accept header prefers. CONNECT is closed without an answer.
 func Redirect(host string, httpsPort int) http.Handler {
 	origin := redirectOrigin(host, httpsPort)
@@ -30,7 +35,11 @@ func Redirect(host string, httpsPort int) http.Handler {
 			badRequest(w)
 			return
 		}
-		location := expressLocation(origin + samePath(r.RequestURI))
+		to := origin
+		if own, ok := ownHost(r); ok {
+			to = redirectOrigin(own, httpsPort)
+		}
+		location := expressLocation(to + samePath(r.RequestURI))
 		h := w.Header()
 		h.Set("Cache-Control", "no-store")
 		h.Set("Location", location)
@@ -50,6 +59,37 @@ func Redirect(host string, httpsPort int) http.Handler {
 			_, _ = io.WriteString(w, body)
 		}
 	})
+}
+
+// ownHost is the host of the request's Host header when it names the
+// address the connection came in on: that IP address itself, or
+// "localhost" on a loopback connection. Every other host, a name above
+// all, is false: a Host header is the client's to write, and the address
+// the connection reached is the one thing it cannot make up, so the
+// redirect never leaves this machine.
+func ownHost(r *http.Request) (string, bool) {
+	local, ok := r.Context().Value(http.LocalAddrContextKey).(net.Addr)
+	if !ok || local == nil {
+		return "", false
+	}
+	at, err := netip.ParseAddrPort(local.String())
+	if err != nil {
+		return "", false
+	}
+	reached := at.Addr().Unmap().WithZone("")
+	host := r.Host
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+	host = strings.ToLower(stripBrackets(host))
+	if host == "localhost" && reached.IsLoopback() {
+		return host, true
+	}
+	addr, err := netip.ParseAddr(host)
+	if err != nil || addr.Zone() != "" || addr.Unmap() != reached {
+		return "", false
+	}
+	return addr.Unmap().String(), true
 }
 
 // PublicHostPage is the plain port of a console in HTTPS mode that has no

@@ -310,6 +310,22 @@ func resetFix(c *resetCase, start serverStart) []string {
 			}
 		}
 		bugs = append(bugs, "S12")
+		// DOCKER-QUICK-14: a run that sets the password prints one line
+		// for the account; the database, the hash and "Done" only with
+		// --verbose (the database also when the run fails)
+		lines := []string{}
+		for _, line := range strings.SplitAfter(c.Stdout, "\n") {
+			switch {
+			case line == "", line == "Done\n", strings.HasPrefix(line, "Auth database ("), strings.HasPrefix(line, "Hash type: "):
+				continue
+			case strings.HasPrefix(line, "Password updated for user: "):
+				line = "Password updated for " + strings.TrimSuffix(strings.TrimPrefix(line, "Password updated for user: "), "\n") +
+					"; its console sessions were signed out.\n"
+			}
+			lines = append(lines, line)
+		}
+		c.Stdout = strings.Join(lines, "")
+		bugs = append(bugs, "DOCKER-QUICK-14")
 	}
 	return bugs
 }
@@ -598,7 +614,7 @@ func runReset(t *testing.T, env map[string]string, cwd string) (int, string) {
 	t.Helper()
 	var out bytes.Buffer
 	e := Env{Stdin: strings.NewReader("Neu-Passw0rd\n"), Stdout: &out, Stderr: &out, Getenv: func(k string) string { return env[k] }}
-	status := resetPassword([]string{"admin"}, e, resetOptions{random: rand.Reader, terminal: func(io.Reader) bool { return false },
+	status := resetPassword([]string{"--verbose", "admin"}, e, resetOptions{random: rand.Reader, terminal: func(io.Reader) bool { return false },
 		exists: func(p string) bool { _, err := os.Stat(p); return err == nil }, cwd: cwd})
 	return status, out.String()
 }
@@ -939,7 +955,7 @@ func TestResetPasswordRemovesTheFirstPassword(t *testing.T) {
 		writeFirst()
 		env["DOCKER"] = c.docker
 		status, out, errOut := run(rootedFiles{root: root, refuse: true})
-		if status != 0 || !strings.Contains(out, "Password updated for user: admin") {
+		if status != 0 || !strings.Contains(out, "Password updated for admin; its console sessions were signed out.") {
 			t.Errorf("DOCKER=%q: the password was not set: %d %q %q", c.docker, status, out, errOut)
 		}
 		if !strings.Contains(errOut, creds) || !strings.Contains(errOut, "permission denied") || !strings.Contains(errOut, c.command) {

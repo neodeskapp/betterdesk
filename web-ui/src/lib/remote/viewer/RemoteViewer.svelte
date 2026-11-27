@@ -16,8 +16,8 @@
 
   Inside the console (embedded) the console owns the viewer and its
   sessions (console-sessions.svelte.ts): no Back, New connection goes
-  through the console's address, the bar has Open in new tab and the
-  sidebar switch, and while the console shows another page (shown false)
+  through the console's address, the bar has Open in new tab (the top
+  bar's menu opens the sidebar as a drawer), and while the console shows another page (shown false)
   the keys and the clipboard are left alone.
 -->
 <script lang="ts">
@@ -54,9 +54,6 @@
 		embedded?: boolean;
 		/** On screen: the console keeps the viewer mounted, hidden, on its other pages */
 		shown?: boolean;
-		/** The console's sidebar is folded away (embedded) */
-		sidebarCollapsed?: boolean;
-		ontogglesidebar?: () => void;
 		/** Open a device's session (embedded: through the console's address) */
 		onopen?: (deviceId: string) => void;
 		onopennewtab?: (deviceId: string) => void;
@@ -68,8 +65,6 @@
 		viewer: given,
 		embedded = false,
 		shown = true,
-		sidebarCollapsed = false,
-		ontogglesidebar,
 		onopen,
 		onopennewtab,
 		onfullscreen
@@ -483,23 +478,7 @@
 	hidden={phone}
 >
 	<div class="session-bar">
-		{#if embedded && ontogglesidebar}
-			<Button
-				variant="ghost"
-				icon="menu"
-				class="bar-btn bar-sidebar"
-				title={sidebarCollapsed
-					? tf('remote_viewer.show_sidebar', 'Show the sidebar')
-					: tf('remote_viewer.hide_sidebar', 'Hide the sidebar')}
-				aria-pressed={!sidebarCollapsed}
-				onclick={ontogglesidebar}
-				><span class="bar-label"
-					>{sidebarCollapsed
-						? tf('remote_viewer.show_sidebar', 'Show the sidebar')
-						: tf('remote_viewer.hide_sidebar', 'Hide the sidebar')}</span
-				></Button
-			>
-		{:else if !embedded}
+		{#if !embedded}
 			<Button variant="ghost" icon="arrow_back" class="bar-btn bar-back" title={backLabel} onclick={back}
 				><span class="bar-label">{backLabel}</span></Button
 			>
@@ -774,12 +753,6 @@
 		flex: 1;
 		height: auto;
 		min-height: 0;
-	}
-	/* Below 1100 px the console's sidebar is a drawer already */
-	@media (max-width: 1099px) {
-		.session-bar :global(.bar-sidebar) {
-			display: none;
-		}
 	}
 	.rd-viewer-shell {
 		/* The bar's words give way by the viewer's own width: inside the console the sidebar takes room */

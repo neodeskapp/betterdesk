@@ -41,6 +41,34 @@ func TestUpdateCommand(t *testing.T) {
 	}
 }
 
+// LINUX-NATIVE-17: the restart hint names this platform's command only,
+// and --no-restart-hint (the installer, which restarts the service and
+// puts the previous binary back itself) leaves it and the rollback hint
+// out.
+func TestUpdateCommandRestartHint(t *testing.T) {
+	in := newInstall(t)
+	in.gh.serve(newTestRelease("3.6.0", newCommit, BranchStable))
+	code, out := runCLI(in, "", "--yes", "--no-backup")
+	if code != 0 || !strings.Contains(out, "Restart the service to start the new version: sudo systemctl restart neodesk-server") ||
+		strings.Contains(out, "Restart-Service") {
+		t.Errorf("linux: %d\n%s", code, out)
+	}
+	win := newInstall(t, func(o *Options) { o.GOOS = "windows" })
+	if got := (CLI{Service: win.svc}).restartCommand(); got != "Restart-Service NeoDeskServer" {
+		t.Errorf("windows: %q", got)
+	}
+
+	in = newInstall(t)
+	in.gh.serve(newTestRelease("3.6.0", newCommit, BranchStable))
+	code, out = runCLI(in, "", "--yes", "--no-backup", "--no-restart-hint")
+	if code != 0 || !strings.Contains(out, "Installed: neodesk-server 3.6.0") {
+		t.Fatalf("install: %d\n%s", code, out)
+	}
+	if strings.Contains(out, "Restart the service") || strings.Contains(out, "rollback") {
+		t.Errorf("--no-restart-hint still says how to restart or roll back:\n%s", out)
+	}
+}
+
 func TestUpdateCommandFailures(t *testing.T) {
 	in := newInstall(t)
 	if code, out := runCLI(in, "", "--yes"); code != 1 || !strings.Contains(out, "Update failed: GitHub API 404") {

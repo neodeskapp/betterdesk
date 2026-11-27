@@ -214,7 +214,13 @@ func TestMergeEnvAgainstNode(t *testing.T) {
 	m := &mismatches{t: t}
 	added := 0
 	dropped := 0
+	commentedOut := 0
 	for _, c := range v.Merge {
+		// Node appended a key the file has commented out once more
+		if commentsOutTemplateKey(c.Existing, c.Template) {
+			commentedOut++
+			continue
+		}
 		content, keys := MergeEnv(c.Existing, c.Template)
 		added += len(keys)
 		if content != c.Content {
@@ -235,6 +241,9 @@ func TestMergeEnvAgainstNode(t *testing.T) {
 		t.Error("no recorded merge carried a comment along (SI6): the vectors do not test it")
 	}
 	t.Logf("%d merges leave out comments Node carried along (SI6)", dropped)
+	if commentedOut == 0 || commentedOut > len(v.Merge)/2 {
+		t.Errorf("%d of %d merges have a key commented out that the template sets", commentedOut, len(v.Merge))
+	}
 	for _, c := range v.BuildFresh {
 		if got := BuildFreshEnv(c.Text); got != c.Out {
 			m.errorf("BuildFreshEnv(%q) = %q, Node answers %q", c.Text, got, c.Out)
@@ -371,6 +380,9 @@ func TestMergeEnvFileAgainstNode(t *testing.T) {
 	dropped := 0
 	for i, c := range v.MergeFile {
 		label := "case " + strconv.Itoa(i)
+		if c.Target != nil && c.Template != nil && commentsOutTemplateKey(*c.Target, *c.Template) {
+			continue
+		}
 		target, template := filepath.Join(dir, c.Name), filepath.Join(dir, c.TemplateName)
 		if c.Template != nil {
 			if err := os.WriteFile(template, []byte(*c.Template), 0o644); err != nil {
@@ -438,6 +450,50 @@ func TestMergeEnvKeepsExistingKeys(t *testing.T) {
 	}
 	if !reflect.DeepEqual(added, []string{"HOST", "TRUST_PROXY"}) {
 		t.Errorf("added %q", added)
+	}
+}
+
+// commentsOutTemplateKey reports whether the existing file has a key
+// commented out that the template sets: MergeEnv leaves such a key out,
+// where Node appended it again.
+func commentsOutTemplateKey(existing, template string) bool {
+	tpl := ParseEnvLines(template)
+	for _, entry := range ParseEnvLines(existing).Entries {
+		if entry.Type != EnvComment {
+			continue
+		}
+		if m := commentedPair.FindStringSubmatch(jsTrim(entry.Raw)); m != nil {
+			if _, ok := tpl.Get(m[1]); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// TestMergeEnvLeavesCommentedOutKeys:a key the file has commented out,
+// as upgrade-env does with WEB_UI_DIR, is not appended again, so a merge
+// after upgrade-env changes nothing and an update that changes nothing
+// leaves the file alone.
+func TestMergeEnvLeavesCommentedOutKeys(t *testing.T) {
+	existing := "PORT=3375\n# Commented out by neodesk-server upgrade-env: the web app is built into the server\n# WEB_UI_DIR=/opt/neodesk/web-ui\n  #DEBUG = 1\n"
+	template := "PORT=5000\n# The web app's build\nWEB_UI_DIR=/opt/neodesk/web-ui\nDEBUG=0\nHOST=0.0.0.0\n"
+	content, added := MergeEnv(existing, template)
+	want := existing + "HOST=0.0.0.0\n"
+	if content != want {
+		t.Errorf("content\n%q\nwant\n%q", content, want)
+	}
+	if !reflect.DeepEqual(added, []string{"HOST"}) {
+		t.Errorf("added %q", added)
+	}
+	// A second merge has nothing to add
+	if again, more := MergeEnv(content, template); again != content || len(more) != 0 {
+		t.Errorf("second merge added %q:\n%q", more, again)
+	}
+	// A comment that only mentions a key in prose does not count
+	prose := "# Set WEB_UI_DIR=... only for development\n"
+	if _, added := MergeEnv(prose, template); !reflect.DeepEqual(added, []string{"PORT", "WEB_UI_DIR", "DEBUG", "HOST"}) {
+		t.Errorf("prose comment: added %q", added)
 	}
 }
 

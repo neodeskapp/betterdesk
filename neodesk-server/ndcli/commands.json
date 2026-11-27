@@ -9913,6 +9913,18 @@
    "reason": "The browser viewer's answer to a device's password question; it needs the device's question from an open session."
   },
   {
+   "route": "GET /api/device-login/{id}",
+   "reason": "The desktop app's sign-in is allowed or denied by a person in the browser, on the page the app opens; the console refuses API tokens there."
+  },
+  {
+   "route": "POST /api/device-login/{id}/approve",
+   "reason": "The desktop app's sign-in is allowed or denied by a person in the browser, on the page the app opens; the console refuses API tokens there."
+  },
+  {
+   "route": "POST /api/device-login/{id}/deny",
+   "reason": "The desktop app's sign-in is allowed or denied by a person in the browser, on the page the app opens; the console refuses API tokens there."
+  },
+  {
    "route": "POST /api/devices/{id}/signin/use",
    "reason": "Saved sign-in is used by a person in the browser viewer for the session it holds; the console refuses API tokens there."
   },

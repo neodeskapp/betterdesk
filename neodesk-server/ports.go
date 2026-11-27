@@ -72,3 +72,29 @@ func checkStartPorts(cfg *config.Config, getenv func(string) string) error {
 	}
 	return checkPorts(startListeners(cfg, ccfg, getenv))
 }
+
+// derivedClientPort is the port a stock RustDesk client with an empty API
+// server setting calls (the ID server's port minus 2), for the server's
+// API to answer there too; 0 when the API already listens there or
+// another of the start's listeners has the port.
+func derivedClientPort(cfg *config.Config, listeners []listener) int {
+	port := cfg.SignalPort - 2
+	if port <= 0 || port == cfg.APIPort {
+		return 0
+	}
+	for _, l := range listeners {
+		if l.port == port {
+			return 0
+		}
+	}
+	return port
+}
+
+// startDerivedClientPort is derivedClientPort for the listeners of this start.
+func startDerivedClientPort(cfg *config.Config, getenv func(string) string) int {
+	ccfg, err := consoleconfig.LoadEnv()
+	if err != nil {
+		ccfg = nil
+	}
+	return derivedClientPort(cfg, startListeners(cfg, ccfg, getenv))
+}

@@ -8,8 +8,8 @@
 
   Remote sessions opened in the console live here, above the pages
   (ConsoleViewer.svelte): on their page (/remote/session/<id>) the viewer
-  fills the main area, the sidebar folds away when the person chose so,
-  and in full screen the console's bars step aside; on the other pages the
+  fills the main area and the sidebar is a drawer behind the top bar's
+  menu, so opening it never resizes the remote screen; in full screen the console's bars step aside; on the other pages the
   sessions stay connected and a strip under the top bar leads back.
 
   On every navigation: dialogs from code, menus and the drawer close. When the page itself changes (not just its query),
@@ -76,10 +76,8 @@
 	// The route as text: the generated list of route ids is not needed to compare with it
 	const routeId = $derived<string | null>(page.route.id);
 	const sessionPage = $derived(routeId === SESSION_ROUTE);
-	// Remote sessions lists the open sessions itself: no strip above it
-	const sessionsPage = $derived(routeId === '/(console)/remote/sessions');
-	// The sidebar folded away on a session's page (the person's choice) and in full screen opens as a drawer
-	const drawer = $derived(narrow || cs.immersive || (sessionPage && cs.collapsed));
+	// On a session's page and in full screen the sidebar opens as a drawer over the viewer
+	const drawer = $derived(narrow || cs.immersive || sessionPage);
 	let drawerOpen = $state(false);
 	let helpOpen = $state(false);
 	let searchOpen = $state(false);
@@ -279,7 +277,7 @@
 					onsearch={() => (searchOpen = true)}
 					onhelp={() => (helpOpen = !helpOpen)}
 				/>
-				{#if !sessionPage && !sessionsPage}<SessionStrip />{/if}
+				{#if !sessionPage}<SessionStrip />{/if}
 			{/if}
 			<div class="shell-body">
 				<main

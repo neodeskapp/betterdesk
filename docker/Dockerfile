@@ -73,7 +73,7 @@ FROM alpine:3.22
 LABEL maintainer="neodeskapp"
 LABEL description="NeoDesk — server and web console in one process"
 LABEL org.opencontainers.image.source="https://github.com/neodeskapp/neodesk"
-LABEL version="3.6.20"
+LABEL version="3.6.26"
 
 # Runtime packages (retry for transient DNS failures). sqlite stays for the
 # admin credential bootstrap, which counts users with the sqlite3 CLI.
@@ -134,14 +134,14 @@ ENV NODE_ENV=production \
     NEODESK_UPDATE_MODE=image \
     NEODESK_SUPERVISOR=docker
 
-EXPOSE 3375 5443 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
+EXPOSE 3375 5443 21114 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
 
 # The server writes files of its own (mesh_agent_server.pem) in its folder
 WORKDIR /opt/neodesk/data
 
 # The API and the web console of the one process, over HTTPS where they
 # serve it (TLS_API, HTTPS_ENABLED)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=10s --timeout=10s --start-period=45s --retries=6 \
     CMD /usr/local/bin/neodesk-healthcheck
 
 ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]

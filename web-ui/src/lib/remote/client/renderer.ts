@@ -7,7 +7,13 @@
  *
  * The last picture stays until the next one comes, so moving the cursor,
  * resizing or panning a picture shown at its own size redraws at once
- * instead of waiting for the device's next frame.
+ * instead of waiting for the device's next frame. A resize draws it again
+ * before it returns: resizing clears the canvas, and a cleared canvas
+ * shown for one frame is a black flash.
+ *
+ * The canvas is not desynchronized: Chrome draws such a canvas past the
+ * page's compositor and blanks it for a moment whenever the page around it
+ * changes (a menu, tooltip or focus ring over it, the layout moving).
  */
 import { viewTransform } from './display-layout.ts';
 import type { ICursorData, ICursorPosition } from './generated/protos.ts';
@@ -32,7 +38,11 @@ export interface RDRendererStats {
 }
 
 export interface RDRendererOptions {
-	/** The window the canvas is in (default: the canvas' own) */
+	/**
+	 * The window the canvas is in (default: the canvas' own). Given, the
+	 * canvas is in a window of its own and follows that window's size: no
+	 * page code there resizes it.
+	 */
 	win?: Window;
 }
 
@@ -85,6 +95,8 @@ export class RDRenderer {
 	_dirty: boolean;
 	_renderLoopActive: boolean;
 	_onPointerMove: (e: PointerEvent) => void;
+	/** Stops following the window the canvas is in (set for a window of its own) */
+	_unfollow: (() => void) | null = null;
 	/** Called after the canvas size changed (the client asks the peer for a keyframe) */
 	onResizeRefresh?: () => void;
 	/** Called with true once a remote cursor image is ready */
@@ -96,7 +108,7 @@ export class RDRenderer {
 	constructor(canvas: HTMLCanvasElement, opts: RDRendererOptions = {}) {
 		this.canvas = canvas;
 		this.win = opts.win ?? canvas.ownerDocument?.defaultView ?? window;
-		this.ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+		this.ctx = canvas.getContext('2d', { alpha: false });
 		this.cursorCanvas = canvas.ownerDocument.createElement('canvas');
 		this.cursorCtx = this.cursorCanvas.getContext('2d');
 
@@ -128,6 +140,24 @@ export class RDRenderer {
 
 		this._onPointerMove = (e) => this.panTo(e.offsetX, e.offsetY);
 		canvas.addEventListener('pointermove', this._onPointerMove);
+		if (opts.win) this._followWindow(opts.win);
+	}
+
+	/** Resize with the window the canvas is in, and with its box (the bar above it can wrap) */
+	_followWindow(win: Window): void {
+		const onResize = () => this.resize();
+		win.addEventListener('resize', onResize);
+		const RO = (win as Window & typeof globalThis).ResizeObserver;
+		const box = this.canvas.parentElement;
+		let ro: ResizeObserver | null = null;
+		if (typeof RO === 'function' && box) {
+			ro = new RO(onResize);
+			ro.observe(box);
+		}
+		this._unfollow = () => {
+			win.removeEventListener('resize', onResize);
+			ro?.disconnect();
+		};
 	}
 
 	_dpr(): number {
@@ -186,7 +216,9 @@ export class RDRenderer {
 		this.canvas.style.height = cssHeight;
 
 		this._updateTransform();
-		this._dirty = true;
+		// Resizing cleared the canvas: the kept picture goes back before the browser shows it
+		if (this._shownFrame) this._renderFrame(this._shownFrame);
+		else this._dirty = true;
 
 		// Request a keyframe after resize to avoid blurry/corrupted frames
 		if (this.onResizeRefresh) {
@@ -523,6 +555,8 @@ export class RDRenderer {
 	 */
 	close(): void {
 		this.stopRenderLoop();
+		this._unfollow?.();
+		this._unfollow = null;
 		this.canvas.removeEventListener('pointermove', this._onPointerMove);
 		if (this._pendingFrame) {
 			this._pendingFrame.close();

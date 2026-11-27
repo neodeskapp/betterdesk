@@ -1,6 +1,8 @@
 package signal
 
 import (
+	"fmt"
+	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -104,4 +106,31 @@ func withSuppressed(details map[string]string, suppressed int) map[string]string
 		details["suppressed_since_last"] = strconv.Itoa(suppressed)
 	}
 	return details
+}
+
+// A device that waits for approval, or that the enrollment mode refuses,
+// tries again with every heartbeat. Its log lines are written once per
+// device in a window; the next line says how many were left out.
+const (
+	enrollmentLogWindow = 10 * time.Minute
+	enrollmentLogBudget = 200
+)
+
+// enrollmentLogf writes a log line about the enrollment of device id,
+// at most one per device in enrollmentLogWindow.
+func (s *Server) enrollmentLogf(id, format string, args ...any) {
+	line := fmt.Sprintf(format, args...)
+	if s.enrollmentLines == nil {
+		log.Printf("[signal] %s", line)
+		return
+	}
+	record, suppressed := s.enrollmentLines.note(id, time.Now())
+	if !record {
+		return
+	}
+	if suppressed > 0 {
+		log.Printf("[signal] %s (%d more lines about %s left out since the last)", line, suppressed, id)
+		return
+	}
+	log.Printf("[signal] %s", line)
 }

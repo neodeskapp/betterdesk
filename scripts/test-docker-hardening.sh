@@ -151,4 +151,19 @@ if printf '%s\n' "$processes" | grep -Eq 'node|supervisord'; then
     fail "the container runs more than the server: $processes"
 fi
 
+# MIGRATE-CLIENT-3: docker stop reaches the server through tini (which
+# needs KILL for a process of another user), so it shuts down by itself:
+# exit code 0, its own shutdown line, no "FATAL tini"
+container=$(docker compose -p "$PROJECT" \
+    -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
+    -f "$OVERRIDE_FILE" ps -q neodesk)
+docker stop -t 20 "$container" >/dev/null
+code=$(docker inspect -f '{{.State.ExitCode}}' "$container")
+stop_log=$(docker logs --tail 50 "$container" 2>&1)
+if printf '%s\n' "$stop_log" | grep -q 'FATAL tini'; then
+    fail "tini could not pass SIGTERM on: $stop_log"
+fi
+[ "$code" = 0 ] || fail "the server ended with $code after docker stop: $stop_log"
+printf '%s\n' "$stop_log" | grep -q 'shutting down' || fail "the server did not shut down by itself: $stop_log"
+
 printf 'PASS: hardened Docker startup regression tests\n'

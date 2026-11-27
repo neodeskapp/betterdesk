@@ -272,6 +272,17 @@ jobs:
             install/docker-compose.quick.single.macvlan.yml; do
             docker compose -f "$file" config --quiet
           done
+      # The console is published on every address (IPv6 too) unless
+      # NEODESK_CONSOLE_BIND names one
+      - name: Check the console's published addresses
+        run: |
+          set -euo pipefail
+          for file in install/docker-compose.single.yml install/docker-compose.quick.single.yml; do
+            hosts=$(docker compose -f "$file" config --format json | jq -r '[.services.neodesk.ports[] | select(.target == 3375 or .target == 5443) | .host_ip // "all"] | join(" ")')
+            [ "$hosts" = "all all" ] || { echo "$file publishes the console on: $hosts"; exit 1; }
+            hosts=$(NEODESK_CONSOLE_BIND=127.0.0.1 docker compose -f "$file" config --format json | jq -r '[.services.neodesk.ports[] | select(.target == 3375 or .target == 5443) | .host_ip // "all"] | join(" ")')
+            [ "$hosts" = "127.0.0.1 127.0.0.1" ] || { echo "$file with NEODESK_CONSOLE_BIND publishes the console on: $hosts"; exit 1; }
+          done
 
   # The smoke tests run the compose files with the image they belong to:
   # the image of this checkout, or with image_tag a published image and the

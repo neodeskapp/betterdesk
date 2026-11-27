@@ -42,10 +42,12 @@ console. It stores its data in SQLite, or in PostgreSQL if you prefer.
   <img src="docs/assets/readme/client-light.png" alt="The console's client setup panel: ID server, relay server, API server and key, each with a copy button." width="100%">
 </picture>
 
-There is no other client to install. A RustDesk client needs four values in its
-network settings: the ID server, the relay server, the API server and the key.
-The console's overview page shows all four with a copy button, and **Show QR**
-puts them in one code for a phone.
+The stock RustDesk client works as it is. It needs four values in its network
+settings: the ID server, the relay server, the API server and the key. The
+console's overview page shows all four with a copy button, and **Show QR** puts
+them in one code for a phone. The [NeoDesk client](https://github.com/neodeskapp/neodesk-client/releases),
+a RustDesk client of our own for Windows, macOS and Linux, makes joining easier:
+it joins from an invite link, without typing any of the four.
 
 ## Every device in one list
 
@@ -68,9 +70,9 @@ light and a dark theme.
 Click a device to see what it is and what it is doing, then connect to it from
 there. Around that, the console has what a team needs to share a server:
 
-- **Enrollment requests:** when approval is required, a new RustDesk client waits until someone approves it.
+- **Join requests:** when approval is required, a new RustDesk client waits until someone approves it.
 - **Users and roles:** each person signs in with their own account, and their role decides what they can do.
-- **Sign-in:** two-factor sign-in, LDAP or Active Directory, and OIDC.
+- **Sign-in:** two-factor sign-in, LDAP or Active Directory, and OIDC. The NeoDesk app on a computer can sign in through the console in the browser, without typing a password into the app.
 - **Activity:** a log of what people do in the console.
 
 ## Install
@@ -79,6 +81,15 @@ The [documentation](https://neode.sk/docs) has each way step by step.
 The addresses on neode.sk lead to the installers of the newest release.
 Every [release](https://github.com/neodeskapp/neodesk/releases) has them
 attached too, for installing one version.
+
+Which one to pick:
+
+- Docker, on any Linux server or NAS with Docker. The shortest path; the
+  console speaks plain HTTP until you give it a domain.
+- Linux, on a server or VM without Docker. The console gets HTTPS on 5443 with
+  a self-signed certificate.
+- Windows, when you have no Linux machine. It works like the Linux install, but
+  Windows support is experimental.
 
 ### Docker
 
@@ -109,12 +120,17 @@ certificate and serves the console on ports 80 and 443:
 
 ```bash
 curl -fsSL https://neode.sk/install.sh | sudo bash -s -- \
-  --domain console.example.com --letsencrypt-email admin@example.com
+  --domain <domain> --letsencrypt-email <email-address>
 ```
 
+Put the DNS name in place of `<domain>` and your own address in place of
+`<email-address>`; Let's Encrypt refuses addresses at example.com.
 `neodesk-docker.sh --domain ... --email ...` does the same for an existing
-install, and `--no-traefik` turns it off again. Add `--letsencrypt-staging`
-to test with Let's Encrypt's staging server first.
+install, and `--no-traefik` turns it off again. `--letsencrypt-staging` tests
+with Let's Encrypt's staging server, whose certificate browsers don't trust. A
+later run without it keeps the staging certificate:
+[Install with Docker](https://neode.sk/docs/getting-started/docker#when-the-certificate-doesnt-come)
+says how to get a trusted one then.
 
 ### Linux
 
@@ -129,14 +145,17 @@ questions instead, download `neodesk.sh` and run it with `sudo bash`. See
 
 ### Windows
 
-In PowerShell as Administrator:
+Windows support is experimental; Linux is the main platform. In PowerShell as
+Administrator:
 
 ```powershell
-Invoke-WebRequest https://neode.sk/neodesk.ps1 -OutFile neodesk.ps1 -UseBasicParsing
-.\neodesk.ps1
+Invoke-WebRequest https://neode.sk/neodesk.ps1 -OutFile $env:TEMP\neodesk.ps1 -UseBasicParsing
+& $env:TEMP\neodesk.ps1
 ```
 
-Add `-Auto` to install with the default settings. See
+Add `-Auto` to install with the default settings. If PowerShell says running
+scripts is disabled, run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
+first; that lasts until you close the window. See
 [Install on Windows](https://neode.sk/docs/getting-started/windows).
 
 ## Connect a RustDesk client
@@ -147,16 +166,19 @@ Add `-Auto` to install with the default settings. See
    address under **Client server address**.
 3. Copy them into the client's network settings, in the ID/Relay server
    section. **Copy all** copies them together, and **Show QR** is for phones.
+   Fill in the API server too: with it empty, the client doesn't send its
+   name, system or version, and can't sign in.
 
-The device then waits under **Enrollment requests** until someone approves
-it, as every new install starts in the Managed enrollment mode. See
+The device then waits under **Join requests** until someone approves
+it, as every new install starts in the Managed join mode. See
 [Connect a RustDesk client](https://neode.sk/docs/getting-started/connect-a-client).
 
 ## Ports
 
 | Port | Used for |
 |------|----------|
-| 3375 | Web console (HTTP; 5000 up to 3.6.0-rc.4) |
+| 3375 | Web console (HTTP; 5000 up to 3.6.0-rc.4). On a Linux or Windows install it sends browsers to 5443. |
+| 5443 | Web console over HTTPS, on Linux and Windows installs |
 | 21115 | NAT type test |
 | 21116, TCP and UDP | ID server |
 | 21117 | Relay server |
@@ -166,7 +188,8 @@ it, as every new install starts in the Managed enrollment mode. See
 
 Open 21115 to 21117 and 21121 to the networks your devices connect from, and
 21118, 21119 and 21122 only for clients and agents that use them. Keep 3375
-behind a reverse proxy with TLS if the console is reachable from the internet.
+and 5443 behind a reverse proxy with TLS if the console is reachable from the
+internet.
 [Ports and firewall](https://neode.sk/docs/operations/ports) and
 [Reverse proxy and TLS](https://neode.sk/docs/operations/reverse-proxy-tls)
 have the details.
@@ -179,8 +202,8 @@ Demo data, in both themes.
 |---|---|
 | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-overview-dark.png"><img src="docs/assets/readme/screen-overview-light.png" alt="Overview: what needs attention, device counts, trends and client setup"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-devices-dark.png"><img src="docs/assets/readme/screen-devices-light.png" alt="All devices: folders, groups and the device table"></picture> |
 | Overview | All devices |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-device-dark.png"><img src="docs/assets/readme/screen-device-light.png" alt="A device's details in a side panel next to the list"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-registrations-dark.png"><img src="docs/assets/readme/screen-registrations-light.png" alt="Enrollment requests with Approve and Reject for each device"></picture> |
-| Device details | Enrollment requests |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-device-dark.png"><img src="docs/assets/readme/screen-device-light.png" alt="A device's details in a side panel next to the list"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-registrations-dark.png"><img src="docs/assets/readme/screen-registrations-light.png" alt="Join requests with Approve and Reject for each device"></picture> |
+| Device details | Join requests |
 | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-settings-auth-dark.png"><img src="docs/assets/readme/screen-settings-auth-light.png" alt="Sign-in settings: password, two-factor sign-in, LDAP and OIDC"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/screen-login-dark.png"><img src="docs/assets/readme/screen-login-light.png" alt="The sign-in page"></picture> |
 | Sign-in settings | Sign in |
 
@@ -191,7 +214,7 @@ Everything is on [neode.sk/docs](https://neode.sk/docs):
 | Topic | Guides |
 |-------|--------|
 | Getting started | [Docker](https://neode.sk/docs/getting-started/docker), [Linux](https://neode.sk/docs/getting-started/linux), [Windows](https://neode.sk/docs/getting-started/windows), [first sign-in](https://neode.sk/docs/getting-started/first-sign-in), [moving from a RustDesk server](https://neode.sk/docs/getting-started/migrate-from-rustdesk) |
-| Using the console | [The device list](https://neode.sk/docs/console/devices), [enrollment](https://neode.sk/docs/console/enrollment), [remote desktop in the browser](https://neode.sk/docs/console/remote-in-browser) |
+| Using the console | [The device list](https://neode.sk/docs/console/devices), [join requests](https://neode.sk/docs/console/enrollment), [remote desktop in the browser](https://neode.sk/docs/console/remote-in-browser) |
 | People and sign-in | [Users and roles](https://neode.sk/docs/people/users-and-roles), [two-factor sign-in](https://neode.sk/docs/people/two-factor), [LDAP](https://neode.sk/docs/people/ldap), [OIDC](https://neode.sk/docs/people/oidc) |
 | Running the server | [Configuration](https://neode.sk/docs/operations/configuration), [hardening](https://neode.sk/docs/operations/security), [updating](https://neode.sk/docs/operations/updating), [backup](https://neode.sk/docs/operations/backup), [troubleshooting](https://neode.sk/docs/operations/troubleshooting) |
 | Development | [Contributing](https://neode.sk/docs/development/contributing), [building from source](https://neode.sk/docs/development/building), [architecture](https://neode.sk/docs/development/architecture), [the HTTP API](https://neode.sk/docs/development/api) |

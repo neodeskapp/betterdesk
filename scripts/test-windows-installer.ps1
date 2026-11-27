@@ -26,7 +26,8 @@ $script:nssmCalls = @()
 function Get-NssmPath { return $script:fakeNssm }
 function fake-nssm { $script:nssmCalls += , @($args | ForEach-Object { $_ } | ForEach-Object { "$_" }) }
 function Set-ServiceLeastPrivilege { param($ServiceName, $NssmPath, $Paths) }
-function icacls { }
+$script:icaclsCalls = @()
+function icacls { $script:icaclsCalls += , @($args | ForEach-Object { "$_" }); $global:LASTEXITCODE = 0 }
 function Unregister-ScheduledTask { param($TaskName, [switch]$Confirm, $ErrorAction) $script:registeredTasks.Remove($TaskName) }
 function New-ScheduledTaskAction { param($Execute, $Argument, $WorkingDirectory) [pscustomobject]@{ Execute = $Execute; Arguments = $Argument } }
 function New-ScheduledTaskTrigger { param([switch]$AtStartup) 'startup' }
@@ -35,6 +36,21 @@ function New-ScheduledTaskSettingsSet { param([switch]$AllowStartIfOnBatteries, 
 function Register-ScheduledTask { param($TaskName, $Action, $Trigger, $Principal, $Settings, $Description, $Xml) $script:registeredTasks[$TaskName] = $Settings }
 function Get-ScheduledTask { param($TaskName, $ErrorAction) if ($script:registeredTasks.ContainsKey($TaskName)) { [pscustomobject]@{ TaskName = $TaskName } } }
 function Get-Service { param($Name, $ErrorAction) $null }
+# Windows Firewall: the rules in a list
+$script:fwRules = @()
+function Get-NetFirewallRule {
+    param($DisplayName, $Direction, $Enabled, $ErrorAction)
+    @($script:fwRules | Where-Object { -not $DisplayName -or $_.DisplayName -like $DisplayName })
+}
+function Get-NetFirewallPortFilter { param([Parameter(ValueFromPipeline = $true)]$InputObject) process { [pscustomobject]@{ LocalPort = $InputObject.Port; Protocol = $InputObject.Proto } } }
+function New-NetFirewallRule {
+    param($DisplayName, $Direction, $Action, $Protocol, $LocalPort, $Profile, $ErrorAction)
+    $script:fwRules += [pscustomobject]@{ DisplayName = $DisplayName; Action = $Action; Port = $LocalPort; Proto = $Protocol; Profile = $Profile }
+}
+function Remove-NetFirewallRule {
+    param([Parameter(ValueFromPipeline = $true)]$InputObject)
+    process { $script:fwRules = @($script:fwRules | Where-Object { $_.DisplayName -ne $InputObject.DisplayName }) }
+}
 # GitHub's API gives no answer unless a test stands in for it, so no check
 # reaches the network
 function Invoke-RestMethod { throw [System.Net.WebException]::new('The remote name could not be resolved: api.github.com') }
@@ -60,6 +76,9 @@ function New-TestInstall {
     $script:USE_POSTGRESQL = $false
     $script:RUN_AS_ROOT = $false
     $script:LOG_FILE = Join-Path $dir 'test.log'
+    $script:BACKUP_DIR = Join-Path $dir 'backups'
+    $script:icaclsCalls = @()
+    $script:fwRules = @()
     $env:CONNECTION_MODE_SET = '1'
     $script:registeredTasks = @{}
     return $dir
@@ -557,11 +576,18 @@ function Test-WindowsFirstHour {
 
     $env:ADMIN_PASSWORD = $null
     $script:FRESH_CONSOLE_ENV = $false
-    $out = (Create-AdminUser 6>&1 | Out-String)
-    if ($out -match 'First-Pass-1') { Fail 'a run that kept .env showed the admin password again' }
+    $got = Create-AdminUser 6> $null
+    if ($got) { Fail 'a run that kept .env has an admin password to show' }
     $script:FRESH_CONSOLE_ENV = $true
-    $out = (Create-AdminUser 6>&1 | Out-String)
-    if ($out -notmatch 'First-Pass-1') { Fail 'a fresh install did not show the admin password' }
+    $shown = @()
+    $got = Create-AdminUser 6>&1 | ForEach-Object { if ($_ -is [System.Management.Automation.InformationRecord]) { $shown += "$_" } else { $_ } }
+    if ($got -ne 'First-Pass-1') { Fail "a fresh install has no admin password for the summary: $got" }
+    # WD-3: the summary at the end shows it, not a step in the middle
+    if (($shown -join "`n") -match 'First-Pass-1') { Fail 'the admin step shows the password in the middle of the install' }
+    $out = (Show-InstallSummary -AdminPassword $got 6>&1 | Out-String)
+    if ($out -notmatch 'First-Pass-1') { Fail 'the summary of a fresh install does not show the admin password' }
+    $out = (Show-InstallSummary 6>&1 | Out-String -Width 4096)
+    if ($out -match 'First-Pass-1') { Fail 'the summary shows a password it was not given' }
     Remove-FirstAdminPassword
     foreach ($f in $envFile, "$envFile.pre-go") {
         if ((Get-Content $f -Raw) -match 'First-Pass-1') { Fail "$(Split-Path -Leaf $f) keeps the admin password after the first start" }
@@ -575,12 +601,26 @@ function Test-WindowsFirstHour {
 
     Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'id_ed25519.pub') -Value 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ='
     Set-ConsoleEnvValue -Key 'PANEL_PUBLIC_HOST' -Value 'desk.example.org'
-    $out = (Show-InstallSummary 6>&1 | Out-String)
+    $out = (Show-InstallSummary 6>&1 | Out-String -Width 4096)
     Set-ConsoleEnvValue -Key 'API_PORT' -Value '21121'
-    $out = (Show-InstallSummary 6>&1 | Out-String)
+    $out = (Show-InstallSummary 6>&1 | Out-String -Width 4096)
     if (-not $out.Contains('http://desk.example.org:21121')) { Fail "the summary gives clients another API address (L76): $out" }
-    foreach ($want in 'desk.example.org', 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=', (Get-ServerLogPath), $envFile, '-Update', '-Uninstall', 'admin') {
+    foreach ($want in 'desk.example.org', 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=', (Get-ServerLogPath), $envFile, '-Update', '-Uninstall', '-ResetPassword', 'admin') {
         if (-not $out.Contains($want)) { Fail "the summary does not name $want" }
+    }
+    # WD-6: the commands for later run in a new window whatever the
+    # execution policy, which refuses .\script.ps1 on Windows 10 and 11
+    $manager = Join-Path $script:RUSTDESK_PATH 'neodesk.ps1'
+    foreach ($verb in '-Update', '-Uninstall', '-ResetPassword') {
+        $want = "powershell -NoProfile -ExecutionPolicy Bypass -File `"$manager`" $verb"
+        if (-not $out.Contains($want)) { Fail "the summary does not give $want" }
+    }
+    if ($out -match "& '") { Fail "the summary gives a command the execution policy refuses in a new window: $out" }
+    # WD-2: it says how the server runs; without NSSM that is SYSTEM
+    if ($out -notmatch 'Runs as:\s+scheduled task NeoDeskServer, as SYSTEM') { Fail "the summary does not say the task runs as SYSTEM: $out" }
+    $text = Get-Content $installer -Raw
+    foreach ($bare in "& '`$(Join-Path `$script:RUSTDESK_PATH 'neodesk.ps1')'", "& '`$manager'", "& '`$target'") {
+        if ($text.Contains($bare)) { Fail "neodesk.ps1 still prints $bare" }
     }
     $script:FRESH_CONSOLE_ENV = $false
     Remove-Item -Recurse -Force $dir
@@ -1341,6 +1381,321 @@ function Test-MenuColours {
     }
 }
 
+# The installer's own Get-ServerBinaryPath again, which earlier tests
+# replaced with stand-ins
+function Use-RealServerBinaryPath {
+    foreach ($fn in $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq 'Get-ServerBinaryPath' }, $false)) {
+        . ([scriptblock]::Create(($fn.Extent.Text -replace '^function ', 'function script:')))
+    }
+}
+
+# The command ASTs named NAME inside the installer's function FUNCTION
+function Get-CommandsIn([string]$Function, [string]$Name) {
+    $fn = $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $args[0].Name -eq $Function }, $false) | Select-Object -First 1
+    if (-not $fn) { return @() }
+    return @($fn.Body.FindAll({ $args[0] -is [System.Management.Automation.Language.CommandAst] -and $args[0].GetCommandName() -eq $Name }, $true))
+}
+
+# WD-1: the install's folders at the drive root hold the keys, .env and
+# the database. They lose the ACL they inherit from C:\ (every user reads
+# it on Windows Server, changes it on Windows 10 and 11): Administrators
+# and SYSTEM by SID, the service's account while the service exists. The
+# install locks them before the keys are made, the update too, and the
+# repair never turns inheritance back on.
+function Test-FoldersAreLocked {
+    $dir = New-TestInstall
+    New-Item -ItemType Directory -Path $script:BACKUP_DIR -Force | Out-Null
+    Protect-InstallFolders 3> $null | Out-Null
+    foreach ($path in $script:RUSTDESK_PATH, $script:CONSOLE_PATH, $script:BACKUP_DIR) {
+        $call = $script:icaclsCalls | Where-Object { $_[0] -eq $path -and $_ -contains '/inheritance:r' } | Select-Object -First 1
+        if (-not $call) { Fail "$path keeps the ACL it inherits: $(($script:icaclsCalls | ForEach-Object { $_ -join ' ' }) -join ' | ')"; continue }
+        foreach ($grant in '/grant:r', '*S-1-5-32-544:(OI)(CI)F', '*S-1-5-18:(OI)(CI)F') {
+            if ($call -notcontains $grant) { Fail "the lock of $path lacks $grant`: $($call -join ' ')" }
+        }
+    }
+    if ((($script:icaclsCalls | ForEach-Object { $_ -join ' ' }) -join "`n") -match 'NT SERVICE') { Fail 'without the service the folders name its account' }
+    function Get-Service { param($Name, $ErrorAction) [pscustomobject]@{ Name = $Name } }
+    $script:icaclsCalls = @()
+    Protect-InstallFolders 3> $null | Out-Null
+    $granted = @($script:icaclsCalls | Where-Object { ($_ -join ' ') -match 'NT SERVICE\\NeoDeskServer:\(OI\)\(CI\)M' } | ForEach-Object { $_[0] })
+    if (($granted -join '|') -ne "$($script:RUSTDESK_PATH)|$($script:CONSOLE_PATH)") { Fail "the service's account may change: $($granted -join ', ')" }
+    Remove-Item function:Get-Service -ErrorAction SilentlyContinue
+
+    function Invoke-ManagementCli { param($Action, $Arguments) $true }
+    Set-Content -Path (Join-Path $script:CONSOLE_PATH '.env') -Value 'SESSION_SECRET=kept'
+    Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'id_ed25519') -Value 'key'
+    $script:icaclsCalls = @()
+    Repair-ManagementPermissions *> $null
+    $all = @($script:icaclsCalls | ForEach-Object { $_ -join ' ' })
+    if (($all -join "`n") -match '/inheritance:e') { Fail "the repair turns inheritance back on: $($all -join ' | ')" }
+    if (($all -join "`n") -match '(^| )(Administrators|SYSTEM):') { Fail "the repair names accounts in English, which fails on other languages: $($all -join ' | ')" }
+    foreach ($secret in (Join-Path $script:CONSOLE_PATH '.env'), (Join-Path $script:RUSTDESK_PATH 'id_ed25519')) {
+        if (-not ($script:icaclsCalls | Where-Object { $_[0] -eq $secret -and $_ -contains '/inheritance:r' })) { Fail "the repair does not lock $secret" }
+    }
+
+    if ((Get-CommandsIn 'Update-GoInstall' 'Protect-InstallFolders').Count -eq 0) { Fail 'an update does not lock the folders' }
+    $lock = @(Get-CommandsIn 'Do-Install' 'Protect-InstallFolders')
+    $certs = @(Get-CommandsIn 'Do-Install' 'Generate-SSLCertificates')
+    $services = @(Get-CommandsIn 'Do-Install' 'Setup-Services')
+    if ($lock.Count -eq 0) { Fail 'an install does not lock the folders' }
+    elseif ($lock[0].Extent.StartOffset -gt $certs[0].Extent.StartOffset -or $lock[0].Extent.StartOffset -gt $services[0].Extent.StartOffset) { Fail 'the install locks the folders after it made the keys' }
+    Remove-Item -Recurse -Force $dir
+}
+
+# WD-2: without NSSM the task runs as SYSTEM and the install says so; once
+# NSSM is there, the repair or update makes the task the service with the
+# task's arguments and settings, and removes the task. The service's name
+# carries no version (WD-17).
+function Test-TaskBecomesServiceWithNssm {
+    $dir = New-TestInstall
+    Use-RealServerBinaryPath
+    $out = (Setup-Services 6>&1 3>&1 | Out-String -Width 4096)
+    if ($out -notmatch 'scheduled task under SYSTEM') { Fail "the install does not say the task runs as SYSTEM: $out" }
+    if ($out -notmatch [regex]::Escape('-ExecutionPolicy Bypass -File')) { Fail "the install does not say how to make it a service later: $out" }
+    if (-not $script:registeredTasks.ContainsKey('NeoDeskServer')) { Fail 'no task registered'; return }
+    $taskArgs = Get-LauncherArguments
+    $script:fakeNssm = 'fake-nssm'
+    $script:nssmCalls = @()
+    Update-ServerServiceDefinition *> $null
+    $script:fakeNssm = $null
+    if ($script:registeredTasks.ContainsKey('NeoDeskServer')) { Fail 'the task stays next to the new service' }
+    if (-not ($script:nssmCalls | Where-Object { $_[0] -eq 'install' -and $_[1] -eq 'NeoDeskServer' })) { Fail 'the task did not become an NSSM service' }
+    $params = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppParameters' } | Select-Object -Last 1
+    if (-not $params -or $params[3] -ne $taskArgs) { Fail "the service lost the task's arguments: [$($params[3])] [$taskArgs]" }
+    $envCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppEnvironmentExtra' } | Select-Object -Last 1
+    if (-not $envCall -or $envCall -notcontains 'NEODESK_SUPERVISOR=nssm' -or $envCall -notcontains 'P2P_FIRST=Y') { Fail "the service's settings: $($envCall -join ' ')" }
+    $name = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'DisplayName' } | Select-Object -Last 1
+    if (-not $name -or $name[3] -ne 'NeoDesk Server') { Fail "the service's display name is '$($name[3])'" }
+    $script:registeredTasks['NeoDeskServer'] = 'task'
+    $script:fakeNssm = 'fake-nssm'
+    Setup-Services | Out-Null
+    $script:fakeNssm = $null
+    if ($script:registeredTasks.ContainsKey('NeoDeskServer')) { Fail 'an install with NSSM keeps the task, which starts a second server' }
+    Remove-Item -Recurse -Force $dir
+}
+
+# WD-14: the task's launcher rotates the log before each start, as NSSM
+# does the service's: over 10 MB it becomes server.log.1.
+function Test-TaskLogRotates {
+    $dir = New-TestInstall
+    Use-RealServerBinaryPath
+    Setup-Services | Out-Null
+    $lines = @(Get-Content (Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd'))
+    $log = Get-ServerLogPath
+    $run = [array]::IndexOf($lines, ':run')
+    $server = @(0..($lines.Count - 1) | Where-Object { $lines[$_] -like '"*neodesk-server.exe"*' })[0]
+    $rotate = @(0..($lines.Count - 1) | Where-Object { $lines[$_] -like "*GTR 10485760 move /y `"$log`" `"$log.1`"*" })
+    if ($rotate.Count -ne 1) { Fail "the launcher does not rotate $log`: $($lines -join ' | ')" }
+    elseif (-not ($run -lt $rotate[0] -and $rotate[0] -lt $server)) { Fail "the launcher rotates the log outside its loop, or after the start: run $run, rotate $($rotate[0]), server $server" }
+    elseif ($env:OS -eq 'Windows_NT') {
+        # The line itself, in cmd
+        $cmd = Join-Path $dir 'rotate.cmd'
+        Set-Content -Path $cmd -Encoding ASCII -Value @('@echo off', $lines[$rotate[0]])
+        [IO.File]::WriteAllBytes($log, (New-Object byte[] (11MB)))
+        & cmd.exe /c $cmd | Out-Null
+        if ((Test-Path $log) -or -not (Test-Path "$log.1")) { Fail 'cmd did not move a log of 11 MB aside' }
+        Set-Content -Path $log -Value 'small'
+        & cmd.exe /c $cmd | Out-Null
+        if (-not (Test-Path $log)) { Fail 'cmd moved a small log aside' }
+        Remove-Item $cmd
+    }
+    Remove-Item -Recurse -Force $dir
+}
+
+# WD-3: the admin's first password is in the summary, and the summary is
+# the last thing of the install: no menu, no question and no cleared
+# screen after it, only Enter once the admin copied it. The folders are
+# locked before the certificates are made.
+function Test-PasswordIsTheLastThingShown {
+    $dir = New-TestInstall
+    $script:AUTO_MODE = $false
+    $script:MINIMAL_MODE = $false
+    $env:ADMIN_PASSWORD = 'Shown-Once-Pass-1'
+    # What the install does, in order: its text, and EVENT lines from the
+    # stand-ins
+    function Print-Header { Write-Host 'EVENT clear' }
+    function Clear-Host { Write-Host 'EVENT clear' }
+    function Detect-Installation { $script:INSTALL_STATUS = 'none' }
+    function Test-NodeEraInstall { $false }
+    function Choose-DatabaseType { }
+    function Install-Binaries { $true }
+    function Setup-ConsoleHome { $script:FRESH_CONSOLE_ENV = $true; $true }
+    function Generate-SSLCertificates { $true }
+    function Setup-Services { }
+    function Configure-Firewall { $true }
+    function Start-ServicesWithVerification { $true }
+    function Remove-FirstAdminPassword { }
+    function Install-ManagerScript { }
+    function Install-CommandLine { }
+    function Get-PublicIP { '203.0.113.7' }
+    function Get-LocalIP { '127.0.0.1' }
+    function Do-ConfigureSSL { Write-Host 'EVENT ssl menu' }
+    function Confirm-Action { param($Prompt) Write-Host "EVENT ask: $Prompt"; $true }
+    function Press-Enter { Write-Host 'EVENT enter' }
+    function Read-Host { param($Prompt) Write-Host "EVENT enter: $Prompt"; '' }
+    $list = @(Do-Install 6>&1 | Where-Object { $_ -is [System.Management.Automation.InformationRecord] } | ForEach-Object { "$_" })
+    $env:ADMIN_PASSWORD = $null
+    $script:AUTO_MODE = $true
+    $shown = @(0..($list.Count - 1) | Where-Object { $list[$_] -like '*Shown-Once-Pass-1*' })
+    if ($shown.Count -eq 0) { Fail 'the install does not show the admin password'; Remove-Item -Recurse -Force $dir; return }
+    $after = @($list[($shown[-1] + 1)..($list.Count - 1)])
+    $bad = @($after | Where-Object { $_ -eq 'EVENT clear' -or $_ -eq 'EVENT ssl menu' -or $_ -like 'EVENT ask: *' })
+    if ($bad.Count -gt 0) { Fail "after the password the install goes on with: $($bad -join ' | ')" }
+    if ($after[-1] -notlike 'EVENT enter: *password*') { Fail "the install ends without asking to copy the password: $($after[-1])" }
+    if (-not ($after | Where-Object { $_ -like '*Commands for later*' })) { Fail 'the password is not part of the summary at the end' }
+    Remove-Item -Recurse -Force $dir
+}
+
+# WD-4: next to the public address the summary gives the console's
+# address on the LAN, which works without port forwarding from inside;
+# none when the two are the same.
+function Test-SummaryNamesTheLanAddress {
+    $dir = New-TestInstall
+    # The installer's own certificate, named as the installer names it
+    New-Item -ItemType Directory -Path (Join-Path $script:RUSTDESK_PATH 'ssl') -Force | Out-Null
+    $crt = Join-Path $script:RUSTDESK_PATH 'ssl\neodesk.crt'
+    $key = Join-Path $script:RUSTDESK_PATH 'ssl\neodesk.key'
+    Set-Content -Path $crt, $key -Value 'pem'
+    Set-Content -Path (Join-Path $script:CONSOLE_PATH '.env') -Value @('HTTPS_ENABLED=true', "SSL_CERT_PATH=$crt", "SSL_KEY_PATH=$key", 'PANEL_PUBLIC_HOST=203.0.113.7')
+    function Get-LocalIP { '192.168.1.20' }
+    $out = (Show-InstallSummary 6>&1 | Out-String -Width 4096)
+    if (-not $out.Contains('https://203.0.113.7:5443')) { Fail "the summary does not give the public console address: $out" }
+    if (-not $out.Contains('https://192.168.1.20:5443')) { Fail "the summary does not give the console address on the LAN: $out" }
+    if ($out -notmatch 'self-signed') { Fail "the summary does not say the certificate is self-signed: $out" }
+    function Get-LocalIP { '203.0.113.7' }
+    $out = (Show-InstallSummary 6>&1 | Out-String -Width 4096)
+    if ($out -match 'On your LAN') { Fail "the summary gives the same address twice: $out" }
+    Remove-Item -Recurse -Force $dir
+}
+
+# WD-12: -ResetPassword gives admin a new password without questions:
+# ADMIN_PASSWORD, else a random one; one shorter than 8 characters is
+# refused. The password goes to the server on standard input.
+function Test-ResetPasswordWithoutQuestions {
+    $dir = New-TestInstall
+    function Print-Header { }
+    function Press-Enter { }
+    function Auto-DetectPaths { }
+    function Detect-Installation { }
+    function Test-NodeEraInstall { $false }
+    function Invoke-MenuChoose { param($Title, $Subtitle, $Items, $Returns) $script:menuAsked = $true; $script:MENU_CHOICE = '0' }
+    function Invoke-ServerCommand { param([string[]]$Arguments, $InputText, $Binary) $script:resetCalls += , @(($Arguments -join ' '), "$InputText"); return 0 }
+    $saved = $env:ADMIN_PASSWORD
+    $script:RESET_PASSWORD_MODE = $true
+    $script:menuAsked = $false
+    $script:resetCalls = @()
+    $env:ADMIN_PASSWORD = 'Given-Pass-123'
+    $ok = Do-ResetPassword 6> $null
+    if ("$ok" -ne 'True' -or $script:resetCalls.Count -ne 1 -or $script:resetCalls[0][0] -ne 'reset-password admin' -or $script:resetCalls[0][1] -ne 'Given-Pass-123') {
+        Fail "-ResetPassword with ADMIN_PASSWORD: $ok, $(($script:resetCalls | ForEach-Object { $_ -join ' <- ' }) -join ' | ')"
+    }
+    $script:resetCalls = @()
+    $env:ADMIN_PASSWORD = $null
+    $ok = Do-ResetPassword 6> $null
+    if ("$ok" -ne 'True' -or $script:resetCalls.Count -ne 1 -or $script:resetCalls[0][1] -notmatch '^[A-Za-z0-9]{16}$') { Fail "-ResetPassword without ADMIN_PASSWORD did not set a random one: $($script:resetCalls[0] -join ' <- ')" }
+    $script:resetCalls = @()
+    $env:ADMIN_PASSWORD = 'short'
+    $ok = Do-ResetPassword 6> $null
+    if ("$ok" -ne 'False' -or $script:resetCalls.Count -ne 0) { Fail 'a short ADMIN_PASSWORD was set' }
+    if ($script:menuAsked) { Fail '-ResetPassword asked a question' }
+    if ((Get-CommandsIn 'Main' 'Do-ResetPassword').Count -lt 2) { Fail 'Main does not run -ResetPassword' }
+
+    # -ResetTwoFactor: reset-password --reset-two-factor admin, on a binary
+    # that has it; an older one would take the switch for a second name, so
+    # nothing runs and it says to update. -ResetTwoFactor alone means
+    # -ResetPassword.
+    $env:ADMIN_PASSWORD = 'Given-Pass-123'
+    $script:RESET_TWO_FACTOR = $true
+    $script:resetCalls = @()
+    function Test-BinaryResetsTwoFactor { param($Path) $true }
+    $ok = Do-ResetPassword 6> $null
+    if ("$ok" -ne 'True' -or $script:resetCalls.Count -ne 1 -or $script:resetCalls[0][0] -ne 'reset-password --reset-two-factor admin' -or $script:resetCalls[0][1] -ne 'Given-Pass-123') {
+        Fail "-ResetTwoFactor ran: $ok, $(($script:resetCalls | ForEach-Object { $_ -join ' <- ' }) -join ' | ')"
+    }
+    $script:resetCalls = @()
+    function Test-BinaryResetsTwoFactor { param($Path) $false }
+    $out = (Do-ResetPassword 6>&1 | Out-String -Width 4096)
+    if ($script:resetCalls.Count -ne 0) { Fail "-ResetTwoFactor on an older binary ran: $($script:resetCalls[0][0])" }
+    if ($out -notmatch 'cannot turn off two-factor' -or $out -notmatch '-Update') { Fail "-ResetTwoFactor on an older binary says: $out" }
+    $script:RESET_TWO_FACTOR = $false
+    $mode = @($ast.EndBlock.Statements | Where-Object {
+            $_ -is [System.Management.Automation.Language.AssignmentStatementAst] -and $_.Left.Extent.Text -eq '$script:RESET_PASSWORD_MODE'
+        })
+    if ($mode.Count -ne 1 -or $mode[0].Right.Extent.Text -notmatch '\$ResetTwoFactor') { Fail '-ResetTwoFactor alone does not reset the password' }
+    # The binary says it has the switch in its usage line (PR #43)
+    $probe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $probe -Value 'Usage: neodesk-server reset-password [--reset-two-factor] [--verbose] [username]'
+    Remove-Item function:Test-BinaryResetsTwoFactor -ErrorAction SilentlyContinue
+    if (-not (Test-BinaryResetsTwoFactor -Path $probe)) { Fail 'a binary with --reset-two-factor does not count as one that has it' }
+    Set-Content -Path $probe -Value 'Usage: neodesk-server reset-password [username]'
+    if (Test-BinaryResetsTwoFactor -Path $probe) { Fail 'an older binary counts as one with --reset-two-factor' }
+    $script:RESET_PASSWORD_MODE = $false
+    $env:ADMIN_PASSWORD = $saved
+    Remove-Item -Recurse -Force $dir
+}
+
+# WD-9 and WD-10: behind a reverse proxy (TRUST_PROXY) the console's
+# firewall rules go again, the others stay. The uninstall takes every
+# NeoDesk rule and the command line's Path entry, also when the data
+# stays; the backups stay unless -Purge, and it says what stays.
+function Test-FirewallRulesAndUninstall {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('API_PORT=21121', 'CONSOLE_PORT=3375', 'HTTPS_ENABLED=true', 'HTTPS_PORT=5443', 'CDAP_ENABLED=N')
+    Configure-Firewall *> $null
+    $names = @($script:fwRules | ForEach-Object { $_.DisplayName })
+    if ($names -notcontains 'NeoDesk - NeoDesk web console HTTPS') { Fail "the install opens no console rule: $($names -join ', ')" }
+    Add-Content -Path $envFile -Value 'TRUST_PROXY=true'
+    Configure-Firewall *> $null
+    $names = @($script:fwRules | ForEach-Object { $_.DisplayName })
+    if (@($names | Where-Object { $_ -like 'NeoDesk - NeoDesk web console*' }).Count -gt 0) { Fail "behind a reverse proxy the console's rules stay: $($names -join ', ')" }
+    if ($names -notcontains 'NeoDesk - NeoDesk relay') { Fail "the proxy took the relay's rule: $($names -join ', ')" }
+
+    function Print-Header { }
+    function Stop-AllServices { }
+    function Do-BackupSilent { }
+    function Press-Enter { }
+    $script:fwRules += [pscustomobject]@{ DisplayName = 'Other app'; Action = 'Allow'; Port = 8080; Proto = 'TCP' }
+    $before = $script:machinePath
+    $script:machinePath = "$before;$(Join-Path $script:RUSTDESK_PATH 'bin')"
+    New-Item -ItemType Directory -Path $script:BACKUP_DIR -Force | Out-Null
+    Set-Content -Path (Join-Path $script:BACKUP_DIR 'neodesk_backup_1.zip') -Value 'zip'
+    $script:AUTO_MODE = $true
+    $script:UNINSTALL_MODE = $true
+    $script:PURGE_MODE = $false
+    $out = (Do-Uninstall 6>&1 | Out-String -Width 4096)
+    $names = @($script:fwRules | ForEach-Object { $_.DisplayName })
+    if (@($names | Where-Object { $_ -like 'NeoDesk - *' }).Count -gt 0) { Fail "the uninstall leaves firewall rules: $($names -join ', ')" }
+    if ($names -notcontains 'Other app') { Fail 'the uninstall took a rule of another program' }
+    if ($script:machinePath -ne $before) { Fail "an uninstall that keeps the data leaves the Path as $($script:machinePath)" }
+    if (-not (Test-Path $script:RUSTDESK_PATH) -or -not (Test-Path $script:BACKUP_DIR)) { Fail 'an uninstall without -Purge removed data' }
+    if (-not $out.Contains($script:BACKUP_DIR) -or $out -notmatch 'Kept on this machine') { Fail "the uninstall does not say what stays: $out" }
+    $script:PURGE_MODE = $true
+    Do-Uninstall *> $null
+    if (Test-Path $script:BACKUP_DIR) { Fail '-Purge leaves the backups' }
+    $script:PURGE_MODE = $false
+    $script:UNINSTALL_MODE = $false
+    $script:machinePath = $before
+    Remove-Item -Recurse -Force $dir -ErrorAction SilentlyContinue
+}
+
+# WD-5: Get-Help finds the help (a #Requires line right above it hides
+# it); WD-15: downloads run without the progress bar, which slows
+# Windows PowerShell 5.1 down; WD-13: no leftover "Enterprise" or C=PL.
+function Test-HelpDownloadsAndWording {
+    $help = $ast.GetHelpContent()
+    if (-not $help -or $help.Synopsis -notmatch 'NeoDesk') { Fail 'Get-Help finds no help in neodesk.ps1' }
+    elseif (-not ($help.Parameters.Keys | Where-Object { $_ -eq 'ResetPassword' })) { Fail 'the help has no -ResetPassword' }
+    $statements = @($ast.EndBlock.Statements)
+    $progress = @(0..($statements.Count - 1) | Where-Object {
+            $statements[$_] -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+            $statements[$_].Left.Extent.Text -eq '$ProgressPreference' -and $statements[$_].Right.Extent.Text -eq "'SilentlyContinue'"
+        })
+    if ($progress.Count -eq 0) { Fail 'neodesk.ps1 downloads with the progress bar on' }
+    $text = Get-Content $installer -Raw
+    if ($text -cmatch 'Enterprise' -or $text -match 'C=PL') { Fail 'neodesk.ps1 still says Enterprise or C=PL' }
+}
+
 Test-HeaderAndColours
 Test-MenuColours
 Test-TaskLauncherLoops
@@ -1372,6 +1727,14 @@ Test-NoStableReleaseTakesTheNewestPrerelease
 Test-MigrateCommand
 Test-BackupUsesTheServersBackup
 Test-FreshInstallStartsManaged
+Test-FoldersAreLocked
+Test-TaskBecomesServiceWithNssm
+Test-TaskLogRotates
+Test-PasswordIsTheLastThingShown
+Test-SummaryNamesTheLanAddress
+Test-ResetPasswordWithoutQuestions
+Test-FirewallRulesAndUninstall
+Test-HelpDownloadsAndWording
 if ($script:failures -gt 0) { exit 1 }
 Write-Host 'Windows installer checks passed'
 # The stand-ins set LASTEXITCODE, and a caller such as GitHub's pwsh step

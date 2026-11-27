@@ -358,14 +358,43 @@ func (s *Server) handleClientTFAVerify(w http.ResponseWriter, clientIP, totpCode
 
 // handleClientLoginOptions returns available authentication methods.
 // GET /api/login-options
-// Stock RustDesk expects [""] for password plus "oidc/<name>" entries when SSO is enabled.
+// [""] is the password sign-in; the "common-oidc/<JSON list>" entry lists
+// the browser sign-ins, which the stock client shows as buttons.
 func (s *Server) handleClientLoginOptions(w http.ResponseWriter, r *http.Request) {
-	opts := []string{""}
-	if s.oidcProvider != nil && s.oidcProvider.IsEnabled() {
-		opts = append(opts, s.oidcProvider.ClientLoginOptionToken())
-	}
-	writeJSON(w, http.StatusOK, opts)
+	writeJSON(w, http.StatusOK, []string{"", "common-oidc/" + s.clientBrowserSignIns()})
 }
+
+// clientBrowserSignIns is the list of browser sign-ins in the common-oidc
+// entry of GET /api/login-options: the console sign-in "NeoDesk" with the
+// NeoDesk mark, then the outside identity provider when it is enabled.
+// The stock client reads only the first common-oidc entry, so the
+// provider is in this list, not in an "oidc/<name>" entry of its own. A
+// provider named NeoDesk is listed as "NeoDesk SSO", since the op
+// "NeoDesk" is the console sign-in.
+func (s *Server) clientBrowserSignIns() string {
+	type option struct {
+		Name string `json:"name"`
+		Icon string `json:"icon,omitempty"`
+	}
+	list := []option{{Name: consoleLoginOp, Icon: neodeskMarkSVG}}
+	if s.oidcProvider != nil && s.oidcProvider.IsEnabled() {
+		name := strings.TrimPrefix(s.oidcProvider.ClientLoginOptionToken(), "oidc/")
+		if name == consoleLoginOp {
+			name += " SSO"
+		}
+		list = append(list, option{Name: name})
+	}
+	var b strings.Builder
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	_ = enc.Encode(list)
+	return strings.TrimSuffix(b.String(), "\n")
+}
+
+// neodeskMarkSVG is the NeoDesk mark for dark backgrounds
+// (lead/brand/mark-on-dark.svg), the icon of the console sign-in's button
+// in the desktop app.
+const neodeskMarkSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 10 44 44" role="img" aria-label="NeoDesk"><title>NeoDesk</title><defs><clipPath id="ndk"><circle cx="38" cy="26" r="16"/></clipPath></defs><g><rect x="10" y="22" width="32" height="32" rx="10" fill="#58a6ff"/><circle cx="38" cy="26" r="16" fill="#a3e635"/><rect x="10" y="22" width="32" height="32" rx="10" fill="#3fd0c4" clip-path="url(#ndk)"/></g></svg>`
 
 // handleClientLogout handles logout for RustDesk clients.
 // POST /api/logout
@@ -1339,6 +1368,16 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 
 	// Verify peer exists, by the uuid it registered with
 	peer, err := s.db.GetPeer(deviceID)
+	if err == nil && peer == nil {
+		// A waiting device: its request shows the name it sends here. The
+		// answer stays ID_NOT_FOUND, so the client sends it again after
+		// approval.
+		osValue := body.Platform
+		if osValue == "" {
+			osValue = body.OS
+		}
+		s.notePendingSysinfo(deviceID, body.UUID, truncate(body.Hostname, 255), truncate(osValue, 255), truncate(body.Version, 64))
+	}
 	if err != nil || peer == nil || !sameRegisteredUUID(peer.UUID, body.UUID) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("ID_NOT_FOUND")) //nolint:errcheck
@@ -1430,6 +1469,46 @@ func (s *Server) handleClientSysinfoVer(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte(hash)) //nolint:errcheck
+}
+
+// pendingRegisterUUIDField is the field of a waiting request in which the
+// signal server keeps the uuid of the device's first RegisterPk.
+const pendingRegisterUUIDField = "register_uuid"
+
+// notePendingSysinfo fills the empty name, system and version of a waiting
+// request from a stock RustDesk client's system information, which it
+// sends before it is approved. Only system information with the uuid of
+// the request's RegisterPk counts; fields the request has stay as they are.
+func (s *Server) notePendingSysinfo(deviceID, uuid, hostname, osValue, version string) {
+	raw, err := s.db.GetConfig(pendingDevicePrefix + deviceID)
+	if err != nil || raw == "" {
+		return
+	}
+	request := map[string]any{}
+	if json.Unmarshal([]byte(raw), &request) != nil {
+		return
+	}
+	registered, _ := request[pendingRegisterUUIDField].(string)
+	if !sameRegisteredUUID(registered, uuid) {
+		return
+	}
+	changed := false
+	for field, value := range map[string]string{"hostname": hostname, "platform": osValue, "version": version} {
+		if current, _ := request[field].(string); strings.TrimSpace(current) == "" && strings.TrimSpace(value) != "" {
+			request[field] = value
+			changed = true
+		}
+	}
+	if !changed {
+		return
+	}
+	data, err := json.Marshal(request)
+	if err != nil {
+		return
+	}
+	if err := s.db.SetConfig(pendingDevicePrefix+deviceID, string(data)); err != nil {
+		log.Printf("[API] Could not note the system information of waiting device %s: %v", deviceID, err)
+	}
 }
 
 // truncate returns s capped at maxLen bytes.

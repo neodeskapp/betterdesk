@@ -30,7 +30,7 @@ load() {
         printf 'TEST_DIR=%q\nNEODESK_DIR=%q\nCALLS=%q\n' "$TEST_DIR" "$TEST_DIR/install" "$TEST_DIR/calls"
         printf 'HEALTH_TIMEOUT=4\nRED="" GREEN="" YELLOW="" CYAN="" BOLD="" NC=""\n'
         printf 'sleep() { :; }\nid() { printf "0\\n"; }\n'
-        declare -f docker curl ss command_docker
+        declare -f docker curl ss command_docker ufw firewall-cmd
     } > "$TEST_DIR/prelude.sh"
     # shellcheck source=/dev/null
     source "$TEST_DIR/prelude.sh"
@@ -141,6 +141,45 @@ ss() {
     printf 'LISTEN 0 4096 0.0.0.0:%s 0.0.0.0:* users:(("%s",pid=7,fd=3))\n' "$port" "$(cat "$TEST_DIR/taken-$port")"
 }
 
+# ufw, firewall-cmd: the host firewall, on when $TEST_DIR/fw says ufw or
+# firewalld. Its rules are in $TEST_DIR/fw-rules (ufw: as "ufw status"
+# lists them, IPv4 and IPv6; firewalld: one port per line), the calls in
+# $CALLS.
+ufw() {
+    printf 'ufw %s\n' "$*" >> "$CALLS"
+    local rules="$TEST_DIR/fw-rules"
+    case "$1" in
+        status)
+            if [ "$(cat "$TEST_DIR/fw" 2>/dev/null)" = ufw ]; then
+                printf 'Status: active\n\nTo                         Action      From\n'
+                cat "$rules" 2>/dev/null || true
+            else
+                printf 'Status: inactive\n'
+            fi ;;
+        allow)
+            printf '%-26s ALLOW       Anywhere                   # %s\n' "$2" "${4:-}" >> "$rules"
+            printf '%-26s ALLOW       Anywhere (v6)              # %s\n' "$2 (v6)" "${4:-}" >> "$rules" ;;
+        delete)
+            grep -vE "^$3 " "$rules" > "$rules.tmp" || true
+            mv "$rules.tmp" "$rules" ;;
+    esac
+    return 0
+}
+firewall-cmd() {
+    printf 'firewall-cmd %s\n' "$*" >> "$CALLS"
+    local rules="$TEST_DIR/fw-rules" arg
+    for arg in "$@"; do
+        case "$arg" in
+            --state)
+                if [ "$(cat "$TEST_DIR/fw" 2>/dev/null)" = firewalld ]; then printf 'running\n'; else printf 'not running\n'; return 252; fi ;;
+            --query-port=*) grep -qx "${arg#*=}" "$rules" 2>/dev/null; return ;;
+            --add-port=*) printf '%s\n' "${arg#*=}" >> "$rules" ;;
+            --remove-port=*) grep -vx "${arg#*=}" "$rules" > "$rules.tmp" || true; mv "$rules.tmp" "$rules" ;;
+        esac
+    done
+    return 0
+}
+
 # The stand-in for Docker, callable from a test's own docker()
 eval "command_docker() $(declare -f docker | tail -n +2)"
 
@@ -158,6 +197,12 @@ test_fresh_install() (
     grep -qx 'compose up -d --remove-orphans' "$CALLS" || fail "the container was not started: $(cat "$CALLS")"
     printf '%s' "$out" | grep -q 'Web console: *http://203.0.113.10:3375' || fail "no console address in: $out"
     printf '%s' "$out" | grep -q 'ID server: *203.0.113.10' || fail "no ID server in: $out"
+    printf '%s' "$out" | grep -q 'Relay server: *203.0.113.10:21117$' || fail "the relay is not given with its port: $out"
+    # DOCKER-QUICK-8: the hints name the manager by its full path, and the
+    # install folder has the copy they name
+    [ -x "$NEODESK_DIR/neodesk-docker.sh" ] || fail "the install folder has no copy of the manager"
+    printf '%s' "$out" | grep -qF "Update:          sudo bash $NEODESK_DIR/neodesk-docker.sh --dir $NEODESK_DIR " \
+        || fail "the update hint does not name the manager by its full path: $out"
     printf '%s' "$out" | grep -q 'Key: *PUBKEYbase64=' || fail "no key in: $out"
     printf '%s' "$out" | grep -q 'docker compose logs -f neodesk' || fail "no logs hint in: $out"
     [ "$(printf '%s' "$out" | grep -c 'first-pass-0123')" = 1 ] || fail "the first password is not printed exactly once: $out"
@@ -165,6 +210,11 @@ test_fresh_install() (
 
     out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "the second run failed: $out"
     if printf '%s' "$out" | grep -q 'first-pass-0123'; then fail "the second run printed the password again"; fi
+    printf '%s' "$out" | grep -qF "a new admin password: sudo bash $NEODESK_DIR/neodesk-docker.sh --dir $NEODESK_DIR reset-password" \
+        || fail "the password hint does not name the manager by its full path: $out"
+    if printf '%s' "$out" | grep -qE '(^|[^/])neodesk-docker\.sh (update|reset-password|--adopt)'; then
+        fail "a hint names the manager without its folder: $out"
+    fi
     rm -rf "$TEST_DIR"
 )
 
@@ -455,6 +505,7 @@ test_errors_say_what_to_do() (
     printf 'hbbs\n' > "$TEST_DIR/taken-21116"
     if out=$(mgr 'COMMAND=install; do_install' 2>&1); then fail "an install with 21116 taken went on"; fi
     printf '%s' "$out" | grep -q 'RustDesk server' || fail "the error does not name the RustDesk server: $out"
+    printf '%s' "$out" | grep -q -- '--import-keys' || fail "the RustDesk error does not say how to keep its key: $out"
     rm -f "$TEST_DIR/taken-21116"
     # L225: the compose file publishes the console's HTTPS port too
     printf 'nginx\n' > "$TEST_DIR/taken-5443"
@@ -627,13 +678,13 @@ test_summary_names_the_console_ports_it_serves() (
     load
     local out
     out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "the install failed: $out"
-    printf '%s' "$out" | grep -q 'in front of this machine: TCP 3375, 21115-21119' || fail "a plain install's summary does not name 3375 alone: $out"
+    printf '%s' "$out" | grep -q 'in front of this machine: TCP 3375, 21114-21119' || fail "a plain install's summary does not name 3375 alone: $out"
     env_set HTTPS_ENABLED true
     out=$(mgr 'COMMAND=update; do_install' 2>&1) || fail "the update with HTTPS failed: $out"
-    printf '%s' "$out" | grep -q 'in front of this machine: TCP 3375, 5443, 21115-21119' || fail "the summary with HTTPS does not name 5443: $out"
+    printf '%s' "$out" | grep -q 'in front of this machine: TCP 3375, 5443, 21114-21119' || fail "the summary with HTTPS does not name 5443: $out"
     env_set TRUST_PROXY 1
     out=$(mgr 'COMMAND=update; do_install' 2>&1) || fail "the update with TRUST_PROXY failed: $out"
-    printf '%s' "$out" | grep -q 'in front of this machine: TCP 21115-21119' || fail "the summary behind a reverse proxy names the console's ports: $out"
+    printf '%s' "$out" | grep -q 'in front of this machine: TCP 21114-21119' || fail "the summary behind a reverse proxy names the console's ports: $out"
     rm -rf "$TEST_DIR"
 )
 
@@ -652,7 +703,6 @@ test_install_sh_runs_the_manager() (
             # shellcheck disable=SC1091
             source "$SCRIPT_ROOT/install/install.sh"
             require_root() { :; }
-            configure_firewall() { :; }
             fetch_url_to_file() {
                 printf '#!/bin/sh\n# NEODESK_DOCKER_SOURCED stand-in\nprintf "%%s\\n" "$*" > "%s/manager-args"\nprintf "%%s\\n" "$ADMIN_PASSWORD|$NEODESK_RAW_BASE" > "%s/manager-env"\n' "$dir" "$dir" > "$2"
             }
@@ -665,8 +715,12 @@ test_install_sh_runs_the_manager() (
         || fail "the manager ran as: $(cat "$dir/manager-args")"
     [ "$(cat "$dir/manager-env")" = "Docker-Admin-1|https://raw.githubusercontent.com/example/fork/feature-x" ] \
         || fail "the manager did not get the admin password and the branch's files: $(cat "$dir/manager-env")"
-    install_sh --relay-servers 203.0.113.9 --version 3.6.0 --skip-docker-install || fail "install.sh with options failed: $(cat "$dir/out")"
-    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay 203.0.113.9 --tag 3.6.0 --no-install-docker" ] \
+    # DOCKER-QUICK-12: one version in the output, the installer's
+    if grep -q '1\.0\.0' "$dir/out"; then fail "install.sh names a version of its own: $(cat "$dir/out")"; fi
+    mkdir -p "$dir/keys"
+    install_sh --relay-servers 203.0.113.9 --version 3.6.0 --skip-docker-install --import-keys "$dir/keys" --skip-firewall \
+        || fail "install.sh with options failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay 203.0.113.9 --tag 3.6.0 --no-install-docker --import-keys $dir/keys --skip-firewall" ] \
         || fail "the manager ran with the options as: $(cat "$dir/manager-args")"
     printf 'NEODESK_DOCKER_LAYOUT=split\n' > "$dir/opt/docker/.env"
     install_sh || fail "install.sh on a split install failed: $(cat "$dir/out")"
@@ -677,98 +731,7 @@ test_install_sh_runs_the_manager() (
     rm -rf "$dir"
 )
 
-# L225, L513: after a Docker install, install.sh's firewall step opens
-# the client ports the compose file publishes, and the console's by the
-# rule of neodesk.sh and neodesk.ps1, read from the .env the manager
-# wrote: none behind a reverse proxy (TRUST_PROXY, --domain, where
-# Traefik's 80 and 443 are opened instead), else 3375, and 5443 only with
-# HTTPS_ENABLED on. ufw, firewall-cmd and systemctl are stand-ins on the
-# PATH that record their calls; the list of opened ports must be exact.
-test_install_sh_opens_the_console_ports_it_serves() (
-    local dir bin clients
-    dir=$(mktemp -d)
-    bin="$dir/bin"
-    mkdir -p "$bin"
-    clients="21115/tcp 21116/tcp 21116/udp 21117/tcp 21118/tcp 21119/tcp 21121/tcp 21122/tcp"
-    # sorted WORDS...: the words, sorted, on one line
-    sorted() { printf '%s\n' "$@" | sort | tr '\n' ' '; }
-    # firewall_step FIREWALL ENV ARGS...: install.sh ARGS's Docker path
-    # with a manager that writes ENV as the install's .env, under FIREWALL
-    # (ufw or firewalld, the other one off); prints the opened ports, sorted
-    firewall_step() {
-        local firewall="$1" ufw_status=inactive firewalld_state=3
-        printf '%s\n' "$2" > "$dir/case.env"
-        shift 2
-        rm -rf "$dir/opt" "$dir/calls"
-        [ "$firewall" = ufw ] && ufw_status=active
-        [ "$firewall" = firewalld ] && firewalld_state=0
-        printf '#!/bin/sh\nprintf "ufw %%s\\n" "$*" >> %q\n[ "$1" != status ] || echo "Status: %s"\n' "$dir/calls" "$ufw_status" > "$bin/ufw"
-        printf '#!/bin/sh\nprintf "firewall-cmd %%s\\n" "$*" >> %q\n' "$dir/calls" > "$bin/firewall-cmd"
-        printf '#!/bin/sh\nexit %s\n' "$firewalld_state" > "$bin/systemctl"
-        chmod +x "$bin/ufw" "$bin/firewall-cmd" "$bin/systemctl"
-        (
-            INSTALL_DIR="$dir/opt"
-            # shellcheck disable=SC1091
-            source "$SCRIPT_ROOT/install/install.sh" "$@"
-            PATH="$bin:$PATH"
-            fetch_docker_manager() {
-                mkdir -p "$(dirname "$1")"
-                printf '#!/bin/sh\ncp %q "$(dirname "$0")/.env"\n' "$dir/case.env" > "$1"
-                chmod +x "$1"
-            }
-            install_docker_mode
-        ) > "$dir/out" 2>&1 || fail "install.sh's Docker path under $firewall failed: $(cat "$dir/out")"
-        # shellcheck disable=SC2046
-        sorted $(sed -nE 's/^ufw allow ([^ ]+).*/\1/p; s/^firewall-cmd --permanent --add-port=([^ ]+)$/\1/p' "$dir/calls")
-    }
-    # check FIREWALL NAME ENV EXPECTED ARGS...: the ports opened in that
-    # case are EXPECTED, and the step's output names exactly them
-    check() {
-        local firewall="$1" name="$2" env="$3" expected opened said
-        # shellcheck disable=SC2086
-        expected=$(sorted $4)
-        shift 4
-        opened=$(firewall_step "$firewall" "$env" "$@")
-        [ "$opened" = "$expected" ] || fail "$name under $firewall opened: $opened; expected: $expected"
-        said=$(sed -n "s/.*Opened in ${firewall}: //p" "$dir/out")
-        # shellcheck disable=SC2086
-        [ "$(sorted $said)" = "$expected" ] || fail "$name under $firewall: the output names other ports: $(cat "$dir/out")"
-    }
-    local firewall
-    for firewall in ufw firewalld; do
-        check "$firewall" "a plain install" "NEODESK_DOCKER_LAYOUT=single" "$clients 3375/tcp"
-        check "$firewall" "TRUST_PROXY on" "TRUST_PROXY=1" "$clients"
-        case "$firewall" in
-            ufw) grep -q 'sudo ufw allow 3375/tcp' "$dir/out" || fail "no hint how to open 3375 in ufw: $(cat "$dir/out")" ;;
-            firewalld) grep -q 'firewall-cmd --permanent --add-port=3375/tcp' "$dir/out" || fail "no hint how to open 3375 in firewalld: $(cat "$dir/out")" ;;
-        esac
-        check "$firewall" "HTTPS on" "HTTPS_ENABLED=true" "$clients 3375/tcp 5443/tcp"
-        check "$firewall" "--domain" "$(printf 'NEODESK_DOMAIN=console.example.com\nNEODESK_CONSOLE_BIND=127.0.0.1\nTRUST_PROXY=1')" \
-            "$clients 80/tcp 443/tcp" --domain console.example.com --letsencrypt-email admin@example.com
-    done
-    rm -rf "$dir"
-)
-
-# L307: an installed ufw that is off gets no rules from install.sh: they
-# would go live with the next "ufw enable"
-test_install_sh_leaves_an_inactive_ufw_alone() (
-    local dir
-    dir=$(mktemp -d)
-    (
-        # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/install/install.sh"
-        ufw() { printf '%s\n' "$*" >> "$dir/ufw"; [ "$1" != status ] || echo "Status: inactive"; }
-        systemctl() { return 3; }
-        configure_firewall
-    ) > "$dir/out" 2>&1 || fail "install.sh's firewall step failed: $(cat "$dir/out")"
-    if grep -v '^status' "$dir/ufw" | grep -q .; then
-        fail "install.sh changed an inactive ufw: $(tr '\n' ';' < "$dir/ufw")"
-    fi
-    grep -q 'No active UFW/firewalld' "$dir/out" || fail "install.sh does not say it skips the firewall: $(cat "$dir/out")"
-    rm -rf "$dir"
-)
-
-# --domain with --email: Traefik in front of the console with Let's
+# --domain (with --email): Traefik in front of the console with Let's
 # Encrypt. .env gets the profile, the domain, the contact, the console's
 # port on this host only and the proxy trust; the summary names the HTTPS
 # address and ports 80 and 443. --no-traefik takes all of it back and
@@ -777,16 +740,16 @@ test_traefik_with_letsencrypt() (
     load
     local out
     out=$(mgr 'getent() { return 2; }
-               DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=admin@example.com; TRAEFIK_ACTION=on
+               DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=ops@neodesk-test.de; TRAEFIK_ACTION=on
                COMMAND=install; do_install' 2>&1) || fail "an install with --domain failed: $out"
     local line
-    for line in COMPOSE_PROFILES=traefik NEODESK_DOMAIN=console.example.com LETSENCRYPT_EMAIL=admin@example.com \
+    for line in COMPOSE_PROFILES=traefik NEODESK_DOMAIN=console.example.com LETSENCRYPT_EMAIL=ops@neodesk-test.de \
         NEODESK_CONSOLE_BIND=127.0.0.1 TRUST_PROXY=1 PANEL_PUBLIC_URL=https://console.example.com; do
         grep -qx "$line" "$NEODESK_DIR/.env" || fail ".env has no $line: $(cat "$NEODESK_DIR/.env")"
     done
     if grep -q '^LETSENCRYPT_CA_SERVER=' "$NEODESK_DIR/.env"; then fail "a production install uses another CA server"; fi
     printf '%s' "$out" | grep -q 'Web console: *https://console.example.com' || fail "no HTTPS console address in: $out"
-    printf '%s' "$out" | grep -q 'TCP 80, 443, 21115' || fail "the firewall line does not name 80 and 443: $out"
+    printf '%s' "$out" | grep -q 'TCP 80, 443, 21114' || fail "the firewall line does not name 80 and 443: $out"
     printf '%s' "$out" | grep -q 'has its certificate' || fail "the certificate was not checked: $out"
     printf '%s' "$out" | grep -q 'does not resolve' || fail "a name that does not resolve gives no warning: $out"
 
@@ -794,7 +757,7 @@ test_traefik_with_letsencrypt() (
                COMMAND=update; do_install' 2>&1) || fail "the switch to the staging server failed: $out"
     grep -qx 'LETSENCRYPT_CA_SERVER=https://acme-staging-v02.api.letsencrypt.org/directory' "$NEODESK_DIR/.env" \
         || fail ".env has not the staging server: $(cat "$NEODESK_DIR/.env")"
-    grep -qx 'LETSENCRYPT_EMAIL=admin@example.com' "$NEODESK_DIR/.env" || fail "the contact of the first run was lost"
+    grep -qx 'LETSENCRYPT_EMAIL=ops@neodesk-test.de' "$NEODESK_DIR/.env" || fail "the contact of the first run was lost"
 
     : > "$CALLS"
     out=$(mgr 'TRAEFIK_ACTION=off; COMMAND=update; do_install' 2>&1) || fail "--no-traefik failed: $out"
@@ -806,25 +769,30 @@ test_traefik_with_letsencrypt() (
     rm -rf "$TEST_DIR"
 )
 
-# --domain needs a DNS name and --email; ports 80 and 443 must be free
-# for Traefik, and the error says what to do.
+# --domain needs a DNS name; ports 80 and 443 must be free for Traefik,
+# and the error says what to do. HTTPS-11: --email is optional, but an
+# address Let's Encrypt refuses (example.com, the installer's old
+# example) stops the run before anything changes.
 test_traefik_errors_say_what_to_do() (
     load
     local out
-    if out=$(mgr 'parse_args --domain console.example.com' 2>&1); then fail "--domain without --email went on"; fi
-    printf '%s' "$out" | grep -q -- '--email' || fail "the error does not name --email: $out"
-    if out=$(mgr 'parse_args --domain 203.0.113.10 --email admin@example.com' 2>&1); then fail "an IP address passed as --domain"; fi
+    out=$(mgr 'parse_args --domain console.example.com; printf "%s\n" "$TRAEFIK_ACTION"' 2>&1) || fail "--domain without --email was refused: $out"
+    [ "$out" = on ] || fail "--domain without --email did not turn Traefik on: $out"
+    if out=$(mgr 'parse_args --domain console.example.com --email admin@example.com' 2>&1); then fail "an address at example.com went on"; fi
+    printf '%s' "$out" | grep -q 'refuses addresses at example.com' || fail "the error does not say why: $out"
+    if out=$(mgr 'parse_args --domain console.example.com --email me@mail.example.org' 2>&1); then fail "an address below example.org went on"; fi
+    if out=$(mgr 'parse_args --domain 203.0.113.10 --email ops@neodesk-test.de' 2>&1); then fail "an IP address passed as --domain"; fi
     printf '%s' "$out" | grep -q 'DNS name' || fail "the --domain error does not say what it needs: $out"
     if out=$(mgr 'parse_args --domain console.example.com --email nobody' 2>&1); then fail "a bad e-mail address passed"; fi
-    if out=$(mgr 'parse_args --domain console.example.com --email a@example.com --no-traefik' 2>&1); then
+    if out=$(mgr 'parse_args --domain console.example.com --email ops@neodesk-test.de --no-traefik' 2>&1); then
         fail "--domain with --no-traefik went on"
     fi
-    out=$(mgr 'parse_args --domain Console.Example.com --email a@example.com; printf "%s %s\n" "$DOMAIN_SET" "$TRAEFIK_ACTION"' 2>&1) \
+    out=$(mgr 'parse_args --domain Console.Example.com --email ops@neodesk-test.de; printf "%s %s\n" "$DOMAIN_SET" "$TRAEFIK_ACTION"' 2>&1) \
         || fail "a valid --domain was refused: $out"
     [ "$out" = "console.example.com on" ] || fail "--domain was read as: $out"
 
     printf 'apache2\n' > "$TEST_DIR/taken-80"
-    if out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=a@example.com; TRAEFIK_ACTION=on
+    if out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=ops@neodesk-test.de; TRAEFIK_ACTION=on
                   COMMAND=install; do_install' 2>&1); then fail "an install with port 80 taken went on"; fi
     printf '%s' "$out" | grep -q 'TCP 80: apache2' || fail "the port error does not name the program: $out"
     printf '%s' "$out" | grep -q 'Traefik needs ports 80 and 443' || fail "the port error does not say why: $out"
@@ -832,7 +800,7 @@ test_traefik_errors_say_what_to_do() (
 
     mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the plain install failed"
     printf 'nginx\n' > "$TEST_DIR/taken-443"
-    if out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=a@example.com; TRAEFIK_ACTION=on
+    if out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=ops@neodesk-test.de; TRAEFIK_ACTION=on
                   COMMAND=update; do_install' 2>&1); then fail "turning Traefik on with port 443 taken went on"; fi
     printf '%s' "$out" | grep -q 'TCP 443: nginx' || fail "the update's port error does not name the program: $out"
     if grep -q '^NEODESK_DOMAIN=' "$NEODESK_DIR/.env"; then fail "the refused switch changed .env"; fi
@@ -840,38 +808,175 @@ test_traefik_errors_say_what_to_do() (
 )
 
 # install.sh passes --domain, --letsencrypt-email and
-# --letsencrypt-staging to the manager, and its firewall opens 80 and 443
-# instead of the console's own ports then.
+# --letsencrypt-staging to the manager; HTTPS-16: it takes the manager's
+# spellings --email and --no-traefik as well.
 test_install_sh_passes_the_domain() (
     local dir
     dir=$(mktemp -d)
-    (
-        INSTALL_DIR="$dir/opt"
-        # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/install/install.sh" --domain console.example.com --letsencrypt-email admin@example.com --letsencrypt-staging
-        require_root() { :; }
-        configure_firewall() { printf '%s\n' "$DOCKER_PORTS" > "$dir/ports"; }
-        fetch_manager() {
-            mkdir -p "$(dirname "$2")"
-            printf '#!/bin/sh\n# NEODESK_DOCKER_SOURCED stand-in\nprintf "%%s\\n" "$*" > "%s/manager-args"\n' "$dir" > "$2"
-            chmod +x "$2"
-        }
-        main
-    ) > "$dir/out" 2>&1 || fail "install.sh with --domain failed: $(cat "$dir/out")"
-    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --domain console.example.com --email admin@example.com --letsencrypt-staging" ] \
+    # install_sh ARGS...: install.sh's main with ARGS and a stand-in manager
+    install_sh() {
+        (
+            INSTALL_DIR="$dir/opt"
+            # shellcheck disable=SC1091
+            source "$SCRIPT_ROOT/install/install.sh" "$@"
+            require_root() { :; }
+            fetch_manager() {
+                mkdir -p "$(dirname "$2")"
+                printf '#!/bin/sh\n# NEODESK_DOCKER_SOURCED stand-in\nprintf "%%s\\n" "$*" > "%s/manager-args"\n' "$dir" > "$2"
+                chmod +x "$2"
+            }
+            main
+        ) > "$dir/out" 2>&1
+    }
+    install_sh --domain console.example.com --letsencrypt-email ops@neodesk-test.de --letsencrypt-staging || fail "install.sh with --domain failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --domain console.example.com --email ops@neodesk-test.de --letsencrypt-staging" ] \
         || fail "the manager ran with the domain as: $(cat "$dir/manager-args")"
-    local port
-    for port in 80 443; do
-        case " $(cat "$dir/ports") " in
-            *" $port "*) ;;
-            *) fail "install.sh's firewall does not open $port: $(cat "$dir/ports")" ;;
-        esac
-    done
-    case " $(cat "$dir/ports") " in
-        *" 3375 "*|*" 5000 "*|*" 5443 "*) fail "install.sh's firewall opens the console's own ports behind Traefik: $(cat "$dir/ports")" ;;
-    esac
+    install_sh --domain console.example.com --email ops@neodesk-test.de || fail "install.sh with --email failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --domain console.example.com --email ops@neodesk-test.de" ] \
+        || fail "the manager ran with --email as: $(cat "$dir/manager-args")"
+    install_sh --no-traefik || fail "install.sh with --no-traefik failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --no-traefik" ] \
+        || fail "the manager ran with --no-traefik as: $(cat "$dir/manager-args")"
     rm -rf "$dir"
 )
+
+# traefik_docker ARGS...: the Docker stand-in, with the volume of
+# Traefik's certificates in $TEST_DIR/le: a script run on it (-c) runs
+# here on that folder, and compose logs prints $TEST_DIR/traefik-log
+traefik_docker() {
+    if [ "$1" = volume ] && [ "$2" = inspect ] && [ "${3:-}" = neodesk-traefik-letsencrypt ]; then
+        printf '%s\n' "$*" >> "$CALLS"
+        [ -d "$TEST_DIR/le" ]
+        return
+    fi
+    if [ "$1" = run ] && [[ " $* " == *" neodesk-traefik-letsencrypt:/le"* ]]; then
+        printf '%s\n' "$*" >> "$CALLS"
+        local arg script="" prev="" rest=()
+        for arg in "$@"; do
+            if [ "$prev" = -c ]; then script="$arg"; prev=""; rest=(); continue; fi
+            [ -z "$script" ] || rest+=("$arg")
+            prev="$arg"
+        done
+        sh -c "${script//\/le/$TEST_DIR/le}" "${rest[@]}"
+        return
+    fi
+    if [ "$1" = compose ] && [ "$2" = logs ]; then
+        cat "$TEST_DIR/traefik-log" 2>/dev/null || true
+        return 0
+    fi
+    command_docker "$@"
+}
+
+# HTTPS-1: with the staging server the certificate check wants one of its
+# certificates; Traefik's own default certificate is no success. HTTPS-4:
+# a missing certificate is told with Traefik's own cause and how to try
+# again.
+test_staging_needs_a_staging_certificate() (
+    load
+    local out
+    printf '%s\n' '2026-11-27T00:00:00Z ERR Unable to obtain ACME certificate for domains error="unable to generate a certificate for the domains [console.example.com]: acme: error: 400 :: urn:ietf:params:acme:error:invalidContact :: Error validating contact(s) :: contact email has forbidden domain \"example.com\"" ACME CA=https://acme-staging-v02.api.letsencrypt.org/directory' > "$TEST_DIR/traefik-log"
+    # With the colours Traefik writes into its log without --log.nocolor
+    sed -i 's/ ERR / \x1b[31mERR\x1b[0m /; s/error="/\x1b[36merror=\x1b[0m\x1b[31m\x1b[1m"/' "$TEST_DIR/traefik-log"
+    out=$(mgr "$(declare -f traefik_docker)"'
+              docker() { traefik_docker "$@"; }
+              openssl() { [ "$1" != s_client ] || { cat > /dev/null; return 0; }; cat > /dev/null; printf "issuer=CN = TRAEFIK DEFAULT CERT\n"; }
+              getent() { return 2; }
+              DOMAIN_SET=console.example.com; LETSENCRYPT_STAGING=true; TRAEFIK_ACTION=on
+              COMMAND=install; do_install' 2>&1) || fail "the staging install failed: $out"
+    if printf '%s' "$out" | grep -q 'has a certificate'; then fail "Traefik's default certificate passed as a staging one: $out"; fi
+    printf '%s' "$out" | grep -q 'no certificate from Let.s Encrypt yet' || fail "no warning without a certificate: $out"
+    printf '%s' "$out" | grep -qF 'contact email has forbidden domain "example.com"' || fail "the warning does not give Traefik's cause: $out"
+    printf '%s' "$out" | grep -q 'run this script again' || fail "the warning does not say how to try again: $out"
+    out=$(mgr "$(declare -f traefik_docker)"'
+              docker() { traefik_docker "$@"; }
+              openssl() { cat > /dev/null; [ "$1" = s_client ] || printf "issuer=C = US, O = (STAGING) Let'"'"'s Encrypt, CN = (STAGING) Ersatz Emmer YR2\n"; }
+              getent() { return 2; }
+              DOMAIN_SET=console.example.com; LETSENCRYPT_STAGING=true; TRAEFIK_ACTION=on
+              COMMAND=update; do_install' 2>&1) || fail "the staging run failed: $out"
+    printf '%s' "$out" | grep -q "certificate of Let's Encrypt's staging server" || fail "a staging certificate was not taken: $out"
+    rm -rf "$TEST_DIR"
+)
+
+# HTTPS-2: going from the staging server to the production one, the
+# staging account and certificate in acme.json move aside, with Traefik
+# stopped, and Traefik is made again, so it asks the production server.
+# An acme.json of the server in use stays.
+test_staging_to_production_renews() (
+    load
+    local out
+    mkdir -p "$TEST_DIR/le"
+    mgr "$(declare -f traefik_docker)"'
+         docker() { traefik_docker "$@"; }
+         getent() { return 2; }
+         DOMAIN_SET=console.example.com; LETSENCRYPT_STAGING=true; TRAEFIK_ACTION=on
+         COMMAND=install; do_install' > "$TEST_DIR/staging.out" 2>&1 || fail "the staging install failed: $(cat "$TEST_DIR/staging.out")"
+    printf '{"letsencrypt":{"Account":{"Registration":{"uri":"https://acme-staging-v02.api.letsencrypt.org/acme/acct/1"}}}}\n' > "$TEST_DIR/le/acme.json"
+    : > "$CALLS"
+    out=$(mgr "$(declare -f traefik_docker)"'
+         docker() { traefik_docker "$@"; }
+              getent() { return 2; }
+              DOMAIN_SET=console.example.com; TRAEFIK_ACTION=on
+              COMMAND=update; do_install' 2>&1) || fail "the switch to production failed: $out"
+    [ ! -e "$TEST_DIR/le/acme.json" ] || fail "the staging acme.json stayed: $(cat "$TEST_DIR/le/acme.json")"
+    ls "$TEST_DIR/le"/acme.json.other-server-* > /dev/null 2>&1 || fail "the staging acme.json was not kept aside: $(ls "$TEST_DIR/le")"
+    local stop move recreate
+    stop=$(grep -n '^compose --profile traefik stop traefik' "$CALLS" | head -n 1 | cut -d: -f1)
+    move=$(grep -n 'mv /le/acme.json' "$CALLS" | head -n 1 | cut -d: -f1)
+    recreate=$(grep -n '^compose up -d --no-deps --force-recreate traefik' "$CALLS" | head -n 1 | cut -d: -f1)
+    { [ -n "$stop" ] && [ -n "$move" ] && [ -n "$recreate" ] && [ "$stop" -lt "$move" ] && [ "$move" -lt "$recreate" ]; } \
+        || fail "Traefik was not stopped, its storage moved and Traefik made again, in that order: $(cat "$CALLS")"
+    printf '%s' "$out" | grep -q 'has its certificate' || fail "the production certificate was not checked: $out"
+
+    printf '{"letsencrypt":{"Account":{"Registration":{"uri":"https://acme-v02.api.letsencrypt.org/acme/acct/2"}}}}\n' > "$TEST_DIR/le/acme.json"
+    mgr "$(declare -f traefik_docker)"'
+         docker() { traefik_docker "$@"; }
+         COMMAND=update; do_install' > /dev/null 2>&1 || fail "the update on production failed"
+    [ -e "$TEST_DIR/le/acme.json" ] || fail "an acme.json of the production server was moved"
+    rm -rf "$TEST_DIR"
+)
+
+# HTTPS-3, HTTPS-17: --domain on an install that runs Traefik, with the
+# same image: Traefik is made again (it reads its routing only when it is
+# made, and asks Let's Encrypt again), and nothing is stopped or backed up.
+test_domain_change_remakes_traefik() (
+    load
+    local out
+    mgr 'getent() { return 2; }
+         DOMAIN_SET=console.example.com; TRAEFIK_ACTION=on
+         COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install with --domain failed"
+    : > "$CALLS"
+    out=$(mgr 'getent() { return 2; }
+               DOMAIN_SET=remote.example.net; TRAEFIK_ACTION=on
+               COMMAND=update; do_install' 2>&1) || fail "the domain change failed: $out"
+    grep -qx 'NEODESK_DOMAIN=remote.example.net' "$NEODESK_DIR/.env" || fail ".env has not the new domain: $(cat "$NEODESK_DIR/.env")"
+    grep -q '^compose up -d --no-deps --force-recreate traefik' "$CALLS" || fail "Traefik was not made again: $(cat "$CALLS")"
+    if grep -qE '^compose stop|^run .*czf' "$CALLS"; then fail "a change of the domain stopped NeoDesk or backed it up: $(cat "$CALLS")"; fi
+    printf '%s' "$out" | grep -q 'Web console: *https://remote.example.net' || fail "the summary does not name the new domain: $out"
+    # The same --domain again: Traefik is made again, so it tries once more
+    : > "$CALLS"
+    mgr 'getent() { return 2; }
+         DOMAIN_SET=remote.example.net; TRAEFIK_ACTION=on
+         COMMAND=update; do_install' > /dev/null 2>&1 || fail "the second run with the domain failed"
+    grep -q '^compose up -d --no-deps --force-recreate traefik' "$CALLS" || fail "a second --domain did not make Traefik try again: $(cat "$CALLS")"
+    rm -rf "$TEST_DIR"
+)
+
+# HTTPS-10: the DNS check knows this server's IPv6 addresses: a name with
+# only an AAAA record of the server gives no warning, another one does.
+test_dns_check_knows_ipv6() (
+    load
+    local out
+    out=$(mgr 'getent() { printf "2001:db8:5::2e STREAM name\n"; }
+               ip() { [ "$1" = -6 ] && printf "    inet6 2001:db8:5::2e/128 scope global\n"; }
+               RELAY_SERVERS_SET=203.0.113.10; check_domain_dns console.example.com' 2>&1) || fail "the DNS check failed: $out"
+    [ -z "$out" ] || fail "a name with the server's IPv6 address gave a warning: $out"
+    out=$(mgr 'getent() { printf "2001:db8:9::1 STREAM name\n"; }
+               ip() { [ "$1" = -6 ] && printf "    inet6 2001:db8:5::2e/128 scope global\n"; }
+               RELAY_SERVERS_SET=203.0.113.10; check_domain_dns console.example.com' 2>&1)
+    printf '%s' "$out" | grep -q 'not at this server' || fail "a name elsewhere gave no warning: $out"
+    rm -rf "$TEST_DIR"
+)
+
 
 # The compose file and the manager's own copy come from the release the
 # image tag names, checked against the release's SHA256SUMS: v<version>
@@ -1043,6 +1148,174 @@ test_update_moves_the_default_console_port() (
     rm -rf "$TEST_DIR"
 )
 
+# DOCKER-QUICK-5: install.sh --help lists every option, also piped into
+# bash (curl ... | sudo bash -s -- --help), where it has no file to read.
+test_install_sh_help_when_piped() (
+    local help opt
+    help=$(bash -s -- --help < "$SCRIPT_ROOT/install/install.sh" 2>&1) || fail "install.sh --help through a pipe failed: $help"
+    for opt in $(sed -n '/^while \[ \$# -gt 0 \]; do/,/^done/p' "$SCRIPT_ROOT/install/install.sh" \
+        | grep -oE '^ +--[a-z-]+' | tr -d ' ' | grep -vx -- '--split' | sort -u); do
+        printf '%s' "$help" | grep -q -- "$opt" || fail "install.sh --help does not list $opt: $help"
+    done
+)
+
+# fw_rules: the rules of the stand-in firewall, sorted, on one line
+fw_rules() {
+    if [ "$(cat "$TEST_DIR/fw")" = ufw ]; then
+        awk '$2 == "ALLOW" { print $1 }' "$TEST_DIR/fw-rules" 2>/dev/null | sort -u | tr '\n' ' '
+    else
+        sort -u "$TEST_DIR/fw-rules" 2>/dev/null | tr '\n' ' '
+    fi
+}
+
+# DOCKER-QUICK-7, HTTPS-9: the manager opens what NeoDesk serves in ufw
+# or firewalld (install.sh no longer does it itself), before the
+# container starts: the client ports, the console's 3375, its 5443 with
+# HTTPS_ENABLED; the console's ports close again behind a reverse proxy
+# (TRUST_PROXY), and uninstall closes everything it opened. A second run
+# opens nothing twice.
+test_firewall_follows_what_it_serves() (
+    local fw out clients first up
+    clients="21114/tcp 21115/tcp 21116/tcp 21116/udp 21117/tcp 21118/tcp 21119/tcp 21121/tcp 21122/tcp"
+    sorted() { printf '%s\n' "$@" | sort -u | tr '\n' ' '; }
+    for fw in ufw firewalld; do
+        load
+        printf '%s\n' "$fw" > "$TEST_DIR/fw"
+        out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "the install under $fw failed: $out"
+        # shellcheck disable=SC2086
+        [ "$(fw_rules)" = "$(sorted $clients 3375/tcp)" ] || fail "a plain install under $fw opened: $(fw_rules)"
+        printf '%s' "$out" | grep -q "Opened in $fw: " || fail "the install does not say what it opened in $fw: $out"
+        first=$(grep -nE '^(ufw allow|firewall-cmd --permanent --add-port)' "$CALLS" | head -n 1 | cut -d: -f1)
+        up=$(grep -n '^compose up' "$CALLS" | head -n 1 | cut -d: -f1)
+        [ -n "$first" ] && [ "$first" -lt "$up" ] || fail "under $fw the ports were opened after the start: $(cat "$CALLS")"
+
+        : > "$CALLS"
+        out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "the second run under $fw failed: $out"
+        if grep -qE '^(ufw allow|firewall-cmd --permanent --add-port)' "$CALLS"; then fail "the second run under $fw opened ports again: $(cat "$CALLS")"; fi
+
+        env_set HTTPS_ENABLED true
+        mgr 'COMMAND=update; do_install' > /dev/null 2>&1 || fail "the update with HTTPS under $fw failed"
+        # shellcheck disable=SC2086
+        [ "$(fw_rules)" = "$(sorted $clients 3375/tcp 5443/tcp)" ] || fail "HTTPS under $fw opened: $(fw_rules)"
+
+        env_set TRUST_PROXY 1
+        out=$(mgr 'COMMAND=update; do_install' 2>&1) || fail "the update with TRUST_PROXY under $fw failed: $out"
+        # shellcheck disable=SC2086
+        [ "$(fw_rules)" = "$(sorted $clients)" ] || fail "behind a reverse proxy $fw still lets in: $(fw_rules)"
+        printf '%s' "$out" | grep -q "Closed in $fw: " || fail "the update does not say what it closed in $fw: $out"
+        case "$fw" in
+            ufw) printf '%s' "$out" | grep -q 'sudo ufw allow 3375/tcp' || fail "no hint how to open 3375 in ufw: $out" ;;
+            firewalld) printf '%s' "$out" | grep -q 'firewall-cmd --permanent --add-port=3375/tcp' || fail "no hint how to open 3375 in firewalld: $out" ;;
+        esac
+
+        out=$(mgr 'do_uninstall' 2>&1) || fail "the uninstall under $fw failed: $out"
+        [ -z "$(fw_rules)" ] || fail "the uninstall left in $fw: $(fw_rules)"
+        printf '%s' "$out" | grep -q "Closed in $fw: " || fail "the uninstall does not say what it closed in $fw: $out"
+        rm -rf "$TEST_DIR"
+    done
+)
+
+# With Traefik the firewall lets in 80 and 443 instead of the console's
+# port, and --no-traefik closes them again. A rule that was there before
+# (a web server's 443) is not added twice and stays; rules of install.sh
+# before 3.6.23 (comment "NeoDesk ...", no record) close at uninstall.
+test_firewall_with_traefik_and_old_rules() (
+    load
+    local out
+    printf 'ufw\n' > "$TEST_DIR/fw"
+    printf '%-26s ALLOW       Anywhere                   # web server\n' 443/tcp > "$TEST_DIR/fw-rules"
+    printf '%-26s ALLOW       Anywhere                   # NeoDesk signal UDP\n' 21116/udp >> "$TEST_DIR/fw-rules"
+    out=$(mgr 'getent() { return 2; }
+               DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=ops@neodesk-test.de; TRAEFIK_ACTION=on
+               COMMAND=install; do_install' 2>&1) || fail "the install with --domain failed: $out"
+    case " $(fw_rules) " in *" 80/tcp "*) ;; *) fail "Traefik's 80 is not open: $(fw_rules)" ;; esac
+    case " $(fw_rules) " in *" 3375/tcp "*) fail "the console's own port is open behind Traefik: $(fw_rules)" ;; esac
+    if grep -q '^ufw allow 443/tcp' "$CALLS"; then fail "443 was added although it was open: $(cat "$CALLS")"; fi
+    out=$(mgr 'TRAEFIK_ACTION=off; COMMAND=update; do_install' 2>&1) || fail "--no-traefik failed: $out"
+    case " $(fw_rules) " in *" 80/tcp "*) fail "--no-traefik left 80 open: $(fw_rules)" ;; esac
+    case " $(fw_rules) " in *" 443/tcp "*) ;; *) fail "--no-traefik closed the web server's 443: $(fw_rules)" ;; esac
+    case " $(fw_rules) " in *" 3375/tcp "*) ;; *) fail "--no-traefik did not open the console's port: $(fw_rules)" ;; esac
+    rm -f "$NEODESK_DIR/.firewall"
+    mgr 'do_uninstall' > /dev/null 2>&1 || fail "the uninstall failed"
+    [ "$(fw_rules)" = "443/tcp " ] || fail "the uninstall did not close the old rules, or closed the web server's: $(fw_rules)"
+    rm -rf "$TEST_DIR"
+)
+
+# An installed ufw that is off gets no rules (they would go live with the
+# next "ufw enable"), and --skip-firewall leaves an active one alone.
+test_firewall_left_alone() (
+    load
+    mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
+    if grep -qE '^ufw (allow|delete)|^firewall-cmd --permanent' "$CALLS"; then fail "an inactive ufw was changed: $(cat "$CALLS")"; fi
+    rm -rf "$TEST_DIR"
+    load
+    printf 'ufw\n' > "$TEST_DIR/fw"
+    mgr 'parse_args --skip-firewall; COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install with --skip-firewall failed"
+    if grep -q '^ufw' "$CALLS"; then fail "--skip-firewall touched ufw: $(cat "$CALLS")"; fi
+    rm -rf "$TEST_DIR"
+)
+
+# MIGRATE-CLIENT-9: --import-keys takes a RustDesk server's key pair
+# instead of a new one: it is checked first (both files, the halves
+# belong together), goes into the data volume before the first start,
+# and on an install that runs, the update does not stop at "up to date"
+# but stops NeoDesk, backs it up and imports the key before the start.
+test_import_keys() (
+    load
+    local out keys seed pubkey import up stop
+    keys="$TEST_DIR/rustdesk"
+    mkdir -p "$keys"
+    if out=$(mgr "parse_args --import-keys $keys" 2>&1); then fail "--import-keys without key files went on"; fi
+    printf '%s' "$out" | grep -q 'id_ed25519' || fail "the error does not name the files: $out"
+    seed=$(head -c 32 /dev/urandom | base64 -w0)
+    pubkey=$(head -c 32 /dev/urandom | base64 -w0)
+    { printf '%s' "$seed" | base64 -d; printf '%s' "$pubkey" | base64 -d; } | base64 -w0 > "$keys/id_ed25519"
+    head -c 32 /dev/urandom | base64 -w0 > "$keys/id_ed25519.pub"
+    if out=$(mgr "parse_args --import-keys $keys" 2>&1); then fail "a public key of another pair went on"; fi
+    printf '%s' "$out" | grep -q 'does not belong' || fail "the mismatch error does not say so: $out"
+    printf '%s' "$pubkey" > "$keys/id_ed25519.pub"
+    out=$(mgr "parse_args --import-keys $keys; COMMAND=install; do_install" 2>&1) || fail "the install with --import-keys failed: $out"
+    import=$(grep -n "^run --rm --entrypoint sh --user 0 -v neodesk-data:/data -v $keys:/in:ro" "$CALLS" | head -n 1 | cut -d: -f1)
+    up=$(grep -n '^compose up' "$CALLS" | head -n 1 | cut -d: -f1)
+    [ -n "$import" ] && [ "$import" -lt "$up" ] || fail "the key was not imported before the first start: $(cat "$CALLS")"
+    printf '%s' "$out" | grep -q 'imported' || fail "the install does not say it imported the key: $out"
+
+    : > "$CALLS"
+    out=$(mgr "parse_args --import-keys $keys; COMMAND=install; do_install" 2>&1) || fail "the import on a running install failed: $out"
+    if printf '%s' "$out" | grep -q 'up to date'; then fail "the import on a running install stopped at up to date: $out"; fi
+    stop=$(grep -n '^compose stop' "$CALLS" | head -n 1 | cut -d: -f1)
+    import=$(grep -n "^run --rm --entrypoint sh --user 0 -v neodesk-data:/data" "$CALLS" | head -n 1 | cut -d: -f1)
+    up=$(grep -n '^compose up' "$CALLS" | head -n 1 | cut -d: -f1)
+    { [ -n "$stop" ] && [ -n "$import" ] && [ -n "$up" ] && [ "$stop" -lt "$import" ] && [ "$import" -lt "$up" ]; } \
+        || fail "the import did not stop NeoDesk, import and start it, in that order: $(cat "$CALLS")"
+    rm -rf "$TEST_DIR"
+)
+
+# reset-password gives the account a new password through the server's
+# reset-password; --reset-two-factor passes the option on (it also turns
+# the account's two-factor sign-in off), and without it nothing else is
+# passed. An image that refuses the option gets a hint to update.
+test_reset_password_two_factor() (
+    load
+    mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
+    local out
+    : > "$CALLS"
+    out=$(mgr 'parse_args reset-password; do_reset_password' 2>&1) || fail "reset-password failed: $out"
+    grep -q 'neodesk-server reset-password admin$' "$CALLS" || fail "reset-password did not run the server's command for admin: $(cat "$CALLS")"
+    if grep -q -- '--reset-two-factor' "$CALLS"; then fail "reset-password turned two-factor sign-in off unasked: $(cat "$CALLS")"; fi
+    if printf '%s' "$out" | grep -q 'Two-factor'; then fail "reset-password talks of two-factor sign-in unasked: $out"; fi
+    : > "$CALLS"
+    out=$(mgr 'parse_args reset-password --reset-two-factor --user ops; do_reset_password' 2>&1) || fail "reset-password --reset-two-factor failed: $out"
+    grep -q 'neodesk-server reset-password --reset-two-factor ops$' "$CALLS" || fail "--reset-two-factor was not passed on: $(cat "$CALLS")"
+    printf '%s' "$out" | grep -q 'Two-factor sign-in of ops is off' || fail "the output does not say two-factor sign-in is off: $out"
+    if out=$(mgr 'docker() { if [ "$1" = exec ] && [[ "$*" == *--reset-two-factor* ]]; then cat > /dev/null; return 2; fi; command_docker "$@"; }
+                  parse_args reset-password --reset-two-factor; do_reset_password' 2>&1); then
+        fail "a refused --reset-two-factor passed"
+    fi
+    printf '%s' "$out" | grep -q 'update first' || fail "a refused --reset-two-factor gives no hint: $out"
+    rm -rf "$TEST_DIR"
+)
+
 test_fresh_install
 test_no_release_image_runs_dev
 test_update_goes_back_when_unhealthy
@@ -1064,11 +1337,19 @@ test_failed_first_install_resumes
 test_rerun_without_changes_keeps_the_container
 test_summary_names_the_console_ports_it_serves
 test_install_sh_runs_the_manager
-test_install_sh_opens_the_console_ports_it_serves
-test_install_sh_leaves_an_inactive_ufw_alone
+test_install_sh_help_when_piped
+test_firewall_follows_what_it_serves
+test_firewall_with_traefik_and_old_rules
+test_firewall_left_alone
+test_import_keys
+test_reset_password_two_factor
 test_traefik_with_letsencrypt
 test_traefik_errors_say_what_to_do
 test_install_sh_passes_the_domain
+test_staging_needs_a_staging_certificate
+test_staging_to_production_renews
+test_domain_change_remakes_traefik
+test_dns_check_knows_ipv6
 test_files_come_from_the_release
 test_install_sh_takes_the_release_files
 test_update_moves_the_default_console_port

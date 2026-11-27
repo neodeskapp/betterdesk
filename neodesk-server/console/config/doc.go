@@ -152,8 +152,11 @@
 //	SMTP_HOST                (none)                The mail server when no SMTP settings are saved (package mail),
 //	SMTP_PORT                587                   read at every use: SMTP_PORT, SMTP_SECURE ("true"), SMTP_USER,
 //	...                                            SMTP_PASS, SMTP_FROM (neodesk@localhost), SMTP_ALERT_EMAIL.
-//	PANEL_PUBLIC_URL         (none)                The console's address in mails. Without both: http or https,
-//	(or PUBLIC_URL)                                HOST (127.0.0.1 for 0.0.0.0) and the console's port.
+//	PANEL_PUBLIC_URL         (none)                The console's address in mails and in the page the desktop app
+//	(or PUBLIC_URL)                                opens to sign in through the console. Without both: http or https,
+//	                                               HOST (127.0.0.1 for 0.0.0.0) and the console's port; the desktop
+//	                                               sign-in takes the host name the app reached the server at
+//	                                               (DECISIONS A276).
 //
 // # The env file
 //

@@ -19,9 +19,6 @@ import { isGuestMode, isRemoteTarget, transportOf } from './access.ts';
 import { loadRdClient } from './rdclient.ts';
 import { Viewer } from './viewer.svelte.ts';
 
-/** The console's sidebar is folded away while a session shows (remembered in this browser) */
-const COLLAPSED_KEY = 'nd_viewer_sidebar_collapsed';
-
 export type OpenResult = 'opened' | 'standalone' | 'problem' | 'signin';
 
 export interface SessionProblem {
@@ -44,14 +41,6 @@ export function standalonePath(deviceId: string, search = ''): string {
 	return '/remote/' + encodeURIComponent(deviceId) + '?' + q.toString();
 }
 
-function readCollapsed(): boolean {
-	try {
-		return localStorage.getItem(COLLAPSED_KEY) === '1';
-	} catch {
-		return false;
-	}
-}
-
 export class ConsoleSessions {
 	viewer = $state.raw<Viewer | null>(null);
 	data = $state.raw<ViewerData | null>(null);
@@ -60,8 +49,6 @@ export class ConsoleSessions {
 	/** A device being opened, and what went wrong opening one */
 	opening = $state<string | null>(null);
 	problem = $state.raw<SessionProblem | null>(null);
-	/** The sidebar is folded away on the session page */
-	collapsed = $state(readCollapsed());
 	/** Full screen: the console's own bars step aside too */
 	immersive = $state(false);
 	/** Where Close goes when the last session ends */
@@ -120,15 +107,6 @@ export class ConsoleSessions {
 		this.viewer?.setParked(!shown);
 		if (!shown && this.immersive && document.fullscreenElement)
 			void document.exitFullscreen().catch(() => {});
-	}
-
-	setCollapsed(collapsed: boolean): void {
-		this.collapsed = collapsed;
-		try {
-			localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0');
-		} catch {
-			/* storage blocked: kept for this page */
-		}
 	}
 
 	/** Moves a session out to the standalone viewer in a new tab: this one ends here */

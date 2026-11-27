@@ -142,6 +142,8 @@ type Server struct {
 	// impersonation holds "Sign in as" to read-only (package
 	// impersonation): a step of the pipeline and the socket upgrades
 	impersonation *impersonation.Service
+	// proxyHint logs once that a proxy TRUST_PROXY ignores is in front
+	proxyHint untrustedProxyHint
 }
 
 // clientAPIPort is the client API port while the console listens on it
@@ -608,10 +610,14 @@ func (s *Server) Jobs() *jobs.Registry { return s.jobs }
 // (but for an impersonation, which opens only some, RefuseUpgrade),
 // as Node's upgrade listener ran outside Express; any other upgrade
 // passes the pipeline like a plain request. The routing report
-// (routing.go), when switched on, answers before all of them.
+// (routing.go), when switched on, answers before all of them, and a
+// request under ClientAPIPath goes to the client API (clientapipath.go).
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.cfg.DebugRouting && r.Method == http.MethodGet && r.URL.Path == routingPath {
 		routingReport(w, r)
+		return
+	}
+	if s.serveClientAPIPath(w, r) {
 		return
 	}
 	if s.deps.Sockets.Serves(r) {
