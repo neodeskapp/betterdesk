@@ -74,6 +74,13 @@ describe('stored values in words', () => {
 		expect(features).not.toHaveClass('is-set');
 	});
 
+	test('an empty Network group says the server’s settings apply, not each device', async () => {
+		render(SettingsTab, { org, canPolicies: true });
+		const network = await row('policy_network');
+		expect(network.textContent).toContain('Not set (the server’s connection settings apply)');
+		expect(network.textContent).not.toContain('each device decides');
+	});
+
 	test('the policies group links to this organization’s Policies page', async () => {
 		render(SettingsTab, { org, canPolicies: true });
 		const link = await screen.findByRole('link', { name: 'Open this organization’s policies' });
