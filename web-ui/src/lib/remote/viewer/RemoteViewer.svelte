@@ -543,7 +543,7 @@
 		{:else if embedded && onopennewtab && active}
 			<Button
 				icon="open_in_new"
-				class="bar-btn"
+				class="bar-btn bar-end"
 				title={tf(
 					'remote_viewer.open_in_new_tab_hint',
 					'Move this session to a tab of its own: it connects again there and ends here'
@@ -759,6 +759,9 @@
 		border-color: var(--accent);
 		background: var(--accent-tint);
 	}
+	.session-bar :global(.bar-end) {
+		margin-inline-start: auto;
+	}
 	.session-bar :global(.bar-btn.is-icon) {
 		width: var(--control-h);
 		padding: 0;
@@ -766,7 +769,7 @@
 	/* Open sessions: the shared tab style (underline on the selected one) */
 	.session-tabs {
 		display: flex;
-		flex: 1;
+		flex: 0 1 auto;
 		align-self: stretch;
 		gap: var(--space-1);
 		min-width: 0;

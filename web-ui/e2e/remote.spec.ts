@@ -103,7 +103,7 @@ for (const role of ROLES) {
 			await expect(page.getByRole('button', { name: /^Controls/ })).toHaveCount(0);
 			await page.locator('.session-canvas').focus();
 			await page.keyboard.press('F8');
-			await expect(controls.getByRole('button', { name: 'Keys', exact: true })).toBeFocused();
+			await expect(controls.locator('[aria-haspopup="menu"]').first()).toBeFocused();
 			for (const name of ['Keys', 'View', 'More']) {
 				await controls.getByRole('button', { name, exact: true }).click();
 				await expect(page.getByRole('menu')).toBeVisible();

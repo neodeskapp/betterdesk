@@ -76,6 +76,8 @@
 	const watchOnly = $derived(viewer.viewOnlyGuest);
 	const recording = $derived(!!(s?.recording || s?.meshServerRecord));
 	const clipState = $derived(viewer.clipboard.state());
+	// The clipboard shows when it needs a click or is off on its own; view only says so itself
+	const clipShown = $derived(clipState !== 'on' && viewer.clipboardOff() !== 'view_only');
 	const anyState = $derived(
 		(hasPackage && !!packageText) ||
 			recording ||
@@ -83,7 +85,7 @@
 			!!s?.toggles.blockInput ||
 			!!s?.toggles.privacy ||
 			!!s?.audioMuted ||
-			clipState !== 'on'
+			clipShown
 	);
 
 	/* ── Width: below 760 px Chat and File transfer move into More ── */
@@ -246,7 +248,7 @@
 					><span class="st-label">{tf('remote_viewer.sound_off', 'Sound off')}</span></Button
 				>
 			{/if}
-			{#if clipState !== 'on'}
+			{#if clipShown}
 				<ClipboardStatus {viewer} />
 			{/if}
 		</div>
@@ -466,7 +468,7 @@
 		<!-- More carries the Session info sheet's button id, so closing the sheet focuses it -->
 		<ToolMenu
 			label={tf('remote_viewer.more', 'More')}
-			icon="more_horiz"
+			icon="more_vert"
 			iconOnly
 			buttonId={SHEET_BUTTONS.info}
 		>
@@ -563,6 +565,7 @@
 	.controls {
 		display: flex;
 		flex: none;
+		margin-inline-start: auto;
 		align-items: center;
 		gap: var(--space-2);
 		min-width: 0;
