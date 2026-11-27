@@ -643,6 +643,8 @@ func (s *Server) routes() *http.ServeMux {
 	// Enrollment — device self-registration (public, no auth, rate-limited via M-07)
 	mux.HandleFunc("POST /api/devices/register", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceRegister))
 	mux.HandleFunc("GET /api/devices/register/status", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceRegisterStatus))
+	// rustdesk --deploy --token <device token>; the handler checks the token
+	mux.HandleFunc("POST /api/devices/deploy", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceDeploy))
 	mux.HandleFunc("POST /api/devices/self/access-policy", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceSelfAccessPolicy))
 	mux.HandleFunc("POST /api/devices/self/help-request", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceSelfHelpRequest))
 	mux.HandleFunc("POST /api/devices/self/totp", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceSelfTOTP))

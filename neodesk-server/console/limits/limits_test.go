@@ -785,6 +785,9 @@ func TestClientAPIPathList(t *testing.T) {
 		// unauthenticated enrollment bootstrap endpoints
 		{"POST", "/api/devices/register", 200},
 		{"GET", "/api/devices/register/status", 200},
+		// rustdesk --deploy --token, POST only
+		{"POST", "/api/devices/deploy", 200},
+		{"GET", "/api/devices/deploy", 405},
 		// pairing redeem and preview, but only as POST
 		{"POST", "/api/pairing/redeem", 200},
 		{"POST", "/api/pairing/config", 200},
