@@ -220,6 +220,22 @@
 		white-space: pre-wrap;
 		word-break: break-all;
 	}
+	/* The side column is narrow: each name above its value, as .facts does on a phone */
+	.facts.receiver-props {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.receiver-props dt {
+		min-height: 0;
+		padding-bottom: 0;
+		border-bottom: 0;
+	}
+	.receiver-props dd {
+		padding-top: var(--space-1);
+	}
+	.receiver-props dd > :global(*) {
+		flex: 1;
+		min-width: 0;
+	}
 	.receiver-props dt code {
 		font-size: var(--text-sm);
 	}
