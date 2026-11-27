@@ -104,3 +104,32 @@ func TestDerivedClientPort(t *testing.T) {
 		})
 	}
 }
+
+// Outside callers on the API port are limited to the client API only
+// when the console's client API port runs in this process: the console
+// on (CONSOLE_PORT not 0) and API_ENABLED on, as on Linux and Windows.
+// Docker sets API_ENABLED=false and keeps the whole API on 21121.
+func TestConsoleClientAPILimitsTheAPIPort(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		env  map[string]string
+		want bool
+	}{
+		{"Linux and Windows", map[string]string{}, true},
+		{"API_ENABLED=true", map[string]string{"API_ENABLED": "true"}, true},
+		{"Docker", map[string]string{"API_ENABLED": "false", "CONSOLE_PORT": "3375"}, false},
+		{"no console", map[string]string{"CONSOLE_PORT": "0"}, false},
+	} {
+		env := c.env
+		ccfg, err := consoleconfig.Load(func(key string) string { return env[key] })
+		if err != nil {
+			t.Fatalf("%s: %v", c.name, err)
+		}
+		if got := consoleClientAPI(ccfg); got != c.want {
+			t.Errorf("%s: consoleClientAPI = %v, want %v", c.name, got, c.want)
+		}
+	}
+	if consoleClientAPI(nil) {
+		t.Errorf("a console configuration that does not load limits the API port")
+	}
+}

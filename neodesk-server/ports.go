@@ -98,3 +98,20 @@ func startDerivedClientPort(cfg *config.Config, getenv func(string) string) int 
 	}
 	return derivedClientPort(cfg, startListeners(cfg, ccfg, getenv))
 }
+
+// consoleClientAPI reports whether the console's client API port
+// (API_ENABLED, API_PORT) will run in this process, so outside callers
+// on the server's API port get what it answers (api.Server.LimitOutside).
+// ccfg is nil when the console's configuration does not load.
+func consoleClientAPI(ccfg *consoleconfig.Config) bool {
+	return ccfg != nil && ccfg.Port != 0 && ccfg.APIEnabled
+}
+
+// startConsoleClientAPI is consoleClientAPI for this start.
+func startConsoleClientAPI() bool {
+	ccfg, err := consoleconfig.LoadEnv()
+	if err != nil {
+		ccfg = nil
+	}
+	return consoleClientAPI(ccfg)
+}

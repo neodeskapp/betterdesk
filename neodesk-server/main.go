@@ -736,6 +736,10 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		}
 
 		apiSrv.SetDerivedClientPort(startDerivedClientPort(cfg, os.Getenv))
+		if startConsoleClientAPI() {
+			apiSrv.LimitOutside()
+			log.Printf("[api] Callers outside this machine and API_ALLOW_FROM get the client API on port %d, as on the console's client API port", cfg.APIPort)
+		}
 		if err := apiSrv.Start(ctx); err != nil {
 			logging.Fatalf("Failed to start API server: %v", err)
 		}

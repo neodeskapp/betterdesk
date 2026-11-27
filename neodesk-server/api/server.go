@@ -86,13 +86,16 @@ type Server struct {
 	// deviceChat is the console's handler of a computer's support chat
 	// (device_chat.go, L526)
 	deviceChat deviceChatHandler
-	cfg        *config.Config
-	db         db.Database
-	peers      *peer.Map
-	relay      *relay.Server
-	blocklist  *security.Blocklist
-	bwLimiter  *ratelimit.BandwidthLimiter
-	auditLog   *audit.Logger
+	// outside decides what callers outside this machine get on the API
+	// port (outside.go)
+	outside   outsideAPI
+	cfg       *config.Config
+	db        db.Database
+	peers     *peer.Map
+	relay     *relay.Server
+	blocklist *security.Blocklist
+	bwLimiter *ratelimit.BandwidthLimiter
+	auditLog  *audit.Logger
 	// joinUnproved limits the audit entries of refused joins per device
 	// (auditJoinUnproved)
 	joinUnproved unprovedAudit
@@ -859,7 +862,7 @@ func (s *Server) Start(ctx context.Context) error {
 	addr := fmt.Sprintf(":%d", s.cfg.APIPort)
 	s.httpSrv = &http.Server{
 		Addr:        addr,
-		Handler:     s.ListenerHandler(),
+		Handler:     s.outsideGate(s.ListenerHandler()),
 		ReadTimeout: 10 * time.Second,
 		// No WriteTimeout — WebSocket connections need unlimited write time.
 		// Individual REST handlers are responsible for their own deadlines.
