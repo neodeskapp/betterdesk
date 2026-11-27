@@ -188,6 +188,9 @@ type Server struct {
 	// refusals decides which refusals of unauthenticated requests are
 	// audited.
 	refusals *refusalCounter
+	// enrollmentLines decides which log lines about devices that wait for
+	// approval or are refused by the enrollment mode are written.
+	enrollmentLines *refusalCounter
 
 	// panelProof is the encoded secret field the console's bridge sends
 	// first (see panel_proof.go); panelConns holds the open TCP
@@ -217,6 +220,7 @@ func New(cfg *config.Config, kp *crypto.KeyPair, database db.Database) *Server {
 
 		maxPendingEnrollments: defaultMaxPendingEnrollments,
 		refusals:              newRefusalCounter(refusalAuditWindow, refusalAuditBudget),
+		enrollmentLines:       newRefusalCounter(enrollmentLogWindow, enrollmentLogBudget),
 		panelProof:            newPanelProof(),
 	}
 	if cfg != nil {
