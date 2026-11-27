@@ -1,10 +1,12 @@
 /**
- * The Policies page on the settings pattern: an organization's settings
- * show what applies now and where it comes from, nothing is filled in
- * that the organization did not set, setting a rule and removing it are
- * explicit, Save writes only the changed groups (PUT with the rules,
- * DELETE when none is left) and the toast offers Undo. Every admin role
- * may read; writing needs org.edit (A83).
+ * The Policies page on the settings pattern (settings-pass-2.md): every
+ * setting's control is there at once with "Not set" inside it, one click
+ * sets a rule, "Remove the rule" sits beside a set control, a note for a
+ * whole group is said once on it, internal keys stay off the screen, and
+ * "Remove all rules of this group" shows only where there are rules. Save
+ * writes only the changed groups (PUT with the rules, DELETE when none is
+ * left) and the toast offers Undo. Every admin role may read; writing
+ * needs org.edit (A83).
  */
 import { cleanup, render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -83,6 +85,7 @@ function resolvedFor(stored: Record<string, Record<string, unknown>>, deviceAppA
 let writes: { call: string; body: unknown }[] = [];
 let stored: Record<string, Record<string, unknown>> = {};
 let deviceAppApplies = false;
+let deviceCount = 2;
 
 function answer(path: string): unknown {
 	switch (path) {
@@ -93,7 +96,7 @@ function answer(path: string): unknown {
 		case '/api/panel/policies/org-1/audit':
 			return { entries: [] };
 		case '/api/panel/org/org-1/devices':
-			return { devices: [{ id: 'a' }, { id: 'b' }] };
+			return { devices: Array.from({ length: deviceCount }, (_, i) => ({ id: `d${i}` })) };
 		case '/api/panel/roles':
 			return {
 				success: true,
@@ -110,6 +113,7 @@ beforeEach(() => {
 	writes = [];
 	stored = {};
 	deviceAppApplies = false;
+	deviceCount = 2;
 	confirm.mockClear();
 	vi.stubGlobal('fetch', async (input: string, init: RequestInit = {}) => {
 		const url = new URL(input, location.origin);
@@ -153,8 +157,9 @@ async function openPage() {
 }
 
 const group = (name: string) => screen.getByRole('heading', { name }).closest('section') as HTMLElement;
-const setHere = (label: string) =>
-	screen.getByRole('button', { name: `Set for this organization: ${label}` });
+/** An on/off setting's Not set / On / Off choice */
+const choice = (label: string) => screen.getByRole('radiogroup', { name: label });
+const NOTICE = 'No NeoDesk app applies this group yet. It is saved and handed to devices that ask.';
 
 describe('policies page', () => {
 	test('server_admin (no org.edit) reads everything but can set nothing and writes nothing', async () => {
@@ -163,22 +168,34 @@ describe('policies page', () => {
 		await openPage();
 		expect(screen.getByText('You can view this page but not change it.')).toBeInTheDocument();
 		expect(screen.getByLabelText('policies.connection_mode')).toBeDisabled();
-		expect(setHere('policies.allow_audio')).toBeDisabled();
+		for (const radio of within(choice('policies.allow_audio')).getAllByRole('radio'))
+			expect(radio).toBeDisabled();
 		expect(screen.queryByRole('button', { name: /Remove all rules/ })).toBeNull();
+		expect(screen.queryByRole('button', { name: /^Remove the rule/ })).toBeNull();
 		expect(writes).toEqual([]);
 	});
 
-	test('a group never saved shows no values, only "No rule" and "Set for this organization"', async () => {
+	test('a group never saved shows every control with "Not set" picked, and no sentence per row', async () => {
 		signIn('global_admin', EDITOR);
 		await openPage();
 		const features = group('policies.features_title');
-		expect(within(features).getByText('No rule here')).toBeInTheDocument();
-		expect(within(features).queryAllByRole('combobox')).toEqual([]);
-		expect(within(features).queryAllByRole('checkbox')).toEqual([]);
-		expect(within(features).getAllByText('No rule: each device keeps its own setting.')).toHaveLength(4);
-		expect(setHere('policies.allow_audio')).toBeEnabled();
+		const radios = within(features).getAllByRole('radiogroup');
+		expect(radios).toHaveLength(4);
+		for (const r of radios) expect(within(r).getByRole('radio', { name: 'Not set' })).toBeChecked();
+		expect(screen.getByLabelText('policies.connection_mode')).toHaveValue('');
+		expect(
+			(screen.getByLabelText('policies.connection_mode') as HTMLSelectElement).selectedOptions[0]
+		).toHaveTextContent('Not set (each device decides)');
+		expect(screen.getByLabelText('policies.idle_lock')).toHaveValue(null);
+		// The old two-click way and its sentence under every row are gone
+		expect(screen.queryByRole('button', { name: /^Set for this organization/ })).toBeNull();
+		expect(screen.queryByText('No rule: each device keeps its own setting.')).toBeNull();
+		expect(screen.queryByText('No rule here')).toBeNull();
 		// The connection strategy is where "Always connect through a relay" comes from
 		const network = group('policies.network_title');
+		expect(
+			within(choice('policies.block_direct_p2p')).getByRole('radio', { name: 'Server value' })
+		).toBeChecked();
 		expect(within(network).getByText(/From the server: Always through the relay\./)).toBeInTheDocument();
 		expect(within(network).getByRole('link', { name: 'settings.connection_mode_title' })).toHaveAttribute(
 			'href',
@@ -199,14 +216,26 @@ describe('policies page', () => {
 		);
 	});
 
-	test('the device groups say no app applies them yet; the network group says when the server does', async () => {
+	test('an organization without devices says first that its policies reach none', async () => {
+		signIn('global_admin', EDITOR);
+		deviceCount = 0;
+		await openPage();
+		const line = await screen.findByText(
+			/No device is in this organization yet, so these policies reach none\./
+		);
+		expect(line).toHaveClass('is-empty');
+		// It comes before the first group
+		const first = screen.getByRole('heading', { name: 'policies.connection_title' });
+		expect(line.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+
+	test('the device groups say once that no app applies them; the network group says when the server does', async () => {
 		signIn('global_admin', EDITOR);
 		await openPage();
-		const notice = 'No NeoDesk app applies this group yet. It is saved and handed to devices that ask.';
 		for (const g of ['connection', 'features', 'security', 'update'])
-			expect(within(group(`policies.${g}_title`)).getByText(notice)).toBeInTheDocument();
+			expect(within(group(`policies.${g}_title`)).getAllByText(NOTICE)).toHaveLength(1);
 		const network = group('policies.network_title');
-		expect(within(network).queryByText(notice)).toBeNull();
+		expect(within(network).queryByText(NOTICE)).toBeNull();
 		expect(within(network).getByText('policies.effect_server')).toBeInTheDocument();
 		// "Devices get this" would contradict the notice: no app gets it yet
 		for (const g of ['connection', 'features', 'security', 'update'])
@@ -219,13 +248,9 @@ describe('policies page', () => {
 		expect(
 			within(group('policies.features_title')).getByRole('link', { name: 'Open access rules' })
 		).toHaveAttribute('href', '/app/devices#access-rules');
-		// A setting reached from the search says it on its own row too
-		expect(document.getElementById('pol-features-allow-audio')).toHaveTextContent(
-			'No NeoDesk app applies this yet.'
-		);
-		expect(document.getElementById('pol-network-block-direct-p2p')).not.toHaveTextContent(
-			'No NeoDesk app applies this yet.'
-		);
+		// Said on the group only, never again on each of its rows
+		expect(screen.queryByText('No NeoDesk app applies this yet.')).toBeNull();
+		expect(document.getElementById('pol-features-allow-audio')).not.toHaveTextContent(/applies this/);
 	});
 
 	test('once an app applies the device groups, the notice is gone', async () => {
@@ -238,17 +263,30 @@ describe('policies page', () => {
 			)
 		).toBeInTheDocument();
 		expect(screen.queryByText(/No NeoDesk app applies this group yet/)).toBeNull();
-		expect(screen.queryByText('No NeoDesk app applies this yet.')).toBeNull();
 	});
 
-	test('task 5: sound off where nothing was set is a change, saved as the only rule of the group, with Undo', async () => {
+	test('no internal key is on screen; the filter still finds a setting by it', async () => {
 		signIn('global_admin', EDITOR);
 		const user = userEvent.setup();
 		await openPage();
-		await user.click(setHere('policies.allow_audio'));
-		const audio = screen.getByLabelText('policies.allow_audio') as HTMLSelectElement;
-		expect(audio.value).toBe('off');
+		expect(screen.queryByText('features.allow_audio')).toBeNull();
+		expect(document.getElementById('pol-features-allow-audio')).toHaveAttribute(
+			'data-setting',
+			'features.allow_audio'
+		);
+		await user.type(screen.getByRole('searchbox', { name: 'Filter policy settings' }), 'allow_audio');
+		expect(document.getElementById('pol-features-allow-audio')).not.toHaveAttribute('hidden');
+		expect(document.getElementById('pol-features-allow-clipboard')).toHaveAttribute('hidden');
+	});
+
+	test('task 5: sound off where nothing was set is one click, saved as the only rule of the group, with Undo', async () => {
+		signIn('global_admin', EDITOR);
+		const user = userEvent.setup();
+		await openPage();
+		await user.click(within(choice('policies.allow_audio')).getByRole('radio', { name: 'Off' }));
+		expect(within(choice('policies.allow_audio')).getByRole('radio', { name: 'Off' })).toBeChecked();
 		expect(screen.getByText('1 unsaved change')).toBeInTheDocument();
+		expect(document.getElementById('pol-features-allow-audio')).toHaveClass('is-set', 'is-changed');
 		await user.click(screen.getByRole('button', { name: 'policies.save_button' }));
 		await vi.waitFor(() =>
 			expect(writes).toEqual([
@@ -256,7 +294,9 @@ describe('policies page', () => {
 			])
 		);
 		await vi.waitFor(() =>
-			expect(within(group('policies.features_title')).getByText('policies.configured')).toBeInTheDocument()
+			expect(
+				screen.getByRole('button', { name: 'Remove all rules of this group: policies.features_title' })
+			).toBeInTheDocument()
 		);
 		const saved = toasts.items.at(-1);
 		expect(saved?.message).toMatch(/policies\.allow_audio Off/);
@@ -266,17 +306,42 @@ describe('policies page', () => {
 		);
 	});
 
-	test('by keyboard: setting a rule puts the focus on its control, removing it back on the button', async () => {
+	test('picking "Not set" again is no change; a number field emptied is no rule', async () => {
 		signIn('global_admin', EDITOR);
+		stored = { connection: { idle_lock_timeout: 30 } };
 		const user = userEvent.setup();
 		await openPage();
-		setHere('policies.connection_mode').focus();
+		const audio = choice('policies.allow_audio');
+		await user.click(within(audio).getByRole('radio', { name: 'On' }));
+		await user.click(within(audio).getByRole('radio', { name: 'Not set' }));
+		expect(screen.queryByText('1 unsaved change')).toBeNull();
+		await user.clear(screen.getByLabelText('policies.idle_lock'));
+		expect(
+			within(document.getElementById('pol-connection-idle-lock-timeout')!).getByText(
+				'Not set (each device decides)'
+			)
+		).toBeInTheDocument();
+		await user.click(screen.getByRole('button', { name: 'policies.save_button' }));
+		await vi.waitFor(() =>
+			expect(writes).toEqual([{ call: 'DELETE /api/panel/policies/org-1/connection', body: undefined }])
+		);
+	});
+
+	test('"Remove the rule" sits beside a set control and puts the focus on it, now "Not set"', async () => {
+		signIn('global_admin', EDITOR);
+		stored = { connection: { mode: 'unattended' } };
+		const user = userEvent.setup();
+		await openPage();
+		const remove = screen.getByRole('button', { name: 'Remove the rule: policies.connection_mode' });
+		expect(remove.closest('.setting-control')).toContainElement(
+			screen.getByLabelText('policies.connection_mode')
+		);
+		// Only set settings have it
+		expect(screen.queryByRole('button', { name: 'Remove the rule: policies.idle_lock' })).toBeNull();
+		remove.focus();
 		await user.keyboard('{Enter}');
 		await vi.waitFor(() => expect(screen.getByLabelText('policies.connection_mode')).toHaveFocus());
-		expect(screen.getByLabelText('policies.connection_mode')).toHaveValue('attended');
-		screen.getByRole('button', { name: 'Remove the rule: policies.connection_mode' }).focus();
-		await user.keyboard('{Enter}');
-		await vi.waitFor(() => expect(setHere('policies.connection_mode')).toHaveFocus());
+		expect(screen.getByLabelText('policies.connection_mode')).toHaveValue('');
 	});
 
 	test('changing one setting sends only that group with only its rules', async () => {
@@ -305,14 +370,15 @@ describe('policies page', () => {
 		);
 	});
 
-	test('"Remove all rules of this group" asks, then clears the group at once', async () => {
+	test('"Remove all rules of this group" shows only on a group with rules, asks, then clears it', async () => {
 		signIn('global_admin', EDITOR);
 		stored = { security: { require_2fa: true, password_min_length: 12 } };
 		const user = userEvent.setup();
 		await openPage();
+		// A group without rules has nothing to remove
 		expect(
-			screen.getByRole('button', { name: 'Remove all rules of this group: policies.update_title' })
-		).toBeDisabled();
+			screen.queryByRole('button', { name: 'Remove all rules of this group: policies.update_title' })
+		).toBeNull();
 		// A button with its outline, not text beside the group's status
 		expect(
 			screen.getByRole('button', { name: 'Remove all rules of this group: policies.security_title' })
@@ -325,7 +391,9 @@ describe('policies page', () => {
 			expect(writes).toEqual([{ call: 'DELETE /api/panel/policies/org-1/security', body: undefined }])
 		);
 		await vi.waitFor(() =>
-			expect(within(group('policies.security_title')).getByText('No rule here')).toBeInTheDocument()
+			expect(
+				screen.queryByRole('button', { name: 'Remove all rules of this group: policies.security_title' })
+			).toBeNull()
 		);
 	});
 
@@ -344,7 +412,6 @@ describe('policies page', () => {
 		signIn('global_admin', EDITOR);
 		const user = userEvent.setup();
 		await openPage();
-		await user.click(setHere('policies.ip_allowlist'));
 		await user.click(screen.getByRole('button', { name: 'Add an IP range' }));
 		await user.type(screen.getByRole('textbox', { name: 'IP range 1' }), 'not-a-cidr');
 		expect(screen.getByRole('textbox', { name: 'IP range 1' })).toHaveAccessibleDescription(
@@ -366,10 +433,10 @@ describe('policies page', () => {
 		signIn('global_admin', EDITOR);
 		const user = userEvent.setup();
 		await openPage();
-		await user.click(setHere('policies.allowed_relays'));
 		await user.click(await screen.findByRole('button', { name: 'Frankfurt (relay-fra.example.net:21117)' }));
 		expect(screen.getByRole('textbox', { name: 'Relay server 1' })).toHaveValue(
 			'relay-fra.example.net:21117'
 		);
+		expect(screen.getByText('1 unsaved change')).toBeInTheDocument();
 	});
 });

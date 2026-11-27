@@ -34,13 +34,15 @@ test('the search finds the sound setting and its group says where sound is turne
 	await expect(page).toHaveURL(/\/policies(\/[^#]*)?#pol-features-allow-audio$/, { timeout: 30_000 });
 	// Policies belong to one organization: with several, the page asks which first and keeps the setting
 	const firstOrg = page.locator('a[href*="/policies/"][href$="#pol-features-allow-audio"]').first();
-	if (await firstOrg.isVisible({ timeout: 10_000 }).catch(() => false)) {
+	const row = page.locator('#pol-features-allow-audio');
+	// isVisible does not wait: wait for the list or the setting, whichever the page shows
+	await expect(firstOrg.or(row)).toBeVisible({ timeout: 30_000 });
+	if (await firstOrg.isVisible()) {
 		for (let i = 0; i < 100 && !(await firstOrg.evaluate((el) => el === document.activeElement)); i++)
 			await page.keyboard.press('Tab');
 		await expect(firstOrg).toBeFocused();
 		await page.keyboard.press('Enter');
 	}
-	const row = page.locator('#pol-features-allow-audio');
 	await expect(row).toBeVisible({ timeout: 30_000 });
 	await expect(row).toBeInViewport();
 
