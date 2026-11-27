@@ -1,6 +1,100 @@
 {
-  "about": "Seconds per package, per long test and per subtest of a long test, from earlier CI runs, by set. repotool test-shards deals the race tests over the CI runners by them; go-server-ci.yml says how to refresh them.",
+  "about": "Seconds per package, per long test and per subtest of a long test, from earlier CI runs, by set. repotool test-shards deals the Go tests over the CI runners by them; ci.yml says how to refresh them. go-sqlite and go-postgres start as copies of the race sets until a pull request run measures them.",
   "sets": {
+    "go-postgres": {
+      "./console/store": {
+        "seconds": 199.3,
+        "tests": {
+          "TestBoolArgWritesWhatTheColumnTakes": 0.1,
+          "TestConcurrentWriters": 1.5,
+          "TestCredentialsChangedAtInEveryOrigin": 16.9,
+          "TestDriverValueTypes": 0.2,
+          "TestEscapeLike": 0,
+          "TestISOTimeCutsToMilliseconds": 2.1,
+          "TestInSnapshotSeesOneState": 0.1,
+          "TestInsertQueryAndTransactions": 0.2,
+          "TestLocalWallClockMatchesNode": 0,
+          "TestMigrateAddsAgentBundleProductType": 2.7,
+          "TestMigrateAddsEachMissingColumn": 51.3,
+          "TestMigrateAddsUpdatedAtOnSQLite": 4,
+          "TestMigrateConcurrently": 3.9,
+          "TestMigrateDeletesTheBackupShareLogin": 3.3,
+          "TestMigrateFixesAgentBundleProductTypes": 3,
+          "TestMigrateFreshEqualsNodeDump": 3.5,
+          "TestMigrateGivesAgentBundlesSlugs": 5,
+          "TestMigrateHashesAccessTokens": 4.6,
+          "TestMigrateKeepsDeviceTokensWithoutAnExpiry": 2.3,
+          "TestMigrateLeavesNodeDatabaseAlone": 4.4,
+          "TestMigrateMakesEarlierTokensAccountTokens": 3.1,
+          "TestMigrateMovesDeviceTokensOutOfAccessTokens": 5.3,
+          "TestMigrateOldInstalls": 18.6,
+          "TestMigrateReportsWhatItDid": 3.7,
+          "TestMigrateSeedsDefaultGroups": 3,
+          "TestMigrateStepFailures": 4,
+          "TestMigrateStopsWhenCancelled": 0,
+          "TestMigrateToleratedFailureKeepsItsNeighbours": 1.4,
+          "TestMigrateTwiceChangesNothing": 4.9,
+          "TestMigrateWaitsForTheSchemaLock": 1.4,
+          "TestMigrateWidensConditionValue": 2,
+          "TestRebind": 0,
+          "TestSQLiteReadersCannotWrite": 0,
+          "TestSchemaDocListsEveryStep": 0,
+          "TestSelectRow": 0.1,
+          "TestSelectScansEachColumnByItsType": 0.2,
+          "TestShapeLifecycle": 2.5,
+          "TestShapeOfEveryVariant": 8.3,
+          "TestShapeOfSharedDumps": 4,
+          "TestShapeOfSignalServerDatabase": 1.9,
+          "TestSharedDatabaseStartOrders": 20.7,
+          "TestSlugAndTokenHashMatchNode": 0,
+          "TestSplitStatements": 0,
+          "TestStoretestMigratedDatabases": 3.3,
+          "TestTimeFormats": 0,
+          "TestTimeFromSQLiteDatetimeColumn": 0,
+          "TestTimeInstant": 0,
+          "TestValueHelpers": 0,
+          "TestValuesMatchNode": 0.3,
+          "TestValuesNeedTheColumnType": 0.6
+        }
+      },
+      "./db": {
+        "seconds": 71
+      },
+      "./migrate": {
+        "seconds": 222.1,
+        "tests": {
+          "TestBackupFailsWhenTheSourceIsNoDatabase": 0,
+          "TestBackupIsOwnerOnlyAtMost": 0.2,
+          "TestBackupOfLiveDatabaseIsOneConsistentFile": 0,
+          "TestBackupsInTheSameSecondKeepEachOther": 0.1,
+          "TestFailedMigrationLeavesTheDestinationAlone": 0.1,
+          "TestIntoPostgresCountsRowsThatWereThere": 0.5,
+          "TestOverwriteDropsTheOldDatabasesWAL": 0.1,
+          "TestPG2SQLiteCopiesRowsWithNulls": 4.9,
+          "TestPG2SQLiteFailsOnARowItCannotRead": 4.1,
+          "TestPG2SQLiteMovesTheWholeInstall": 34.3,
+          "TestPG2SQLiteReplacesAnExistingDestinationOnlyWhenTheCopySucceeds": 9.5,
+          "TestPG2SQLiteStopsOnLeftoversUnlessTold": 10,
+          "TestPG2SQLiteWritesTheEmptyTextWhereTheServerDoes": 6.7,
+          "TestParseTimeReadsTheConsolesTimeText": 0,
+          "TestRust2GoFailsOnAPeerItCannotRead": 0.1,
+          "TestRust2GoReadsASourceInRollbackJournalMode": 0.1,
+          "TestRust2GoReplacesAnExistingDestinationOnlyWithOverwrite": 0.2,
+          "TestSQLite2PGAppliesPostgresForeignKeysToRowsThatPointAtNothing": 14.9,
+          "TestSQLite2PGCopiesRowsWithNulls": 2.2,
+          "TestSQLite2PGFailsOnARowItCannotCopy": 7.1,
+          "TestSQLite2PGFailsWhenTheDestinationDropsRows": 7.9,
+          "TestSQLite2PGKeepsTimesTheConsoleWrites": 1.9,
+          "TestSQLite2PGMovesTheWholeInstall": 31.3,
+          "TestSQLite2PGReadsASourceInRollbackJournalMode": 1.9,
+          "TestSQLite2PGReplacesAPostgresInstallOnlyWithOverwrite": 15.2,
+          "TestSQLite2PGStopsOnLeftoversUnlessTold": 9.9,
+          "TestSQLite2PGWritesTheDefaultWherePostgresTakesNoNULL": 8.5,
+          "TestSQLiteToPostgresAndBackKeepsEveryRow": 49.1,
+          "TestTimesGoToSQLiteAsUTC": 0
+        }
+      }
+    },
     "go-race-postgres": {
       ".": {
         "seconds": 39.1
@@ -1906,6 +2000,1763 @@
       }
     },
     "go-race-sqlite": {
+      ".": {
+        "seconds": 31.7
+      },
+      "./admin": {
+        "seconds": 9.8
+      },
+      "./api": {
+        "seconds": 401.7,
+        "tests": {
+          "TestANewDeviceTokenEndsTheEarlierOne": 0.8,
+          "TestAPIKeyExpiryIsWrittenInUTC": 1.1,
+          "TestAPIKeyRoleNeedsAssignRight": 0.7,
+          "TestAbDataFieldPresent": 0,
+          "TestAccountRoutesKeepThePasswordRule": 2,
+          "TestActorIsRecordedAsCreatorAndHandler": 1.1,
+          "TestAddressBookKeepsToPermissionsAndScope": 1,
+          "TestAddressBookPasswordsNeedConnect": 1.2,
+          "TestApplyActiveSessionOwnerBindsAfterPeerAppears": 5.2,
+          "TestApprovedEnrollmentResponseIncludesDeviceTokenField": 0,
+          "TestAssignUserToOrgAcceptsNumericOrgID": 1.1,
+          "TestAuditConnEndpoint": 1.3,
+          "TestAuditConnRequiresHostID": 1.2,
+          "TestAuditEventsPageFromTheOffset": 0.7,
+          "TestAuditWriteEndpointsAreRateLimited": 0,
+          "TestAuthMiddlewarePublicBootstrapEndpoints": 0,
+          "TestAuthenticatePasswordLoginLDAPAutoProvision": 3.1,
+          "TestAuthenticatePasswordLoginLDAPUserSuccess": 3.1,
+          "TestAuthenticatePasswordLoginLDAPUserWrongPassword": 1.9,
+          "TestBanKeepsLastSeenOfOfflinePeer": 1.2,
+          "TestBanRemovesPeerFromMap": 0.7,
+          "TestBanUnbanEndpoint": 1.2,
+          "TestBillingExportNamesTheBillingDay": 0.8,
+          "TestBillingExportsKeepToTheNamedDevices": 1.8,
+          "TestBlocklistEndpoints": 0.8,
+          "TestBrandingGetDefaultsAndSave": 0.8,
+          "TestBuildRustDeskPeerManualGroupNames": 0,
+          "TestCDAPAdminRoutesTakeSuperAdmin": 0.6,
+          "TestCDAPRecordsTheActor": 1.1,
+          "TestCDAPRegistrationAsksTheAPIsPermission": 0.7,
+          "TestChangePeerIDSoftDeletedTargetReturnsConflict": 0.8,
+          "TestChatContactsCountUnreadPerContact": 0.7,
+          "TestChatContactsOfADeviceAreItsGroups": 1.2,
+          "TestChatGroupUpdateAndReadMarksCheckTheID": 1.5,
+          "TestChatSenderAndGroupDelete": 1.2,
+          "TestClassifyNeoDeskDevice": 0,
+          "TestClassifyNeoDeskSupportSKU": 0,
+          "TestClientCompatEndpoints": 0.8,
+          "TestClientPostsNeedTheRegisteredUUID": 1.1,
+          "TestClientSessionSlidingExtendsExpiry": 3.6,
+          "TestConcurrentRedeemsOfAOneUseCode": 1,
+          "TestConfigRoutesKeepSecrets": 0.8,
+          "TestConnectionConfigRequiresServerConfigPermission": 0.7,
+          "TestConnectionModeBadSignatureStaysQueued": 1.1,
+          "TestConnectionModeRequiresCapabilityAndUUID": 0.7,
+          "TestConnectionModeRoundTripAndPlaintextHold": 0.7,
+          "TestConnectionModeSupportAgentRejectsNormal": 1,
+          "TestConnectionModeViewerForbidden": 0.7,
+          "TestConsoleSignInsCountPerBrowser": 0.7,
+          "TestControlSocketOnTheAPIPortAsksTheAPIsPermissions": 1.2,
+          "TestCreateDeviceTokenAnswersPrefixAndTime": 1,
+          "TestCreateHelpRequestIsStored": 1,
+          "TestDecodeClientAbPostBodyEmpty": 0,
+          "TestDecodeClientAbPostBodyFlutterEnvelope": 0,
+          "TestDecodeClientAbPostBodyInvalidJSON": 0,
+          "TestDeleteCascadeOnlyToTheNamedLinkedPeers": 0.8,
+          "TestDeleteUserAllowsWhenAnotherSuperAdminExists": 2.2,
+          "TestDeleteUserBlocksLastSuperAdmin": 3.3,
+          "TestDeleteUserSucceedsWithNullLastLoginSibling": 2.3,
+          "TestDemoteUserSucceedsWithNullLastLoginSibling": 5.1,
+          "TestDeviceJWTCannotAccessOperatorAPIHandlers": 0.7,
+          "TestDeviceRegisterDoesNotReissueTokenWithoutIdentityProof": 0.7,
+          "TestDeviceRegisterIdentityConflict": 0.7,
+          "TestDeviceRegisterSameUUIDReissues": 0.7,
+          "TestDeviceRegisterStatusIssuesTokenOnlyAfterIdentityProof": 0.7,
+          "TestDeviceRoutesKeepToTheScope": 0.9,
+          "TestDeviceSelfAccessPolicyNeverAcceptsPasswordMaterial": 1,
+          "TestDeviceSelfServiceRequiresActiveBoundToken": 0.7,
+          "TestDeviceTOTPIgnoresCredentialsInQueryString": 1,
+          "TestDirectorySignInComparesNamesInLowerCase": 8.9,
+          "TestDisabledAccountAtTheClientsLaterSteps": 2.5,
+          "TestDisabledAccountIsRefusedEverywhere": 7.8,
+          "TestDisabledAccountWaitingForItsSecondFactor": 3.4,
+          "TestDisabledSingleSignOnAccountIsNotMadeAgain": 0.9,
+          "TestEnrollmentApprovePersistsHistoryAndClearsRejection": 1,
+          "TestEnrollmentClearRejectionAllowsRequeue": 1,
+          "TestEnrollmentClearRejectionWithoutBanKeepsNoPeer": 0.7,
+          "TestEnrollmentHistoryIncludesOrphanRejected": 1,
+          "TestEnrollmentHistoryOrphanBackfillsIPFromPeer": 0.7,
+          "TestEnrollmentHistoryOrphanWithoutPeerKeepsEmptyIP": 1,
+          "TestEnrollmentHistoryStatusFilter": 1,
+          "TestEnrollmentManualBanUnbanKeepsPeer": 0.7,
+          "TestEnrollmentProofCannotBeReplayed": 0.7,
+          "TestEnrollmentProofReplayCannotUseBoundTokenFallback": 1,
+          "TestEnrollmentRejectBanCreatesPeerAndHistory": 0.7,
+          "TestEnrollmentRejectTouchesOnlyPendingRequests": 1.1,
+          "TestEnrollmentRoutesCheckTheDeviceID": 1.1,
+          "TestEnrollmentStateBlocksRegistrationAndStatus": 2.1,
+          "TestEnrollmentTokenCannotAdmitSecondDevice": 0.7,
+          "TestEnrollmentUnbanRemovesAuditPeer": 1,
+          "TestEnsureOIDCUserAppliesExplicitGroupRole": 3.2,
+          "TestEnsureOIDCUserLeavesOtherAccountsAlone": 0.7,
+          "TestEnsureOIDCUserPreservesRoleWhenOnlyDefaultApplies": 2.1,
+          "TestEveryUnusableCodeGetsTheSameAnswer": 1.1,
+          "TestFilterAddressBookPeersByVisibleSet": 0,
+          "TestForceHTTPSHonoursForwardedProtoOnlyFromATrustedProxy": 1.1,
+          "TestFreshEnrollmentClearsOrphanedSecureSequence": 0.7,
+          "TestFreshEnrollmentDoesNotResetActiveOrDeletedPeerState": 1.7,
+          "TestGetBillingSessionByID": 0.8,
+          "TestGetConnectionConfigReturnsNormalizedSnapshot": 1,
+          "TestGuacInstructionParserHandlesFragmentedInput": 0,
+          "TestGuestLinksBelongToTheActingAccount": 1,
+          "TestGuestLinksKeepTheCreatorsAccountID": 1,
+          "TestHandleClientAddressBookEmptyPostSavesEmptyLegacyBook": 0.7,
+          "TestHandleClientAddressBookFlutterPush": 0.7,
+          "TestHandleClientAddressBookGetNormalizesEmptyStoredData": 0.7,
+          "TestHandleClientAddressBookGetReturnsStoredData": 1.1,
+          "TestHandleClientAddressBookMergesOrgSharedBook": 1.1,
+          "TestHandleClientAddressBookPersonalEmptyJSONProbeReturns404": 0.7,
+          "TestHandleClientAddressBookPersonalEmptyProbeReturns404": 1,
+          "TestHandleClientAddressBookScopesOrgPeersByACL": 0.7,
+          "TestHandleClientLoginBindsPeerOwner": 5.3,
+          "TestHandleClientLoginIssuesOpaqueSessionToken": 5.1,
+          "TestHandleClientLoginLDAPAutoProvision": 3.1,
+          "TestHandleClientLoginLDAPReturnsAccessToken": 2.1,
+          "TestHandleClientLoginLDAPWithTOTPReturnsChallenge": 3.2,
+          "TestHandleClientLoginLDAPWrongPassword": 2,
+          "TestHandleClientLoginLocalUserStillUsesLocalPassword": 4.9,
+          "TestHandleClientLoginOptionsOIDC": 0,
+          "TestHandleClientLoginOptionsPasswordOnly": 0,
+          "TestHandleClientLoginRejectsWrongPassword": 3.5,
+          "TestHandleClientLoginWithTOTPReturnsTFAChallenge": 3.5,
+          "TestHandleClientLoginWithoutTOTPReturnsAccessToken": 5.9,
+          "TestHandleClientLogoutRevokesSession": 3.5,
+          "TestHandleClientOIDCAuthQueryDeviceMismatch": 0,
+          "TestHandleClientOIDCAuthQueryOmittingDeviceRejected": 0,
+          "TestHandleClientOIDCAuthQuerySuccessIncludesUserInfo": 2.2,
+          "TestHandleClientOIDCAuthQueryWaiting": 0,
+          "TestHandleClientOIDCAuthRequiresEnabled": 0,
+          "TestHandleOIDCExchangeEmptyPicture": 0,
+          "TestHandleOIDCExchangeIncludesPicture": 0,
+          "TestHardDeleteAllowsSecureSequenceRestartWithNewIdentity": 1,
+          "TestHardDeleteTakesTheDataGuardEventsAlong": 0.8,
+          "TestHealthDetailEndpointRequiresAuth": 1.1,
+          "TestHealthEndpoint": 0.7,
+          "TestHeartbeatWithoutEnvelopeIsMetricsOnly": 0.7,
+          "TestInjectOrgPeerCredentialsIntoAB": 0.6,
+          "TestInternalHandler": 3.2,
+          "TestInternalHandlerKeepsAddressLimits": 1.3,
+          "TestInternalHandlerSetsNoCallerOnPathsWithoutCredential": 1,
+          "TestInternalHandlerSharesRouteTableWithStart": 0.7,
+          "TestInternalHandlerSkipsHTTPSRequirement": 1,
+          "TestIsHTTPFirstByte": 0,
+          "TestIsMissingClientSessionsTable": 0,
+          "TestIssueClientSessionRecoversMissingTable": 5.2,
+          "TestIssueClientSessionRejectsZeroUserID": 0.7,
+          "TestIssueSupportSessionGrantBindsOperatorDeviceAndTransport": 1.3,
+          "TestIssueSupportSessionGrantRejectsNegativeLifetime": 0.7,
+          "TestIssueSupportSessionGrantRejectsUnknownCapabilities": 1.1,
+          "TestJoinRedeemAdmitsTheDeviceInManagedMode": 0.7,
+          "TestLDAPAutoCreateSwitch": 1.3,
+          "TestLDAPSignInUsesTheDirectoryName": 2.2,
+          "TestLDAPTestSendsStoredPasswordOnlyToStoredHost": 1.7,
+          "TestLDAPWithoutAutoCreateSignsInOnlyExistingAccounts": 3.1,
+          "TestListOrganizationsSuperAdminSeesAll": 1,
+          "TestListPeersEndpoint": 0.8,
+          "TestListPeersPaginatedEndpoint": 1,
+          "TestListUserOrganizationsIncludesMembershipShape": 0.8,
+          "TestLockedEnrollmentAdmitsWithToken": 0.7,
+          "TestLockedEnrollmentWithoutTokenIsRefused": 1,
+          "TestLockedLoginDoesNotQueueViewerEnrollment": 3.6,
+          "TestLogLinesCannotBeForged": 1.1,
+          "TestManagedApprovalPreservesEnrollmentMetadata": 0.7,
+          "TestManagedEnrollmentAdmitsWithToken": 1,
+          "TestManagedEnrollmentPublishesPendingEvent": 1,
+          "TestManagedEnrollmentRejectsInvalidToken": 0.7,
+          "TestManagedEnrollmentResponseOmitsDeviceToken": 0,
+          "TestManagedEnrollmentWithoutTokenStaysPending": 0.7,
+          "TestManagedLoginQueuesViewerEnrollment": 3.6,
+          "TestManagedLoginSkipsRejectedViewerEnrollment": 5.2,
+          "TestMandatoryTwoFactorAtTheAPI": 8.3,
+          "TestMergeAddressBookJSON": 0,
+          "TestMergeAddressBookJSONEmptyOverlay": 0,
+          "TestMergeRustDeskStrategyOptionsPreservesBrandingLocks": 0,
+          "TestMeshAgentEnrollmentQueue": 1.8,
+          "TestMetricsEndpointRequiresAuth": 0.8,
+          "TestMetricsGuard": 2,
+          "TestMultiUseJoinCodeCountsDownAndKeepsHostnames": 0.6,
+          "TestNdMgmtReconnectStaysConnected": 1.3,
+          "TestNdMgmtWebSocketRequiresProof": 1.2,
+          "TestNoCredentialPathsMatchAuthMiddleware": 1.1,
+          "TestNormalizeAbDataField": 0,
+          "TestNormalizeRustDeskStrategyPermissionsDropsLockedKeys": 0,
+          "TestNormalizeStrategyOptionValue": 0,
+          "TestOIDCCallbackCodeExchangesWithTheState": 3.2,
+          "TestOIDCConfigUsesPKCEUnlessSavedOff": 1.1,
+          "TestOnboardCodeCreationChecksItsFields": 0.7,
+          "TestOnboardCodesAreMadeWithTheirFields": 1,
+          "TestOnboardListIsPerKindAndRevokeAnswersTheRecord": 0.7,
+          "TestOnboardRoutesAnswerOnlyInProcess": 1,
+          "TestOnlinePeersEndpoint": 1.2,
+          "TestOpenEnrollmentRequiresProofBeforeIssuingDeviceToken": 0.7,
+          "TestOrgPolicyAndInviteOfAnUnknownOrgAre404": 0.7,
+          "TestOrgSharedAddressBookEnabledFromValue": 0,
+          "TestOrgTokenIsNoServerRole": 0.7,
+          "TestOrganizationAccountPasswordRule": 15.8,
+          "TestOrganizationConnectionSettingsAreRefused": 1,
+          "TestOrganizationInvitationIsRedeemedOnce": 7.4,
+          "TestOrganizationRolesAreNotStored": 2.2,
+          "TestPairingAnswersGiveTheAPIWithTheRequestsScheme": 0.7,
+          "TestPairingCodeFormatAndNormalization": 0,
+          "TestPairingCodeIsStoredHashedOnly": 1,
+          "TestPairingCodeUsesUnambiguousAlphabet": 0,
+          "TestPairingConfigPreviewDoesNotConsumeCode": 0.7,
+          "TestPairingEndsWithADeviceToken": 1.1,
+          "TestPairingListAndRevoke": 1.1,
+          "TestPairingRedeemConsumesCode": 0.7,
+          "TestPairingRedeemIsRateLimited": 1.1,
+          "TestPairingRedeemRejectsExpiredCode": 0.8,
+          "TestPairingRedeemRespectsDeviceBans": 1,
+          "TestPairingRedeemRouteIsPublic": 0.8,
+          "TestPairingRejectsMalformedCodeWithoutTouchingStore": 0.6,
+          "TestPairingRoutesLeaveOnboardCodesAlone": 0.7,
+          "TestPanelAccessAllowed": 0,
+          "TestPanelCatalogEndpoint": 1.2,
+          "TestPanelCatalogIsComplete": 0,
+          "TestPanelCatalogOrderIsStable": 0,
+          "TestPanelDeletesOfGroupsWithAnAccessListAskUserEdit": 0.7,
+          "TestPanelDeviceManualGroup": 1.2,
+          "TestPanelFoldersLifecycle": 0.7,
+          "TestPanelGroupAccessListsAskUserEdit": 1.2,
+          "TestPanelGroupLifecycle": 1.2,
+          "TestPanelGroupRejectsInvalidInput": 0.7,
+          "TestPanelGroupRoutesRequirePermission": 1.2,
+          "TestPanelGroupSaveAnswersTheStoredAccessList": 0.7,
+          "TestPanelGroupUpdateKeepsAccessListsItLeavesOut": 1.1,
+          "TestPanelGroupUpdateKeepsNoteAndTeam": 0.7,
+          "TestPanelGroupWritesKeepOutClosedGroups": 1.1,
+          "TestPanelTrustAcceptsValidStatement": 0,
+          "TestPanelTrustAllowsOperatorWrite": 1.1,
+          "TestPanelTrustDisabledKeepsLegacyAuth": 0,
+          "TestPanelTrustDoesNotRaiseRole": 0,
+          "TestPanelTrustEnforcesOperatorRole": 1.2,
+          "TestPanelTrustOnlyFromAllowedPeer": 0,
+          "TestPanelTrustRejectsExpiredStatement": 0,
+          "TestPanelTrustRejectsForgedHeaderWithoutTheSecret": 0.9,
+          "TestPanelTrustRejectsMissingHeader": 0,
+          "TestPanelTrustRejectsOverlongTTL": 0,
+          "TestPanelTrustRejectsReplay": 0,
+          "TestPanelTrustRejectsReuseOnAnotherEndpoint": 0,
+          "TestPanelTrustRejectsStatementFromTheFuture": 0,
+          "TestPanelTrustRejectsTamperedStatement": 0,
+          "TestPanelTrustRejectsWithoutSecret": 0,
+          "TestPanelTrustRejectsWrongSecret": 0,
+          "TestPanelTrustRoleComesFromTheDatabase": 1.2,
+          "TestPanelUserGrants": 0.9,
+          "TestPasswordChangeEndsDesktopClientSessions": 1.5,
+          "TestPasswordChangeEndsTheAccountsTokens": 6.7,
+          "TestPatchPeerLinksAPeer": 1.1,
+          "TestPatchPeerTakesTagsAsList": 0.7,
+          "TestPeerStatusEndpoint": 1.3,
+          "TestPendingEnrollmentIsRejectedAndCleared": 0.7,
+          "TestQueryLimitOffsetClampsInput": 0,
+          "TestRefusedDeviceSpendsNothing": 1,
+          "TestRemoteIPTakesTheRightmostUntrustedForwardedAddress": 0,
+          "TestRemoteTargetLimitsOverTheBrowser": 0,
+          "TestRemoteTargetReadiness": 0.9,
+          "TestRemoteTargetReadinessRoute": 1,
+          "TestRemoteTargetTunnelHoldsConnectUntilArgs": 1,
+          "TestRemoteTargetTunnelOutlivesTheHandshake": 13,
+          "TestResolveRemoteTargetHostBlocksMetadataAndLoopback": 0,
+          "TestResolvingAgainKeepsTheResolveTime": 2.1,
+          "TestRevokeBanSurvivesARestart": 1,
+          "TestRewriteRemoteTargetConnectAllowlist": 0,
+          "TestRewriteRemoteTargetConnectPinsServerValues": 0,
+          "TestRoleLevelRoutesAskAPermission": 2.8,
+          "TestRoleListsIncludeGuestIssuer": 0.9,
+          "TestRolePermissionOverridesNeedSuperAdmin": 0.7,
+          "TestRolePermissionsFailWhenOverridesCannotBeRead": 1,
+          "TestRolePermissionsKeepTheirOrder": 0.7,
+          "TestRoutesAskAPermission": 0.8,
+          "TestRoutesAskTheirNeighboursPermission": 0.8,
+          "TestRustDeskPeerDeviceGroupName": 0,
+          "TestRustDeskStrategyOptionKeysExcludeLockedEndpointKeys": 0,
+          "TestRustdeskUserPayloadHasInfo": 0,
+          "TestSameDeviceUUIDAcceptsBase64Encoding": 0,
+          "TestSaveLDAPConfigClearsAnEmptyPassword": 1.4,
+          "TestSecureEnvelopeMiddlewareAcceptsClientWrapper": 0.9,
+          "TestServerAdminKeepsOffDeviceConnectRoutes": 0.7,
+          "TestServerAdminListsAndDeletesKeysButCreatesNone": 1,
+          "TestServerEventsNameTheAccount": 0.6,
+          "TestServerKeyEndpoints": 0.8,
+          "TestServerStatsEndpoint": 0.8,
+          "TestServerStatsWithBandwidthAndBlocklist": 1.4,
+          "TestServerTokenFollowsTheAccount": 3.7,
+          "TestSetConnectionConfigPersistsAndApplies": 0.7,
+          "TestSetConnectionConfigRejectsUnsafeInput": 2.1,
+          "TestSetTimeSyncConfigPersistsAndHotReloads": 0.6,
+          "TestSetTimeSyncConfigRejectsInvalidValues": 0.9,
+          "TestShareValidateRefusalIsBoolean": 1.1,
+          "TestSignInAddressOnlyInProcess": 0.6,
+          "TestSignInsStoreTheProvidersEmailAndName": 7.3,
+          "TestSingleSignOnStartsAreBounded": 1.1,
+          "TestSniffListenerCloseEndsAccept": 0.1,
+          "TestSniffListenerPassesHTTPToHTTPServer": 0,
+          "TestSniffListenerPassesTLSHandshakeToHTTPServer": 0,
+          "TestSniffListenerRoutesRelayFramingToRelay": 0.2,
+          "TestSniffListenerSilentConnectionsDoNotHoldUpOthers": 0.1,
+          "TestStatusSummaryEndpoint": 1.1,
+          "TestStripSecretsFromOrgAddressBook": 0,
+          "TestSuggestAlternateDeviceID": 0,
+          "TestSupportAgentEnrollmentCannotChangeBoundBundle": 0.7,
+          "TestTFASessionStoreAtItsCap": 0.1,
+          "TestTelemetryKeyPersistsAcrossServerInstances": 0.6,
+          "TestTemporaryDeviceIsAdmittedAndRemoved": 1.1,
+          "TestTemporaryDeviceIsTakenOverOrKeptForGood": 0.8,
+          "TestUnbanWritesThePeerUnderTheMapLock": 1,
+          "TestUnifiedExecAsksTheTransportsTerminalPermission": 1.1,
+          "TestUpdateDeviceTokenClearsNoteAndLimit": 0.6,
+          "TestUserGroupsEndpoint": 0.8,
+          "TestUserGroupsListAsksUserView": 1,
+          "TestUserRoutesCheckTheAccountsRole": 2.2,
+          "TestUserViewOverrideBlocksPanelAndClientDirectory": 1.3,
+          "TestValidateAccentAndLogo": 0,
+          "TestVerifyNdMgmtRequestAcceptsValidSignature": 2.7,
+          "TestVerifyNdMgmtRequestRejectsReplay": 1,
+          "TestViewOnlyGuestLinksKeepToMeshAndCDAPDevices": 1,
+          "TestWhatAnOrganizationSignInReads": 0.9
+        }
+      },
+      "./audit": {
+        "seconds": 2.3
+      },
+      "./auth": {
+        "seconds": 14.1
+      },
+      "./billing": {
+        "seconds": 2.1
+      },
+      "./cdap": {
+        "seconds": 31.7
+      },
+      "./cli": {
+        "seconds": 313.1,
+        "tests": {
+          "FuzzEnvMerge": 0,
+          "FuzzSubstFile": 0,
+          "FuzzUpgradeEnv": 0,
+          "TestApplyEnvDefaultsAddsTheTemplatesNewKeys": 0,
+          "TestCertMakesASelfSignedPair": 0.4,
+          "TestCertificateHostnameLikeNode": 0.3,
+          "TestCertificateHostnameOfIPv6": 0,
+          "TestCheckArgumentsLikeNode": 0.4,
+          "TestCheckRunsLikeNode": 0.9,
+          "TestConfigCheckExitStatus": 0,
+          "TestConfigCheckLikeNode": 0.3,
+          "TestConfigSetLikeNode": 0.6,
+          "TestConfigUsage": 0,
+          "TestEnvMergeLikeNode": 1,
+          "TestEnvMergeUsesTheBuiltInTemplate": 0,
+          "TestJSInspectNumber": 0,
+          "TestResetPasswordHashesAsTheAPIServer": 16.2,
+          "TestResetPasswordLikeNode": 245.3,
+          "TestResetPasswordMakesTheUsersTableOfAServerStart": 14.2,
+          "TestResetPasswordShortPasswordOpensNothing": 0,
+          "TestResetPasswordTakesThePasswordFromStandardInputOnly": 10.7,
+          "TestResetPasswordUsesTheServersDatabase": 19.9,
+          "TestServerIdentityLikeNode": 0.4,
+          "TestSubstFilesLikeNode": 0.3,
+          "TestUpgradeEnvCommand": 0,
+          "TestUpgradeEnvOnAnInstallersFile": 0,
+          "TestUpgradeEnvRules": 0,
+          "TestUpgradeEnvSupervisorByPlatform": 0
+        }
+      },
+      "./cmd/devseed": {
+        "seconds": 81.9
+      },
+      "./cmd/embed-webui": {
+        "seconds": 1
+      },
+      "./cmd/release-manifest": {
+        "seconds": 1
+      },
+      "./cmd/repotool": {
+        "seconds": 11.3
+      },
+      "./codec": {
+        "seconds": 1
+      },
+      "./config": {
+        "seconds": 1.1
+      },
+      "./console": {
+        "seconds": 903.3,
+        "tests": {
+          "TestAPICallsNameTheSignedInAccount": 5.9,
+          "TestATakenPortGivesWayOnlyWithoutConsolePort": 62.2,
+          "TestAlertSweepRuns": 3.4,
+          "TestBillingClockChangeIsCanceledThroughTheRestartRoutes": 3.4,
+          "TestBrandingAtStart": 32,
+          "TestBrokenEscapeGetsTheConsolesAnswer": 19.6,
+          "TestCSRFCookieIsSecureBehindATLSProxy": 3.9,
+          "TestClientAPICertificateWarning": 0.5,
+          "TestClientAPILive": 0,
+          "TestClientAPILocalModeAgainstNode": 24.5,
+          "TestClientAPIPortReachesTheAPIInProcess": 6,
+          "TestClientAPIProxyModeAgainstNode": 19.7,
+          "TestClientAPIProxyModeTakesRegistrations": 11.3,
+          "TestClientAPIServerLimits": 17.2,
+          "TestClientAPISwitchesAgainstNode": 13.5,
+          "TestClientAPITLSAgainstNode": 26.6,
+          "TestClientAPITLSModes": 27.2,
+          "TestConsoleHTTPSAgainstNode": 27.1,
+          "TestConsoleHeaderLimit": 9.8,
+          "TestConsoleListenerTimeLimits": 22.9,
+          "TestConsoleStrings": 2.7,
+          "TestConsoleTakesOverTheOldFonts": 3.5,
+          "TestDiscoveryAndCleanUpsRun": 5,
+          "TestEscapedPathMissesTheRouteThePanelAccessGuardMisses": 2.2,
+          "TestFallbackAgainstNode": 20,
+          "TestGuardAsksTheEarlyStageFirst": 5.5,
+          "TestGuardBelowAMountAnswersJSON": 3.6,
+          "TestGuardsOnTheWire": 11.8,
+          "TestGuestLinkTakenBackEndsTheWebClientsBridge": 3.7,
+          "TestHTTPSFallbackCookiesAreNotSecure": 4.6,
+          "TestHTTPSSettingsAgainstNode": 16.9,
+          "TestHealth": 6,
+          "TestHelpRequestMailRuns": 3.3,
+          "TestI18nPublicRoutes": 4.3,
+          "TestI18nSetStoresTheChoice": 8.1,
+          "TestI18nUploadAndDelete": 2.3,
+          "TestLANAnnouncesTheConsoleListener": 10.1,
+          "TestLanguagesLimiterComesBeforeTheGuards": 2.3,
+          "TestLanguagesOverview": 17.5,
+          "TestMDNSOnlyWhenAsked": 22.1,
+          "TestMailSettingsReachTheService": 13.8,
+          "TestMeshSocketsCarryTheClientsAddress": 3.5,
+          "TestNetworkTargetCheckIsAToolkitRoute": 4.9,
+          "TestNotFoundLogNamesTheTrustedAddress": 10.6,
+          "TestOldFontsAreCopiedOnce": 0,
+          "TestOldFontsFailedCopyIsTriedAgain": 0,
+          "TestOldFontsWithoutTheOldFolder": 0,
+          "TestPanelAccessGuardAnswers": 11.9,
+          "TestPipelineOnBothDatabases": 1.8,
+          "TestPortsInUseAgainstNode": 14.4,
+          "TestProAccountLosesItsSessionAtTheGuard": 5.6,
+          "TestProfilePictureIsForEveryAccount": 5.8,
+          "TestRedirectAgainstNode": 50.6,
+          "TestRemoteRoutesSeeTheSocketsSessions": 4.1,
+          "TestRemoteTargetTunnelIsTheAPIServersInProcess": 5.3,
+          "TestRouteBodyLimits": 6.7,
+          "TestRouteMatchesLikeExpress": 3.9,
+          "TestRoutesThatDeclareTheirSection": 2,
+          "TestRoutingReportIsOffByDefault": 4.1,
+          "TestRoutingReportNamesGo": 5.3,
+          "TestRoutingReportRejectsBadQuestions": 5.3,
+          "TestServerTerminalFollowsThePanelAccessPolicy": 2,
+          "TestSignedOutPageRedirectKnowsAnEndedSession": 3.5,
+          "TestStartAndStopLeaveNothingRunning": 38.6,
+          "TestStartFailsWithoutTheFirstAccount": 4.6,
+          "TestStartFailuresAgainstNode": 8.7,
+          "TestStartImportsAuthDB": 6.4,
+          "TestStartLooksAfterTheFirstAccount": 5.1,
+          "TestStartTakesTheForceFileOfTheDataFolder": 5.6,
+          "TestStaticPreconditionAndRange": 4,
+          "TestStep10PanelAccessGuardRunsBeforeLimitersAndRoutes": 4.1,
+          "TestStep11LimiterAnswersBeforeTheRoutesOwnGuard": 4.9,
+          "TestStep12EarlyStageHasNoLanguageNoCSRFCheckNoCompression": 3.3,
+          "TestStep12PassOnLeavesTheRequestToTheLaterStage": 4,
+          "TestStep14RequestLanguage": 5.7,
+          "TestStep15CacheHeaderIsOnRoutesAndNotOnFileNames": 4,
+          "TestStep16CSRFGate": 2.8,
+          "TestStep17CompressionIsForAPIAnswersOfTheLaterStage": 5.1,
+          "TestStep18FirstRouteThatFitsAnswers": 2.3,
+          "TestStep18JSONRuleComesAfterTheCSRFGate": 3.8,
+          "TestStep19WebAppAnswersWhatNoRouteDoes": 5.4,
+          "TestStep1SecurityHeadersAreOnEveryAnswer": 3.6,
+          "TestStep20NotFound": 11.7,
+          "TestStep3CORSAnswersPreflightsBeforeAnythingElse": 3.3,
+          "TestStep4BodyErrorSkipsTheRestAndIsAnsweredByTheErrorHandler": 8.8,
+          "TestStep4BodyReachesTheHandler": 4.1,
+          "TestStep6SessionIsLoadedAndRenewed": 4.3,
+          "TestStep7AddressChangeIsAudited": 4.1,
+          "TestStep7IdleSessionIsEndedAndAudited": 3.9,
+          "TestStep8CSRFTokenIsHandedOutOnEveryRead": 4,
+          "TestStep9StaticFilesComeBeforeGuardLimitersAndCacheHeader": 6.5,
+          "TestStepAsideInTheLaterStageEndsInTheNotFound": 5.4,
+          "TestStepOrderIsTheOneOfTheNodeConsole": 3.3,
+          "TestStopEndsOpenSockets": 33.1,
+          "TestStopWaitsForPictureSyncs": 2.2,
+          "TestTrailerHeaderAgainstNode": 6.2,
+          "TestUIShell": 6.3,
+          "TestUIShellCookieIsSecureInHTTPSMode": 4.4,
+          "TestUpdateKeepsTheDataBackup": 4.1,
+          "TestUpgradeGoesToTheSocketOrThePipeline": 5.8
+        }
+      },
+      "./console/access": {
+        "seconds": 18.9
+      },
+      "./console/advancedconfig": {
+        "seconds": 2.6
+      },
+      "./console/agentreleases": {
+        "seconds": 1.1
+      },
+      "./console/alerts": {
+        "seconds": 32.3
+      },
+      "./console/attestation": {
+        "seconds": 9.9
+      },
+      "./console/auditlog": {
+        "seconds": 2
+      },
+      "./console/authimport": {
+        "seconds": 23.5
+      },
+      "./console/authn": {
+        "seconds": 437.9,
+        "tests": {
+          "FuzzOIDCRedirect": 0.1,
+          "FuzzRecoveryCode": 0,
+          "FuzzStoredHash": 3.5,
+          "FuzzTOTPCode": 0,
+          "TestABannedOrDeletedDeviceOpensNoSocketWithAnEnrollmentToken": 2.4,
+          "TestABannedOrDeletedDeviceProvesNothing": 2.4,
+          "TestAChangeOfIDEndsTheDeviceTokens": 2.6,
+          "TestAClaimThatIsNoTextIsRefused": 0,
+          "TestAdminPasswordLineWithoutAValue": 0,
+          "TestAttemptTimeOfSQLiteText": 1,
+          "TestAuthenticateNamesTheClientAddress": 1.3,
+          "TestAuthenticateReportsAProAccount": 1.1,
+          "TestBcrypt2aLongPasswordUsesTheFirst72Bytes": 0.4,
+          "TestBcryptRefusesLowCosts": 0.1,
+          "TestBruteForceJSON": 0,
+          "TestChangePasswordRemovesTheFirstPasswordFile": 4.3,
+          "TestContextEndsAHighCostCompare": 0.9,
+          "TestDeviceRequestChecks": 1.1,
+          "TestDeviceSocketRefusesAnUnboundTokenForAKnownDevice": 2.2,
+          "TestDeviceTokensDoNotExpireByTime": 2.4,
+          "TestDisableTOTPOnEitherShape": 3.8,
+          "TestDisabledAccountsCannotSignIn": 4.3,
+          "TestDisabledAccountsTokensAreRefused": 1.2,
+          "TestEveryNewDeviceTokenEndsTheOthers": 1.7,
+          "TestFirstAdminLogsTheCredentialsPath": 1,
+          "TestForcedAdminPasswordKeepsThePasswordRule": 1.1,
+          "TestGenerateSecretKeepsEveryBit": 0,
+          "TestHashVectors": 215.4,
+          "TestHousekeepingLogsAFailure": 0,
+          "TestKeptDefects": 1.1,
+          "TestLDAPAccountWithTOTPKeepsRoleAndProvider": 5.4,
+          "TestLegacyPBKDF2NeedsItsExactForm": 1,
+          "TestLockoutAndTokenTimesInAnotherZone": 0,
+          "TestLockoutCountsAnIPv6NetworkAsOneAddress": 1.2,
+          "TestLockoutCountsWithinTheWindow": 1.1,
+          "TestLockoutIsPerAccountAndAddress": 1.1,
+          "TestNewAccountFromASecondFactorAnswerIsViewer": 1.8,
+          "TestNewDirectoryAccountsAreLowerCase": 1.1,
+          "TestNewNeedsDatabaseAndClient": 1,
+          "TestOIDCUser": 4.8,
+          "TestOIDCUserLeavesOtherProvidersAlone": 1.2,
+          "TestOIDCVectors": 0.2,
+          "TestOnlyDeviceTokensProveADevice": 2.3,
+          "TestPBKDF2RefusesZeroIterations": 0,
+          "TestPasswordHashStaysAcrossBothSignIns": 13.3,
+          "TestProviderVectors": 0,
+          "TestReadAdminCredentialsFile": 1.5,
+          "TestRecoveryCodeIsWrittenWithACondition": 1.2,
+          "TestRecoveryCodeWithAStoredListOfOtherValues": 1.7,
+          "TestRecoveryCodeWorksOnBothSides": 1.7,
+          "TestRevokeWithoutClientRevokesAll": 1.1,
+          "TestScenarios": 109.6,
+          "TestServerChangesEndTheServersDeviceTokens": 2.2,
+          "TestServerDeletesAndBansEndDeviceTokens": 2.5,
+          "TestServerDeviceTokensProveTheirDevice": 5.6,
+          "TestSettingsFromEnv": 0,
+          "TestSignInComparesDirectoryNamesInLowerCase": 1.1,
+          "TestSignInLogLinesMaskTheName": 1.1,
+          "TestTOTPCodeWorksOnce": 1.1,
+          "TestTOTPSetup": 1.5,
+          "TestTOTPVectors": 0.2,
+          "TestTOTPWithShortAndNonASCIISecrets": 1.9,
+          "TestTokenHash": 0,
+          "TestTokenLengthRules": 1.1,
+          "TestTokenLifetimeFollowsTheSetting": 1,
+          "TestTokenVectors": 0,
+          "TestTokensAreKeptAsTheirHashOnly": 2.3,
+          "TestTouchLastLoginAndUserByID": 1,
+          "TestTwoFactorSetUpDue": 1.7,
+          "TestUserJSON": 4.1
+        },
+        "subtests": {
+          "TestScenarios": {
+            "postgres": 0,
+            "sqlite": 109.6
+          }
+        }
+      },
+      "./console/avatars": {
+        "seconds": 9.1
+      },
+      "./console/backup": {
+        "seconds": 90.5
+      },
+      "./console/billingclock": {
+        "seconds": 3.3
+      },
+      "./console/branding": {
+        "seconds": 253.4,
+        "tests": {
+          "FuzzBrandingSettings": 15.8,
+          "FuzzBrandingURL": 10.2,
+          "FuzzConfigFiles": 0.4,
+          "FuzzFontFile": 0.9,
+          "FuzzFontNames": 0,
+          "FuzzImportPreset": 0.2,
+          "FuzzSanitizers": 36.5,
+          "TestAppearanceAndReadability": 1.9,
+          "TestApplyBackground": 1.5,
+          "TestBackgroundAddressWithALineBreakStaysInItsDeclaration": 1.6,
+          "TestBuiltinFilesFromFilesAsFromDisk": 1.4,
+          "TestBuiltinPathWinsOverFiles": 0,
+          "TestCSSStructureCheckerNoticesBreakouts": 0,
+          "TestCleanersRemoveWordsWrappedAroundThemselves": 0,
+          "TestCleanersStayFastOnNestedWords": 9.5,
+          "TestConcurrentUse": 1.2,
+          "TestCustomCSSAtTheEnd": 2.4,
+          "TestExportAndImport": 2.3,
+          "TestFaviconAndLogo": 2,
+          "TestFaviconFallback": 0,
+          "TestFontCSS": 0,
+          "TestFontDownloadGoesThroughTheGuard": 0,
+          "TestFontDownloadStopsAtTheRedirectLimit": 0,
+          "TestFontFolderMustStayInside": 0,
+          "TestFontNames": 0,
+          "TestFontsAreStoredByTheirBytes": 0,
+          "TestGenerateThemeCSSDefaults": 0,
+          "TestGlassCSS": 1.6,
+          "TestGuardedDialRefusesNamesAndLiterals": 0,
+          "TestHelpersForRoutes": 0,
+          "TestHexToMutedRGBA": 0,
+          "TestJSON": 0,
+          "TestListBackgrounds": 0,
+          "TestLoadFallsBackToDefaults": 1.9,
+          "TestLoginSlides": 0,
+          "TestNestedAppearanceInput": 0,
+          "TestNewNeedsThePalettes": 0,
+          "TestNoPalettesFile": 0,
+          "TestNormalizers": 0,
+          "TestOddRows": 1.6,
+          "TestOracleConstants": 11.1,
+          "TestOracleFiles": 13.5,
+          "TestOracleHosts": 0.4,
+          "TestOraclePure": 21.8,
+          "TestOracleStore": 87.1,
+          "TestProfiles": 1.6,
+          "TestRefusedFontUploadLeavesNoTemporaryFile": 0,
+          "TestRemovePreviousLogo": 1.5,
+          "TestRevision": 1.9,
+          "TestRevisionOfAnEmptyTable": 1.1,
+          "TestRowsWrittenElsewhereShowAfterTheNextLoad": 1.4,
+          "TestSVGAttributeAllowlist": 0,
+          "TestSVGDocument": 0,
+          "TestSVGElementAllowlist": 0,
+          "TestSVGLinks": 0,
+          "TestSVGStyles": 0,
+          "TestSanitizeSVGKeepsShippedPictures": 0.2,
+          "TestSanitizeSVGSeesWhatAParserSees": 0,
+          "TestSaveCleansValues": 1.9,
+          "TestSignInAndBootstrapBranding": 1.2,
+          "TestStoreLogoTakesTheExtensionOfItsType": 1.5,
+          "TestStoredSVGIsCleanedOnRead": 1.6,
+          "TestStoredValuesCannotLeaveTheirDeclaration": 1.8,
+          "TestTableWithoutUpdatedAt": 1.5,
+          "TestThemeModesCSS": 1.7,
+          "TestThemePalettes": 0,
+          "TestThemes": 1.4,
+          "TestToFixed2": 0,
+          "TestUploads": 1.6,
+          "TestWallpaperCSS": 2.1,
+          "TestWritesReachTheCache": 1.3
+        },
+        "subtests": {
+          "TestOracleStore": {
+            "postgres": 0,
+            "sqlite": 87.1
+          }
+        }
+      },
+      "./console/cdapproxy": {
+        "seconds": 24
+      },
+      "./console/clientrelease": {
+        "seconds": 1.2
+      },
+      "./console/config": {
+        "seconds": 1.1
+      },
+      "./console/contract": {
+        "seconds": 2.1
+      },
+      "./console/csrf": {
+        "seconds": 1.1
+      },
+      "./console/devicegroups": {
+        "seconds": 40.4
+      },
+      "./console/discovery": {
+        "seconds": 3.7
+      },
+      "./console/embedfs": {
+        "seconds": 1
+      },
+      "./console/filetransfer": {
+        "seconds": 39.3
+      },
+      "./console/generator": {
+        "seconds": 25.4
+      },
+      "./console/goapi": {
+        "seconds": 10.9
+      },
+      "./console/goapipath": {
+        "seconds": 8.7
+      },
+      "./console/guestaccess": {
+        "seconds": 1
+      },
+      "./console/helpmail": {
+        "seconds": 8.1
+      },
+      "./console/housekeeping": {
+        "seconds": 45.1
+      },
+      "./console/httpx": {
+        "seconds": 2.6
+      },
+      "./console/i18n": {
+        "seconds": 59.1
+      },
+      "./console/jobs": {
+        "seconds": 1.2
+      },
+      "./console/jsbind": {
+        "seconds": 1.7
+      },
+      "./console/kit": {
+        "seconds": 14
+      },
+      "./console/limits": {
+        "seconds": 9.7
+      },
+      "./console/listen": {
+        "seconds": 22.9
+      },
+      "./console/mail": {
+        "seconds": 40.8
+      },
+      "./console/mail/addressparser": {
+        "seconds": 32.9
+      },
+      "./console/mail/message": {
+        "seconds": 53.8
+      },
+      "./console/mail/smtpwire": {
+        "seconds": 134.4,
+        "tests": {
+          "FuzzDataStream": 0,
+          "FuzzServer": 2,
+          "TestAlternate": 0,
+          "TestCertificateClock": 0,
+          "TestCertificateNames": 0,
+          "TestClientNameVectors": 0,
+          "TestConnectErrorTexts": 0,
+          "TestConnectionTimeout": 0.4,
+          "TestContext": 0.4,
+          "TestCramVectors": 0,
+          "TestCredentialsNeverGoOutWithoutTLS": 0.9,
+          "TestDNSTimeout": 0.2,
+          "TestDataStreamChunks": 0,
+          "TestDataStreamVectors": 0,
+          "TestDefaults": 0,
+          "TestDialSeveralAddresses": 1,
+          "TestEhloVectors": 1,
+          "TestEndToEnd": 82.6,
+          "TestEnvelopeVectors": 0,
+          "TestFuzzServerSeeds": 0,
+          "TestIPFamily": 0,
+          "TestIdentityVectors": 0,
+          "TestMessageWriter": 2.7,
+          "TestReplyQueueBound": 0,
+          "TestReplySizeLimit": 0.3,
+          "TestReplyVectors": 0.1,
+          "TestRequireTLSOnTheRecordedDowngrades": 0,
+          "TestResolve": 0,
+          "TestResolveErrors": 0,
+          "TestResolveShortShare": 0,
+          "TestServerMessageIDVectors": 0,
+          "TestSessions": 0.1,
+          "TestSocketErrorTexts": 0,
+          "TestSocketErrors": 0,
+          "TestStartTLSBeforeLogin": 0.1,
+          "TestSystemRoots": 0.1,
+          "TestTheWaitAfterQuitEnds": 1.3,
+          "TestUsableFamilies": 0,
+          "TestVerifyWaitsForQuitReply": 0.4
+        }
+      },
+      "./console/managedconfig": {
+        "seconds": 1
+      },
+      "./console/meshproxy": {
+        "seconds": 12.7
+      },
+      "./console/middleware": {
+        "seconds": 48.9
+      },
+      "./console/ndrelay": {
+        "seconds": 41.5
+      },
+      "./console/netmonitor": {
+        "seconds": 94.5
+      },
+      "./console/onboard": {
+        "seconds": 1
+      },
+      "./console/qr": {
+        "seconds": 244.2,
+        "tests": {
+          "FuzzEncode": 0,
+          "TestAlignmentTable": 0,
+          "TestBlocksAreInterleaved": 0,
+          "TestCapacitiesFromTheStandard": 0,
+          "TestCodewordTables": 0,
+          "TestDataCodewordsFromTheStandard": 0,
+          "TestDataCodewordsOfEachMode": 0,
+          "TestEncodeRefusesWhatCannotBeEncoded": 0.2,
+          "TestEveryVersionReadsBack": 23.5,
+          "TestFieldMultiplication": 0,
+          "TestFormatAndVersionBits": 0,
+          "TestGeneratorPolynomials": 0,
+          "TestMaskFormulas": 0,
+          "TestMaskIsTheBestOfEight": 2.4,
+          "TestPNGDataURL": 0.1,
+          "TestPNGLimits": 17,
+          "TestPNGScalesModulesToPixels": 0.2,
+          "TestPNGWithAScaleThatIsNotWhole": 0,
+          "TestPatternsOfEveryVersion": 6.5,
+          "TestPenaltyRules": 0,
+          "TestPlanJoinsRunsWhenThatIsShorter": 0,
+          "TestRandomTextsReadBack": 20.9,
+          "TestSameModulesAsNpmPackage": 106.2,
+          "TestSamePixelsAsNpmPackage": 66.1,
+          "TestSizeAndBlack": 0,
+          "TestSplitRuns": 0
+        }
+      },
+      "./console/registrations": {
+        "seconds": 5.2
+      },
+      "./console/remoterelay": {
+        "seconds": 38.1
+      },
+      "./console/remotetarget": {
+        "seconds": 70.1,
+        "subtests": {
+          "TestNodeScenarios": {
+            "checks": 5.1,
+            "frames_around_the_length_marks": 2.5,
+            "names_in_headers": 1.5,
+            "passing_messages": 28,
+            "sizes": 22.2,
+            "the_upstream_side": 5.2
+          }
+        }
+      },
+      "./console/reports": {
+        "seconds": 10.6
+      },
+      "./console/restart": {
+        "seconds": 6.6
+      },
+      "./console/routes/activity": {
+        "seconds": 99.2
+      },
+      "./console/routes/auth": {
+        "seconds": 432,
+        "tests": {
+          "FuzzPendingAccount": 0,
+          "FuzzQueryText": 0,
+          "FuzzTextNumber": 0,
+          "TestCallbackQuery": 0,
+          "TestCutUTF16": 0,
+          "TestDisabledAccountAtTheSignIn": 3.6,
+          "TestExternalAccountsTurnTwoFactorOffWithACode": 7.8,
+          "TestHousekeepingJob": 4.6,
+          "TestJSNumberAndLength": 0,
+          "TestJSString": 0,
+          "TestLocalAccountsTurnTwoFactorOffWithThePassword": 3.6,
+          "TestLockoutAnswersOfNode": 29.2,
+          "TestLoginAnswersInTheRequestLanguage": 4.4,
+          "TestLoginLimiterAndTheOrderOfChecks": 4.7,
+          "TestLoginLockoutAfterTenFailures": 4.2,
+          "TestLoginLockoutOfNamesThatAreNoText": 3.9,
+          "TestLoginLockoutWithAnEndThatIsNoTime": 4.4,
+          "TestLoginNamesTheBrowsersAddressToTheAPIServer": 4.4,
+          "TestLoginOverHTTPS": 4.6,
+          "TestLoginOverPlainHTTPInHTTPSMode": 3.7,
+          "TestLoginPage": 2.1,
+          "TestLoginPageShowsASaveAtOnce": 2,
+          "TestLoginRecordsTheClientAndTheWayBack": 5.6,
+          "TestLoginRefusesALockedAccount": 6.7,
+          "TestLoginRefusesAnAddressWithTooManyFailures": 3.7,
+          "TestLoginRefusesProWith403": 2.8,
+          "TestLoginRefusesWhatIsNoCredentials": 5.5,
+          "TestLoginSignsIn": 4.1,
+          "TestLoginThroughTheSignalServer": 8.9,
+          "TestLoginWhenTheAuditLogFails": 4.8,
+          "TestLoginWithValuesThatAreNoText": 4.8,
+          "TestLoginWithWrongCredentials": 7.1,
+          "TestLogout": 2.8,
+          "TestLogoutForm": 4.6,
+          "TestLogoutPage": 2.9,
+          "TestLogoutPageWithTheWebApp": 4.7,
+          "TestLogoutWhenTheAuditLogFails": 3.9,
+          "TestMandatoryTwoFactorSetUpAtSignIn": 9.5,
+          "TestNewRecoveryCodesWithACurrentCode": 28.7,
+          "TestNoAccountLookup": 3.7,
+          "TestOIDCAuthorize": 4.5,
+          "TestOIDCCallback": 3.6,
+          "TestOIDCSessionRefusesPro": 6.7,
+          "TestOIDCStatus": 7,
+          "TestOwnPasswordChangeEndsTheOtherSessions": 6,
+          "TestPasswordChange": 10.2,
+          "TestPasswordChangeForAnAccountThatIsGone": 4.6,
+          "TestPasswordChangeLimit": 3.4,
+          "TestPasswordChangeRefusals": 5.7,
+          "TestPasswordChangeRefusesWhatTheSignInRefuses": 9,
+          "TestPasswordChangeWhenTheAuditLogFails": 4,
+          "TestPasswordStepOfATwoFactorAccount": 3.4,
+          "TestPendingAccount": 0,
+          "TestPendingSecondFactorExpires": 3.7,
+          "TestQueryText": 0,
+          "TestRecoveryCodes": 4.2,
+          "TestRowLine": 0,
+          "TestSecondFactor": 4.6,
+          "TestSecondFactorCheckedByTheSignalServer": 3.3,
+          "TestSecondFactorOfASessionAnOlderConsoleLeft": 4.8,
+          "TestSecondFactorUnavailableWhenTheAuditLogFails": 4.1,
+          "TestSecondSignInEndsTheFirst": 5.3,
+          "TestSessionList": 3.2,
+          "TestSessionListWhenTheTableFails": 5.2,
+          "TestSignInAllowsMoreSessionsWhenThePolicyDoes": 3.6,
+          "TestSignInKeepsTheFormOfTheAccountID": 15.2,
+          "TestSingleSignOn": 6.8,
+          "TestSingleSignOnLeavesOtherAccountsAlone": 3.6,
+          "TestSingleSignOnNeedsTheBrowserThatStartedIt": 6.3,
+          "TestSingleSignOnProfilePicture": 5.4,
+          "TestSingleSignOnRefusals": 5.1,
+          "TestSingleSignOnRolesAndWaysBack": 6.9,
+          "TestSingleSignOnWhenTheAccountCannotBeWritten": 5.3,
+          "TestSpread": 0,
+          "TestStoredJSON": 0,
+          "TestStrictEqual": 0,
+          "TestTOTPDisableCountsWrongPasswords": 3.7,
+          "TestTwoFactorEnrolment": 23,
+          "TestTwoFactorNotRequired": 4.7,
+          "TestTwoFactorRoutesWhenTheAuditLogFails": 13.4,
+          "TestVerify": 4.4,
+          "TestVerifyOfSessionsWithOtherFields": 2.9,
+          "TestWrongCodesCountAgainstTheAccount": 6.2,
+          "TestWrongCodesEndThePendingSignIn": 4.9
+        }
+      },
+      "./console/routes/automation": {
+        "seconds": 131.6,
+        "tests": {
+          "FuzzQueryAndPath": 0,
+          "FuzzResultText": 0,
+          "TestACommandNeedsAKnownDevice": 4.2,
+          "TestAFinishedCommandStaysFinished": 3.5,
+          "TestALimitKeepsEightBytes": 3.1,
+          "TestANameThatIsNoTextIsRefused": 3.3,
+          "TestARuleKeepsTheStateItWasCreatedWith": 3.2,
+          "TestAcknowledgeKeepsTheFirst": 3.6,
+          "TestAnotherDevicesCommandIsNotFound": 3,
+          "TestAutomationMountHasNoUnreachableRoute": 3.3,
+          "TestCommandsNeedDeviceConnectAndTheScope": 3.6,
+          "TestCooldownZeroIsTheDefault": 3.2,
+          "TestDeviceRouteFailures": 3.4,
+          "TestFailures": 3.4,
+          "TestFiltersAreOneText": 4.3,
+          "TestIDsBeyondTheColumnAreNotFound": 3.4,
+          "TestListsOfTheSameSecondKeepTheirOrder": 3.2,
+          "TestNodeAnswers": 35,
+          "TestNodeDeviceAnswers": 4.3,
+          "TestNotifyEmailsArePlainAddresses": 3.6,
+          "TestPermissions": 3.6,
+          "TestResultText": 0,
+          "TestRuleFieldsHaveTheirTypes": 3.7,
+          "TestSMTPSettings": 3.5,
+          "TestTheAuditLog": 3.1,
+          "TestTheCSRFGateAtEachMount": 3.7,
+          "TestTheDeviceMountInAnotherSpelling": 3.3,
+          "TestTheListsAnswerAtMost500Rows": 5.8,
+          "TestTheRoutesAtBothMounts": 3.3,
+          "TestTheRoutesStepAsideAtTheDeviceMount": 0,
+          "TestTurnedOff": 0,
+          "TestUpdateChecksLikeCreate": 3.4,
+          "TestWhatANewRuleAndANewCommandAreAnsweredWith": 2.8,
+          "TestWrittenInDigits": 0
+        }
+      },
+      "./console/routes/avatars": {
+        "seconds": 14.4
+      },
+      "./console/routes/cdap": {
+        "seconds": 22.3
+      },
+      "./console/routes/cdapstudio": {
+        "seconds": 17.5
+      },
+      "./console/routes/chat": {
+        "seconds": 49.7
+      },
+      "./console/routes/clientbranding": {
+        "seconds": 5.5
+      },
+      "./console/routes/commercialization": {
+        "seconds": 55.2
+      },
+      "./console/routes/console": {
+        "seconds": 10.2
+      },
+      "./console/routes/crossplatform": {
+        "seconds": 9.2
+      },
+      "./console/routes/dashboard": {
+        "seconds": 33
+      },
+      "./console/routes/dataguard": {
+        "seconds": 65
+      },
+      "./console/routes/desktop": {
+        "seconds": 14.2
+      },
+      "./console/routes/devices": {
+        "seconds": 216,
+        "tests": {
+          "FuzzBodyValues": 0,
+          "TestAgentErrorsAreTheAgents": 3.2,
+          "TestAgentRequestThatWouldEndNode": 3.2,
+          "TestAssignChecksEveryReferenceFirst": 4,
+          "TestAssignChecksTheDeviceScope": 4.1,
+          "TestAssignNamesOnlyItselfWithALimitedScope": 4,
+          "TestAssignmentKeys": 1.1,
+          "TestAuditFailures": 3.5,
+          "TestBearerRequestsGoToTheClientAPI": 3.6,
+          "TestBulkDeleteIsNoDeviceID": 2.8,
+          "TestCascadeChecksTheLinkedDevices": 2.8,
+          "TestCascadeNamesTheLinkedDevicesItChecked": 2.6,
+          "TestChangeIDTakesTextOnly": 4,
+          "TestClipboardNeedsDeviceConnect": 3.4,
+          "TestCutsKeepWholeCharacters": 3.4,
+          "TestDeleteAndBanRevokeTheDeviceTokens": 4.8,
+          "TestDeleteNamesCascadedDevices": 2.8,
+          "TestDeleteTagClearsTheGroupsThatFilterOnIt": 7.1,
+          "TestDeletingAGroupWithAnAccessListNeedsUserEdit": 6.4,
+          "TestEveryRouteChecksTheScope": 4,
+          "TestGroupAccessListsNeedUserEdit": 7.5,
+          "TestGroupWritesKeepTheScope": 8.5,
+          "TestHardCascadeClearsTheLinkedDevicesRows": 3.4,
+          "TestHardDeleteClearsDeviceRows": 3.3,
+          "TestIssueANewDeviceToken": 4.1,
+          "TestLimitedScopeBindsNoRuleToAUserGroup": 3.7,
+          "TestListIgnoresQueryLists": 3.5,
+          "TestListSortFields": 3.5,
+          "TestMembershipIsOneWrite": 3.9,
+          "TestNodeAgentAnswers": 20.8,
+          "TestNodeAnswers": 13.6,
+          "TestNodeOwnerKeepsTheWrites": 3.8,
+          "TestNormalizeStrategyPermissions": 0,
+          "TestPanelRole": 1.1,
+          "TestPanelTrustActsAsTheOperator": 7.3,
+          "TestParseStoredTime": 0,
+          "TestPermissions": 3.7,
+          "TestRemoteTargetReadiness": 7.2,
+          "TestSaveGroupRefusesLongAccessLists": 7.1,
+          "TestSaveGroupTakesTextOnly": 5.8,
+          "TestScreenshotNeedsDeviceEdit": 3,
+          "TestSetGroupsNeedsAList": 4.1,
+          "TestSetTagsKeepsWholeCharacters": 2.7,
+          "TestSetTagsTrimsAfterTheCut": 2.5,
+          "TestStrategyRoutesKeepTheScope": 4,
+          "TestStrategyWriteAnswersPermissions": 9.8,
+          "TestSysinfoNullColumnsAnswerTheFallback": 3.4,
+          "TestUpdateStrategyKeepsItsSwitch": 2.8
+        }
+      },
+      "./console/routes/filetransfer": {
+        "seconds": 28.5
+      },
+      "./console/routes/fleet": {
+        "seconds": 20.5
+      },
+      "./console/routes/folders": {
+        "seconds": 42.9
+      },
+      "./console/routes/generator": {
+        "seconds": 37.9
+      },
+      "./console/routes/guest": {
+        "seconds": 22.7
+      },
+      "./console/routes/internal/devicemount": {
+        "seconds": 1
+      },
+      "./console/routes/internal/jsjson": {
+        "seconds": 2.5
+      },
+      "./console/routes/internal/jsreq": {
+        "seconds": 2.9
+      },
+      "./console/routes/internal/replay": {
+        "seconds": 1.1
+      },
+      "./console/routes/internal/reqquery": {
+        "seconds": 2.1
+      },
+      "./console/routes/inventory": {
+        "seconds": 142.7,
+        "tests": {
+          "FuzzPageNumber": 0,
+          "FuzzSpread": 0,
+          "TestARefusedReportIsNotStored": 5.4,
+          "TestDeviceRouteFailures": 4.4,
+          "TestFailures": 5.4,
+          "TestFullestDisk": 0,
+          "TestInventoryUsesTheDeviceGuards": 4.2,
+          "TestListMembersHaveTheirTypes": 5.9,
+          "TestNodeAnswers": 36.6,
+          "TestNodeDeviceAnswers": 19.4,
+          "TestOneBadReportDoesNotFailTheList": 5.8,
+          "TestPageNumber": 0,
+          "TestPermissions": 5.3,
+          "TestReadRoutesKeepToTheScope": 2.6,
+          "TestRound": 0,
+          "TestSpreadAndJSON": 0,
+          "TestTelemetryNullIsNullOnBothDatabases": 5.2,
+          "TestTheCSRFGateAtEachMount": 5.7,
+          "TestTheDeviceMountInAnotherSpelling": 5.3,
+          "TestTheListFallsBackToThePeerList": 1.6,
+          "TestTheReadRoutesStepAsideAtTheDeviceMount": 0,
+          "TestTheRoutesAtBothMounts": 6,
+          "TestTheTokenCheckWhenTheDatabaseFails": 4.2,
+          "TestUploadKeepsTheInfoTheReportDoesNotName": 8.2,
+          "TestUploadValuesHaveTheirTypes": 4.7,
+          "TestUploadsTakeTheTokensDevice": 5.4
+        }
+      },
+      "./console/routes/keys": {
+        "seconds": 2.5
+      },
+      "./console/routes/meshcentral": {
+        "seconds": 20.1
+      },
+      "./console/routes/ndapi": {
+        "seconds": 125.3,
+        "tests": {
+          "FuzzNodeBase64": 0,
+          "FuzzVerifyProof": 0,
+          "TestApprovalWithAKeyNeedsThatKey": 1.6,
+          "TestBannedTarget": 1.7,
+          "TestBindTemplateAdmitsOnlyTheBoundDevice": 2,
+          "TestCanonicalKey": 0,
+          "TestChatGoesThroughTheAPIServer": 4.4,
+          "TestChatHistoryIsTheTokensDevice": 1.6,
+          "TestEnrollmentToken": 1.7,
+          "TestKeysEqual": 0,
+          "TestNodeAnswers": 3.7,
+          "TestNonces": 15.7,
+          "TestNormalizeHelpRequest": 0,
+          "TestNotificationWritesNeedTheCSRFToken": 1.7,
+          "TestOnlyADeviceTokenProvesADevice": 7,
+          "TestOpenRegistration": 13.8,
+          "TestOperatorDevicesFollowTheScope": 1.7,
+          "TestOperatorLogin": 23.9,
+          "TestOperatorLoginNamesTheClientsAddressToTheAPIServer": 1.7,
+          "TestOperatorLoginOfADisabledAccount": 4.7,
+          "TestOperatorLoginTakesOnlyADeviceID": 9.6,
+          "TestOperatorLoginWhileTheSetUpIsDue": 4.8,
+          "TestOperatorRoutesNeedAnOperator": 1.6,
+          "TestProofPayload": 0,
+          "TestRegisterIsLimited": 3.2,
+          "TestRegistrationAddressIsTheTrustedOne": 3.3,
+          "TestRegistrationEndsWithADeviceToken": 3.4,
+          "TestRegistrationWithoutUUIDKeepsTheStoredOne": 1.6,
+          "TestRenameGuardOnBothDatabases": 1.7,
+          "TestSessionHistoryIsNotForgedThroughTheClientAudit": 1.2,
+          "TestSessionHistoryIsTheOperatorsOwn": 1.8,
+          "TestSessionHistoryTimes": 1.7,
+          "TestStoredKeyAsBytes": 1.6,
+          "TestUUIDInOtherLetterCaseIsTheSame": 1.8
+        }
+      },
+      "./console/routes/network": {
+        "seconds": 50.5
+      },
+      "./console/routes/onboard": {
+        "seconds": 57.3
+      },
+      "./console/routes/organizations": {
+        "seconds": 24.4
+      },
+      "./console/routes/pairing": {
+        "seconds": 16.2
+      },
+      "./console/routes/panelaccess": {
+        "seconds": 18.5
+      },
+      "./console/routes/permissions": {
+        "seconds": 16.7
+      },
+      "./console/routes/phase45": {
+        "seconds": 17.9
+      },
+      "./console/routes/policies": {
+        "seconds": 25.1
+      },
+      "./console/routes/registration": {
+        "seconds": 53.4
+      },
+      "./console/routes/remote": {
+        "seconds": 84.3
+      },
+      "./console/routes/reports": {
+        "seconds": 30.9
+      },
+      "./console/routes/resourcecontrol": {
+        "seconds": 11
+      },
+      "./console/routes/rustdeskapi": {
+        "seconds": 241.6,
+        "tests": {
+          "FuzzAddressBook": 0,
+          "FuzzAuditUploads": 0.8,
+          "FuzzLoginBody": 2.1,
+          "TestADatabaseFailureAnswers500": 4,
+          "TestAFolderListsItsDevicesInObjectKeyOrder": 3.6,
+          "TestAProAccountGetsNoDeviceKey": 3.8,
+          "TestASignInTokenProvesNoDevice": 5.9,
+          "TestAUsernameCollisionIsRefused": 1,
+          "TestAnAccountWithoutTheDeviceListSeesItsAddressBook": 4,
+          "TestAssignHidesDatabaseErrors": 3.2,
+          "TestAuditReadsAskForAuditView": 2.6,
+          "TestClientReportsAreBounded": 2.3,
+          "TestClientReportsNeedTheRegisteredUUID": 2.7,
+          "TestClientSignInOfADisabledAccount": 5.4,
+          "TestClientSignInWhileTheSetUpIsDue": 4.3,
+          "TestConnectionRecordsNeedAuditView": 4.1,
+          "TestDecodeBase64LikeNode": 0,
+          "TestDeviceGroupFormFollowsTheRoute": 4.1,
+          "TestDeviceGroupSaveTakesTextOnly": 4.3,
+          "TestDeviceIDs": 0,
+          "TestDeviceListsFollowTheScope": 3.4,
+          "TestDevicesComePageByPage": 4.1,
+          "TestFileAuditOnEitherShape": 13.2,
+          "TestIsAdminIsOneRule": 16.4,
+          "TestLoginNamesTheClientsAddressToTheAPIServer": 1.2,
+          "TestNodeAnswers": 13.3,
+          "TestParseCPU": 0,
+          "TestParseDate": 0,
+          "TestParseIntAndFloat": 0,
+          "TestPendingSecondSteps": 0,
+          "TestSanitize": 0,
+          "TestSecondStepChecksTheLockout": 9.4,
+          "TestSecondStepRefusesAWrongCode": 8.6,
+          "TestSignInChecksTheBanAfterThePassword": 4.3,
+          "TestSignInStoresTextClientIDsOnly": 17.6,
+          "TestSignInTakesOnlyADeviceIDAsClientID": 14.3,
+          "TestStrategiesFollowTheScopeAndTheProRule": 2.8,
+          "TestStrategyListReadsTheSwitch": 3.2,
+          "TestStrategyStatusSwitchesOn": 3.7,
+          "TestStringOfAValue": 0,
+          "TestStringifyIsJSONStringify": 0,
+          "TestSysinfoLogThrottle": 0,
+          "TestSysinfoVersionIsTheStoredHash": 5,
+          "TestTheAuditListsComeFromTheAPIServer": 4,
+          "TestTheAuditTypes": 3.9,
+          "TestTheFiveRoutesLeaveRequestsWithoutABearerToken": 3.4,
+          "TestTheGuardsOfTheWrites": 4,
+          "TestTheKeyFingerprint": 4,
+          "TestThePeerList": 4,
+          "TestTheSignInRefusals": 4,
+          "TestTheSystemInformationLimits": 3.9,
+          "TestTheTOTPBypassNeedsItsAcknowledgement": 22.9,
+          "TestTheTelemetryKeyIsTheAPIServersAnswer": 4.1,
+          "TestUserGroupsAskForUserView": 3.7
+        }
+      },
+      "./console/routes/scaling": {
+        "seconds": 17.1
+      },
+      "./console/routes/securityaudit": {
+        "seconds": 32
+      },
+      "./console/routes/serverattestation": {
+        "seconds": 17.3
+      },
+      "./console/routes/servermanagement": {
+        "seconds": 12.8
+      },
+      "./console/routes/settings": {
+        "seconds": 101.9
+      },
+      "./console/routes/settingsbackup": {
+        "seconds": 23.6
+      },
+      "./console/routes/settingsupdates": {
+        "seconds": 18.2
+      },
+      "./console/routes/system": {
+        "seconds": 8.2
+      },
+      "./console/routes/tenants": {
+        "seconds": 62.9
+      },
+      "./console/routes/tickets": {
+        "seconds": 99.9
+      },
+      "./console/routes/tokens": {
+        "seconds": 6.4
+      },
+      "./console/routes/toolkit": {
+        "seconds": 12.9
+      },
+      "./console/routes/trends": {
+        "seconds": 8
+      },
+      "./console/routes/users": {
+        "seconds": 532.6,
+        "tests": {
+          "FuzzRequestValues": 0,
+          "TestCannotChangeAnAccountAboveYourRole": 5.9,
+          "TestCreateAnswersStoredGroups": 4.2,
+          "TestCreatingAccountsDoesNotSpendThePasswordBudget": 13.8,
+          "TestDeletedUserLeavesTheAvatarList": 2.9,
+          "TestDisableAndEnableAnAccount": 11.7,
+          "TestDisableFollowsWhoMayChangeWhom": 2.9,
+          "TestGuestIssuerIsGivenByWhoGivesViewer": 7.2,
+          "TestLastAdministrator": 1.6,
+          "TestListRefusedByRoleOverride": 2,
+          "TestListWritesNothing": 2.9,
+          "TestNewPasswordsFitTheSignIn": 4.4,
+          "TestNewPasswordsNeedEightCharacters": 4,
+          "TestNodeAnswers": 408.7,
+          "TestPasswordLimitCountsOnlyOwnPasswordChanges": 4.3,
+          "TestProviderAccountsGetTheirGroups": 1.6,
+          "TestRefusedChangesWriteNothing": 11.3,
+          "TestRenameSkipsAMissingTable": 2.3,
+          "TestRenameWithAddressBooksKeyedByID": 1.2,
+          "TestRoleChangeEndsTheAccountsSessions": 17.4,
+          "TestScopeValuesThatAreNoText": 1.5,
+          "TestSessionAccountWithTextID": 3.2,
+          "TestTurnOffAnotherPersonsTwoFactor": 5.8,
+          "TestUsernameMustBeText": 4.5,
+          "TestUsernameTakenInTheMeantime": 4.3
+        },
+        "subtests": {
+          "TestNodeAnswers": {
+            "postgres": 0,
+            "postgres-go": 0,
+            "sqlite": 212.7,
+            "sqlite-go": 196
+          }
+        }
+      },
+      "./console/safepath": {
+        "seconds": 1.3
+      },
+      "./console/scheduledbackup": {
+        "seconds": 18.2
+      },
+      "./console/serverinfo": {
+        "seconds": 58
+      },
+      "./console/servermgmt": {
+        "seconds": 8.4
+      },
+      "./console/servicedef": {
+        "seconds": 1.1
+      },
+      "./console/session": {
+        "seconds": 8.6
+      },
+      "./console/session/cookie": {
+        "seconds": 1
+      },
+      "./console/ssrfguard": {
+        "seconds": 14.8
+      },
+      "./console/static": {
+        "seconds": 38.9
+      },
+      "./console/statuspush": {
+        "seconds": 32.9
+      },
+      "./console/store": {
+        "seconds": 127.1,
+        "tests": {
+          "TestBoolArgWritesWhatTheColumnTakes": 0,
+          "TestConcurrentWriters": 0.4,
+          "TestCredentialsChangedAtInEveryOrigin": 9.3,
+          "TestDriverValueTypes": 0.1,
+          "TestEscapeLike": 0,
+          "TestISOTimeCutsToMilliseconds": 1.4,
+          "TestInSnapshotSeesOneState": 0,
+          "TestInsertQueryAndTransactions": 0,
+          "TestLocalWallClockMatchesNode": 0,
+          "TestMigrateAddsAgentBundleProductType": 1.8,
+          "TestMigrateAddsEachMissingColumn": 44.3,
+          "TestMigrateAddsUpdatedAtOnSQLite": 4,
+          "TestMigrateConcurrently": 1.9,
+          "TestMigrateDeletesTheBackupShareLogin": 1.8,
+          "TestMigrateFixesAgentBundleProductTypes": 2.1,
+          "TestMigrateFreshEqualsNodeDump": 1.8,
+          "TestMigrateGivesAgentBundlesSlugs": 3.3,
+          "TestMigrateHashesAccessTokens": 3.2,
+          "TestMigrateKeepsDeviceTokensWithoutAnExpiry": 1.7,
+          "TestMigrateLeavesNodeDatabaseAlone": 2.5,
+          "TestMigrateMakesEarlierTokensAccountTokens": 2.1,
+          "TestMigrateMovesDeviceTokensOutOfAccessTokens": 3.6,
+          "TestMigrateOldInstalls": 9.7,
+          "TestMigrateReportsWhatItDid": 2,
+          "TestMigrateSeedsDefaultGroups": 1.7,
+          "TestMigrateStepFailures": 1.8,
+          "TestMigrateStopsWhenCancelled": 0,
+          "TestMigrateToleratedFailureKeepsItsNeighbours": 0.9,
+          "TestMigrateTwiceChangesNothing": 2.3,
+          "TestMigrateWaitsForTheSchemaLock": 0,
+          "TestMigrateWidensConditionValue": 0,
+          "TestRebind": 0,
+          "TestSQLiteReadersCannotWrite": 0,
+          "TestSchemaDocListsEveryStep": 0,
+          "TestSelectRow": 0,
+          "TestSelectScansEachColumnByItsType": 0,
+          "TestShapeLifecycle": 1.3,
+          "TestShapeOfEveryVariant": 4,
+          "TestShapeOfSharedDumps": 1.9,
+          "TestShapeOfSignalServerDatabase": 1,
+          "TestSharedDatabaseStartOrders": 12.2,
+          "TestSlugAndTokenHashMatchNode": 0,
+          "TestSplitStatements": 0,
+          "TestStoretestMigratedDatabases": 1.9,
+          "TestTimeFormats": 0,
+          "TestTimeFromSQLiteDatetimeColumn": 0,
+          "TestTimeInstant": 0,
+          "TestValueHelpers": 0,
+          "TestValuesMatchNode": 0,
+          "TestValuesNeedTheColumnType": 0
+        }
+      },
+      "./console/updater": {
+        "seconds": 5.1
+      },
+      "./console/webui": {
+        "seconds": 6.3
+      },
+      "./console/ws": {
+        "seconds": 4.3
+      },
+      "./console/ws/wstest": {
+        "seconds": 1
+      },
+      "./console/wsrelay": {
+        "seconds": 85.4,
+        "subtests": {
+          "TestNodeScenarios": {
+            "checks": 2.8,
+            "frames_around_the_length_marks": 0.8,
+            "guest_relay": 2,
+            "guest_revalidation": 2.3,
+            "guest_revoked": 1.5,
+            "guest_signal": 2.4,
+            "guest_use_expires": 1.1,
+            "guest_uses": 2.1,
+            "idle": 1.6,
+            "per-address_limit": 1.3,
+            "relay_frame_limits": 41.5,
+            "relay_messages": 2.3,
+            "signal_bridge": 1.7,
+            "signal_refused": 0.4
+          }
+        }
+      },
+      "./crypto": {
+        "seconds": 1
+      },
+      "./crypto/peervault": {
+        "seconds": 1
+      },
+      "./db": {
+        "seconds": 64
+      },
+      "./events": {
+        "seconds": 1
+      },
+      "./guestaccess": {
+        "seconds": 4
+      },
+      "./internal/clientaddr": {
+        "seconds": 1
+      },
+      "./internal/envvar": {
+        "seconds": 1
+      },
+      "./internal/productversion": {
+        "seconds": 1
+      },
+      "./logging": {
+        "seconds": 1
+      },
+      "./meshcentral": {
+        "seconds": 36.8
+      },
+      "./metrics": {
+        "seconds": 1
+      },
+      "./migrate": {
+        "seconds": 2.2
+      },
+      "./peer": {
+        "seconds": 1
+      },
+      "./policy": {
+        "seconds": 2.8
+      },
+      "./ratelimit": {
+        "seconds": 1.3
+      },
+      "./relay": {
+        "seconds": 7.7
+      },
+      "./reload": {
+        "seconds": 1
+      },
+      "./security": {
+        "seconds": 1
+      },
+      "./sessiongrant": {
+        "seconds": 1
+      },
+      "./signal": {
+        "seconds": 143.2,
+        "tests": {
+          "TestARefusedSessionReachesNoDevice": 4.1,
+          "TestAllowSharedNATInitiatorAuthorizesSynthetic": 1.2,
+          "TestAnonymousInitiatorPunchHoleRejected": 0.7,
+          "TestAnonymousInitiatorRequestRelayRejected": 0.7,
+          "TestBannedTokenInitiatorRevokesSessionAndRelayTickets": 0.7,
+          "TestBillingMetersRelaySessionsWhateverSignalledThem": 2.1,
+          "TestBillingRefusesPunchHoleOverTCP": 0.7,
+          "TestBillingRefusesRelayRequestsOverTCPAndWebSocket": 1.5,
+          "TestBillingSessionsNameTheConsoleAccount": 0.8,
+          "TestCancelPunchFallback": 1.1,
+          "TestClientFetchLocalAddrIsDropped": 0.9,
+          "TestClientTokenAuthorizesViewerOnlyPunch": 0.7,
+          "TestDevicesGetTheRelaySavedInTheConsole": 0.7,
+          "TestEmptyRelayResponseUUIDUsesMatchingInitiatorSession": 0.7,
+          "TestEnsurePunchHoleSocketAddrRejectsEmpty": 0,
+          "TestEverySwitchTurnsOffASessionPermission": 0,
+          "TestExactAddrInitiatorAuthorized": 0.7,
+          "TestGetRendezvousServersAddsSignalPort": 0,
+          "TestGetRendezvousServersEmptyWhenUnset": 0,
+          "TestHandleEmptyOrUnknownUnion": 0.7,
+          "TestHandleIceCandidateForwardsToTargetPeer": 0.7,
+          "TestHandleIceCandidateIgnoresUnknownTarget": 0.7,
+          "TestHandleMessageHttpProxyRequestRejected": 0.7,
+          "TestHandlePunchHoleRequestTCPForwardsUDPWhenConnTCP": 0.6,
+          "TestHandlePunchHoleRequestTCPForwardsWebRTCSDPOffer": 0.7,
+          "TestHandlePunchHoleSentForwardsWebRTCSDPAnswer": 0.6,
+          "TestHandlePunchHoleSentRecordsPeerRelayVerbatim": 0.6,
+          "TestHandleRegisterPeerWSManagedRetainsPendingTransport": 0.7,
+          "TestHandleRegisterPeerWSRejectsSoftDeletedHeartbeat": 0.7,
+          "TestHandleRegisterPeerWSRejectsSoftDeletedPeer": 0.7,
+          "TestHandleRelayResponseForwardAuthorizesRelayTicket": 0.6,
+          "TestHandleRelayResponseForwardRefusesUnresolvedPair": 0.7,
+          "TestHandleRequestRelayTCPForwardsUDPWhenConnTCP": 0.6,
+          "TestHandleRequestRelayTCPMatchingWSAllowed": 0.7,
+          "TestHandleRequestRelayTCPMixedTransportIsRelayed": 0.8,
+          "TestHandleRequestRelayTCPSamePublicIPIgnoresPrivateRelayHint": 0.7,
+          "TestHandleRequestRelayTCPSamePublicIPWithUDPTargetForcesPublicRelay": 0.7,
+          "TestHandleTestNatAdvertisesConfiguredRendezvousServers": 0.7,
+          "TestHandleTestNatNeverAdvertisesRelayServersAsRendezvous": 0.7,
+          "TestHeartbeatAfterRestartFromAnotherIPDoesNotRegisterKeyedPeer": 0.7,
+          "TestHeartbeatFromAnotherIPDoesNotMoveKeyedPeer": 0.6,
+          "TestHeartbeatFromNewPortOfSameIPMovesKeyedPeer": 0.5,
+          "TestHttpProxyRequestDecodesAfterSchemaSync": 0,
+          "TestIDChangeWritesThePeerUnderTheMapLock": 0.7,
+          "TestIPFallbackDoesNotQueueManagedPending": 0.6,
+          "TestIceCandidateBetweenPunchEndsIsForwarded": 0.9,
+          "TestIceCandidateFromStrangerIsNotForwarded": 0.9,
+          "TestInboundOnlyAgentCanBeConnectionTarget": 0.7,
+          "TestInboundOnlyAgentsCannotInitiatePunchOrRelay": 2.1,
+          "TestInboundOnlySupportTargetForcesRelay": 0.6,
+          "TestInvalidTargetIDIsRefusedBeforeAudit": 0.7,
+          "TestIsSameNetworkDefaultSlash24": 0,
+          "TestIsSameNetworkSlash23Boundary": 0,
+          "TestIsSameNetworkUsesConfiguredMask": 0,
+          "TestLANExchangeKeepsParallelInitiatorsSeparate": 0.6,
+          "TestLANExchangeKeepsWebSocketInitiatorOnRelayCompatiblePath": 0.7,
+          "TestLANExchangeOfASignedInControllerTurnsItsFeaturesOff": 0.7,
+          "TestLANExchangeRejectsUnexpectedSourceAndUnsolicitedResponse": 0.9,
+          "TestLANExchangeTimeoutFallsBackToRelay": 0.7,
+          "TestLegacyOutboundCompatibilityMintsRelayTicket": 0.7,
+          "TestLegacyOutboundCompatibilityNeverBypassesManagedEnrollment": 1.4,
+          "TestLegacyOutboundCompatibilityOpenAllowsControllerOnly": 0.7,
+          "TestLegacyOutboundCompatibilityWebSocketRelay": 0.7,
+          "TestLockedInitiatorWithoutDBPeerRejected": 0.6,
+          "TestLockedTokenDoesNotQueueViewerOnlyInitiator": 0.7,
+          "TestLogAndCheckKeepAliveHttpProxyAndPunch": 0.7,
+          "TestLoggedInOnlyInitiatorAllowsValidTokenAndPanelProxy": 0.7,
+          "TestLoggedInOnlyInitiatorRejectsAddressFallbacks": 0.7,
+          "TestLoggedInOnlyInitiatorRejectsExpiredTokenWithoutUdpFallback": 0.5,
+          "TestLoopbackClientNeedsThePanelProof": 2.8,
+          "TestManagedApprovalRetainsSignalTransportAndEnablesInboundRelay": 0.7,
+          "TestManagedApprovedInitiatorCanRequestRelay": 0.7,
+          "TestManagedHeartbeatOnlyDoesNotMakeTargetReachable": 0.7,
+          "TestManagedPendingInitiatorCannotPunchHole": 0.7,
+          "TestManagedPendingInitiatorCannotRequestRelay": 0.7,
+          "TestManagedPendingSameNATAsApprovedInitiatorRejected": 0.7,
+          "TestManagedPendingStillRejectedDespitePanelAllowlist": 0.7,
+          "TestManagedPendingTransportIsNotAdvertisedOnline": 0.7,
+          "TestManagedPendingWithDBRowStillRejected": 0.7,
+          "TestManagedTokenQueuesViewerOnlyInitiator": 0.5,
+          "TestMatchingRegisterPkOverUDPMovesKeyedPeer": 0.7,
+          "TestMultiApprovedSameIPAmbiguousRejected": 0.7,
+          "TestNATPortLimitsAndClosesSilentConnections": 1.5,
+          "TestNativeLANExchangeForwardsResponseToTCPInitiator": 0.6,
+          "TestNativeLANExchangeReturnsPunchHoleResponse": 0.6,
+          "TestOnlineRequestAnswersAtMostTheCap": 0.6,
+          "TestOnlineRequestReadsPendingQueueOnce": 0.7,
+          "TestOpaqueTokenCaseInsensitive": 0.6,
+          "TestOpenRegisteredInitiatorCanRequestRelay": 0.7,
+          "TestOperatorOnlyOutboundKeepsPanelProxyAndAuditsAllowedConnection": 0.6,
+          "TestOperatorOnlyOutboundRequiresPrivilegedSessionAndRechecksRole": 0.6,
+          "TestOrgPolicyForcesRelayOnPunchHole": 0.7,
+          "TestPanelProofMustMatchAndComeFromTheAllowedAddresses": 0.7,
+          "TestPanelWebClientCanPunchHoleWithoutPeer": 0.7,
+          "TestPanelWebClientCanRequestRelayWithoutPeer": 0.7,
+          "TestPanelWebRemoteCanRelayToWSTarget": 0.7,
+          "TestParseLANMaskInvalidFallsBackToNil": 0,
+          "TestPeerUUIDEqualBinaryVsASCIIHexBug": 0,
+          "TestPeerUUIDFromDB": 0,
+          "TestPendingEnrollmentQueueIsCapped": 0.6,
+          "TestPendingRelayAdvertisedAddressResolvesCorrelationEndpoint": 0.7,
+          "TestPendingRelayUUIDIsolatedByInitiatorEndpoint": 0.7,
+          "TestProcessIDChangeAcceptsMatchingUUIDWithoutPK": 0.7,
+          "TestProcessIDChangeRejectsInvalidNewID": 0.7,
+          "TestProcessIDChangeRejectsPKMismatch": 0.7,
+          "TestProcessIDChangeRejectsSoftDeletedSource": 0.7,
+          "TestProcessIDChangeRejectsWithoutIdentityProof": 0.7,
+          "TestProcessIDChangeRejectsWrongPKWhenPKSent": 0.7,
+          "TestProcessIDChangeSoftDeletedTargetReturnsIDExists": 0.7,
+          "TestProcessIDChangeSuccessEmptyPK": 0.7,
+          "TestProcessRegisterPkFirstEnrollmentStoresIdentity": 0.7,
+          "TestProcessRegisterPkLockedDoesNotQueueUnknownPeer": 0.7,
+          "TestProcessRegisterPkManagedAllowsExistingPeer": 0.7,
+          "TestProcessRegisterPkManagedAllowsTokenBoundPeer": 0.7,
+          "TestProcessRegisterPkManagedRejectsUnknownPeer": 0.7,
+          "TestProcessRegisterPkPreservesPersistedIdentityAfterRestart": 0.7,
+          "TestPublicAnonymousInitiatorStillRejectedWithPanelAllowlist": 0.7,
+          "TestPublishPeerOnlineEmitsEvent": 0.7,
+          "TestPunchHoleSentFromStrangerDoesNotStoreRelay": 0.7,
+          "TestPunchHoleSentFromStrangerIsDropped": 0.9,
+          "TestPunchHoleSentFromTargetForPendingPunchIsForwarded": 0.7,
+          "TestPunchHoleSentWithoutPendingPunchIsDropped": 1,
+          "TestPunchHoleTCPUsesWSSAdvertisedAddress": 0.7,
+          "TestPunchHoleUnparseableTargetAddrReturnsOffline": 0.7,
+          "TestReadPanelProof": 0.7,
+          "TestRecoverMessagePanicKeepsServing": 0.6,
+          "TestRefusalAuditHasAGlobalBudget": 0,
+          "TestRefusalAuditWindowCarriesSuppressedCount": 0,
+          "TestRefusalsAreAuditedOncePerAddress": 0.6,
+          "TestRegisterPeerHeartbeatHydratesPersistedPK": 0.7,
+          "TestRegisterPkForNewIDsIsRateLimited": 0.6,
+          "TestRegisterPkNeedsBothFieldsWhenOneIsStored": 0.7,
+          "TestRegisterPkRefusesOversizedKeyAndUUID": 0.7,
+          "TestRegisterPkWithoutIdentityIsRefusedForKnownPeer": 0.7,
+          "TestRegisterPkWritesThePeerUnderTheMapLock": 0.9,
+          "TestRegistrationLimiterKeepsUnknownPeersIPScoped": 0.7,
+          "TestRegistrationLimiterSkipsKnownPeerHeartbeats": 0.7,
+          "TestRelayAdvertisedAddrPreservesNativeEndpoint": 0.7,
+          "TestRelayAdvertisedAddrUsesWSClientIPWithoutProxyPort": 0.7,
+          "TestRelayAdvertisedToTargetFallsBackForOldClients": 0,
+          "TestRelayAdvertisedToTargetPrefersPeerReportedRelay": 0,
+          "TestRelayRequestToTheDeviceDropsTheControllersPermissionsAndToken": 1.4,
+          "TestRelayResponseForwardHonorsPanelWebClient": 0.7,
+          "TestRelayResponseForwardHydratesPKAndUsesUDP": 0.7,
+          "TestRelayResponseForwardSharedNATFlag": 0.7,
+          "TestRelayResponseForwardUsesPendingInitiatorOnSharedNAT": 0.7,
+          "TestRelayResponseRefusesFindByIPMisdelivery": 0.7,
+          "TestRelayResponseRejectsUnexpectedTargetSource": 0.7,
+          "TestRelayTransportMismatchHelper": 0,
+          "TestRequestRelayResponseCarriesServerDerivedTargetAddress": 0.6,
+          "TestRequestRelayTCPUsesActiveWSTransportForAdvertisement": 0.7,
+          "TestRequestRelayWithShortUUIDDoesNotPanic": 0.8,
+          "TestResolveRegistrationPeerIDRedirectsSameDevice": 0.7,
+          "TestRustDesk15RelayFieldsRoundTrip": 0,
+          "TestSecureTCPHttpProxyRoundTrip": 0.6,
+          "TestSelectPeerRelayServerInvalidMaskFallsBackToSlash24": 0.7,
+          "TestSelectPeerRelayServerKeepsDefaultRelayWhenLANRelayOutsidePeerSubnet": 0.7,
+          "TestSelectPeerRelayServerKeepsPublicRelayForSharedPublicIP": 0.7,
+          "TestSelectPeerRelayServerUsesLANRelayForPrivateSubnet": 0.7,
+          "TestSelectPeerRelayServerUsesMaskForWidePrivateSubnet": 0.7,
+          "TestSendToPeerTCPPunchConn": 0.6,
+          "TestSendToPeerTCPWithoutTransportDrops": 0.6,
+          "TestSessionPermissionsByController": 0.6,
+          "TestSessionPolicyRefusesKindsOfSessionTheAccountMayNotOpen": 0.9,
+          "TestSessionsOfASignedInControllerTurnItsFeaturesOff": 4.7,
+          "TestSignalConnectionLimiterDoesNotConsumeRegistrationBucket": 0.7,
+          "TestSignalRelayWireFlow": 0.7,
+          "TestSingleIPFallbackAuthorizesDifferentPort": 0.7,
+          "TestTCPIDChangeEmptyPKRustDesk147": 0.7,
+          "TestTCPIDChangeLegacyRowWithoutUUIDRejected": 0.7,
+          "TestTCPRegisterPkBindsIPForViewerOnlyPunch": 0.7,
+          "TestTCPSessionPeerIDAuthorizesWithoutFindByAddr": 0.7,
+          "TestUdpPortHintDisambiguatesSameNAT": 0.6,
+          "TestUnavailableTargetCannotReceiveRelay": 1.4,
+          "TestUnknownFieldNumbersFromRaw": 0,
+          "TestWSEffectiveRemoteAddr": 0,
+          "TestWSHeartbeatDoesNotMoveKeyedUDPPeer": 0.7,
+          "TestWSNoRegisterDeviceDoesNotBindPeer": 0.8,
+          "TestWSPunchHoleSentExactPortNotSiblingNAT": 0.9,
+          "TestWSPunchHoleSentForwardsToWSInitiator": 0.9,
+          "TestWSRequestRelayFirstFrameIsRelayResponse": 0.9,
+          "TestWSSOnlyTargetPunchHoleResponseHasSocketAddr": 0.7,
+          "TestWSSignalClosesSilentConnection": 1.3,
+          "TestWSSignalDesktopRegisterPkDelayed": 1.9,
+          "TestWSSignalHealthCheck": 0.9,
+          "TestWSSignalHealthCheckProxyPath": 0.9,
+          "TestWSSignalImmediateKeepAlive": 1,
+          "TestWSSignalLimitsOpenConnectionsPerAddress": 1,
+          "TestWSSignalOnlineRequest": 1.2,
+          "TestWSSignalRegisterPeer": 1.2,
+          "TestWSSignalRustDeskKeepAlive": 1,
+          "TestWSSignalXForwardedFor": 0.9,
+          "TestWebClientSessionsCarryTheAccountsFeatures": 0.7,
+          "TestWebSocketRegistrationWritesThePeerUnderTheMapLock": 0.8
+        }
+      },
+      "./timesync": {
+        "seconds": 1
+      }
+    },
+    "go-sqlite": {
       ".": {
         "seconds": 31.7
       },

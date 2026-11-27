@@ -1,0 +1,833 @@
+# The checks of the server repository in one workflow: the repo checks,
+# the Go server (vet, tests on SQLite and PostgreSQL), the web app, the
+# console against a running server (contract suite and Playwright) and
+# the CDAP SDKs.
+#
+# A pull request runs only the parts its files touch, and the Go tests
+# in their quick form: without the race detector, and PostgreSQL only for
+# the store, db and migrate packages. The nightly run on main runs every
+# part in full: the race tests on SQLite and on PostgreSQL. A failed
+# nightly run opens an issue (or comments on the open one). Nothing runs
+# again on the push to main: the pull request was tested.
+#
+# "CI passed" is the one check that sums the run up.
+name: CI
+
+on:
+  pull_request:
+  schedule:
+    - cron: '17 2 * * *'
+  # By hand on any branch: gh workflow run ci.yml --ref <branch> [-f mode=pr]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'full: every part, race tests on both databases; pr: every part, as a pull request tests'
+        type: choice
+        options: [full, pr]
+        default: full
+
+permissions:
+  contents: read
+
+# A newer push to the same pull request replaces a run that is still going
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Which parts the run tests, and the shards of the Go tests
+  changes:
+    name: what changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      go: ${{ steps.parts.outputs.go }}
+      web: ${{ steps.parts.outputs.web }}
+      console: ${{ steps.parts.outputs.console }}
+      build: ${{ steps.parts.outputs.build }}
+      cdap: ${{ steps.parts.outputs.cdap }}
+      full: ${{ steps.parts.outputs.full }}
+      mode: ${{ steps.parts.outputs.mode }}
+      race: ${{ steps.parts.outputs.race }}
+      tests: ${{ steps.parts.outputs.tests }}
+    steps:
+      - name: Sort the changed files into parts
+        id: parts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          set -euo pipefail
+          full=false
+          case "$EVENT" in
+            pull_request)
+              gh api "repos/$REPO/pulls/$PR/files" --paginate -q '.[].filename' > files ;;
+            schedule)
+              full=true; echo "everything" > files ;;
+            *)
+              [ "$MODE" = pr ] || full=true
+              echo "everything" > files ;;
+          esac
+          echo "Changed files:"; sed 's/^/  /' files
+
+          # Docs do not need the tests
+          grep -Ev '\.md$' files > code || true
+          has() { grep -Eq "$1" "${2:-code}"; }
+          all=false
+          if has '^everything$' || has '^\.github/workflows/ci\.yml$'; then all=true; fi
+          part() { if [ "$all" = true ] || has "$@"; then echo true; else echo false; fi; }
+
+          go=$(part '^(neodesk-server/|\.github/test-times\.json$)')
+          web=$(part '^(web-ui/|neodesk-server/protos/)')
+          cdap=$(part '^(sdks/|bridges/|neodesk-server/cdap/)')
+          # The console suite runs against the whole server, so any change
+          # to what the server is made of runs it; tests of Go packages and
+          # the repo's own tools do not
+          grep -Ev '^neodesk-server/(.*_test\.go|.*/testdata/.*|cmd/repotool/.*)$' code > server || true
+          console=$(part '^(neodesk-server/|web-ui/|\.github/test-stack/)' server)
+          build=false
+          if [ "$go" = true ] || [ "$web" = true ] || [ "$console" = true ]; then build=true; fi
+
+          if [ "$full" = true ]; then
+            mode=race
+            race=-race
+            tests=$(jq -nc '{include: (
+              [range(1;8) | {db: "sqlite", shard: ., shards: 7, set: "go-race-sqlite", packages: ""}] +
+              [range(1;10) | {db: "postgres", shard: ., shards: 9, set: "go-race-postgres", packages: ""}]
+            )}')
+          else
+            mode=plain
+            race=
+            tests=$(jq -nc '{include: (
+              [range(1;5) | {db: "sqlite", shard: ., shards: 4, set: "go-sqlite", packages: ""}] +
+              [{db: "postgres", shard: 1, shards: 1, set: "go-postgres", packages: "./console/store,./db,./migrate"}]
+            )}')
+          fi
+          {
+            echo "go=$go"; echo "web=$web"; echo "console=$console"; echo "build=$build"
+            echo "cdap=$cdap"; echo "full=$full"; echo "mode=$mode"; echo "race=$race"
+            echo "tests=$tests"
+          } | tee -a "$GITHUB_OUTPUT"
+
+  # Secrets, path fingerprints, ports in the docs, language parity, the
+  # JavaScript allow list, the security regressions of the 2026-11-13
+  # audit and the product version in every file that carries it
+  checks:
+    name: repo checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GITLEAKS_VERSION: 8.24.3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 1
+
+      - name: Install Gitleaks
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Run Gitleaks directory scan
+        run: gitleaks detect --source . --no-git --redact --config .github/gitleaks.toml --exit-code 1
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Check for operator-specific path fingerprints
+        run: bash scripts/check-no-sensitive-paths.sh
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
+
+      - name: Check that no script or Go file presents port 21120 as live
+        working-directory: neodesk-server
+        run: go run ./cmd/repotool check-port-docs
+
+      - name: Check pairing i18n parity across console locales
+        working-directory: neodesk-server
+        run: go run ./cmd/repotool check-pairing-i18n
+
+      - name: Check that no JavaScript is left outside the allow list
+        working-directory: neodesk-server
+        run: go run ./cmd/repotool check-js
+
+      - name: Check security regressions from the 2026-11-13 audit
+        run: bash scripts/check-security-regressions.sh
+
+      - name: Test that the security regression check finds a regression
+        run: bash scripts/test-security-regressions.sh
+
+      - name: Verify product version parity
+        working-directory: neodesk-server
+        run: go run ./cmd/repotool bump-version --verify
+
+  # go vet, govulncheck and the MeshCentral interop
+  go-checks:
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
+    name: go vet and mesh interop
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: neodesk-server
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache: false
+
+      # The module cache every Go job restores; this job saves it when
+      # go.sum changed
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
+
+      - name: Download modules
+        run: go mod download
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: govulncheck
+        run: govulncheck ./...
+
+      - name: Mesh interop (simulated handshake)
+        run: go test ./meshcentral/... -count=1 -timeout 5m
+
+      - name: Mesh interop (live MeshAgent binary)
+        continue-on-error: true
+        run: go test -tags=meshagent_live ./meshcentral/... -run TestMeshAgentLiveConnect -count=1 -timeout 10m
+
+  # .github/test-times.json holds how long each package and each long
+  # test took in earlier runs, per set: go-sqlite and go-postgres for the
+  # quick tests of pull requests, go-race-sqlite and go-race-postgres for
+  # the nightly race tests. repotool test-shards deals the packages out by
+  # them, the longest first to the shard with the least time so far, and
+  # cuts a package longer than --split-over seconds into parts by its
+  # tests (a test that long by its subtests). Tests and packages the file
+  # does not know yet still run, in the last part of their package or as a
+  # package of ten seconds. The changes job says which shards run.
+  #
+  # Each shard uploads the times it measured (test-times-*). To refresh
+  # the file from a green nightly run and a green pull request run:
+  #
+  #   gh run download <run id> -R neodeskapp/neodesk -p 'test-times-*' -D /tmp/times
+  #   cd neodesk-server
+  #   go run ./cmd/repotool test-shards merge --out ../.github/test-times.json /tmp/times/*/test-times.json
+  #   go run ./cmd/repotool test-shards plan --set go-race-postgres --shards 9 --split-over 240
+  #
+  # The PostgreSQL shards run their tests with NEODESK_TEST_POSTGRES_DSN
+  # set, so the store tests run on both databases there; the SQLite shards
+  # run them without it, as an install without PostgreSQL does.
+  go-test:
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
+    name: go test (${{ matrix.db }} ${{ matrix.shard }} of ${{ matrix.shards }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.tests) }}
+    defaults:
+      run:
+        working-directory: neodesk-server
+    services:
+      postgres:
+        # No image, no service: the SQLite shards go without
+        image: ${{ matrix.db == 'postgres' && 'postgres:16-alpine' || '' }}
+        env:
+          POSTGRES_USER: neodesk
+          POSTGRES_DB: neodesk_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U neodesk -d neodesk_test"
+          --health-interval 2s --health-timeout 5s --health-retries 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache: false
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
+
+      # The test binaries, saved by the nightly job "go test cache"
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build
+          key: go-test-${{ needs.changes.outputs.mode }}-${{ hashFiles('neodesk-server/go.sum') }}
+          restore-keys: |
+            go-test-${{ needs.changes.outputs.mode }}-${{ hashFiles('neodesk-server/go.sum') }}-
+            go-test-${{ needs.changes.outputs.mode }}-
+
+      # The tests open many connections side by side, and need no
+      # durability. The server is reached as bdgo-testpg, the name of the
+      # local test database, which recordings of the Node tools print.
+      - name: Set up PostgreSQL for the tests
+        if: matrix.db == 'postgres'
+        env:
+          PG: ${{ job.services.postgres.id }}
+        run: |
+          echo "127.0.0.1 bdgo-testpg" | sudo tee -a /etc/hosts >/dev/null
+          docker exec "$PG" psql -U neodesk -d neodesk_test -q \
+            -c "ALTER SYSTEM SET max_connections = 300" \
+            -c "ALTER SYSTEM SET fsync = off" \
+            -c "ALTER SYSTEM SET synchronous_commit = off" \
+            -c "ALTER SYSTEM SET full_page_writes = off"
+          docker restart "$PG" >/dev/null
+          for _ in $(seq 1 60); do
+            docker exec "$PG" pg_isready -U neodesk -d neodesk_test -q && exit 0
+            sleep 1
+          done
+          echo "PostgreSQL did not come back"
+          exit 1
+
+      - name: go test
+        env:
+          NEODESK_TEST_POSTGRES_DSN: ${{ matrix.db == 'postgres' && 'postgres://neodesk@bdgo-testpg:5432/neodesk_test?sslmode=disable' || '' }}
+          SET: ${{ matrix.set }}
+          SHARD: ${{ matrix.shard }}
+          SHARDS: ${{ matrix.shards }}
+          PACKAGES: ${{ matrix.packages }}
+          RACE: ${{ needs.changes.outputs.race }}
+        run: |
+          args=(--set "$SET" --shards "$SHARDS" --shard "$SHARD" --split-over 240 --times-out "$RUNNER_TEMP/test-times.json")
+          [ -z "$PACKAGES" ] || args+=(--packages "$PACKAGES")
+          go run ./cmd/repotool test-shards run "${args[@]}" -- $RACE -count=1 -timeout 25m
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: test-times-${{ matrix.set }}-${{ matrix.shard }}
+          path: ${{ runner.temp }}/test-times.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+  # Builds every test binary, with and without the race detector, in the
+  # nightly run on main and saves them as the build cache the shards of
+  # the day start from. Caches saved by a pull request reach only that
+  # pull request, so this runs on main alone. The shards do not wait for it.
+  go-test-cache:
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
+    name: go test cache (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        mode: [race, plain]
+    defaults:
+      run:
+        working-directory: neodesk-server
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache: false
+
+      - name: Name today's cache
+        id: key
+        env:
+          MODE: ${{ matrix.mode }}
+        run: echo "key=go-test-$MODE-${{ hashFiles('neodesk-server/go.sum') }}-$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: today
+        with:
+          path: ~/.cache/go-build
+          key: ${{ steps.key.outputs.key }}
+          lookup-only: true
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.today.outputs.cache-hit != 'true'
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
+
+      # Test failures and build errors are the shards' to report
+      - name: Build every test binary
+        if: steps.today.outputs.cache-hit != 'true'
+        env:
+          RACE: ${{ matrix.mode == 'race' && '-race' || '' }}
+        run: go test $RACE -count=1 -run '^$' ./... > /dev/null 2>&1 || true
+
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.today.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cache/go-build
+          key: ${{ steps.key.outputs.key }}
+
+  # The web app: lint, audit, type check and build in one job, the unit
+  # tests in the other
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    name: web ${{ matrix.check.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        check:
+          - name: lint, audit, type check and build
+            run: npm run lint && npx -y npm@11.6.2 audit --audit-level=high && npm run check && npm run build
+          - name: unit tests
+            run: npx vitest run
+    defaults:
+      run:
+        working-directory: web-ui
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: web-ui/package-lock.json
+
+      # npm 10 (bundled with Node 22) fails to resolve this dependency tree
+      - name: Install dependencies
+        run: npx -y npm@11.6.2 ci --no-audit --no-fund
+
+      - name: ${{ matrix.check.name }}
+        env:
+          CHECK: ${{ matrix.check.run }}
+        run: eval "$CHECK"
+
+  # The release build: the web app and the console's own files go into
+  # the binary (cmd/embed-webui), then the server and devseed, which seeds
+  # the test instances of the console suite, build. The console's language
+  # files are checked here too, since they are part of the server.
+  build:
+    needs: changes
+    if: needs.changes.outputs.build == 'true'
+    name: build the server
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # As the release builds the server; the suite shares its build cache
+      CGO_ENABLED: '0'
+    defaults:
+      run:
+        working-directory: neodesk-server
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: web-ui/package-lock.json
+
+      - name: Build the web app
+        working-directory: web-ui
+        run: |
+          npx -y npm@11.6.2 ci --no-audit --no-fund
+          npm run build
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache: false
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
+
+      # Saved once a day; the contract jobs restore it
+      - name: Name today's build cache
+        id: key
+        run: echo "key=go-build-${{ hashFiles('neodesk-server/go.sum') }}-$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build
+          key: ${{ steps.key.outputs.key }}
+          restore-keys: |
+            go-build-${{ hashFiles('neodesk-server/go.sum') }}-
+            go-build-
+
+      - name: Check the console's language files
+        run: go run ./cmd/repotool i18n-check --system console
+
+      - name: Embed the web app and record the times of the console's files
+        run: go run ./cmd/embed-webui
+
+      - name: The embedded folders hold what the binary serves
+        run: |
+          test -f console/webui/dist/index.html
+          test -s console/webui/dist/.embedfs-times.json
+          test -s console/static/files/.embedfs-times.json
+
+      - name: Build the server and devseed
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          go build -o "$RUNNER_TEMP/bin/neodesk-server" .
+          "$RUNNER_TEMP/bin/neodesk-server" -version
+          go build -o "$RUNNER_TEMP/bin/devseed" ./cmd/devseed
+          go test -tags contract -c -o /dev/null ./console/contract
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: needs.changes.outputs.console == 'true'
+        with:
+          name: test-server
+          path: ${{ runner.temp }}/bin
+          retention-days: 1
+
+  # The contract suite (neodesk-server/console/contract) as `contract.sh
+  # check all` runs it on the local stack, each part on a fresh instance
+  # (.github/test-stack): the matrix, which writes to everything it
+  # reaches, and the cases. The goldens are answers of SQLite installs, so
+  # the instances use SQLite.
+  #
+  # The case groups run in name order on one instance, because some
+  # goldens hold what earlier groups left there. ws-remote, half of the
+  # cases' time, needs none of that and runs on an instance of its own.
+  contract:
+    needs: [changes, build]
+    if: needs.changes.outputs.console == 'true'
+    name: contract (${{ matrix.part.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        part:
+          - name: matrix
+            run: '^(TestMatrix|TestEveryRouteIsCovered)$'
+          - name: cases
+            run: '^TestCases$'
+            skip: '^TestCases$/^ws-remote$'
+          - name: cases ws-remote
+            run: '^TestCases$/^ws-remote$'
+    env:
+      CGO_ENABLED: '0'
+      # What contract.sh sets: uncovered routes are listed, not failed
+      CONTRACT_COVERAGE: report
+      RUN: ${{ matrix.part.run }}
+      SKIP: ${{ matrix.part.skip }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: test-server
+          path: ${{ runner.temp }}/bin
+
+      # The instance seeds itself while the suite builds. Its name has the
+      # shape of the local stack's (ct-<6 hex>-<layer>).
+      - name: Start a test instance
+        env:
+          LAYER: ${{ matrix.part.name == 'matrix' && 'matrix' || 'cases' }}
+        run: |
+          name="ct-$(head -c 3 /dev/urandom | od -An -tx1 | tr -d ' \n')-$LAYER"
+          echo "INSTANCE=$name" >> "$GITHUB_ENV"
+          bash .github/test-stack/up.sh start "$name" "$RUNNER_TEMP/bin"
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache: false
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build
+          key: go-build-${{ hashFiles('neodesk-server/go.sum') }}
+          restore-keys: |
+            go-build-${{ hashFiles('neodesk-server/go.sum') }}-
+            go-build-
+
+      - name: Build the suite
+        working-directory: neodesk-server
+        run: go test -tags contract -c -o /dev/null ./console/contract
+
+      - name: go vet with the contract tag
+        if: matrix.part.name == 'matrix'
+        working-directory: neodesk-server
+        run: go vet -tags contract ./console/contract
+
+      - name: Wait for the test instance
+        run: bash .github/test-stack/up.sh wait "$INSTANCE"
+
+      # From the suite's folder without a package argument, so a passing
+      # run prints its summary too
+      - name: Check ${{ matrix.part.name }}
+        working-directory: neodesk-server/console/contract
+        run: |
+          export ND_URL="http://ndgo-$INSTANCE:5000"
+          export ND_PASSWORD_FILE="$RUNNER_TEMP/ndgo-$INSTANCE/secrets/e2e_password"
+          export ND_SECRETS_DIR="$RUNNER_TEMP/ndgo-$INSTANCE/secrets"
+          args=(-run "$RUN")
+          [ -z "$SKIP" ] || args+=(-skip "$SKIP")
+          go test -tags contract -count=1 -timeout 25m "${args[@]}"
+
+      - name: Logs of the test instance
+        if: failure()
+        run: bash .github/test-stack/up.sh logs "$INSTANCE"
+
+  # The Playwright tests of the web app (web-ui/e2e) in Chromium and
+  # Firefox, cut into shards by Playwright (--shard), each against its own
+  # fresh instance
+  e2e:
+    needs: [changes, build]
+    if: needs.changes.outputs.console == 'true'
+    name: e2e (${{ matrix.shard }} of 6)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: test-server
+          path: ${{ runner.temp }}/bin
+
+      # The update check asks GitHub; with the job's token it is not
+      # refused for the runner address's rate limit. The e2e instance keeps
+      # the product's default of several sessions per account (an empty
+      # SESSION_MAX_PER_USER): sessions.spec.ts signs one account in twice
+      - name: Start a test instance
+        env:
+          UPDATE_GITHUB_TOKEN: ${{ github.token }}
+          SESSION_MAX_PER_USER: ''
+        run: bash .github/test-stack/up.sh start e2e "$RUNNER_TEMP/bin"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: web-ui/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web-ui
+        run: |
+          npx -y npm@11.6.2 ci --no-audit --no-fund
+          echo "PLAYWRIGHT=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_ENV"
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT }}-chromium-firefox
+
+      # The sign-in of the global setup uses Chromium, so every shard needs both
+      - name: Install the browsers
+        working-directory: web-ui
+        env:
+          CACHED: ${{ steps.browsers.outputs.cache-hit }}
+        run: |
+          if [ "$CACHED" = true ]; then
+            npx playwright install-deps chromium firefox
+          else
+            npx playwright install --with-deps chromium firefox
+          fi
+
+      # Saved before the tests run: after a failed test the job would save nothing
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.browsers.outputs.cache-hit != 'true'
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.browsers.outputs.cache-primary-key }}
+
+      - name: Wait for the test instance
+        run: bash .github/test-stack/up.sh wait e2e
+
+      - name: Run the e2e tests
+        working-directory: web-ui
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          export ND_URL=http://ndgo-e2e:5000
+          export E2E_PASSWORD_FILE="$RUNNER_TEMP/ndgo-e2e/secrets/e2e_password"
+          npx playwright test --shard="$SHARD/6"
+
+      - name: Logs of the test instance
+        if: failure()
+        run: bash .github/test-stack/up.sh logs e2e
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: failure()
+        with:
+          name: e2e-results-${{ matrix.shard }}
+          path: web-ui/test-results
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # The setup guide's walk (web-ui/e2e/setup-guide.spec.ts) needs a new
+  # install: an instance without the seed, whose admin is its first
+  # account. The walk changes the server, so each browser gets its own.
+  e2e-fresh:
+    needs: [changes, build]
+    if: needs.changes.outputs.console == 'true'
+    name: e2e on a new install (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: test-server
+          path: ${{ runner.temp }}/bin
+
+      - name: Start a test instance without the seed
+        env:
+          STACK_SEED: '0'
+        run: bash .github/test-stack/up.sh start fresh "$RUNNER_TEMP/bin"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: web-ui/package-lock.json
+
+      - name: Install dependencies and the browser
+        working-directory: web-ui
+        env:
+          BROWSER: ${{ matrix.browser }}
+        run: |
+          npx -y npm@11.6.2 ci --no-audit --no-fund
+          npx playwright install --with-deps "$BROWSER"
+
+      - name: Wait for the test instance
+        run: bash .github/test-stack/up.sh wait fresh
+
+      - name: Run the setup guide's walk
+        working-directory: web-ui
+        env:
+          BROWSER: ${{ matrix.browser }}
+        run: |
+          export ND_URL=http://ndgo-fresh:5000 ND_FRESH=1
+          export ADMIN_PASSWORD_FILE="$RUNNER_TEMP/ndgo-fresh/secrets/admin_password"
+          npx playwright test --project="$BROWSER" e2e/setup-guide.spec.ts
+
+      - name: Logs of the test instance
+        if: failure()
+        run: bash .github/test-stack/up.sh logs fresh
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: failure()
+        with:
+          name: e2e-fresh-results-${{ matrix.browser }}
+          path: web-ui/test-results
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # The CDAP SDKs (sdks/) and the reference bridges (bridges/) against the
+  # gateway: neodesk-server/cdap/sdk_examples_test.go runs each SDK's
+  # example and each bridge with its example config. CDAP_SDK_TESTS=1 makes
+  # a missing tool or module a failure instead of a skip.
+  cdap:
+    needs: changes
+    if: needs.changes.outputs.cdap == 'true'
+    name: CDAP SDK examples and bridges
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.23.2'
+          cache: npm
+          cache-dependency-path: sdks/nodejs/package-lock.json
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.12'
+
+      - name: Build the Node SDK
+        working-directory: sdks/nodejs
+        run: |
+          npm ci
+          npm run build
+
+      # The versions the tests were written against
+      - name: Install the Python modules of the SDK and the bridges
+        run: python3 -m pip install websockets==17.4 aiohttp==3.14.5 pymodbus==3.16.2
+
+      - name: Run the SDK examples and the bridges against the gateway
+        working-directory: neodesk-server
+        env:
+          CDAP_SDK_TESTS: '1'
+        run: go test ./cdap/ -run 'SDKExample|Bridge' -count=1 -v -timeout 10m
+
+  # Green when every part that ran passed; parts the change did not touch
+  # are skipped and count as passed
+  passed:
+    needs: [changes, checks, go-checks, go-test, go-test-cache, web, build, contract, e2e, e2e-fresh, cdap]
+    if: always()
+    name: CI passed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the issue of a failed nightly run
+        if: github.event_name == 'schedule' && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Nightly CI failed"
+          n=$(gh issue list --state open --search "\"$title\" in:title" --json number,title -q ".[] | select(.title == \"$title\") | .number" | head -n1)
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body "Failed again: $RUN"
+          else
+            gh issue create --title "$title" --body "The nightly run of CI on main failed: $RUN"
+          fi
+
+      - name: Sum up the parts
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Results: $RESULTS"
+          case " $RESULTS " in
+            *" failure "*|*" cancelled "*) exit 1 ;;
+          esac
