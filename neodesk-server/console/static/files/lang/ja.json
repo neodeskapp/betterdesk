@@ -2311,7 +2311,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "ロールの権限を変更しました"
+    "action_role_permissions_changed": "ロールの権限を変更しました",
+    "action_mail_identity_saved": "メールの送信者とフッターを変更",
+    "action_mail_preview_sent": "サンプルメールを自分のアドレスに送信",
+    "action_mail_resubscribed": "アドレスへの通知メールを再びオンにしました"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

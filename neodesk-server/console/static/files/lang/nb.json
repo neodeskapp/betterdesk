@@ -2317,7 +2317,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Rolletillatelser endret"
+    "action_role_permissions_changed": "Rolletillatelser endret",
+    "action_mail_identity_saved": "Avsender og bunntekst for e-post endret",
+    "action_mail_preview_sent": "Eksempel-e-post sendt til egen adresse",
+    "action_mail_resubscribed": "Varsel-e-post slått på igjen for en adresse"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

@@ -2317,7 +2317,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "เปลี่ยนสิทธิ์ของบทบาทแล้ว"
+    "action_role_permissions_changed": "เปลี่ยนสิทธิ์ของบทบาทแล้ว",
+    "action_mail_identity_saved": "เปลี่ยนผู้ส่งและส่วนท้ายของอีเมล",
+    "action_mail_preview_sent": "ส่งอีเมลตัวอย่างไปยังที่อยู่ของตนเอง",
+    "action_mail_resubscribed": "เปิดอีเมลแจ้งเตือนอีกครั้งสำหรับที่อยู่หนึ่ง"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

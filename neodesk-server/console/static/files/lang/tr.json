@@ -2317,7 +2317,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Rol izinleri değiştirildi"
+    "action_role_permissions_changed": "Rol izinleri değiştirildi",
+    "action_mail_identity_saved": "E-posta göndereni ve alt bilgisi değiştirildi",
+    "action_mail_preview_sent": "Örnek e-posta kendi adresine gönderildi",
+    "action_mail_resubscribed": "Bir adres için bildirim e-postaları yeniden açıldı"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

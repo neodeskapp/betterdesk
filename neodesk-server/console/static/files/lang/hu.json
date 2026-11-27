@@ -2317,7 +2317,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Szerepkör-engedélyek módosítva"
+    "action_role_permissions_changed": "Szerepkör-engedélyek módosítva",
+    "action_mail_identity_saved": "Levelek feladója és lábléce módosítva",
+    "action_mail_preview_sent": "Mintalevél elküldve a saját címre",
+    "action_mail_resubscribed": "Értesítő levelek ismét bekapcsolva egy címhez"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

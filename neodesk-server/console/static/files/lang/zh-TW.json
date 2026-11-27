@@ -2315,7 +2315,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "角色權限已變更"
+    "action_role_permissions_changed": "角色權限已變更",
+    "action_mail_identity_saved": "已變更郵件寄件者與頁尾",
+    "action_mail_preview_sent": "已將範例郵件寄到自己的地址",
+    "action_mail_resubscribed": "已為某個地址重新開啟通知郵件"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

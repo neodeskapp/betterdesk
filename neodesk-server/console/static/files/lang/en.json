@@ -2319,7 +2319,10 @@
         "action_user_role_changed": "Role changed",
         "action_user_disabled": "Account disabled",
         "action_user_enabled": "Account enabled",
-        "action_role_permissions_changed": "Role permissions changed"
+        "action_role_permissions_changed": "Role permissions changed",
+        "action_mail_identity_saved": "Mail sender and footer changed",
+        "action_mail_preview_sent": "Sample mail sent to own address",
+        "action_mail_resubscribed": "Notification mails turned on again for an address"
     },
     "generator": {
         "title": "NeoDesk Support Generator",

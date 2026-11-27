@@ -2318,7 +2318,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "تم تغيير أذونات الدور"
+    "action_role_permissions_changed": "تم تغيير أذونات الدور",
+    "action_mail_identity_saved": "تم تغيير مرسل الرسائل وتذييلها",
+    "action_mail_preview_sent": "تم إرسال رسالة نموذجية إلى العنوان الخاص",
+    "action_mail_resubscribed": "تمت إعادة تشغيل رسائل الإشعارات لعنوان"
   },
   "generator": {
     "title": "مولّد وكيل الدعم",

@@ -2317,7 +2317,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Permisiunile rolului au fost modificate"
+    "action_role_permissions_changed": "Permisiunile rolului au fost modificate",
+    "action_mail_identity_saved": "Expeditorul și subsolul e-mailurilor au fost modificate",
+    "action_mail_preview_sent": "E-mail de exemplu trimis la adresa proprie",
+    "action_mail_resubscribed": "E-mailurile de notificare au fost repornite pentru o adresă"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

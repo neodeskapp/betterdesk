@@ -2311,7 +2311,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Rolmachtigingen gewijzigd"
+    "action_role_permissions_changed": "Rolmachtigingen gewijzigd",
+    "action_mail_identity_saved": "Afzender en voettekst van e-mails gewijzigd",
+    "action_mail_preview_sent": "Voorbeeldmail naar eigen adres gestuurd",
+    "action_mail_resubscribed": "Meldingsmails weer aangezet voor een adres"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

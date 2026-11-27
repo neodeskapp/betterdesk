@@ -2311,7 +2311,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Oprávnění role změněna"
+    "action_role_permissions_changed": "Oprávnění role změněna",
+    "action_mail_identity_saved": "Odesílatel a zápatí e-mailů změněny",
+    "action_mail_preview_sent": "Ukázkový e-mail odeslán na vlastní adresu",
+    "action_mail_resubscribed": "Oznamovací e-maily pro adresu znovu zapnuty"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

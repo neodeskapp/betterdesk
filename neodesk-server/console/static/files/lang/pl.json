@@ -2311,7 +2311,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Zmieniono uprawnienia roli"
+    "action_role_permissions_changed": "Zmieniono uprawnienia roli",
+    "action_mail_identity_saved": "Zmieniono nadawcę i stopkę e-maili",
+    "action_mail_preview_sent": "Wysłano przykładowy e-mail na własny adres",
+    "action_mail_resubscribed": "Ponownie włączono e-maile z powiadomieniami dla adresu"
   },
   "generator": {
     "title": "Generator NeoDesk Support",

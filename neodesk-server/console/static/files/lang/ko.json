@@ -2311,7 +2311,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "역할 권한 변경됨"
+    "action_role_permissions_changed": "역할 권한 변경됨",
+    "action_mail_identity_saved": "메일 발신자와 바닥글 변경",
+    "action_mail_preview_sent": "샘플 메일을 본인 주소로 보냄",
+    "action_mail_resubscribed": "주소의 알림 메일을 다시 켬"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

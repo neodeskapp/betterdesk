@@ -2317,7 +2317,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Izin peran diubah"
+    "action_role_permissions_changed": "Izin peran diubah",
+    "action_mail_identity_saved": "Pengirim dan footer email diubah",
+    "action_mail_preview_sent": "Email contoh dikirim ke alamat sendiri",
+    "action_mail_resubscribed": "Email notifikasi diaktifkan lagi untuk sebuah alamat"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

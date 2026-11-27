@@ -2317,7 +2317,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Roolin käyttöoikeuksia muutettu"
+    "action_role_permissions_changed": "Roolin käyttöoikeuksia muutettu",
+    "action_mail_identity_saved": "Sähköpostien lähettäjä ja alatunniste muutettu",
+    "action_mail_preview_sent": "Esimerkkiviesti lähetetty omaan osoitteeseen",
+    "action_mail_resubscribed": "Ilmoitusviestit otettu uudelleen käyttöön osoitteelle"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

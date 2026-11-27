@@ -2317,7 +2317,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Rollbehörigheter ändrade"
+    "action_role_permissions_changed": "Rollbehörigheter ändrade",
+    "action_mail_identity_saved": "Avsändare och sidfot för mejl ändrade",
+    "action_mail_preview_sent": "Exempelmejl skickat till egen adress",
+    "action_mail_resubscribed": "Aviseringsmejl påslagna igen för en adress"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

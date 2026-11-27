@@ -2317,7 +2317,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Дозволи ролі змінено"
+    "action_role_permissions_changed": "Дозволи ролі змінено",
+    "action_mail_identity_saved": "Змінено відправника та нижній колонтитул листів",
+    "action_mail_preview_sent": "Зразок листа надіслано на власну адресу",
+    "action_mail_resubscribed": "Знову ввімкнено листи сповіщень для адреси"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

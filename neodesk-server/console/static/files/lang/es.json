@@ -2311,7 +2311,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "Permisos de rol cambiados"
+    "action_role_permissions_changed": "Permisos de rol cambiados",
+    "action_mail_identity_saved": "Remitente y pie de los correos cambiados",
+    "action_mail_preview_sent": "Correo de ejemplo enviado a la propia dirección",
+    "action_mail_resubscribed": "Correos de notificación reactivados para una dirección"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

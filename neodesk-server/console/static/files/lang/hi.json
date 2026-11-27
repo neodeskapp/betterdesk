@@ -2317,7 +2317,10 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "भूमिका की अनुमतियाँ बदलीं"
+    "action_role_permissions_changed": "भूमिका की अनुमतियाँ बदलीं",
+    "action_mail_identity_saved": "मेल का प्रेषक और फ़ुटर बदला गया",
+    "action_mail_preview_sent": "नमूना मेल अपने पते पर भेजा गया",
+    "action_mail_resubscribed": "एक पते के लिए सूचना मेल फिर से चालू किए गए"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
