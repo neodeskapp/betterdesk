@@ -98,4 +98,5 @@ func Register(d *kit.Deps) {
 	r.Put("/api/settings/email/smtp", h.saveSMTP, d.RequireAuth, server)
 	r.Get("/api/panel/settings/sources", g.sources, d.RequireAuth, server)
 	r.Post("/api/settings/email/smtp/test", h.testSMTP, d.RequireAuth, server)
+	h.registerMails(server)
 }
