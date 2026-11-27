@@ -158,7 +158,7 @@ func TestOwnEmailChange(t *testing.T) {
 	if len(first) != 1 {
 		t.Fatalf("confirmation mails: %d", len(first))
 	}
-	if want := strings.ReplaceAll(langText(t, "de", "email_change.confirm_subject"), "{server}", "NeoDesk"); first[0].Subject != want {
+	if want := langText(t, "de", "mail.email_confirm.subject"); first[0].Subject != want {
 		t.Errorf("subject %q, want the German %q", first[0].Subject, want)
 	}
 	expectHas(t, "resend", viewer.Do("POST", "/api/users/me/email-change/resend", "{}"), 200, `"email_pending":{"email":"mine@example.test"`)
@@ -345,7 +345,7 @@ func TestResetLinkInTheRecipientsLanguage(t *testing.T) {
 	if got.Status != http.StatusOK {
 		t.Fatalf("reset link: %d %s", got.Status, got.Body)
 	}
-	want := strings.ReplaceAll(langText(t, "de", "password_link.reset_subject"), "{server}", "NeoDesk")
+	want := langText(t, "de", "mail.reset.subject")
 	if s := box.last(t).Subject; s != want {
 		t.Errorf("subject %q, want the German %q", s, want)
 	}

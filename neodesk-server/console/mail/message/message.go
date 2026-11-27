@@ -60,10 +60,29 @@ type Mail struct {
 	// Content-Language header. Empty, or anything that is no language tag,
 	// leaves the header out.
 	Lang string
+	// ReplyTo is the address replies go to, read as To is; empty, or no
+	// address, leaves the header out.
+	ReplyTo string
+	// Headers are more header lines, in order, after Content-Language;
+	// a header whose name or value could break the message is left out.
+	Headers []Header
+	// MessageIDDomain is the domain of the Message-ID, where it should
+	// not be the sender's (a sender at localhost). Empty is the sender's.
+	MessageIDDomain string
 }
+
+// Header is one more header line of a message.
+type Header struct{ Name, Value string }
+
+// headerName is what a header's name may be.
+var headerName = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9-]{0,60}$`)
 
 // langTag is what a Content-Language value may be: a language tag.
 var langTag = regexp.MustCompile(`^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$`)
+
+// hostLike is a domain for a Message-ID: labels of letters, digits and
+// hyphens joined by dots.
+var hostLike = regexp.MustCompile(`^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$`)
 
 // Options holds everything the message depends on besides the mail.
 type Options struct {
@@ -188,6 +207,9 @@ func Build(mail Mail, opts Options) (*Message, error) {
 	if message.EnvelopeFrom != "" {
 		domain = message.EnvelopeFrom[strings.LastIndexByte(message.EnvelopeFrom, '@')+1:]
 	}
+	if d := strings.ToLower(mail.MessageIDDomain); d != "" && hostLike.MatchString(d) {
+		domain = d
+	}
 	id := make([]string, 5)
 	for i, length := range []int{4, 2, 2, 2, 6} {
 		if id[i], err = b.randomHex(length); err != nil {
@@ -230,9 +252,18 @@ func Build(mail Mail, opts Options) (*Message, error) {
 	}
 	add("From", fromValue)
 	add("To", toValue)
+	if mail.ReplyTo != "" {
+		var replyTo recipients
+		add("Reply-To", b.formatAddresses(parseAddresses(b.tables, []string{validUTF8(mail.ReplyTo)}), &replyTo))
+	}
 	add("Subject", encodeHeaderText(lineBreaksToSpaces(subject)))
 	if langTag.MatchString(mail.Lang) {
 		add("Content-Language", mail.Lang)
+	}
+	for _, h := range mail.Headers {
+		if headerName.MatchString(h.Name) && !strings.ContainsAny(h.Value, "\r\n\x00") {
+			add(h.Name, encodeHeaderText(h.Value))
+		}
 	}
 	add("Message-ID", messageIDHeader(message.MessageID))
 	rootEncoding := ""

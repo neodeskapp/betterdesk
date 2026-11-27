@@ -1,130 +1,85 @@
 package onboard
 
 import (
-	"fmt"
-	"strings"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
 )
 
 // Translate gives the text of a language key with its placeholders
 // filled, in the language the mail is written in.
-type Translate func(key string, vars map[string]any) string
+type Translate = brandmail.Translate
 
-// Mail is an invite or quick support mail: a subject, a text part and the
-// same as an HTML part.
-type Mail struct {
-	Subject string
-	Text    string
-	HTML    string
-	// Inline are the logo images the HTML shows (brandmail.Inline).
-	Inline []message.Inline
-	// Lang is the language the texts are in, for mail.Email.Lang.
-	Lang string
-}
-
-// MailFacts are what a mail says.
+// MailFacts are what an invite or quick support mail says.
 type MailFacts struct {
 	// Kind is KindJoin or KindSupport.
 	Kind string
-	// Link is the code's link; Code the code as people read it.
+	// Lang is the language of T's texts.
+	Lang string
+	// Link is the code's link and Code the code, both in the one form
+	// the mail shows (Display): the link written out has the code as the
+	// reader types it.
 	Link string
 	Code string
-	// Server is the console's name (branding), Sender the account's name,
-	// Host the console's host name.
-	Server string
-	Sender string
-	Host   string
-	// Expires is when the link stops working, as the reader sees it.
-	Expires string
-	// Company is whose support helps the person (the server's name).
-	Company string
-	// Accent is the branding's accent colour (#rrggbb); anything else is
-	// the default blue.
-	Accent string
-	// Logo is the address of the branding logo as a PNG, JPEG or GIF over
-	// HTTPS; anything else leaves the logo out for the server's name.
-	Logo string
+	// Branding is the server's name, for the wording: a server named
+	// NeoDesk is not named as the reader's support.
+	Branding brandmail.Branding
+	// Sender is the person who sends it, by display name, and SenderEmail
+	// where replies go.
+	Sender      string
+	SenderEmail string
+	// Expires is when the link stops working, Zone where the reader's
+	// times are said.
+	Expires time.Time
+	Zone    *time.Location
+}
+
+// MailLink is the link of a code for a mail: the console's page with the
+// code as Display writes it, the form the mail shows the code in. The
+// page reads it with or without the hyphen.
+func (c Console) MailLink(kind, code string) string {
+	if kind == KindSupport {
+		return c.Base() + "/s/" + Display(code)
+	}
+	return c.Base() + "/join/" + Display(code)
 }
 
 // BuildMail writes the mail of a code. An invite is the welcome mail:
-// who invited the person to which server, one button (Set up NeoDesk),
-// the three steps, the link for when the button does not work, until
-// when it works and the code for a NeoDesk that is already installed. A
-// quick support mail says who wants to help and what to do, with the same
-// button. Both carry the server's logo or name and its accent colour, in
-// a table layout with inline styles, as mail clients need it; nothing in
-// them but the link opens anything. The keys are below onboard.mail in
-// the language files; the mail's language is the one whose meta.lang t
-// gives, the one its texts came from.
-func BuildMail(t Translate, f MailFacts) Mail {
-	lang := t("meta.lang", nil)
-	if lang == "meta.lang" {
-		lang = ""
+// who invited the person, one button (Set up NeoDesk), the three steps,
+// until when it works and the code for a NeoDesk that is already
+// installed. A quick support mail says who wants to help and what to do,
+// with one button. Replies go to the person who sent it. The keys are
+// below mail.invite and mail.support in the language files.
+func BuildMail(t Translate, f MailFacts) brandmail.Mail {
+	named := f.Branding.OwnName()
+	vars := map[string]any{"server": f.Branding.Name(), "sender": f.Sender, "expires": brandmail.DateTime(f.Expires, f.Lang, f.Zone)}
+	pick := func(key string) string {
+		if named {
+			return t(key+"_named", vars)
+		}
+		return t(key, vars)
 	}
-	company := f.Company
-	if company == "" {
-		company = f.Server
-	}
-	vars := map[string]any{"server": f.Server, "sender": f.Sender, "code": f.Code, "expires": f.Expires, "host": f.Host, "company": company}
-	var subject, heading, lead, button, expires, code string
-	var steps []string
+	m := brandmail.Mail{T: t, Lang: f.Lang, Link: f.Link, ReplyTo: f.SenderEmail}
 	if f.Kind == KindSupport {
-		subject = t("onboard.mail.support_subject", vars)
-		heading = t("onboard.mail.support_heading", vars)
-		lead = t("onboard.mail.support_intro", vars) + " " + t("onboard.mail.support_steps", vars)
-		button = t("onboard.mail.support_button", vars)
-		expires = t("onboard.mail.support_expires", vars)
-	} else {
-		subject = t("onboard.mail.welcome_subject", vars)
-		heading = subject
-		lead = t("onboard.mail.welcome_lead", vars)
-		button = t("onboard.mail.welcome_button", vars)
-		steps = []string{t("onboard.mail.welcome_step_1", vars), t("onboard.mail.welcome_step_2", vars), t("onboard.mail.welcome_step_3", vars)}
-		expires = t("onboard.mail.invite_expires", vars)
-		code = t("onboard.mail.invite_code", vars)
+		m.Kind = "support"
+		m.Subject = t("mail.support.subject", vars)
+		m.Preheader = t("mail.support.preheader", vars)
+		m.Heading = t("mail.support.heading", vars)
+		m.Lead = pick("mail.support.lead")
+		m.Button = t("mail.support.button", vars)
+		m.Details = []string{t("mail.support.expires", vars)}
+		m.Why = t("mail.support.why", vars)
+		return m
 	}
-	linkHint := t("onboard.mail.welcome_link", vars)
-	footer := t("onboard.mail.footer", vars)
-
-	return Mail{
-		Subject: subject,
-		Text:    mailText(heading, lead, steps, button, f.Link, expires, code, f.Code, footer),
-		HTML:    mailHTML(f, lang, heading, lead, steps, button, linkHint, expires, code, footer),
-		Inline:  brandmail.Inline(brandmail.Page{Branding: brandmail.Branding{Server: f.Server, Logo: f.Logo}}),
-		Lang:    lang,
-	}
-}
-
-// mailText is the plain text part. codeLead, when set, says where to
-// enter the code, which follows on a line of its own.
-func mailText(heading, lead string, steps []string, button, link, expires, codeLead, code, footer string) string {
-	lines := []string{heading, "", lead, ""}
-	for i, step := range steps {
-		lines = append(lines, fmt.Sprintf("%d. %s", i+1, step))
-	}
-	if len(steps) > 0 {
-		lines = append(lines, "")
-	}
-	lines = append(lines, button+": "+link, "", expires)
-	if codeLead != "" {
-		lines = append(lines, "", codeLead, code)
-	}
-	lines = append(lines, "", "--", footer)
-	return strings.Join(lines, "\n") + "\n"
-}
-
-// mailHTML is the HTML part, in the console's branded layout. The code
-// is a line of its own below codeLead.
-func mailHTML(f MailFacts, lang, heading, lead string, steps []string, button, linkHint, expires, codeLead, footer string) string {
-	p := brandmail.Page{
-		Branding: brandmail.Branding{Server: f.Server, Accent: f.Accent, Logo: f.Logo}, Lang: lang,
-		Heading: heading, Lead: lead, Button: button, Link: f.Link, Steps: steps,
-		LinkHint: linkHint, Small: []string{expires}, Footer: footer,
-	}
-	if codeLead != "" {
-		p.CodeLead, p.Code = codeLead, f.Code
-	}
-	return brandmail.HTML(p)
+	m.Kind = "invite"
+	m.Subject = t("mail.invite.subject", vars)
+	m.Preheader = pick("mail.invite.preheader")
+	m.Heading = t("mail.invite.heading", vars)
+	m.Lead = pick("mail.invite.lead")
+	m.Button = t("mail.invite.button", vars)
+	m.Steps = []string{t("mail.invite.step_1", vars), t("mail.invite.step_2", vars), pick("mail.invite.step_3")}
+	m.CodeLead, m.Code = t("mail.invite.code_lead", vars), Display(f.Code)
+	m.Details = []string{t("mail.invite.expires", vars)}
+	m.Why = t("mail.invite.why", vars)
+	return m
 }

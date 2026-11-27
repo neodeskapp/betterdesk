@@ -325,7 +325,7 @@ func TestRunMailsEachRequestOnce(t *testing.T) {
 			t.Fatalf("%d mails, want 2", n)
 		}
 		first := sink.sent[0]
-		if strings.Join(first.To, ",") != "ops@example.com" || first.Subject != "[Support] Help request — reception" {
+		if strings.Join(first.To, ",") != "ops@example.com" || first.Subject != "[Support] NeoDesk: reception asks for help" {
 			t.Errorf("first mail to %v, subject %q", first.To, first.Subject)
 		}
 		if sent, err := mailer.HasEmailNotificationSent(context.Background(), "help_request", "9", "ops@example.com"); err != nil || !sent {

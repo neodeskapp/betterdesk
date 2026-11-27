@@ -114,6 +114,8 @@ async function violations(page: Page): Promise<string[]> {
 		await Promise.race([Promise.all(ending), new Promise((done) => setTimeout(done, 2_000))]);
 	});
 	const r = await new AxeBuilder({ page })
+		// A frame sandboxed without scripts (the mail preview) can't run axe; entering it stalls the run
+		.exclude('iframe[sandbox]')
 		.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'])
 		.analyze();
 	return r.violations.map(

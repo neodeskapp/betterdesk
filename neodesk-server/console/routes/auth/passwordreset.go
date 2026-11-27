@@ -134,11 +134,8 @@ func (h *handlers) sendResets(ctx context.Context, job resetJob) error {
 	if err != nil {
 		return err
 	}
-	host := job.base
-	if i := strings.Index(host, "://"); i >= 0 {
-		host = host[i+3:]
-	}
-	brand := brandmail.Of(h.d.Branding, job.base)
+	brand := brandmail.Of(h.d.Branding)
+	brand.Host = brandmail.HostOf(job.base)
 	for _, t := range targets {
 		recent, err := h.links.IssuedSince(ctx, t.id, h.now().Add(-resetThrottle))
 		if err != nil {
@@ -151,15 +148,16 @@ func (h *handlers) sendResets(ctx context.Context, job resetJob) error {
 		if err != nil {
 			return err
 		}
-		translate := securitymail.Translator(h.d, securitymail.Language(ctx, h.d, t.id))
+		translate, lang, zone := securitymail.ReaderOf(ctx, h.d, t.id)
 		m := passwordlinks.BuildMail(translate, passwordlinks.MailFacts{
-			Purpose: passwordlinks.PurposeReset, Self: true, Link: passwordlinks.SetPasswordLink(job.base, token),
-			Username: t.username, Host: host, Expires: brandmail.When(expires), Branding: brand,
+			Purpose: passwordlinks.PurposeReset, Self: true, Lang: lang, Link: passwordlinks.SetPasswordLink(job.base, token),
+			Username: t.username, Expires: expires, Zone: zone, Branding: brand,
 		})
+		m.Host = brand.Host
 		if err := h.d.Audit.WriteAbout(ctx, t.id, t.id, "password_reset_link_sent", "Asked for a password reset link on the sign-in page", job.ip); err != nil {
 			return err
 		}
-		if _, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{t.email}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline, Lang: m.Lang}); err != nil {
+		if _, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{t.email}, Mail: m}); err != nil {
 			return err
 		}
 	}

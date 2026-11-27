@@ -352,6 +352,8 @@ func codeID(id string) bool {
 type mailRequest struct {
 	Code string `json:"code"`
 	To   string `json:"to"`
+	// Lang is the language of the mail; "" is the sender's.
+	Lang string `json:"lang"`
 }
 
 // mailInvite answers POST /api/onboard/invites/{id}/mail with the body
@@ -390,38 +392,56 @@ func (h *handlers) mailCode(w http.ResponseWriter, r *http.Request, kind string)
 		fail(w, r, http.StatusConflict, "smtp_not_configured")
 		return
 	}
-	if sent, _ := h.sendCodeMail(r, code, req.Code, req.To); !sent {
+	if sent, _ := h.sendCodeMail(r, code, req.Code, req.To, req.Lang); !sent {
 		fail(w, r, http.StatusBadGateway, "mail_failed")
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, map[string]bool{"success": true, "sent": true})
 }
 
-// sendCodeMail mails the link of a code to one address, in the request
-// language. It reports whether the mail server took it, and why not.
-func (h *handlers) sendCodeMail(r *http.Request, code onboard.Code, text, to string) (bool, string) {
+// sendCodeMail mails the link of a code to one address, in the invite's
+// language: the request's "lang" when it names a language of the console,
+// else the language the console is in for the person who sends it. Dates
+// are in the server's time zone; the reader has no account to say
+// another. Replies go to the sender. It reports whether the mail server
+// took it, and why not.
+func (h *handlers) sendCodeMail(r *http.Request, code onboard.Code, text, to string, lang ...string) (bool, string) {
 	if !h.mailReady(r.Context()) {
 		return false, "smtp_not_configured"
 	}
 	c := h.consoleOf(r)
-	expires := code.ExpiresAt
-	if t, err := time.Parse(time.RFC3339, code.ExpiresAt); err == nil {
-		expires = brandmail.When(t)
+	want := kit.Lang(r)
+	if len(lang) > 0 && strings.TrimSpace(lang[0]) != "" {
+		want = strings.TrimSpace(lang[0])
 	}
-	accent, logo := h.mailBranding(c)
-	m := onboard.BuildMail(func(key string, vars map[string]any) string {
-		return kit.T(r, key, kit.Vars(flatten(vars)...))
-	}, onboard.MailFacts{
-		Kind: code.Kind, Link: c.Link(code.Kind, text), Code: onboard.Display(text),
-		Server: h.serverName(), Sender: h.personName(r.Context(), kit.UserID(r), code.CreatedBy), Host: c.Host, Expires: expires,
-		Company: h.serverName(), Accent: accent, Logo: logo,
+	t, pageLang := h.d.Mail.Translator(want)
+	expires, _ := time.Parse(time.RFC3339, code.ExpiresAt)
+	brand := brandmail.Of(h.d.Branding)
+	brand.Host = c.Host
+	m := onboard.BuildMail(t, onboard.MailFacts{
+		Kind: code.Kind, Lang: pageLang, Link: c.MailLink(code.Kind, text), Code: text,
+		Branding: brand, Sender: h.personName(r.Context(), kit.UserID(r), code.CreatedBy),
+		SenderEmail: h.emailOf(r.Context(), kit.UserID(r)), Expires: expires, Zone: time.Local,
 	})
-	sent, err := h.d.Mail.SendEmail(r.Context(), consolemail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline, Lang: m.Lang})
+	m.Host = c.Host
+	sent, err := h.d.Mail.SendEmail(r.Context(), consolemail.Email{To: []string{to}, Mail: m})
 	if err != nil || !sent {
 		return false, "mail_failed"
 	}
 	h.audit(r, "onboard_mail_sent", "Sent the link of "+code.Kind+" code "+code.ID+" by mail")
 	return true, ""
+}
+
+// emailOf is an account's address, "" without one.
+func (h *handlers) emailOf(ctx context.Context, userID int64) string {
+	if h.d.Store == nil || userID == 0 {
+		return ""
+	}
+	var email sql.NullString
+	if err := h.d.Store.QueryRow(ctx, `SELECT email FROM users WHERE id = ?`, userID).Scan(&email); err != nil {
+		return ""
+	}
+	return strings.TrimSpace(email.String)
 }
 
 // flatten turns a map into name, value pairs for kit.Vars.
@@ -456,16 +476,4 @@ func (h *handlers) approveKey(w http.ResponseWriter, r *http.Request) {
 	}
 	h.audit(r, "device_key_approved", "Approved the new key of device "+id)
 	kit.JSON(w, r, http.StatusOK, map[string]bool{"success": true})
-}
-
-// mailBranding is the accent colour and logo address of the console's
-// branding for a mail: the logo only when it is an uploaded or linked
-// image, made absolute with the console's address (BuildMail keeps it
-// only as PNG, JPEG or GIF over HTTPS).
-func (h *handlers) mailBranding(c onboard.Console) (accent, logo string) {
-	if h.d.Branding == nil {
-		return "", ""
-	}
-	b := brandmail.Of(h.d.Branding, c.Base())
-	return b.Accent, b.Logo
 }

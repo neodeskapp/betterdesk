@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
@@ -57,15 +57,16 @@ func RunWaitMail(ctx context.Context, d *kit.Deps) {
 		if d.Mail == nil || d.I18n == nil || d.I18n.Bundle == nil {
 			continue
 		}
-		brand := brandmail.Of(d.Branding, d.Mail.GetPanelBaseURL())
-		if err := hub.mailWaiting(ctx, d.Mail, brand, d.I18n.Bundle, time.Now()); err != nil {
+		if err := hub.mailWaiting(ctx, d.Mail, brandmail.Of(d.Branding).Name(), d.I18n.Bundle, time.Now()); err != nil {
 			logging.Logf("console", "WARN: [Chat] mail about waiting people: %v", err)
 		}
 	}
 }
 
-// mailWaiting sends the mails that are due at now.
-func (h *Hub) mailWaiting(ctx context.Context, mailer waitMailer, brand brandmail.Branding, texts mailTexts, now time.Time) error {
+// mailWaiting sends the mails that are due at now: one per recipient,
+// in the account's language and time zone, with a link that turns them
+// off. server is the server's name.
+func (h *Hub) mailWaiting(ctx context.Context, mailer waitMailer, server string, texts mailTexts, now time.Time) error {
 	st := h.opts.Store
 	settings := LoadServerSettings(ctx, st)
 	if settings.MailAfterMinutes <= 0 {
@@ -80,25 +81,22 @@ func (h *Hub) mailWaiting(ctx context.Context, mailer waitMailer, brand brandmai
 		if err != nil {
 			return err
 		}
-		// One mail per language, in the order the languages first come
-		var langs []string
-		byLang := map[string][]string{}
 		for _, a := range to {
-			if _, ok := byLang[a.Lang]; !ok {
-				langs = append(langs, a.Lang)
+			t := func(key string, vars map[string]any) string {
+				pairs := make([]any, 0, 2*len(vars))
+				for k, v := range vars {
+					pairs = append(pairs, k, v)
+				}
+				return texts.Translate(a.Lang, key, i18n.V(pairs...))
 			}
-			byLang[a.Lang] = append(byLang[a.Lang], a.Email)
-		}
-		for _, lang := range langs {
-			t := func(key string, pairs ...any) string { return texts.Translate(lang, "chat."+key, i18n.V(pairs...)) }
 			// The language the texts came from: the account's, or the default one
-			pageLang := texts.Translate(lang, "meta.lang", nil)
+			pageLang := t("meta.lang", nil)
 			if pageLang == "meta.lang" {
 				pageLang = ""
 			}
-			subject, text, body := h.waitMail(ctx, c, brand, pageLang, mailer.GetPanelBaseURL(), settings.MailPreview, t, now)
-			m := mail.Email{To: byLang[lang], ToList: true, Subject: subject, Text: &text, HTML: &body, Inline: brandmail.Inline(brandmail.Page{Branding: brand}), Lang: pageLang}
-			if _, err := mailer.SendEmail(ctx, m); err != nil {
+			zone := brandmail.Zone(people.TimeZone(ctx, st.DB(), a.ID))
+			m := h.waitMail(ctx, c, server, pageLang, mailer.GetPanelBaseURL(), settings.MailPreview, t, zone)
+			if _, err := mailer.SendEmail(ctx, mail.Email{To: []string{a.Email}, Mail: m}); err != nil {
 				return err
 			}
 		}
@@ -167,11 +165,11 @@ func (h *Hub) waitRecipients(ctx context.Context, c chatstore.Conversation) ([]a
 	return to, nil
 }
 
-// waitMail is the subject and bodies of a waiting conversation's mail, in
-// the language of t (a chat text by its key under "chat."), which is lang,
-// and the server's branded layout (brandmail, as the invite mail).
-func (h *Hub) waitMail(ctx context.Context, c chatstore.Conversation, brand brandmail.Branding, lang, baseURL string, preview bool,
-	t func(key string, pairs ...any) string, now time.Time) (subject, text, body string) {
+// waitMail is the mail about a waiting conversation in the language of
+// t (lang): who waits since when, the start of their message unless an
+// admin turned that off, and a button to the conversation.
+func (h *Hub) waitMail(ctx context.Context, c chatstore.Conversation, server, lang, baseURL string, preview bool,
+	t func(key string, vars map[string]any) string, zone *time.Location) brandmail.Mail {
 	name := c.ID
 	if h.opts.Scope.Device != nil {
 		if d := h.opts.Scope.Device(ctx, c.ID); d != nil {
@@ -183,33 +181,39 @@ func (h *Hub) waitMail(ctx context.Context, c chatstore.Conversation, brand bran
 			}
 		}
 	}
-	app := brand.Server
-	minutes := int(now.Sub(time.UnixMilli(c.WaitingSinceMs)).Minutes())
-	subject = t("mail_subject", "app", app, "name", name)
-	waited := t("mail_waited", "name", name, "id", c.ID, "minutes", strconv.Itoa(minutes))
-	footer := t("mail_footer", "app", app)
-	lines := []string{waited}
-	quote := ""
+	since := brandmail.DateTime(time.UnixMilli(c.WaitingSinceMs), lang, zone)
+	vars := map[string]any{"name": name, "id": c.ID, "time": since, "server": server}
+	m := brandmail.Mail{
+		Kind: "chat", T: t, Lang: lang, Automatic: true, Unsubscribe: mail.NotifyChat,
+		Subject: t("mail.chat.subject", vars), Preheader: t("mail.chat.preheader", vars),
+		Heading: t("mail.chat.heading", vars), Lead: t("mail.chat.lead", vars),
+		Why: t("mail.chat.why", vars), TurnOff: t("mail.chat.turn_off", vars), TurnOffNoLink: t("mail.chat.turn_off_nolink", vars),
+	}
 	if preview {
-		if m, err := h.opts.Store.Get(ctx, c.LastMessageID); err == nil && m.From.Kind == chatstore.KindDevice && !m.Deleted() {
-			quote = cutChars(strings.Join(strings.Fields(m.Text), " "), mailPreview)
-			if len([]rune(m.Text)) > mailPreview {
+		if msg, err := h.opts.Store.Get(ctx, c.LastMessageID); err == nil && msg.From.Kind == chatstore.KindDevice && !msg.Deleted() {
+			quote := cutChars(strings.Join(strings.Fields(msg.Text), " "), mailPreview)
+			if len([]rune(msg.Text)) > mailPreview {
 				quote += "…"
+			}
+			if quote != "" {
+				m.Quote, m.QuoteLabel = quote, t("mail.chat.quote_label", nil)
+				m.Preheader = quote
 			}
 		}
 	}
-	if quote != "" {
-		lines = append(lines, "", t("mail_quote", "quote", quote))
-	}
-	link, button := "", ""
 	if baseURL != "" {
-		link = strings.TrimRight(baseURL, "/") + "/chat?c=" + url.QueryEscape(c.ID)
-		button = t("mail_button", "app", app)
-		lines = append(lines, "", t("mail_open", "link", link))
+		m.Button, m.Link = t("mail.chat.button", vars), strings.TrimRight(baseURL, "/")+"/chat?c="+url.QueryEscape(c.ID)
 	}
-	lines = append(lines, "", "--", footer)
-	text = strings.Join(lines, "\n") + "\n"
-	body = brandmail.HTML(brandmail.Page{Branding: brand, Lang: lang, Heading: t("mail_heading", "name", name), Lead: waited,
-		Quote: quote, QuoteLabel: t("mail_quote_label"), Button: button, Link: link, Footer: footer})
-	return subject, text, body
+	return m
+}
+
+// PreviewWaitMail is the mail with made-up facts, for the mail previews.
+func PreviewWaitMail(t func(key string, vars map[string]any) string, lang, baseURL, server string, since time.Time) brandmail.Mail {
+	h := &Hub{}
+	c := chatstore.Conversation{ID: "123456789", WaitingSinceMs: since.UnixMilli()}
+	m := h.waitMail(context.Background(), c, server, lang, baseURL, false, t, time.Local)
+	vars := map[string]any{"name": "Reception PC", "id": c.ID, "time": brandmail.DateTime(since, lang, time.Local), "server": server}
+	m.Subject, m.Heading, m.Lead = t("mail.chat.subject", vars), t("mail.chat.heading", vars), t("mail.chat.lead", vars)
+	m.Quote, m.QuoteLabel, m.Preheader = "My printer stopped working after the update", t("mail.chat.quote_label", nil), "My printer stopped working after the update"
+	return m
 }

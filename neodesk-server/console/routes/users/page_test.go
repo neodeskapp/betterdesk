@@ -284,10 +284,10 @@ func TestSecurityNoticesUseThePersonsTimeZone(t *testing.T) {
 	for _, id := range []string{ana, bo} {
 		expect(t, "reset "+id, admin.Do("POST", "/api/users/"+id+"/reset-password", `{"newPassword":"Admin-Set-123!"}`), 200, "")
 	}
-	if got := mailsTo(box, "ana@example.test", 500*time.Millisecond); len(got) != 1 || !strings.Contains(*got[0].Text, " Asia/Tokyo") || strings.Contains(*got[0].Text, " UTC") {
+	if got := mailsTo(box, "ana@example.test", 500*time.Millisecond); len(got) != 1 || !strings.Contains(*got[0].Text, " JST") || strings.Contains(*got[0].Text, " UTC") {
 		t.Errorf("ana's mail: %q", textsOf(got))
 	}
-	if got := mailsTo(box, "bob@example.test", 500*time.Millisecond); len(got) != 1 || !strings.Contains(*got[0].Text, " UTC") {
+	if got := mailsTo(box, "bob@example.test", 500*time.Millisecond); len(got) != 1 || !strings.Contains(*got[0].Text, " "+time.Now().Format("MST")) || strings.Contains(*got[0].Text, " JST") {
 		t.Errorf("bob mail: %q", textsOf(got))
 	}
 }

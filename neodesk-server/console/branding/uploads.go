@@ -312,3 +312,44 @@ func FontUploadFamily(family any, originalName string) (name string, err error) 
 func fontUploadFamily(family any, originalName string) string {
 	return trim(toString(or(family, basenameWithout(originalName, posixExtname(originalName)))))
 }
+
+// MailLogo is the logo an admin uploaded, for a mail to carry as an
+// inline image: its bytes and content type when the settings show an
+// uploaded PNG, JPEG or GIF (a file this service stored under /uploads/,
+// at most LogoMaxBytes). A linked logo, an SVG or a WebP is no mail logo
+// (mail clients don't show SVG or WebP, and a mail loads nothing from
+// elsewhere), and the answer is ok false.
+func (s *Service) MailLogo() (data []byte, contentType string, ok bool) {
+	b := s.GetBranding()
+	if b.Text("logoType") != "image" {
+		return nil, "", false
+	}
+	logoURL := b.Text("logoUrl")
+	if !strings.HasPrefix(logoURL, "/uploads/") || s.opts.UploadsDir == "" {
+		return nil, "", false
+	}
+	base := posixBasename(logoURL)
+	if !reManagedLogo.MatchString(base) {
+		return nil, "", false
+	}
+	switch strings.ToLower(filepath.Ext(base)) {
+	case ".png":
+		contentType = "image/png"
+	case ".jpg", ".jpeg":
+		contentType = "image/jpeg"
+	case ".gif":
+		contentType = "image/gif"
+	default:
+		return nil, "", false
+	}
+	path := filepath.Join(s.opts.UploadsDir, base)
+	info, err := os.Lstat(path)
+	if err != nil || !info.Mode().IsRegular() || info.Size() > LogoMaxBytes {
+		return nil, "", false
+	}
+	data, err = os.ReadFile(path)
+	if err != nil || len(data) == 0 {
+		return nil, "", false
+	}
+	return data, contentType, true
+}

@@ -104,7 +104,8 @@ async function scan(
 	state = 'page'
 ): Promise<void> {
 	await settle(page);
-	const r = await new AxeBuilder({ page }).analyze();
+	// A frame sandboxed without scripts (the mail preview) can't run axe; entering it stalls the run
+	const r = await new AxeBuilder({ page }).exclude('iframe[sandbox]').analyze();
 	const facts = await page.evaluate(() => ({
 		title: document.title,
 		lang: document.documentElement.lang,

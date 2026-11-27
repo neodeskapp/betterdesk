@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
@@ -95,27 +96,31 @@ func TestScriptsCarryTheirLinkAndCode(t *testing.T) {
 func TestMailEscapesAndCarriesTheLink(t *testing.T) {
 	tr := func(key string, vars map[string]any) string {
 		out := key
-		for k, v := range vars {
-			out += " " + k + "=" + v.(string)
+		for _, k := range []string{"server", "sender"} {
+			if v, ok := vars[k]; ok {
+				out += " " + k + "=" + v.(string)
+			}
 		}
 		return out
 	}
-	m := BuildMail(tr, MailFacts{Kind: KindSupport, Link: "https://desk.example.com/s/ABCD2345", Code: "ABCD-2345", Server: "<b>Acme</b>", Sender: "Ana", Host: "desk.example.com", Expires: "2026-11-22 15:00 UTC"})
-	if !strings.HasPrefix(m.Subject, "onboard.mail.support_subject") {
+	b := brandmail.Branding{Server: "<b>Acme</b>", Host: "desk.example.com"}
+	m := BuildMail(tr, MailFacts{Kind: KindSupport, Link: "https://desk.example.com/s/ABCD-2345", Code: "ABCD2345", Branding: b, Sender: "Ana"})
+	if !strings.HasPrefix(m.Subject, "mail.support.subject") {
 		t.Errorf("subject %q", m.Subject)
 	}
-	if !strings.Contains(m.Text, "https://desk.example.com/s/ABCD2345") || !strings.Contains(m.HTML, `href="https://desk.example.com/s/ABCD2345"`) {
+	built := brandmail.Render(m, b, "")
+	if !strings.Contains(built.Text, "https://desk.example.com/s/ABCD-2345") || !strings.Contains(built.HTML, `href="https://desk.example.com/s/ABCD-2345"`) {
 		t.Error("the link is missing")
 	}
-	if strings.Contains(m.HTML, "<b>Acme</b>") || !strings.Contains(m.HTML, "&lt;b&gt;Acme&lt;/b&gt;") {
-		t.Errorf("the server name is not escaped:\n%s", m.HTML)
+	if strings.Contains(built.HTML, "<b>Acme</b>") || !strings.Contains(built.HTML, "&lt;b&gt;Acme&lt;/b&gt;") {
+		t.Errorf("the server name is not escaped: %s", built.HTML)
 	}
-	if strings.Contains(m.Text, "onboard.mail.invite_code") || !strings.Contains(m.Text, "onboard.mail.footer") {
-		t.Errorf("support mail text: %s", m.Text)
+	if strings.Contains(built.Text, "mail.invite.code_lead") {
+		t.Errorf("support mail text: %s", built.Text)
 	}
-	j := BuildMail(tr, MailFacts{Kind: KindJoin, Code: "ABCD-2345"})
-	if !strings.HasPrefix(j.Subject, "onboard.mail.welcome_subject") || !strings.Contains(j.Text, "onboard.mail.invite_code") || !strings.Contains(j.HTML, "code=ABCD-2345") {
-		t.Errorf("invite mail: %q %s", j.Subject, j.Text)
+	j := BuildMail(tr, MailFacts{Kind: KindJoin, Code: "ABCD2345", Branding: b})
+	if !strings.HasPrefix(j.Subject, "mail.invite.subject") || j.CodeLead != "mail.invite.code_lead server=<b>Acme</b> sender=" || j.Code != "ABCD-2345" {
+		t.Errorf("invite mail: %q %q %q", j.Subject, j.CodeLead, j.Code)
 	}
 }
 

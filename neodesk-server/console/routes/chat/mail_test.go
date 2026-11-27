@@ -39,6 +39,10 @@ func texts(t *testing.T) *i18n.Bundle {
 // of the message unless that is off, links to the conversation, and goes
 // once per wait. 0 minutes sends nothing.
 func TestWaitMail(t *testing.T) {
+	// Times are in the server's zone when the account has none
+	old := time.Local
+	time.Local = time.UTC
+	defer func() { time.Local = old }()
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
 		if err := chatstore.Ensure(ctx, db); err != nil {
@@ -66,28 +70,29 @@ func TestWaitMail(t *testing.T) {
 			t.Fatal(err)
 		}
 		sent := &sentMails{}
-		if err := hub.mailWaiting(ctx, sent, brandmail.Branding{Server: "NeoDesk"}, texts(t), now.Add(-10*time.Minute)); err != nil || len(sent.list) != 0 {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now.Add(-10*time.Minute)); err != nil || len(sent.list) != 0 {
 			t.Fatalf("after 10 minutes: %d mails, %v", len(sent.list), err)
 		}
-		if err := hub.mailWaiting(ctx, sent, brandmail.Branding{Server: "NeoDesk"}, texts(t), now); err != nil {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now); err != nil {
 			t.Fatal(err)
 		}
 		if len(sent.list) != 1 {
 			t.Fatalf("after 20 minutes: %d mails", len(sent.list))
 		}
 		m := sent.list[0]
-		if len(m.Inline) != 2 || !strings.Contains(*m.HTML, "cid:"+m.Inline[0].ID) {
-			t.Errorf("the mail doesn't carry the logo: %d images", len(m.Inline))
+		built := brandmail.Render(m.Mail, brandmail.Branding{Server: "NeoDesk"}, "https://console.example/mail/unsubscribe?t=x")
+		if m.Mail.Unsubscribe != mail.NotifyChat || !m.Mail.Automatic || !strings.Contains(built.Text, "https://console.example/mail/unsubscribe?t=x") {
+			t.Errorf("the mail can't be turned off from itself: %+v", m.Mail)
 		}
 		if strings.Join(m.To, ",") != "anna@example.test" {
 			t.Errorf("to %v, want anna only (admin has chat mails off, ben doesn't see dev1, cleo may not assign)", m.To)
 		}
-		if !strings.Contains(m.Subject, "is waiting for an answer") || !strings.Contains(*m.Text, "waited 20 minutes") ||
-			!strings.Contains(*m.Text, "My printer stopped printing this morning and now it blinks red and orange and sh…") ||
-			strings.Contains(*m.Text, "E-42") || !strings.Contains(*m.Text, "https://console.example/chat?c=dev1") {
-			t.Errorf("mail: %s\n%s", m.Subject, *m.Text)
+		if m.Mail.Subject != "dev1 is waiting for an answer in the chat" || !strings.Contains(built.Text, "since 25 November 2026, 09:40 UTC") ||
+			!strings.Contains(built.Text, "My printer stopped printing this morning and now it blinks red and orange and sh…") ||
+			strings.Contains(built.Text, "E-42") || !strings.Contains(built.Text, "https://console.example/chat?c=dev1") {
+			t.Errorf("mail: %s\n%s", m.Mail.Subject, built.Text)
 		}
-		if err := hub.mailWaiting(ctx, sent, brandmail.Branding{Server: "NeoDesk"}, texts(t), now.Add(time.Hour)); err != nil || len(sent.list) != 1 {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now.Add(time.Hour)); err != nil || len(sent.list) != 1 {
 			t.Errorf("a second mail for the same wait: %d, %v", len(sent.list), err)
 		}
 
@@ -107,12 +112,12 @@ func TestWaitMail(t *testing.T) {
 		if _, err := db.Exec(ctx, `INSERT INTO user_peer_grants (user_id, peer_id) VALUES (6, 'dev1')`); err != nil {
 			t.Fatal(err)
 		}
-		if err := hub.mailWaiting(ctx, sent, brandmail.Branding{Server: "NeoDesk"}, texts(t), now); err != nil || len(sent.list) != 2 {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now); err != nil || len(sent.list) != 2 {
 			t.Fatalf("the second wait: %d mails, %v", len(sent.list), err)
 		}
 		m = sent.list[1]
-		if strings.Join(m.To, ",") != "ben@example.test" || strings.Contains(*m.Text, "still broken") {
-			t.Errorf("second mail to %v: %s", m.To, *m.Text)
+		if strings.Join(m.To, ",") != "ben@example.test" || m.Mail.Quote != "" {
+			t.Errorf("second mail to %v: %+v", m.To, m.Mail)
 		}
 
 		if err := st.SetSetting(ctx, settingMailAfter, "0"); err != nil {
@@ -124,7 +129,7 @@ func TestWaitMail(t *testing.T) {
 		if _, err := st.Post(ctx, chatstore.Message{ConversationID: "dev1", From: chatstore.Device("dev1", "reception-01"), Text: "again"}, nil); err != nil {
 			t.Fatal(err)
 		}
-		if err := hub.mailWaiting(ctx, sent, brandmail.Branding{Server: "NeoDesk"}, texts(t), now.Add(time.Hour)); err != nil || len(sent.list) != 2 {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now.Add(time.Hour)); err != nil || len(sent.list) != 2 {
 			t.Errorf("with the mail off: %d mails, %v", len(sent.list), err)
 		}
 	})
@@ -135,6 +140,10 @@ func TestWaitMail(t *testing.T) {
 // account without a language, or with one the console doesn't have, gets
 // English.
 func TestWaitMailSpeaksTheRecipientsLanguage(t *testing.T) {
+	// Times are in the server's zone when the account has none
+	old := time.Local
+	time.Local = time.UTC
+	defer func() { time.Local = old }()
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
 		if err := chatstore.Ensure(ctx, db); err != nil {
@@ -156,24 +165,25 @@ func TestWaitMailSpeaksTheRecipientsLanguage(t *testing.T) {
 			t.Fatal(err)
 		}
 		sent := &sentMails{}
-		if err := hub.mailWaiting(ctx, sent, brandmail.Branding{Server: "NeoDesk"}, texts(t), now); err != nil {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now); err != nil {
 			t.Fatal(err)
 		}
 		byTo := map[string]string{}
 		for _, m := range sent.list {
-			byTo[strings.Join(m.To, ",")] = m.Subject + "\n" + *m.Text + "\n" + *m.HTML
+			b := brandmail.Render(m.Mail, brandmail.Branding{Server: "NeoDesk"}, "")
+			byTo[strings.Join(m.To, ",")] = b.Subject + "\n" + b.Text + "\n" + b.HTML
 		}
 		if len(sent.list) != 2 {
 			t.Fatalf("%d mails, want one per language: %q", len(sent.list), byTo)
 		}
 		de := byTo["anna@example.test"]
-		for _, want := range []string{"NeoDesk: dev1 wartet auf eine Antwort", "seit 20 Minuten", "Der Drucker blinkt", "https://console.example/chat?c=dev1"} {
+		for _, want := range []string{"dev1 wartet im Chat auf eine Antwort", "seit 25. November 2026, 09:40 Uhr UTC", "Der Drucker blinkt", "https://console.example/chat?c=dev1"} {
 			if !strings.Contains(de, want) {
 				t.Errorf("anna's mail has no %q:\n%s", want, de)
 			}
 		}
 		en := byTo["admin@example.test"]
-		for _, want := range []string{"NeoDesk: dev1 is waiting for an answer", "waited 20 minutes", "Der Drucker blinkt"} {
+		for _, want := range []string{"dev1 is waiting for an answer in the chat", "since 25 November 2026, 09:40 UTC", "Der Drucker blinkt"} {
 			if !strings.Contains(en, want) {
 				t.Errorf("admin's mail has no %q:\n%s", want, en)
 			}
@@ -182,13 +192,14 @@ func TestWaitMailSpeaksTheRecipientsLanguage(t *testing.T) {
 		for _, m := range sent.list {
 			lang, label := "en", "They wrote:"
 			if strings.Join(m.To, ",") == "anna@example.test" {
-				lang, label = "de", "Nachricht:"
+				lang, label = "de", "Die Nachricht:"
 			}
-			if m.Lang != lang || !strings.Contains(*m.HTML, `<html lang="`+lang+`" dir="ltr">`) {
-				t.Errorf("%v: Lang %q, page starts %.100q", m.To, m.Lang, *m.HTML)
+			b := brandmail.Render(m.Mail, brandmail.Branding{Server: "NeoDesk"}, "")
+			if b.Lang != lang || !strings.Contains(b.HTML, `<html lang="`+lang+`" dir="ltr"`) {
+				t.Errorf("%v: Lang %q, page starts %.100q", m.To, b.Lang, b.HTML)
 			}
-			if !strings.Contains(*m.HTML, label+"</p><blockquote") {
-				t.Errorf("%v: the quote is not labelled %q:\n%s", m.To, label, *m.HTML)
+			if !strings.Contains(b.HTML, label+"</p><blockquote") {
+				t.Errorf("%v: the quote is not labelled %q", m.To, label)
 			}
 		}
 	})
@@ -218,22 +229,19 @@ func TestWaitMailIsBranded(t *testing.T) {
 			t.Fatal(err)
 		}
 		sent := &sentMails{}
-		brand := brandmail.Branding{Server: "Acme Desk", Accent: "#FF0000", Logo: "https://desk.example/logo.png"}
-		if err := hub.mailWaiting(ctx, sent, brand, texts(t), now); err != nil || len(sent.list) == 0 {
+		if err := hub.mailWaiting(ctx, sent, "Acme Desk", texts(t), now); err != nil || len(sent.list) == 0 {
 			t.Fatalf("%d mails, %v", len(sent.list), err)
 		}
-		m := sent.list[0]
-		// Red with white text is 4.00:1, so the button and the quote's bar are a darker red
-		red, _ := brandmail.Button("#ff0000")
-		for _, want := range []string{`role="presentation"`, `<img src="https://desk.example/logo.png" alt="Acme Desk"`,
-			`bgcolor="` + red + `"`, `href="https://console.example/chat?c=dev1"`, `border-left: 3px solid ` + red + `;`, "The printer blinks",
-			"Chat notifications"} {
-			if !strings.Contains(*m.HTML, want) {
+		built := brandmail.Render(sent.list[0].Mail, brandmail.Branding{Server: "Acme Desk", Accent: "#ff0000"}, "")
+		light, _ := brandmail.Palettes("#ff0000")
+		for _, want := range []string{`role="presentation"`, `>Acme Desk</td>`, `bgcolor="` + light.Button + `"`, `href="https://console.example/chat?c=dev1"`,
+			`border-left: 3px solid ` + light.Button + `;`, "The printer blinks", "Chat notifications"} {
+			if !strings.Contains(built.HTML, want) {
 				t.Errorf("the mail has no %s", want)
 			}
 		}
-		if m.Subject != "Acme Desk: dev1 is waiting for an answer" || !strings.Contains(*m.Text, "Chat notifications") {
-			t.Errorf("subject %q, text %q", m.Subject, *m.Text)
+		if built.Subject != "dev1 is waiting for an answer in the chat" || !strings.Contains(built.Text, "Chat notifications") {
+			t.Errorf("subject %q, text %q", built.Subject, built.Text)
 		}
 	})
 }

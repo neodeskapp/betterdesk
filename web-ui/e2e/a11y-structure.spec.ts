@@ -11,6 +11,8 @@ import { UI } from './roles.ts';
 
 async function structureViolations(page: Page): Promise<string[]> {
 	const r = await new AxeBuilder({ page })
+		// A frame sandboxed without scripts (the mail preview) can't run axe; entering it stalls the run
+		.exclude('iframe[sandbox]')
 		.withRules(['document-title', 'region', 'landmark-unique'])
 		.analyze();
 	return r.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);

@@ -20,7 +20,7 @@ func TestRequireTLSReachesTheConnection(t *testing.T) {
 			if _, err := s.TestConnection(ctx); err != nil {
 				t.Fatal(err)
 			}
-			if _, err := s.SendEmail(ctx, Email{To: []string{"a@example.org"}, Subject: "s"}); err != nil {
+			if _, err := s.SendEmail(ctx, Email{To: []string{"a@example.org"}, Mail: testMail}); err != nil {
 				t.Fatal(err)
 			}
 			if len(transport.verifies) != 1 || len(transport.sends) != 1 ||

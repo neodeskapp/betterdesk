@@ -197,12 +197,12 @@ func TestResetMailInTheRecipientsLanguage(t *testing.T) {
 		t.Fatal(err)
 	}
 	expect(t, "link", admin.Do("POST", "/api/users/"+id+"/password-reset-link", "{}", "Accept-Language", "en"), 200, "")
-	if m := box.last(t); m.Subject != "Neues Passwort für NeoDesk festlegen" {
+	if m := box.last(t); m.Subject != "Neues Passwort für dein NeoDesk-Konto festlegen" {
 		t.Errorf("subject %q", m.Subject)
 	}
 	other := makeAccount(t, w, admin, "jon", "jon@example.test")
 	expect(t, "link", admin.Do("POST", "/api/users/"+other+"/password-reset-link", "{}", "Accept-Language", "de", "Cookie", "lang=de"), 200, "")
-	if m := box.last(t); m.Subject != "Set a new password for NeoDesk" {
+	if m := box.last(t); m.Subject != "Set a new password for your NeoDesk account" {
 		t.Errorf("subject without a preferred language %q", m.Subject)
 	}
 }

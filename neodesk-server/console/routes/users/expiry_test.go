@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/users"
@@ -156,11 +157,11 @@ func TestEndDateNotice(t *testing.T) {
 		t.Errorf("subjects: %q and %q", s, box.mailTo("admin@example.test")[0].Subject)
 	}
 	// Each admin reads the date in their own time zone, UTC without one
-	if s := box.mailTo("admin@example.test")[0].Subject; !strings.Contains(s, end.In(berlin).Format("2006-01-02 15:04")+" Europe/Berlin") {
+	if s := box.mailTo("admin@example.test")[0].Subject; !strings.Contains(s, brandmail.Date(end, "en", berlin)) {
 		t.Errorf("the date for an admin in Berlin: %q", s)
 	}
-	if s := box.mailTo("global@example.test")[0].Subject; !strings.Contains(s, end.Format("2006-01-02 15:04")+" UTC") {
-		t.Errorf("the date for an admin without a time zone: %q", s)
+	if s := box.mailTo("global@example.test")[0].Subject; !strings.Contains(s, brandmail.Date(end, "de", time.Local)) {
+		t.Errorf("the date for an admin without a time zone, in the server's: %q", s)
 	}
 	if err := users.Sweep(ctx, d, end.Add(-5*24*time.Hour)); err != nil {
 		t.Fatal(err)

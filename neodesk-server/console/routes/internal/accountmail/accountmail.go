@@ -1,9 +1,8 @@
 // Package accountmail sends the mails about an account (an address to
 // confirm, a notice that the address is being changed, an account that
-// ends or is about to be disabled for inactivity) in the console's
-// branded layout, each in the language of the person who reads it: the
-// account's preferred language when it has one, else the console's
-// default.
+// ends or is about to be disabled for inactivity), each in the language
+// of the person who reads it: the account's preferred language when it
+// has one, else the console's default. The mail service lays them out.
 package accountmail
 
 import (
@@ -15,12 +14,10 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
 )
 
 // Translate gives the text of a key in the mail's language.
-type Translate = passwordlinks.Translate
+type Translate = brandmail.Translate
 
 // Ready reports whether the console has SMTP settings to send with.
 func Ready(ctx context.Context, d *kit.Deps) bool {
@@ -80,53 +77,11 @@ func Host(base string) string {
 	return base
 }
 
-// Page is what a mail says; its texts are already in the reader's
-// language.
-type Page struct {
-	Subject  string
-	Heading  string
-	Lead     string
-	Button   string
-	Link     string
-	LinkHint string
-	Small    []string
-	Footer   string
-}
-
-// Built is a mail ready to send.
-type Built struct {
-	Subject string
-	Text    string
-	HTML    string
-	Inline  []message.Inline
-}
-
-// Build lays out a page in the console's branding, with a plain-text part
-// that says the same.
-func Build(b brandmail.Branding, p Page) Built {
-	lines := []string{p.Heading, "", p.Lead, ""}
-	if p.Button != "" && p.Link != "" {
-		lines = append(lines, p.Button+": "+p.Link, "")
-	}
-	lines = append(lines, p.Small...)
-	lines = append(lines, "", "--", p.Footer)
-	page := brandmail.Page{
-		Branding: b, Heading: p.Heading, Lead: p.Lead, Button: p.Button, Link: p.Link,
-		LinkHint: p.LinkHint, Small: p.Small, Footer: p.Footer,
-	}
-	return Built{Subject: p.Subject, Text: strings.Join(lines, "\n") + "\n", HTML: brandmail.HTML(page), Inline: brandmail.Inline(page)}
-}
-
-// Send sends a built mail to one address. It reports whether the mail
-// server took it.
-func Send(ctx context.Context, d *kit.Deps, to string, m Built) (bool, error) {
+// Send sends a mail to one address. It reports whether the mail server
+// took it.
+func Send(ctx context.Context, d *kit.Deps, to string, m brandmail.Mail) (bool, error) {
 	if d.Mail == nil {
 		return false, nil
 	}
-	return d.Mail.SendEmail(ctx, mail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline})
-}
-
-// Branding is the console's name, accent colour and logo for a mail.
-func Branding(d *kit.Deps, base string) brandmail.Branding {
-	return brandmail.Of(d.Branding, base)
+	return d.Mail.SendEmail(ctx, mail.Email{To: []string{to}, Mail: m})
 }

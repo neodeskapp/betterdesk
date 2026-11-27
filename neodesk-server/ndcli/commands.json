@@ -6906,6 +6906,104 @@
    ]
   },
   {
+   "name": "settings mail-identity",
+   "summary": "Show the sender name and the footer details of the console's mails.",
+   "route": "GET /api/settings/email/identity",
+   "permission": "server.config"
+  },
+  {
+   "name": "settings mail-identity-set",
+   "summary": "Set the sender name and who runs this server, for the mails' footer.",
+   "route": "PUT /api/settings/email/identity",
+   "permission": "server.config",
+   "flags": [
+    {
+     "name": "from-name",
+     "in": "body",
+     "type": "string",
+     "help": "the sender's display name",
+     "field": "from_name"
+    },
+    {
+     "name": "organisation",
+     "in": "body",
+     "type": "string",
+     "help": "who runs this server"
+    },
+    {
+     "name": "support-email",
+     "in": "body",
+     "type": "string",
+     "help": "where people get help; replies go there",
+     "field": "support_email"
+    },
+    {
+     "name": "support-url",
+     "in": "body",
+     "type": "string",
+     "help": "a page where people get help",
+     "field": "support_url"
+    }
+   ],
+   "examples": [
+    "neodesk settings mail-identity-set --organisation \"Acme IT\" --support-email it@example.com"
+   ]
+  },
+  {
+   "name": "settings mails",
+   "summary": "List the mails the console sends, for previews.",
+   "route": "GET /api/settings/email/previews",
+   "permission": "server.config"
+  },
+  {
+   "name": "settings mail-send-me",
+   "summary": "Send one of the console's mails to your own address, with made-up facts.",
+   "route": "POST /api/settings/email/previews/{kind}/send",
+   "permission": "server.config",
+   "flags": [
+    {
+     "name": "lang",
+     "in": "body",
+     "type": "string",
+     "help": "its language, like de"
+    }
+   ],
+   "args": [
+    {
+     "name": "kind",
+     "help": "The mail (see settings mails)"
+    }
+   ]
+  },
+  {
+   "name": "settings mail-unsubscribed",
+   "summary": "List the addresses that turned a notification mail off.",
+   "route": "GET /api/settings/email/unsubscribed",
+   "permission": "server.config"
+  },
+  {
+   "name": "settings mail-resubscribe",
+   "summary": "Send a kind of notification mail to an address again.",
+   "route": "POST /api/settings/email/unsubscribed/resubscribe",
+   "permission": "server.config",
+   "flags": [
+    {
+     "name": "kind",
+     "in": "body",
+     "type": "string",
+     "help": "chat, alert or help",
+     "required": true
+    },
+    {
+     "name": "address",
+     "in": "body",
+     "type": "string",
+     "help": "the address",
+     "required": true
+    }
+   ]
+  },
+  {
    "name": "setup-guide hide",
    "summary": "Hide the setup guide on the overview for your account.",
    "route": "POST /api/setup-guide/hide",
@@ -10427,6 +10525,18 @@
   {
    "route": "POST /api/support/session/feedback",
    "reason": "Used by the person who got a link or the device that joins with it, not by an admin."
+  },
+  {
+   "route": "GET /api/settings/email/previews/{kind}",
+   "reason": "The HTML of a mail for the settings page's preview; on the command line, settings mail-send-me sends the mail."
+  },
+  {
+   "route": "GET /mail/unsubscribe",
+   "reason": "The page of the link in a notification mail, for its reader, who has no account."
+  },
+  {
+   "route": "POST /mail/unsubscribe",
+   "reason": "The one-click unsubscribe of a notification mail, for its reader and their mail client."
   }
  ]
 }

@@ -388,7 +388,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 			}
 			return s.deps.I18n.Bundle
 		},
-		Branding: func() brandmail.Branding { return brandmail.Of(s.deps.Branding, s.deps.Mail.GetPanelBaseURL()) },
+		Branding: func() brandmail.Branding { return brandmail.Of(s.deps.Branding) },
 	})
 	// Alert mails and evaluations beside a request end with the console:
 	// the job below cancels them and waits for them when the jobs stop.

@@ -18,6 +18,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
@@ -255,6 +256,9 @@ type replay struct {
 	// refusedSave is set after a save the Go console refused and Node
 	// stored, until the next state
 	refusedSave bool
+	// build is the mail of an alert or help request step for one
+	// recipient, nil for the other steps
+	build func(addr string) brandmail.Mail
 }
 
 func (r *replay) setState(step oracleStep) {
@@ -668,12 +672,16 @@ func (r *replay) checkSend(i int, step oracleStep, got bool, err error) {
 	if !okTo {
 		// notify_emails that is no text and no list of texts
 		r.counts["recipients that are no text"]++
-		if len(r.transport.sends) > 1 {
+		if len(r.transport.sends) > 1 && r.build == nil {
 			t.Fatalf("step %d: %d sends", i, len(r.transport.sends))
 		}
 		return
 	}
 
+	if r.build != nil {
+		r.checkNotification(i, step, got, want, wantSettings, wantFrom, wantTo, wantList, wantLogs)
+		return
+	}
 	if got != want || len(r.transport.sends) != 1 || !sameLogs(r.log.lines, wantLogs) {
 		t.Fatalf("step %d %s: got %v, sent %d, logs %q\nNode: %s, logs %q", i, step.Op, got, len(r.transport.sends), r.log.lines, step.Ret, wantLogs)
 	}
@@ -696,6 +704,52 @@ func (r *replay) checkSend(i int, step oracleStep, got bool, err error) {
 		m.Subject != wantSubject || !samePointer(m.Text, text) || !samePointer(m.HTML, html) {
 		t.Fatalf("step %d %s: message\n got %s\nwant from %q to %q (list %v) subject %q text %s html %s",
 			i, step.Op, describe(m), wantFrom, wantTo, wantList, wantSubject, sent.Text, sent.HTML)
+	}
+}
+
+// checkNotification checks an alert or help request step that Node sent
+// as one message: the Go console sends the rework's mail (brandmail) to
+// each recipient on its own, with the same connection settings and
+// sender, and logs one line per mail.
+func (r *replay) checkNotification(i int, step oracleStep, got, want bool, settings Settings, from string, to []string, list bool, wantLogs [][2]string) {
+	t := r.t
+	ctx := context.Background()
+	addrs := splitRecipients(to, list)
+	r.counts["mail rework: an alert or help request mail to each recipient, laid out by brandmail"]++
+	if len(addrs) == 0 {
+		// Node handed the stub a message to nobody (recipients of white
+		// space); the Go console sends no mail to nobody
+		r.counts["mail rework: no mail when the recipients are only white space"]++
+		if got || len(r.transport.sends) != 0 {
+			t.Fatalf("step %d %s: got %v, %d sends to no recipient (to %q)", i, step.Op, got, len(r.transport.sends), to)
+		}
+		return
+	}
+	// Node's last line is the outcome: one per mail in Go
+	logs := append([][2]string{}, wantLogs[:len(wantLogs)-1]...)
+	outcome := wantLogs[len(wantLogs)-1]
+	if strings.HasPrefix(outcome[1], "Sent message to ") {
+		outcome = [2]string{"info", "Sent message to 1 recipient(s)"}
+	}
+	for range addrs {
+		logs = append(logs, outcome)
+	}
+	if got != want || len(r.transport.sends) != len(addrs) || !sameLogs(r.log.lines, logs) {
+		t.Fatalf("step %d %s: got %v, %d sends to %q, logs %q\nNode: %s, logs %q", i, step.Op, got, len(r.transport.sends), addrs, r.log.lines, step.Ret, wantLogs)
+	}
+	brand := r.service.Branding(ctx)
+	for k, addr := range addrs {
+		call := r.transport.sends[k]
+		m := call.mail
+		kind := NotifyAlert
+		if step.Op == "help" {
+			kind = NotifyHelp
+		}
+		built := brandmail.Render(r.build(addr), brand, r.service.UnsubscribeURL(ctx, kind, addr))
+		if call.settings != settings || m.From != withName(from, FromName(Identity{}, brand)) || !sameStrings(m.To, []string{addr}) || m.ToList ||
+			m.Subject != built.Subject || *m.Text != built.Text || *m.HTML != built.HTML {
+			t.Fatalf("step %d %s: mail %d\n got %s\nwant to %q subject %q", i, step.Op, k, describe(m), addr, built.Subject)
+		}
 	}
 }
 
@@ -730,6 +784,7 @@ func errorOf(message *string) error {
 }
 
 func (r *replay) run(i int, step oracleStep) {
+	r.build = nil
 	t := r.t
 	ctx := context.Background()
 	if r.service != nil {
@@ -812,11 +867,11 @@ func (r *replay) run(i int, step oracleStep) {
 		subject, _ := optional(orUndefined(step.Mail["subject"]))
 		text, _ := optional(orUndefined(step.Mail["text"]))
 		html, _ := optional(orUndefined(step.Mail["html"]))
-		m := Email{To: to, ToList: list, Text: text, HTML: html}
+		m := RawEmail{To: to, ToList: list, Text: text, HTML: html}
 		if subject != nil {
 			m.Subject = *subject
 		}
-		got, err := r.service.SendEmail(ctx, m)
+		got, err := r.service.SendUnbranded(ctx, m)
 		r.checkSend(i, step, got, err)
 	case "alert":
 		alert := Alert{
@@ -833,27 +888,13 @@ func (r *replay) run(i int, step oracleStep) {
 			ConditionValue: bindValue(t, step.Rule["condition_value"]),
 			NotifyEmails:   bindValue(t, step.Rule["notify_emails"]),
 		}
-		if len(step.Sent) > 0 {
-			html, _ := optional(step.Sent[0].HTML)
-			if html != nil {
-				if escaped := escapedAlertCells(alert, *html); escaped != *html {
-					r.counts["EM3: an alert value with markup is escaped"]++
-					step.Sent = append(step.Sent[:0:0], step.Sent...)
-					step.Sent[0].HTML = marshal(t, escaped)
-				}
+		r.build = func(addr string) brandmail.Mail {
+			f := AlertFacts{Server: r.service.brand().Name(), Base: r.service.GetPanelBaseURL(), Zone: brandmail.Zone(r.service.ReaderOf(ctx, addr).Zone)}
+			m, err := alertMail(alert, rule, r.service.wordsIn(r.service.ReaderOf(ctx, addr).Lang), f)
+			if err != nil {
+				r.t.Fatal(err)
 			}
-		}
-		if len(step.Sent) > 0 {
-			// The alert mail in the branded layout of the accessibility pass:
-			// a page with its language, a heading and the facts as a table
-			// in place of Node's fragment, and its text with them; the subject
-			// stays Node's
-			if _, text, html, err := alertMail(alert, rule, r.service.words(), r.service.brand()); err == nil {
-				r.counts["accessibility M-B1: an alert or help request mail in the branded layout"]++
-				step.Sent = append(step.Sent[:0:0], step.Sent...)
-				step.Sent[0].Text = marshal(t, text)
-				step.Sent[0].HTML = marshal(t, html)
-			}
+			return m
 		}
 		got, err := r.service.SendAlertEmail(ctx, alert, rule)
 		r.checkSend(i, step, got, err)
@@ -864,30 +905,13 @@ func (r *replay) run(i int, step oracleStep) {
 			DeviceID: bindValue(t, step.Help["device_id"]),
 			Message:  bindValue(t, step.Help["message"]),
 		}
-		if len(step.Sent) > 0 {
-			step.Sent = append(step.Sent[:0:0], step.Sent...)
-			if text, _ := optional(step.Sent[0].Text); text != nil {
-				r.counts["EM7: a help request mail with its blank lines"]++
-				spaced := spacedHelpText(t, help, *text)
-				if r.noPublicURL() {
-					// BUGS EM8: without a public address the mail has no link
-					r.counts["EM8: a help request mail without a link"]++
-					spaced, _, _ = strings.Cut(spaced, "\n\nOpen in panel: ")
-				}
-				step.Sent[0].Text = marshal(t, spaced)
+		folder := bindValue(t, step.Folder)
+		r.build = func(addr string) brandmail.Mail {
+			m, err := helpRequestMail(help, folder, "", r.service.GetPanelBaseURL(), r.service.brand().Name(), r.service.wordsIn(r.service.ReaderOf(ctx, addr).Lang))
+			if err != nil {
+				r.t.Fatal(err)
 			}
-			if html, _ := optional(step.Sent[0].HTML); html != nil && r.noPublicURL() {
-				step.Sent[0].HTML = marshal(t, helpLinkRow.ReplaceAllString(*html, ""))
-			}
-		}
-		if len(step.Sent) > 0 {
-			// The help request mail in the branded layout (accessibility M-B1, as the alert)
-			if _, text, html, err := helpRequestMail(help, bindValue(t, step.Folder), r.service.GetPanelBaseURL(), r.service.words(), r.service.brand()); err == nil {
-				r.counts["accessibility M-B1: an alert or help request mail in the branded layout"]++
-				step.Sent = append(step.Sent[:0:0], step.Sent...)
-				step.Sent[0].Text = marshal(t, text)
-				step.Sent[0].HTML = marshal(t, html)
-			}
+			return m
 		}
 		got, err := r.service.SendHelpRequestEmail(ctx, HelpRequestEmail{To: to, ToList: list, HelpRequest: help, FolderName: bindValue(t, step.Folder)})
 		r.checkSend(i, step, got, err)
@@ -1029,57 +1053,11 @@ func (r *replay) run(i int, step oracleStep) {
 	}
 }
 
-// escapedAlertCells is the HTML of an alert mail Node sent, with the
-// severity, the device and the time escaped as the Go console prints them
-// (BUGS EM3). Node printed those three as they were.
-func escapedAlertCells(alert Alert, html string) string {
-	text := func(v jsbind.Value) string {
-		s, _ := fromBind(v).toString()
-		return s
-	}
-	device := "N/A"
-	if alert.DeviceID.Truthy() {
-		device = text(alert.DeviceID)
-	}
-	row := `</td></tr>
-                <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">`
-	for _, cell := range []struct{ value, after string }{
-		{text(alert.Severity), row + "Device</td>"},
-		{device, row + "Message</td>"},
-		{text(alert.TriggeredAt), "</td></tr>\n            </table>"},
-	} {
-		html = strings.Replace(html, ">"+cell.value+cell.after, ">"+escapeHTML(cell.value)+cell.after, 1)
-	}
-	return html
-}
-
 // noPublicURL reports whether the environment of the replay names no
 // public URL. The replay's service has no public host, so its mails have
 // no link then (BUGS EM8).
 func (r *replay) noPublicURL() bool {
 	return r.env["PANEL_PUBLIC_URL"] == "" && r.env["PUBLIC_URL"] == ""
-}
-
-// helpLinkRow is the link of a help request mail's HTML.
-var helpLinkRow = regexp.MustCompile(`\n            <p style="margin-top: 16px;"><a href="[^"]*">Open help requests in NeoDesk</a></p>`)
-
-// spacedHelpText is the text of a help request mail Node sent, with the
-// blank lines Node dropped (BUGS EM7): after the first line, and before
-// the message and the link.
-func spacedHelpText(t *testing.T, help HelpRequest, text string) string {
-	t.Helper()
-	message := ""
-	if help.Message.Truthy() {
-		message, _ = fromBind(help.Message).toString()
-	}
-	const first = "A new help request was submitted.\n"
-	link := strings.LastIndex(text, "\nOpen in panel: ")
-	head, tail := text[:link], text[link:]
-	body, ok := strings.CutSuffix(head, "\nMessage: "+message)
-	if !ok || !strings.HasPrefix(body, first) {
-		t.Fatalf("help request text %q", text)
-	}
-	return first + "\n" + body[len(first):] + "\n\nMessage: " + message + "\n" + tail
 }
 
 func orUndefined(text string) string {
@@ -1139,11 +1117,11 @@ func TestNodeRecording(t *testing.T) {
 		// Every kind of step and every special case has to have been met
 		for _, name := range []string{"state", "env", "reset", "load", "get", "test", "send", "alert", "help", "baseurl", "put", "has", "logsent", "logcount",
 			"credentials that are no text", "a sender that is no text", "a sender that is no text, sent as text",
-			"recipients that are no text", "EM1: a stored tlsVerify that is no flag", "EM3: an alert value with markup is escaped",
-			"EM7: a help request mail with its blank lines", "EM4: a stored configuration that is invalid",
+			"recipients that are no text", "EM1: a stored tlsVerify that is no flag",
+			"EM4: a stored configuration that is invalid",
 			"EM5: a save with a member of the wrong type", "EM5: a read after a refused save",
-			"EM8: no address without a public URL", "EM8: a help request mail without a link", "EM9: a save without a sender",
-			"accessibility M-B1: an alert or help request mail in the branded layout",
+			"EM8: no address without a public URL", "EM9: a save without a sender",
+			"mail rework: an alert or help request mail to each recipient, laid out by brandmail",
 			"RV33: the stored password kept for another account", "RV40: an empty password removes the stored one"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)
