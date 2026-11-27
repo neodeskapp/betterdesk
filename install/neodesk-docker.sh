@@ -53,6 +53,13 @@ TRAEFIK_ACTION=""
 LETSENCRYPT_STAGING_CA="https://acme-staging-v02.api.letsencrypt.org/directory"
 CERT_TIMEOUT="${NEODESK_CERT_TIMEOUT:-120}"
 
+# The folder of a RustDesk server's key pair (id_ed25519, id_ed25519.pub)
+# to take over
+IMPORT_KEYS=""
+# ufw or firewalld stay as they are (NEODESK_SKIP_FIREWALL=true)
+SKIP_FIREWALL="${NEODESK_SKIP_FIREWALL:-false}"
+NEODESK_DEFAULT_DIR=/opt/neodesk/docker
+
 COMMAND=""
 ASSUME_YES=false
 PURGE=false
@@ -210,6 +217,14 @@ Options:
                          3375; 5000 up to 3.6.0-rc.4)
   --postgres             A new install on PostgreSQL instead of SQLite
                          (NEODESK_POSTGRES=true)
+  --import-keys FOLDER   The key pair of a RustDesk server (id_ed25519 and
+                         id_ed25519.pub in FOLDER) instead of a new one, so
+                         its clients keep working; the install's own key is
+                         kept in the data volume as id_ed25519.before-import-*
+  --skip-firewall        Leave ufw and firewalld as they are; without it the
+                         client ports (and the console's) are opened there
+                         when one of them is on, and closed at uninstall
+                         (NEODESK_SKIP_FIREWALL=true)
   --domain NAME          HTTPS for the console at this DNS name (NEODESK_DOMAIN):
                          a Traefik container gets a Let's Encrypt certificate
                          and renews it by itself. The name must point at this
@@ -285,6 +300,9 @@ parse_args() {
             --user) [ $# -ge 2 ] || die "--user needs an account name"; RESET_USER="$2"; shift ;;
             --user=*) RESET_USER="${1#*=}" ;;
             --postgres) USE_POSTGRES=true ;;
+            --import-keys) [ $# -ge 2 ] || die "--import-keys needs a folder"; IMPORT_KEYS="$2"; shift ;;
+            --import-keys=*) IMPORT_KEYS="${1#*=}" ;;
+            --skip-firewall) SKIP_FIREWALL=true ;;
             --domain) [ $# -ge 2 ] || die "--domain needs a DNS name"; DOMAIN_SET="$2"; shift ;;
             --domain=*) DOMAIN_SET="${1#*=}" ;;
             --email) [ $# -ge 2 ] || die "--email needs an e-mail address"; LETSENCRYPT_EMAIL_SET="$2"; shift ;;
@@ -307,7 +325,7 @@ parse_args() {
                 if [ $# -lt 2 ] || [[ "$2" != *=* ]]; then die "--set-config needs KEY=VALUE"; fi
                 MANAGED_CONFIG_CHANGES+=("$2"); COMMAND="${COMMAND:-set-config}"; shift ;;
             -h|--help) usage; exit 0 ;;
-            *) die "Unknown option: $1" "See: bash neodesk-docker.sh --help" ;;
+            *) die "Unknown option: $1" "See: $(manager_cmd) --help" ;;
         esac
         shift
     done
@@ -323,6 +341,11 @@ parse_args() {
         1|y|yes|true|on) USE_POSTGRES=true ;;
         *) USE_POSTGRES=false ;;
     esac
+    case "${SKIP_FIREWALL,,}" in
+        1|y|yes|true|on) SKIP_FIREWALL=true ;;
+        *) SKIP_FIREWALL=false ;;
+    esac
+    [ -z "$IMPORT_KEYS" ] || check_import_keys
     case "${LETSENCRYPT_STAGING,,}" in
         1|y|yes|true|on) LETSENCRYPT_STAGING=true ;;
         *) LETSENCRYPT_STAGING=false ;;
@@ -349,6 +372,40 @@ valid_domain() {
 }
 
 valid_email() { [[ "$1" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]]; }
+
+# manager_cmd: how to run this manager from any folder: the install's own
+# copy by its full path (with --dir for another folder than the default),
+# else this script's own path
+manager_cmd() {
+    local path="$NEODESK_DIR/neodesk-docker.sh" dir=""
+    if [ ! -f "$path" ]; then
+        path=$(readlink -f "${BASH_SOURCE[0]:-}" 2>/dev/null || true)
+        [ -n "$path" ] && [ -f "$path" ] || path=neodesk-docker.sh
+    fi
+    [ "$NEODESK_DIR" = "$NEODESK_DEFAULT_DIR" ] || dir=" --dir $NEODESK_DIR"
+    printf 'sudo bash %s%s\n' "$path" "$dir"
+}
+
+# check_import_keys: IMPORT_KEYS is a folder with a RustDesk key pair
+# whose halves belong together (the server does not start otherwise);
+# IMPORT_KEYS becomes its full path
+check_import_keys() {
+    local dir="$IMPORT_KEYS" priv pub
+    [ -d "$dir" ] || die "--import-keys: $dir is not a folder" \
+        "Name the folder that holds the RustDesk server's id_ed25519 and id_ed25519.pub."
+    priv="$dir/id_ed25519"
+    pub="$dir/id_ed25519.pub"
+    [ -r "$priv" ] && [ -r "$pub" ] || die "--import-keys: $dir has no readable id_ed25519 and id_ed25519.pub" \
+        "RustDesk's server keeps them in its data folder (with Docker: the folder mounted at /root)."
+    if [ "$(base64 -d < "$priv" 2>/dev/null | wc -c)" != 64 ] || [ "$(base64 -d < "$pub" 2>/dev/null | wc -c)" != 32 ]; then
+        die "--import-keys: the files in $dir are no RustDesk key pair (base64, 64 and 32 bytes)."
+    fi
+    # An Ed25519 private key ends with its public key
+    if [ "$(base64 -d < "$priv" | tail -c 32 | od -An -tx1 | tr -d ' \n')" != "$(base64 -d < "$pub" | od -An -tx1 | tr -d ' \n')" ]; then
+        die "--import-keys: id_ed25519.pub in $dir does not belong to id_ed25519 there."
+    fi
+    IMPORT_KEYS=$(cd "$dir" && pwd -P)
+}
 
 # confirm QUESTION DEFAULT(y|n): yes or no; --yes says yes, and without a
 # terminal the default is taken
@@ -642,7 +699,7 @@ note_console_port_move() {
     [ "$1" = true ] || return 0
     [ "$(console_port)" = "$CONSOLE_DEFAULT_PORT" ] || return 0
     say ""
-    warn "The console now answers on port $CONSOLE_DEFAULT_PORT; it was $CONSOLE_OLD_DEFAULT_PORT. To keep $CONSOLE_OLD_DEFAULT_PORT set NEODESK_CONSOLE_PORT=$CONSOLE_OLD_DEFAULT_PORT in $(env_file), then: sudo bash neodesk-docker.sh update"
+    warn "The console now answers on port $CONSOLE_DEFAULT_PORT; it was $CONSOLE_OLD_DEFAULT_PORT. To keep $CONSOLE_OLD_DEFAULT_PORT set NEODESK_CONSOLE_PORT=$CONSOLE_OLD_DEFAULT_PORT in $(env_file), then: $(manager_cmd) update"
 }
 
 # update_manager_copy: run as the install's own copy
@@ -675,6 +732,16 @@ update_manager_copy() {
         *) rm -f "$new" ;;
     esac
     return 0
+}
+
+# place_manager_copy: an install made with a downloaded copy of this
+# manager gets its own one in the install folder, which the hints name
+place_manager_copy() {
+    local dest="$NEODESK_DIR/neodesk-docker.sh" self
+    [ ! -f "$dest" ] || return 0
+    self=$(readlink -f "${BASH_SOURCE[0]:-}" 2>/dev/null || true)
+    [ -n "$self" ] && [ -f "$self" ] && grep -q 'NEODESK_DOCKER_SOURCED' "$self" || return 0
+    install -m 0755 "$self" "$dest" 2>/dev/null || true
 }
 
 # write_compose_file: docker-compose.yml of this release. A file the user
@@ -717,13 +784,13 @@ need_root_or_docker() {
         return 0
     fi
     die "This needs root: run it with sudo." \
-        "sudo bash neodesk-docker.sh ${COMMAND}" \
+        "$(manager_cmd) ${COMMAND}" \
         "Without sudo it works when your user may use Docker (the docker group) and write $NEODESK_DIR (--dir)."
 }
 
 install_docker_engine() {
     if [ "$(id -u)" -ne 0 ]; then
-        die "Docker is not installed, and installing it needs root." "Run: sudo bash neodesk-docker.sh"
+        die "Docker is not installed, and installing it needs root." "Run: $(manager_cmd)"
     fi
     if ! command -v curl >/dev/null 2>&1; then
         die "Docker is not installed, and curl is missing to install it." \
@@ -813,7 +880,7 @@ check_ports() {
     [ "${#taken[@]}" -eq 0 ] && return 0
     local hint="Stop what uses them, then run this again."
     if printf '%s\n' "${taken[@]}" | grep -qE ': (hbbs|hbbr|rustdesk)'; then
-        hint="A RustDesk server (hbbs, hbbr) uses them: stop it first, then run this again."
+        hint="A RustDesk server (hbbs, hbbr) uses them: stop it first, then run this again. To keep its clients, add --import-keys <its data folder, with id_ed25519 and id_ed25519.pub>."
     fi
     if [ "${#taken[@]}" -eq 1 ] && [[ "${taken[0]}" == "TCP $(console_port):"* ]]; then
         hint="Stop it, or give the console another port: --console-port 5080"
@@ -850,6 +917,118 @@ check_internet() {
             "Behind a proxy, Docker needs it in its own settings: https://docs.docker.com/engine/daemon/proxy/" \
             "Without internet: docker load the image, then run this with --no-pull."
     fi
+}
+
+#===============================================================================
+# The host firewall: ufw or firewalld
+#===============================================================================
+
+# Docker publishes IPv4 ports past ufw and firewalld, but IPv6 visitors
+# come in through docker-proxy and the INPUT chain, where the host firewall
+# decides. So the ports NeoDesk publishes are opened there when one of
+# them is on, before the container starts (Let's Encrypt's challenge
+# comes in on 80), and closed again when they are no longer served or at
+# uninstall. Only rules this manager added are closed: in ufw the ones
+# with the comment "NeoDesk ...", in both the ones in FIREWALL_RECORD.
+
+firewall_record() { printf '%s\n' "$NEODESK_DIR/.firewall"; }
+
+# active_firewall: ufw or firewalld when one of them is on, else nothing.
+# "ufw status" prints "Status: active" (in English with LC_ALL=C); rules
+# added to an inactive ufw would go live with the next "ufw enable".
+active_firewall() {
+    if command -v ufw >/dev/null 2>&1 && LC_ALL=C ufw status 2>/dev/null | grep -q '^Status: active'; then
+        printf 'ufw\n'
+    elif command -v firewall-cmd >/dev/null 2>&1 && [ "$(firewall-cmd --state 2>/dev/null)" = running ]; then
+        printf 'firewalld\n'
+    fi
+}
+
+# firewall_wanted: the rules NeoDesk needs, one per line (21116/udp): the
+# client ports and the console's by console_firewall_ports
+firewall_wanted() {
+    local port
+    for port in "${DOCKER_PORTS_TCP[@]}"; do printf '%s/tcp\n' "$port"; done
+    for port in "${DOCKER_PORTS_UDP[@]}"; do printf '%s/udp\n' "$port"; done
+    for port in $(console_firewall_ports "$(console_domain)" | tr ',' ' '); do printf '%s/tcp\n' "$port"; done
+}
+
+# firewall_ours FIREWALL: the rules of FIREWALL this manager added
+firewall_ours() {
+    {
+        sed -n "s#^$1 ##p" "$(firewall_record)" 2>/dev/null || true
+        if [ "$1" = ufw ]; then
+            LC_ALL=C ufw status 2>/dev/null | awk '/# NeoDesk/ { print $1 }' || true
+        fi
+    } | grep -E '^[0-9]+/(tcp|udp)$' | sort -u || true
+}
+
+# firewall_open FIREWALL RULE: the firewall lets RULE in already
+firewall_open() {
+    case "$1" in
+        ufw) LC_ALL=C ufw status 2>/dev/null | awk -v r="$2" '$1 == r && $2 == "ALLOW" { found = 1 } END { exit !found }' ;;
+        firewalld) firewall-cmd --permanent --query-port="$2" >/dev/null 2>&1 ;;
+    esac
+}
+
+firewall_note() {
+    local file
+    file=$(firewall_record)
+    if [ "$2" = add ]; then
+        printf '%s %s\n' "$1" "$3" >> "$file"
+    elif [ -f "$file" ]; then
+        grep -vxF "$1 $3" "$file" > "$file.tmp" || true
+        mv "$file.tmp" "$file"
+    fi
+}
+
+# sync_firewall [none]: the host firewall lets in what NeoDesk serves now
+# (with "none": nothing, for uninstall); says what it opened and closed
+sync_firewall() {
+    local fw rule wanted opened=() closed=() hint=()
+    [ "$SKIP_FIREWALL" != true ] || return 0
+    fw=$(active_firewall)
+    [ -n "$fw" ] || return 0
+    if [ "$(id -u)" -ne 0 ]; then
+        warn "$fw is on, but changing it needs root: run with sudo to open NeoDesk's ports there."
+        return 0
+    fi
+    wanted=""
+    [ "${1:-}" = none ] || wanted=$(firewall_wanted)
+    mkdir -p "$NEODESK_DIR"
+    for rule in $wanted; do
+        firewall_open "$fw" "$rule" && continue
+        case "$fw" in
+            ufw) ufw allow "$rule" comment "NeoDesk port $rule" >/dev/null 2>&1 || continue ;;
+            firewalld) firewall-cmd --permanent --add-port="$rule" >/dev/null 2>&1 || continue ;;
+        esac
+        firewall_note "$fw" add "$rule"
+        opened+=("$rule")
+    done
+    for rule in $(firewall_ours "$fw"); do
+        printf '%s\n' "$wanted" | grep -qxF "$rule" && continue
+        case "$fw" in
+            ufw) ufw delete allow "$rule" >/dev/null 2>&1 || true ;;
+            firewalld) firewall-cmd --permanent --remove-port="$rule" >/dev/null 2>&1 || true ;;
+        esac
+        firewall_note "$fw" remove "$rule"
+        closed+=("$rule")
+    done
+    if [ "$fw" = firewalld ] && [ $((${#opened[@]} + ${#closed[@]})) -gt 0 ]; then
+        firewall-cmd --reload >/dev/null 2>&1 || true
+    fi
+    [ "${#opened[@]}" -eq 0 ] || ok "Opened in $fw: ${opened[*]}"
+    [ "${#closed[@]}" -eq 0 ] || ok "Closed in $fw: ${closed[*]}"
+    # Behind a reverse proxy of its own (TRUST_PROXY, the console on all
+    # addresses) the console's port stays closed: say how to open it
+    [ "${1:-}" != none ] && [ -z "$(console_domain)" ] && [ -z "$(console_firewall_ports "")" ] || return 0
+    case "$(env_get NEODESK_CONSOLE_BIND)" in 127.*|::1|"[::1]"|localhost) return 0 ;; esac
+    case "$fw" in
+        ufw) hint=("sudo ufw allow $(console_port)/tcp") ;;
+        firewalld) hint=("sudo firewall-cmd --permanent --add-port=$(console_port)/tcp" "sudo firewall-cmd --reload") ;;
+    esac
+    say "$fw keeps the console's port $(console_port) closed, as a reverse proxy is in front of it (TRUST_PROXY in $(env_file))."
+    say "To reach the console directly, open it by hand: $(printf '%s; ' "${hint[@]}" | sed 's/; $//')"
 }
 
 #===============================================================================
@@ -896,8 +1075,8 @@ foreign_install_error() {
     done
     die "Found NeoDesk from another install, so nothing was changed:" "${lines[@]}" \
         "Take it over into $NEODESK_DIR (its data is copied, the old container is kept stopped):" \
-        "  sudo bash neodesk-docker.sh --adopt" \
-        "Or manage it in its own folder: sudo bash neodesk-docker.sh --dir <that folder>"
+        "  $(manager_cmd) --adopt" \
+        "Or manage it in its own folder: $(NEODESK_DIR=$NEODESK_DEFAULT_DIR manager_cmd) --dir <that folder>"
 }
 
 pull_image() {
@@ -919,7 +1098,7 @@ pull_image() {
     if [ "$ok" = false ] && printf '%s' "$out" | grep -qiE 'manifest unknown|not found' && [ "$(image_tag)" = latest ] \
         && [ -z "$NEODESK_IMAGE_TAG_SET" ] && [ -z "$(env_get NEODESK_IMAGE_TAG)" ]; then
         warn "ghcr.io has no release image yet (latest): running the development image dev instead."
-        warn "Once a release is out: sudo bash neodesk-docker.sh update --tag latest"
+        warn "Once a release is out: $(manager_cmd) update --tag latest"
         env_set NEODESK_IMAGE_TAG dev
         step "Pulling $(image_ref)"
         ok=true
@@ -929,7 +1108,7 @@ pull_image() {
         if printf '%s' "$out" | grep -qiE 'manifest unknown|not found|denied|unauthorized'; then
             die "The image $(image_ref) was not found on ghcr.io." \
                 "Check the tag (--tag, NEODESK_IMAGE_TAG in $(env_file)); latest is the newest release." \
-                "Or build it from a checkout of the repository: sudo bash neodesk-docker.sh --build"
+                "Or build it from a checkout of the repository: sudo bash <checkout>/install/neodesk-docker.sh --build"
         fi
         printf '%s\n' "$out" >&2
         die "Pulling the image failed (output above)." "Check the internet connection and run this again."
@@ -1256,6 +1435,36 @@ wait_certificate() {
     warn "and ports 80 and 443 to reach it; Traefik keeps trying. Its log: cd $NEODESK_DIR && docker compose logs traefik"
 }
 
+# import_keys: the key pair of IMPORT_KEYS into the data volume, while the
+# container is stopped (or not made yet). A key of the install's own that
+# differs stays next to it as id_ed25519.before-import-<time>.
+import_keys() {
+    [ -n "$IMPORT_KEYS" ] || return 0
+    local uid gid out
+    uid="${PUID:-$(env_get PUID)}"
+    gid="${PGID:-$(env_get PGID)}"
+    docker volume create "$DATA_VOLUME" >/dev/null 2>&1 || true
+    out=$(docker run --rm --entrypoint sh --user 0 -v "$DATA_VOLUME:/data" -v "$IMPORT_KEYS:/in:ro" "$(image_ref)" -c '
+        set -e
+        if [ -f /data/id_ed25519 ] && ! cmp -s /in/id_ed25519 /data/id_ed25519; then
+            mv /data/id_ed25519 "/data/id_ed25519.before-import-$1"
+            [ ! -f /data/id_ed25519.pub ] || mv /data/id_ed25519.pub "/data/id_ed25519.pub.before-import-$1"
+            echo replaced
+        fi
+        cp /in/id_ed25519 /data/id_ed25519
+        cp /in/id_ed25519.pub /data/id_ed25519.pub
+        chown "$2:$3" /data/id_ed25519 /data/id_ed25519.pub
+        chmod 600 /data/id_ed25519
+        chmod 644 /data/id_ed25519.pub' sh "$(date +%Y%m%d-%H%M%S)" "${uid:-10001}" "${gid:-10001}") \
+        || die "The key pair of $IMPORT_KEYS could not be put into the volume $DATA_VOLUME." \
+            "Check that the folder is readable, then run this again."
+    if [ "$out" = replaced ]; then
+        ok "Key pair of $IMPORT_KEYS imported; the install's previous one is in the volume as id_ed25519.before-import-*"
+    else
+        ok "Key pair of $IMPORT_KEYS imported: clients that have its key keep working"
+    fi
+}
+
 new_secret() {
     if command -v openssl >/dev/null 2>&1; then
         openssl rand -hex "$1"
@@ -1300,7 +1509,7 @@ do_install() {
     fi
     if [ "$COMMAND" = update ]; then
         die "There is no install in $NEODESK_DIR to update." \
-            "Install it: sudo bash neodesk-docker.sh" "Another folder: --dir <folder>"
+            "Install it: $(manager_cmd)" "Another folder: --dir <folder>"
     fi
 
     local started=$SECONDS
@@ -1315,11 +1524,14 @@ do_install() {
         postgres_settings
     fi
     write_compose_file
+    place_manager_copy
     pull_image
     set_data_path
     if [ "$state" = foreign ]; then
         adopt_old_install
     fi
+    import_keys
+    sync_firewall
     step "Starting NeoDesk"
     export ADMIN_PASSWORD
     compose_quiet up -d --remove-orphans \
@@ -1343,7 +1555,7 @@ do_update() {
     case "$(install_state)" in
         ours) ;;
         foreign) foreign_install_error ;;
-        *) die "There is no install in $NEODESK_DIR to update." "Install it: sudo bash neodesk-docker.sh" ;;
+        *) die "There is no install in $NEODESK_DIR to update." "Install it: $(manager_cmd)" ;;
     esac
     check_internet
     check_traefik_ports
@@ -1366,7 +1578,8 @@ do_update() {
     set_data_path
     new_image=$(image_id "$(image_ref)")
     applied=$(cat "$NEODESK_DIR/.applied.sha256" 2>/dev/null || true)
-    if [ -n "$old_image" ] && [ "$old_image" = "$new_image" ] && [ "$applied" = "$(settings_fingerprint)" ] \
+    sync_firewall
+    if [ -z "$IMPORT_KEYS" ] && [ -n "$old_image" ] && [ "$old_image" = "$new_image" ] && [ "$applied" = "$(settings_fingerprint)" ] \
         && container_running && wait_healthy; then
         rm -rf "$before"
         ok "NeoDesk is up to date: $(server_version)"
@@ -1379,6 +1592,7 @@ do_update() {
     compose stop -t 30 neodesk >/dev/null 2>&1 || true
     backup=$(backup_volumes "$before")
     ok "Backup: $backup"
+    import_keys
     step "Starting $(image_ref)"
     compose_quiet up -d --remove-orphans || true
     if wait_healthy; then
@@ -1476,18 +1690,18 @@ print_summary() {
             fi
         fi
     else
-        say "Sign in:         with your accounts; a new admin password: sudo bash neodesk-docker.sh reset-password"
+        say "Sign in:         with your accounts; a new admin password: $(manager_cmd) reset-password"
     fi
     say ""
     say "RustDesk clients (Settings, Network, ID/Relay server):"
     say "  ID server:     ${addr}"
-    say "  Relay server:  ${addr}"
+    say "  Relay server:  ${addr}:21117"
     say "  API server:    http://${addr}:21121"
     say "  Key:           ${key:-not made yet; later: docker exec neodesk cat /opt/neodesk/data/id_ed25519.pub}"
     say ""
     say "Ports to open in a firewall in front of this machine: TCP $(console_firewall_ports "$domain")21115-21119, 21121, 21122 and UDP 21116"
     say "Logs:            cd $NEODESK_DIR && docker compose logs -f neodesk"
-    say "Update:          sudo bash neodesk-docker.sh   (or: cd $NEODESK_DIR && docker compose pull && docker compose up -d)"
+    say "Update:          $(manager_cmd)   (or: cd $NEODESK_DIR && docker compose pull && docker compose up -d)"
     say "Settings:        $(env_file)   (then: cd $NEODESK_DIR && docker compose up -d)"
     say "Help:            $NEODESK_HELP_URL"
 }
@@ -1562,7 +1776,7 @@ require_install() {
     need_root_or_docker
     check_docker
     [ -f "$(compose_file)" ] || die "There is no install in $NEODESK_DIR." \
-        "Install it: sudo bash neodesk-docker.sh" "Another folder: --dir <folder>"
+        "Install it: $(manager_cmd)" "Another folder: --dir <folder>"
 }
 
 do_status() {
@@ -1626,9 +1840,11 @@ do_uninstall() {
         compose_quiet --profile postgres --profile guacd --profile traefik down -v --remove-orphans
         docker volume rm "$DATA_VOLUME" "$CONSOLE_VOLUME" "$PG_VOLUME" "$TRAEFIK_VOLUME" >/dev/null 2>&1 || true
         ok "NeoDesk's containers and volumes are removed."
+        sync_firewall none
     else
         compose_quiet --profile postgres --profile guacd --profile traefik down --remove-orphans
         ok "NeoDesk's containers are removed."
+        sync_firewall none
         say "Left on this machine:"
         local listed="" removable="" v
         for v in "$PG_VOLUME" "$TRAEFIK_VOLUME"; do
@@ -1650,6 +1866,7 @@ do_set_config() {
     docker run --rm --user "$(id -u):$(id -g)" --entrypoint /usr/local/bin/neodesk-server \
         -v "$NEODESK_DIR:/cfg" -e NEODESK_ENV_FILE=/cfg/.env \
         "$(image_ref)" config set "${MANAGED_CONFIG_CHANGES[@]}" || die "The settings were refused (output above)."
+    sync_firewall
     compose_quiet up -d || die "docker compose up failed (output above)."
     wait_healthy || die "NeoDesk did not get healthy after the change."
     remember_applied "Its log: cd $NEODESK_DIR && docker compose logs neodesk"
@@ -1784,11 +2001,11 @@ do_postgres() {
         return 0
     fi
     container_exists "$CONTAINER" || die "NeoDesk is not installed in $NEODESK_DIR yet." \
-        "Install it on PostgreSQL right away: sudo bash neodesk-docker.sh --postgres"
+        "Install it on PostgreSQL right away: $(manager_cmd) --postgres"
     local image uid gid pass out
     image=$(docker container inspect -f '{{.Config.Image}}' "$CONTAINER")
     docker run --rm --entrypoint sh "$image" -c "$MIGRATE_TOOL -h" >/dev/null 2>&1 \
-        || die "The image $image has no move tool yet." "Update first: sudo bash neodesk-docker.sh, then run this again."
+        || die "The image $image has no move tool yet." "Update first: $(manager_cmd), then run this again."
 
     say "This moves every device, account and setting from SQLite into a PostgreSQL"
     say "container (neodesk-postgres, volume $PG_VOLUME). NeoDesk stops for it;"
@@ -1800,7 +2017,7 @@ do_postgres() {
 
     if docker volume inspect "$PG_VOLUME" >/dev/null 2>&1; then
         [ "$OVERWRITE_POSTGRES" = true ] || die "The volume $PG_VOLUME holds a PostgreSQL database from before; nothing was changed." \
-            "Delete it and move again: sudo bash neodesk-docker.sh postgres --overwrite-postgres"
+            "Delete it and move again: $(manager_cmd) postgres --overwrite-postgres"
         compose --profile postgres rm -sf postgres >/dev/null 2>&1 || true
         docker volume rm "$PG_VOLUME" >/dev/null || die "The volume $PG_VOLUME could not be deleted (is a container using it?)."
         env_unset POSTGRES_PASSWORD
@@ -1830,7 +2047,7 @@ do_postgres() {
         --entrypoint sh neodesk -c "exec $MIGRATE_TOOL -mode sqlite2pg -src \"\$DB_PATH\" -dst \"\$DATABASE_URL\"" 2>&1); then
         printf '%s\n' "$out" >&2
         back_to_sqlite "The move failed (output above); the install stays on SQLite and nothing of it changed." \
-            "Run it again after the cause is fixed: sudo bash neodesk-docker.sh postgres --overwrite-postgres"
+            "Run it again after the cause is fixed: $(manager_cmd) postgres --overwrite-postgres"
     fi
     printf '%s\n' "$out" | grep -E 'Migration complete|Backup created' || true
 

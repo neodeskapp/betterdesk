@@ -29,9 +29,15 @@ done
 for note in "$data/.admin_credentials.removed" /app/data/.admin_credentials.removed; do
     if [ -f "$note" ] && [ -r "$note" ]; then
         cat "$note" >&2
+        # The script's install folder is /opt/neodesk/docker unless --dir
+        # named another; this container can't see which
         echo "To set a new password for admin, on the Docker host:" >&2
-        echo "  sudo bash neodesk-docker.sh reset-password      (prints a new random password)" >&2
-        echo "  or pipe one in: printf '%s\\n' 'the new password' | docker compose exec -T -u neodesk neodesk neodesk-server reset-password admin" >&2
+        echo "  Installed with the script (prints a new random password):" >&2
+        echo "    sudo bash /opt/neodesk/docker/neodesk-docker.sh reset-password" >&2
+        echo "  Or choose one, in the folder of docker-compose.yml (it stays out of the shell history):" >&2
+        echo "    read -rs NEWPASS" >&2
+        # printf, as the echo of some shells turns \n into a line break
+        printf '%s\n' "    printf '%s\\n' \"\$NEWPASS\" | docker compose exec -T -u neodesk neodesk neodesk-server reset-password admin" >&2
         exit 1
     fi
 done

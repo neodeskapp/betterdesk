@@ -36,7 +36,8 @@
 #                                  (found by itself at every start when empty)
 #   NEODESK_CONSOLE_PORT=5080   the host port of the web console (3375; 5000 up to 3.6.0-rc.4)
 #   NEODESK_CONSOLE_BIND=127.0.0.1  publish the console on this host
-#                                  address only (behind a reverse proxy)
+#                                  address only (behind a reverse proxy;
+#                                  without it, on every IPv4 and IPv6 address)
 #   ADMIN_PASSWORD=...             the admin's password, at the first start only
 #   TRUST_PROXY=1                  the console is behind one reverse proxy
 #
@@ -66,8 +67,10 @@ services:
     container_name: neodesk
     hostname: neodesk
     ports:
-      - "${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-3375}:3375"  # Web console
-      - "${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_HTTPS_PORT:-5443}:5443"  # Web console with HTTPS_ENABLED=true
+      # On every address of the host, IPv4 and IPv6; NEODESK_CONSOLE_BIND
+      # names one (127.0.0.1 behind a reverse proxy, [::1] for IPv6)
+      - "${NEODESK_CONSOLE_BIND:+${NEODESK_CONSOLE_BIND}:}${NEODESK_CONSOLE_PORT:-3375}:3375"  # Web console
+      - "${NEODESK_CONSOLE_BIND:+${NEODESK_CONSOLE_BIND}:}${NEODESK_CONSOLE_HTTPS_PORT:-5443}:5443"  # Web console with HTTPS_ENABLED=true
       - "21115:21115"           # NAT type test
       - "21116:21116/tcp"       # Signal TCP
       - "21116:21116/udp"       # Signal UDP
@@ -164,16 +167,23 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    # SETUID and SETGID: the entrypoint starts the server as neodesk;
+    # CHOWN and FOWNER: it gives the volumes to neodesk; KILL: tini, as
+    # root, passes docker stop's SIGTERM on to the server running as
+    # neodesk, which then shuts down cleanly
     cap_add:
       - SETUID
       - SETGID
       - CHOWN
       - FOWNER
+      - KILL
+    # Checked every 10 seconds, so the container shows healthy soon after
+    # the server is ready; unhealthy after a minute without an answer
     healthcheck:
       test: ["CMD", "/usr/local/bin/neodesk-healthcheck"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 6
       start_period: 45s
 
   # guacd for RDP and VNC targets in the browser (the profile "guacd": put
