@@ -6,7 +6,9 @@
   (lib/settings/sources.ts): a value saved here wins over the SMTP_
   variables of the environment, so nothing is locked. Beside the form:
   whether mail works now with Test connection (an action that checks the
-  saved server), and what sends email.
+  saved server), and what sends email. Below it (MailsPanel): the sender
+  name and footer of the mails, a preview of each mail with "Send me this
+  mail", and the addresses that turned a notification off.
 -->
 <script lang="ts">
 	import { ApiError } from '#lib/api/client.ts';
@@ -34,6 +36,7 @@
 	import { emailProblem, smtpProblems, splitEmails, type SmtpValues } from '../email.ts';
 	import { sourceInfo, sourceRow } from '../sources.ts';
 	import '../side-rows.css';
+	import MailsPanel from './MailsPanel.svelte';
 
 	const allowed = can('server.config');
 
@@ -415,6 +418,7 @@
 					{/snippet}
 				</SettingRow>
 			</SettingsGroup>
+			<MailsPanel />
 		{/if}
 	</SettingsBody>
 {/if}
