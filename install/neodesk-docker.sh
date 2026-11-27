@@ -937,7 +937,11 @@ firewall_record() { printf '%s\n' "$NEODESK_DIR/.firewall"; }
 # "ufw status" prints "Status: active" (in English with LC_ALL=C); rules
 # added to an inactive ufw would go live with the next "ufw enable".
 active_firewall() {
-    if command -v ufw >/dev/null 2>&1 && LC_ALL=C ufw status 2>/dev/null | grep -q '^Status: active'; then
+    # The status is read whole first: grep -q on the pipe could end ufw
+    # early (SIGPIPE), which pipefail reports as a failure
+    local status=""
+    if command -v ufw >/dev/null 2>&1; then status=$(LC_ALL=C ufw status 2>/dev/null || true); fi
+    if printf '%s\n' "$status" | grep -q '^Status: active'; then
         printf 'ufw\n'
     elif command -v firewall-cmd >/dev/null 2>&1 && [ "$(firewall-cmd --state 2>/dev/null)" = running ]; then
         printf 'firewalld\n'
