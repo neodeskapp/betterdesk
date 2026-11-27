@@ -217,6 +217,34 @@ function errorField(err: unknown, key: 'message' | 'stack'): unknown {
 	return typeof err === 'object' && err !== null ? Reflect.get(err, key) : undefined;
 }
 
+/** A JSON object's fields, or none */
+function jsonObject(text: string | null | undefined): Record<string, unknown> {
+	if (!text) return {};
+	try {
+		const v: unknown = JSON.parse(text);
+		return v && typeof v === 'object' && !Array.isArray(v) ? { ...v } : {};
+	} catch {
+		return {};
+	}
+}
+
+/**
+ * The platform additions after a later peer info of changed displays. That
+ * one carries the virtual displays only (no is_installed, no idd_impl when the
+ * device's service is down), so its fields go over the known ones and a
+ * virtual display count it leaves out is gone, as in the desktop client.
+ */
+export function mergePlatformAdditions(
+	known: string | null | undefined,
+	update: string | null | undefined
+): string {
+	const merged = jsonObject(known);
+	delete merged.rustdesk_virtual_displays;
+	delete merged.amyuni_virtual_displays;
+	Object.assign(merged, jsonObject(update));
+	return JSON.stringify(merged);
+}
+
 export class RDClient {
 	deviceId: string;
 	opts: RDClientOptions;
@@ -1482,7 +1510,7 @@ export class RDClient {
 			// service; current_display is 0 there): the rest stays as it was, as the
 			// desktop client keeps it
 			known.displays = info.displays ?? [];
-			if (info.platformAdditions) known.platformAdditions = info.platformAdditions;
+			known.platformAdditions = mergePlatformAdditions(known.platformAdditions, info.platformAdditions);
 			this._processPeerInfo(known, true);
 			this._emit('peer_info', known);
 			return;
