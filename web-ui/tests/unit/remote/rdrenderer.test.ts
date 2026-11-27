@@ -84,3 +84,49 @@ describe('a display in a window of its own', () => {
 		expect(canvas.width).toBe(800);
 	});
 });
+
+describe('the picture through layout changes', () => {
+	/** A canvas in a box of the given size, with a 2D context that records what it draws */
+	function screenIn(box: { width: number; height: number }) {
+		const drawn: unknown[] = [];
+		const ctx = { fillRect() {}, drawImage: (src: unknown) => drawn.push(src), fillStyle: '' };
+		const options: unknown[] = [];
+		vi.mocked(HTMLCanvasElement.prototype.getContext).mockImplementation(function (
+			this: HTMLCanvasElement,
+			_kind: string,
+			opts?: unknown
+		) {
+			options.push(opts);
+			// The cursor canvas gets no context; the screen's records
+			return options.length === 1 ? ctx : null;
+		} as never);
+		const container = document.createElement('div');
+		container.getBoundingClientRect = () =>
+			({ ...box, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0 }) as DOMRect;
+		const canvas = document.createElement('canvas');
+		container.append(canvas);
+		const r = new RDRenderer(canvas);
+		return { r, canvas, drawn, options };
+	}
+
+	test('a resize draws the last picture again before it returns, so the cleared canvas never shows', () => {
+		const box = { width: 800, height: 450 };
+		const { r, canvas, drawn } = screenIn(box);
+		r.resize();
+		r.startRenderLoop();
+		const frame = decoded();
+		r.pushFrame(frame as unknown as VideoFrame);
+		r._renderTick();
+		expect(drawn).toEqual([frame]);
+		box.width = 1100;
+		r.resize();
+		expect(canvas.width).toBe(1100);
+		expect(drawn).toEqual([frame, frame]);
+		r.stopRenderLoop();
+	});
+
+	test('the screen is drawn through the page compositor, not desynchronized', () => {
+		const { options } = screenIn({ width: 800, height: 450 });
+		expect(options[0]).not.toMatchObject({ desynchronized: true });
+	});
+});

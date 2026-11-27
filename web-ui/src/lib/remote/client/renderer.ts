@@ -7,7 +7,13 @@
  *
  * The last picture stays until the next one comes, so moving the cursor,
  * resizing or panning a picture shown at its own size redraws at once
- * instead of waiting for the device's next frame.
+ * instead of waiting for the device's next frame. A resize draws it again
+ * before it returns: resizing clears the canvas, and a cleared canvas
+ * shown for one frame is a black flash.
+ *
+ * The canvas is not desynchronized: Chrome draws such a canvas past the
+ * page's compositor and blanks it for a moment whenever the page around it
+ * changes (a menu, tooltip or focus ring over it, the layout moving).
  */
 import { viewTransform } from './display-layout.ts';
 import type { ICursorData, ICursorPosition } from './generated/protos.ts';
@@ -102,7 +108,7 @@ export class RDRenderer {
 	constructor(canvas: HTMLCanvasElement, opts: RDRendererOptions = {}) {
 		this.canvas = canvas;
 		this.win = opts.win ?? canvas.ownerDocument?.defaultView ?? window;
-		this.ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+		this.ctx = canvas.getContext('2d', { alpha: false });
 		this.cursorCanvas = canvas.ownerDocument.createElement('canvas');
 		this.cursorCtx = this.cursorCanvas.getContext('2d');
 
@@ -210,7 +216,9 @@ export class RDRenderer {
 		this.canvas.style.height = cssHeight;
 
 		this._updateTransform();
-		this._dirty = true;
+		// Resizing cleared the canvas: the kept picture goes back before the browser shows it
+		if (this._shownFrame) this._renderFrame(this._shownFrame);
+		else this._dirty = true;
 
 		// Request a keyframe after resize to avoid blurry/corrupted frames
 		if (this.onResizeRefresh) {
