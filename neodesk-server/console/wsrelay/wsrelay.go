@@ -196,7 +196,7 @@ func New(opts Options) *Service {
 	relayPort := orPort(opts.RelayPort, 21117)
 	if isLoopbackHost(relayHost) {
 		if other := nonLoopbackIPv4(opts.Interfaces()); other != "" {
-			logf("  WebSocket proxy: hbbr host changed from '%s' to '%s' (avoiding loopback command mode)", relayHost, other)
+			logf("  DEBUG: WebSocket proxy: hbbr host changed from '%s' to '%s' (avoiding loopback command mode)", relayHost, other)
 			relayHost = other
 		} else {
 			logf("  WebSocket proxy: WARNING - could not find non-loopback IP for hbbr, relay connections may fail!")

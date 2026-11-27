@@ -118,7 +118,7 @@ func detectLevel(msg string) string {
 		return "error"
 	case strings.HasPrefix(upper, "WARN"), strings.Contains(upper, " WARN:"), strings.Contains(upper, " WARN "):
 		return "warn"
-	case strings.HasPrefix(upper, "DEBUG"):
+	case strings.HasPrefix(upper, "DEBUG"), strings.Contains(upper, " DEBUG:"):
 		return "debug"
 	default:
 		return "info"

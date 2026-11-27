@@ -50,6 +50,8 @@ func TestDetectLevel(t *testing.T) {
 		{"ERROR: connection refused", "error"},
 		{"FATAL: cannot bind port", "fatal"},
 		{"DEBUG: parsing packet", "debug"},
+		{"[relay] DEBUG: WS origin allowlist not configured", "debug"},
+		{"[console]   DEBUG: WebSocket proxy: hbbr host changed", "debug"},
 		{"Something with WARN in it", "warn"},
 	}
 

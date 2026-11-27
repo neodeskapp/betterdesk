@@ -683,14 +683,13 @@ func captureLog(t *testing.T, fn func()) string {
 func TestMigrateReportsWhatItDid(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		first := captureLog(t, func() { mustMigrate(t, db) })
-		for _, want := range []string{
-			"[DB] Migration: created 56 tables: peer, ",
-			"[DB] Migration: added users.first_name\n",
-			"[DB] Migration: added the default row to user_groups\n",
-		} {
-			if !strings.Contains(first, want) {
-				t.Errorf("log of the first Migrate lacks %q:\n%s", want, first)
-			}
+		if want := "[DB] Migration: created 56 tables: peer, "; !strings.Contains(first, want) {
+			t.Errorf("log of the first Migrate lacks %q:\n%s", want, first)
+		}
+		// Setting up a new database logs the tables, not each column and
+		// row it added to them (DOCKER-QUICK-13)
+		if strings.Contains(first, "Migration: added") {
+			t.Errorf("log of the first Migrate names added columns or rows:\n%s", first)
 		}
 		if again := captureLog(t, func() { mustMigrate(t, db) }); again != "" {
 			t.Errorf("a Migrate with nothing to do logged:\n%s", again)

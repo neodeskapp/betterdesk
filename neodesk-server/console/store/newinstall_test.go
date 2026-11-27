@@ -1,6 +1,9 @@
 package store_test
 
 import (
+	"bytes"
+	"log"
+	"strings"
 	"testing"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
@@ -33,4 +36,27 @@ func TestNewInstallByOrigin(t *testing.T) {
 			t.Errorf("%s: NewInstall = %v, want %v", origin, db.NewInstall(), want)
 		}
 	})
+}
+
+// DOCKER-QUICK-13: setting the console up on a new database logs the
+// tables it made, not every column and row it added to the server's
+// tables a moment before; on a database the Node console set up, each
+// added column is still logged.
+func TestNewInstallLogsNoAddedColumns(t *testing.T) {
+	for _, origin := range []storetest.Origin{storetest.GoServerFirst, storetest.NodeFirst} {
+		t.Run(origin.String(), func(t *testing.T) {
+			var buf bytes.Buffer
+			prev := log.Writer()
+			log.SetOutput(&buf)
+			defer log.SetOutput(prev)
+			storetest.Prepare(t, storetest.SQLite(t), origin)
+			added := strings.Count(buf.String(), "Migration: added")
+			if origin == storetest.GoServerFirst && added != 0 {
+				t.Errorf("a new install logged %d added columns or rows:\n%s", added, buf.String())
+			}
+			if origin == storetest.NodeFirst && added == 0 {
+				t.Errorf("an existing install logged no added column:\n%s", buf.String())
+			}
+		})
+	}
 }

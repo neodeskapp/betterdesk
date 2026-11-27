@@ -68,16 +68,46 @@ type persistedTimeSyncConfig struct {
 // WebSocket ports take while no allow list names them: the signal and
 // relay ports refuse every page that is not on localhost, the API's event
 // stream every page that is not on its own host. Clients without an
-// Origin header, such as RustDesk, are not affected.
+// Origin header, such as RustDesk, are not affected. That is the safe
+// default, so the notes are debug lines.
 func wsOriginNotices(cfg *config.Config) []string {
 	var notices []string
 	if cfg.AllowedWSOrigins == "" {
-		notices = append(notices, "[SECURITY] WS_ALLOWED_ORIGINS is not set: the signal and relay WebSocket ports take browser pages from localhost only")
+		notices = append(notices, "DEBUG: WS_ALLOWED_ORIGINS is not set: the signal and relay WebSocket ports take browser pages from localhost only")
 	}
 	if cfg.APIAllowedWSOrigins == "" {
-		notices = append(notices, "[SECURITY] API_WS_ALLOWED_ORIGINS is not set: the API event stream takes browser pages from its own host only")
+		notices = append(notices, "DEBUG: API_WS_ALLOWED_ORIGINS is not set: the API event stream takes browser pages from its own host only")
 	}
 	return notices
+}
+
+// migrateNoteAfter is how long the database's migration runs before the
+// start says what it is doing: setting the tables up on the first start
+// takes 10 to 30 seconds, an ordinary start well under a second.
+const migrateNoteAfter = 3 * time.Second
+
+// migrateSaying runs migrate and, once it has taken longer than after,
+// logs that the database's tables are being set up, and how long it took
+// when done.
+func migrateSaying(migrate func() error, after time.Duration) error {
+	start := time.Now()
+	done := make(chan struct{})
+	noted := make(chan bool, 1)
+	go func() {
+		select {
+		case <-done:
+			noted <- false
+		case <-time.After(after):
+			log.Printf("Database: setting up its tables; the first start takes up to a minute...")
+			noted <- true
+		}
+	}()
+	err := migrate()
+	close(done)
+	if <-noted && err == nil {
+		log.Printf("Database: tables ready after %s", time.Since(start).Round(time.Second))
+	}
+	return err
 }
 
 // applySavedCDAPEnabled turns the CDAP gateway on or off as the IoT
@@ -312,7 +342,7 @@ func main() {
 	}
 	defer database.Close()
 
-	if err := database.Migrate(); err != nil {
+	if err := migrateSaying(database.Migrate, migrateNoteAfter); err != nil {
 		logging.Fatalf("Failed to run migrations: %v", err)
 	}
 	// Defensive: ensure client_sessions exists even if an older binary never created it.
@@ -1222,7 +1252,7 @@ func resolveAuthDBPath(explicit, dbPath string) string {
 func attachPanelTrust(apiSrv *api.Server) {
 	secret := strings.TrimSpace(os.Getenv(api.PanelTrustSecretEnv))
 	if secret == "" {
-		log.Printf("[panel-trust] disabled (no %s) — panel requests use API key auth only", api.PanelTrustSecretEnv)
+		log.Printf("[panel-trust] DEBUG: disabled (no %s): panel requests use API key auth only", api.PanelTrustSecretEnv)
 		return
 	}
 	if len(secret) < 32 {
@@ -1259,7 +1289,10 @@ func attachPanelSync(apiSrv *api.Server, billingSvc *billing.Service, database d
 	if billingSvc != nil {
 		billingSvc.SetPanelSyncStore(consoleAuth)
 	}
-	log.Printf("RustDesk panel sync: legacy auth.db at %s", authDBPath)
+	// panelSyncPath has said so when the sync reads the main file
+	if authDBPath != primaryDBPath {
+		log.Printf("RustDesk panel sync: legacy auth.db at %s", authDBPath)
+	}
 	return func() { _ = consoleAuth.Close() }
 }
 
