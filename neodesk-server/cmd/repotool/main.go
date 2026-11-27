@@ -35,7 +35,7 @@ var commands map[string]command
 func init() {
 	commands = map[string]command{
 		"check-provenance": {
-			about: "check the clean-room provenance documents",
+			about: "check the clean-room policy in the third-party notices",
 			run:   checkProvenance,
 		},
 		"check-pairing-i18n": {

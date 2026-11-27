@@ -22,10 +22,6 @@ import (
 // regular expressions (Go's \s is ASCII only).
 const jsSpace = `[\t\n\v\f\r \x{00a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}\x{feff}]`
 
-// jsDot is what . matches in a JavaScript regular expression without the
-// s flag: anything but a line terminator.
-const jsDot = `[^\n\r\x{2028}\x{2029}]`
-
 func isJSSpace(r rune) bool {
 	switch r {
 	case '\t', '\n', '\v', '\f', '\r', ' ', 0x00a0, 0x1680, 0x2028, 0x2029, 0x202f, 0x205f, 0x3000, 0xfeff:
