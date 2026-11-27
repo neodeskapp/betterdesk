@@ -142,6 +142,7 @@ func (s *Server) onboardRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /api/onboard/devices/{id}", s.inProcessOnly(s.handleOnboardRemoveDevice))
 	mux.HandleFunc("GET /api/onboard/devices/{id}/key-request", s.inProcessOnly(s.handleDeviceKeyRequest))
 	mux.HandleFunc("POST /api/onboard/devices/{id}/key-request/approve", s.inProcessOnly(s.handleApproveDeviceKey))
+	mux.HandleFunc("POST /api/onboard/admissions", s.inProcessOnly(s.handleReceiverAdmissionCreate))
 	s.onboardSessionRoutes(mux)
 	s.onboardFeedbackRoutes(mux)
 }

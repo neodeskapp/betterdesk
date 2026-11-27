@@ -43,6 +43,8 @@ type world struct {
 	front *httptest.Server
 	// blocklist is the API server's
 	blocklist *security.Blocklist
+	// api is the API server's listener, where devices register
+	api http.Handler
 }
 
 func newWorld(t *testing.T, sdb *store.DB) *world {
@@ -111,7 +113,7 @@ func newWorld(t *testing.T, sdb *store.DB) *world {
 	s.Router().Get("/__test/token", func(rw http.ResponseWriter, r *http.Request) {
 		kit.JSON(rw, r, http.StatusOK, map[string]string{"token": kit.CSRFToken(r)})
 	})
-	w := &world{t: t, db: sdb, gdb: gdb, deps: d, front: httptest.NewServer(s), blocklist: bl}
+	w := &world{t: t, db: sdb, gdb: gdb, deps: d, front: httptest.NewServer(s), blocklist: bl, api: apiSrv.ListenerHandler()}
 	t.Cleanup(w.front.Close)
 	return w
 }

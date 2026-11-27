@@ -149,6 +149,8 @@ func RegisterWith(d *kit.Deps, opts Options) {
 	r.Get("/api/support/feedback", h.listFeedback, d.RequireAuth, connect)
 	r.Get("/api/support/feedback/form", h.getFeedbackForm, d.RequireAuth, config)
 	r.Put("/api/support/feedback/form", h.saveFeedbackForm, d.RequireAuth, config)
+	r.Get("/api/support/receiver-offer", h.getReceiverOffer, d.RequireAuth, config)
+	r.Put("/api/support/receiver-offer", h.saveReceiverOffer, d.RequireAuth, config)
 
 	r.Get("/api/onboard/public/{code}", h.publicCode, h.limit)
 	r.Get("/api/onboard/public/{code}/download", h.download, h.limit)

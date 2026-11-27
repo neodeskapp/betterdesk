@@ -98,3 +98,15 @@ export async function listFeedback(helper?: number, signal?: AbortSignal): Promi
 		query: helper ? { helper: String(helper) } : undefined
 	});
 }
+
+/** "Offer to install after quick support": GET/PUT /api/support/receiver-offer (server.config) */
+const ReceiverOffer = v.object({ enabled: v.boolean() });
+
+export async function getReceiverOffer(signal?: AbortSignal): Promise<boolean> {
+	return (await api(ReceiverOffer, '/api/support/receiver-offer', { signal })).enabled;
+}
+
+export async function saveReceiverOffer(enabled: boolean): Promise<boolean> {
+	return (await api(ReceiverOffer, '/api/support/receiver-offer', { method: 'PUT', body: { enabled } }))
+		.enabled;
+}

@@ -15,7 +15,7 @@ after the end (below, "Feedback after the session").
 
 | Route | Body | What it does |
 |---|---|---|
-| `POST /api/support/redeem` | `{code}` | Spends the support code; answers the session token, the supporter's name and how to reach the server. |
+| `POST /api/support/redeem` | `{code}` | Spends the support code; answers the session token, the supporter's name, how to reach the server and whether the app may offer to stay (below, "Keeping the app after the session"). |
 | `POST /api/support/session/device` | `{device_id, uuid, hostname, platform, version}` | The device the app runs on. A refused device is `403 {"error":"device_refused","reason":...}` (docs/failure-reasons.md). |
 | `POST /api/support/session/consent` | `{allowed, grants?}` | The person's answer in the quick support window. |
 | `POST /api/support/session/password` | `{password}` | The one-time password for the supporter, kept in memory. |
@@ -252,3 +252,61 @@ later edit of the form does not change old answers, and with the
 session's device ID and computer name, the helper, the person's name and
 email from the session, when the session started and ended, and when the
 answer came.
+
+## Keeping the app after the session
+
+After a session, the app may offer the person to keep NeoDesk on the
+computer: the installed app (the receiver) with its service, which
+enrolls the computer on this server. Whether it may is the console's
+setting "Offer to install after quick support" (Settings, Quick support;
+on unless an admin turned it off). The redeem answer says so:
+
+```
+POST /api/support/redeem
+{"code":"K7Q2-M9XD"}
+
+200
+{"success":true,"session_token":"...","session":{...},"supporter":"Olga Operator",
+ "company":"NeoDesk","server":{...},"console":"https://support.example.com",
+ "receiver_offer":{"allowed":true,
+                   "admission":"3f9c0d...<48 hex digits>",
+                   "expires_at":"2026-11-28T14:05:00Z"}}
+```
+
+With the setting off, or when the console could not make an admission,
+`receiver_offer` is `{"allowed":false,"admission":null,"expires_at":null}`
+and the app offers nothing.
+
+`admission` is a one-time secret that admits one computer on this server
+without a join request, also in managed and locked enrollment mode, as a
+single-use enrollment token without a folder would. It works for 24 hours
+(`expires_at`, RFC 3339 in UTC) on the server that answered the redeem
+and on no other; its first use spends it, whether it admitted the
+computer or not. The server keeps only its SHA-256. In open mode the
+server takes the computer anyway; the app may send the admission there
+too.
+
+The installed app sends it once, with its first registration:
+
+```
+POST /api/devices/register
+{"device_id":"523456781","uuid":"...","hostname":"ANA-LAPTOP","platform":"windows",
+ "version":"1.4.7","public_key":"...","admission":"3f9c0d..."}
+
+200  {"status":"approved","device_id":"523456781","device_token":"...",...}
+403  {"status":"rejected","device_id":"523456781","error":"admission_rejected",
+      "message":"The admission of the quick support session is invalid, expired, or already used"}
+```
+
+A registration that carries an enrollment token (`token`) is admitted by
+the token, and the admission is not looked at. A refused admission is not
+queued for approval: the app tells the person the server did not take
+the computer and keeps quick support as it was.
+
+### The other fields of the registration
+
+| Field | |
+|---|---|
+| `token` | An enrollment token (Devices, Add, Device tokens; the MSI's `TOKEN`). In open, managed and locked mode a valid one admits the computer; it lands in the token's folder and organization, whose policies then apply. A wrong one is refused in managed and locked mode and changes nothing in open mode. |
+| `group` | A folder (device group) by id or by name in any case (the MSI's `GROUP`), at most 128 bytes. It counts only when a valid `token` admits the computer, and a token with a folder of its own puts the computer there instead. An unknown group is ignored. |
+| `admission` | The redeem answer's admission, above. |

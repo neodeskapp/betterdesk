@@ -457,6 +457,10 @@ type EnrollmentRequest struct {
 	// a valid enrollment token admits the device, and the token's own
 	// folder wins over it (enrollment_placement.go).
 	Group string `json:"group,omitempty"`
+	// Admission is the one-time admission of a quick support session
+	// (receiver_admission.go): it admits one device in managed and locked
+	// mode without a join request.
+	Admission string `json:"admission,omitempty"`
 	// RendezvousPK is the key the peer row binds for the signal server, set
 	// only by a deploy (device_deploy.go), never from a request body.
 	RendezvousPK []byte `json:"-"`
@@ -495,6 +499,7 @@ var enrollmentFieldCaps = []struct {
 	{"public_key", 512, func(r *EnrollmentRequest) string { return r.PublicKey }},
 	{"token", 512, func(r *EnrollmentRequest) string { return r.Token }},
 	{"group", enrollmentGroupMax, func(r *EnrollmentRequest) string { return r.Group }},
+	{"admission", 128, func(r *EnrollmentRequest) string { return r.Admission }},
 }
 
 // checkEnrollmentFields answers why an enrollment request is refused
@@ -793,6 +798,10 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
+		if admission := strings.TrimSpace(req.Admission); admission != "" {
+			s.answerAdmission(w, &req, admission, clientIP, "managed")
+			return
+		}
 		// Each support-agent installation registers without a shared bundle token.
 		// Operator approval issues a unique device_token per device.
 		if err := s.storePendingDevice(&req, clientIP); err != nil {
@@ -849,6 +858,11 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 				json.NewEncoder(w).Encode(resp)
 				return
 			}
+		}
+
+		if admission := strings.TrimSpace(req.Admission); admission != "" && strings.TrimSpace(req.Token) == "" {
+			s.answerAdmission(w, &req, admission, clientIP, "locked")
+			return
 		}
 
 		resp := EnrollmentResponse{
