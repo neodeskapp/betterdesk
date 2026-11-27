@@ -175,6 +175,46 @@ describe('data loss prevention policy sheet', () => {
 		expect(writes()).toEqual([]);
 	});
 
+	test('all devices by default; only these devices shows a list of device IDs saved as the scope', async () => {
+		const user = userEvent.setup();
+		const onsaved = vi.fn();
+		render(PolicySheet, { policy: null, onclose: () => {}, onsaved, ondeleted: () => {} });
+		expect(screen.getByRole('radio', { name: 'dataguard.scope_all' })).toBeChecked();
+		const add = screen.getByRole('button', { name: 'Add a device', hidden: true });
+		expect(add).not.toBeVisible();
+		await user.type(screen.getByLabelText('dataguard.policy_name'), 'USB');
+		await user.click(screen.getByRole('radio', { name: 'Only these devices' }));
+		expect(add).toBeVisible();
+		// An empty list is refused: "only these devices" with none would cover nothing
+		await user.click(screen.getByRole('button', { name: 'dataguard.create_policy' }));
+		expect(screen.getByText('Add a device ID, or choose All devices.')).toBeVisible();
+		expect(writes()).toEqual([]);
+		await user.click(add);
+		await user.type(screen.getByRole('textbox', { name: 'Device 1' }), '900100001');
+		await user.click(add);
+		await user.type(screen.getByRole('textbox', { name: 'Device 2' }), '900100002');
+		await user.click(screen.getByRole('button', { name: 'dataguard.create_policy' }));
+		await vi.waitFor(() => expect(onsaved).toHaveBeenCalled());
+		expect(writes()[0]?.body).toMatchObject({ scope: '900100001,900100002' });
+	});
+
+	test('a stored scope opens as its list of devices, and All devices saves none', async () => {
+		const user = userEvent.setup();
+		const onsaved = vi.fn();
+		render(PolicySheet, {
+			policy: { ...policy, scope: '900100001, 900100002' },
+			onclose: () => {},
+			onsaved,
+			ondeleted: () => {}
+		});
+		expect(screen.getByRole('radio', { name: 'Only these devices' })).toBeChecked();
+		expect(screen.getByRole('textbox', { name: 'Device 2' })).toHaveValue('900100002');
+		await user.click(screen.getByRole('radio', { name: 'dataguard.scope_all' }));
+		await user.click(screen.getByRole('button', { name: 'dataguard.save_policy' }));
+		await vi.waitFor(() => expect(onsaved).toHaveBeenCalled());
+		expect(writes()[0]?.body).toMatchObject({ scope: null });
+	});
+
 	test('saving sends the chosen action and the parsed rules', async () => {
 		const user = userEvent.setup();
 		const onsaved = vi.fn();

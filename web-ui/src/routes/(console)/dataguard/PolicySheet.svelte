@@ -1,6 +1,6 @@
 <!--
   Create or edit a data loss prevention policy: name and description, what
-  it covers (transfer type, devices, and the rules JSON under Advanced
+  it covers (transfer type, all devices or a list of device IDs, and the rules JSON under Advanced
   options, open by itself when the policy has rules or the JSON is
   refused), the action (block, log, allow) and whether devices get it.
   Editing also offers Delete; its confirm sits on top of the sheet, so
@@ -9,8 +9,17 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { createDlpPolicy, deleteDlpPolicy, updateDlpPolicy, type DlpPolicy } from '#lib/api/dataguard.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { DLP_ACTIONS, DLP_TYPES, parseRules, rulesText, typeLabel, typeOf } from '#lib/rules/dataguard.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import {
+		DLP_ACTIONS,
+		DLP_TYPES,
+		parseRules,
+		rulesText,
+		scopeList,
+		scopeText,
+		typeLabel,
+		typeOf
+	} from '#lib/rules/dataguard.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import ChoiceList from '#lib/ui/ChoiceList.svelte';
@@ -19,7 +28,10 @@
 	import FormSection from '#lib/ui/FormSection.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import Select from '#lib/ui/Select.svelte';
+	import ChoiceSegments from '#lib/ui/settings/ChoiceSegments.svelte';
+	import ListEditor from '#lib/ui/settings/ListEditor.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
+	import ShowWhen from '#lib/ui/ShowWhen.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { createForm, FormError } from '#lib/ui/form.svelte.ts';
@@ -48,6 +60,8 @@
 		};
 	});
 	let advancedOpen = $state(untrack(() => !!initial.rules));
+	/** "Only these devices": the policy covers the listed device IDs; else every device */
+	let someDevices = $state(untrack(() => scopeList(initial.scope).length > 0));
 
 	const form = createForm({
 		initial,
@@ -56,7 +70,11 @@
 			if (rules === null) advancedOpen = true;
 			return {
 				name: v.name.trim() ? undefined : t('dataguard.name_required'),
-				rules: rules === null ? t('dataguard.invalid_rules') : undefined
+				rules: rules === null ? t('dataguard.invalid_rules') : undefined,
+				scope:
+					someDevices && !scopeList(v.scope).length
+						? tf('dataguard.devices_required', 'Add a device ID, or choose All devices.')
+						: undefined
 			};
 		},
 		submit: async (v) => {
@@ -65,7 +83,7 @@
 				description: v.description.trim(),
 				policy_type: v.policy_type,
 				action: v.action,
-				scope: v.scope.trim() || null,
+				scope: (someDevices && scopeText(scopeList(v.scope))) || null,
 				rules: parseRules(v.rules) ?? [],
 				enabled: v.enabled
 			};
@@ -121,6 +139,10 @@
 		}))
 	);
 	const statusText = $derived(deleteError || form.status.message);
+	const scopeOptions = $derived([
+		{ value: 'all', label: t('dataguard.scope_all') },
+		{ value: 'some', label: tf('dataguard.scope_some', 'Only these devices') }
+	]);
 </script>
 
 <Sheet
@@ -147,11 +169,44 @@
 						bind:value={form.values.policy_type}
 					/>{/snippet}
 			</Field>
-			<Field label={t('dataguard.scope')} hint={t('dataguard.scope_help')}>
-				{#snippet children(f)}
-					<Input {...f} class="mono" autocomplete="off" spellcheck={false} bind:value={form.values.scope} />
-				{/snippet}
-			</Field>
+			<div class="scope">
+				<p class="scope-label" id="{uid}-scope-label">{t('dataguard.scope')}</p>
+				<ChoiceSegments
+					id="{uid}-scope"
+					labelledby="{uid}-scope-label"
+					options={scopeOptions}
+					value={someDevices ? 'some' : 'all'}
+					onchange={(v) => (someDevices = v === 'some')}
+				/>
+			</div>
+			<ShowWhen id="{uid}-devices-block" when={someDevices}>
+				<div class="scope">
+					<p class="scope-label" id="{uid}-devices-label">{tf('dataguard.devices', 'Devices')}</p>
+					<p class="scope-hint" id="{uid}-devices-hint">
+						{tf(
+							'dataguard.devices_hint',
+							'One device ID per row, as the device shows it in its NeoDesk app.'
+						)}
+					</p>
+					<ListEditor
+						id="{uid}-devices"
+						items={scopeList(form.values.scope)}
+						onchange={(list) => (form.values.scope = scopeText(list))}
+						itemLabel={(n) => tf('dataguard.device_n', 'Device {n}', { n })}
+						addLabel={tf('dataguard.add_device', 'Add a device')}
+						describedby={[
+							`${uid}-devices-label`,
+							`${uid}-devices-hint`,
+							form.errors.scope ? `${uid}-devices-error` : ''
+						]
+							.filter(Boolean)
+							.join(' ')}
+					/>
+					{#if form.errors.scope}
+						<p class="scope-error" id="{uid}-devices-error">{form.errors.scope}</p>
+					{/if}
+				</div>
+			</ShowWhen>
 			<!-- Matching rules are rarely needed: closed unless the policy has some -->
 			<Disclosure title={t('dataguard.advanced')} level={4} bind:open={advancedOpen}>
 				<Field label={t('dataguard.rules')} hint={t('dataguard.rules_hint')} error={form.errors.rules}>
@@ -201,6 +256,26 @@
 	/* Addresses, IDs, lists and JSON in the monospace font */
 	form :global(.form-input.mono) {
 		font-family: var(--mono);
+	}
+	.scope {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		margin: 0;
+	}
+	.scope-label {
+		margin: 0;
+		font-weight: 600;
+	}
+	.scope-hint {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+	}
+	.scope-error {
+		margin: 0;
+		color: var(--danger);
+		font-size: var(--text-sm);
 	}
 	.enabled {
 		margin-top: var(--space-5);
