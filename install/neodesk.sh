@@ -6630,14 +6630,17 @@ do_build_legacy_rust() {
 #===============================================================================
 
 # firewall_ports: the ports the installers open, one PORT/PROTO a line:
-# RustDesk's (NAT test, signal TCP and UDP, relay), the client API port,
+# the API port a stock RustDesk client without an API server setting calls
+# (the signal port minus 2, 21114: callers from other hosts get only the
+# client API there), RustDesk's (NAT test, signal TCP and UDP, relay), the
+# client API port,
 # the CDAP gateway (21122) while CDAP is on, and the console's ports
 # unless TLS ends at a reverse proxy (TRUST_PROXY).
 firewall_ports() {
     local signal relay value port
     signal=$(signal_port)
     relay=$(relay_port)
-    printf '%s\n' "$((signal - 1))/tcp" "$signal/tcp" "$signal/udp" "$relay/tcp"
+    printf '%s\n' "$((signal - 2))/tcp" "$((signal - 1))/tcp" "$signal/tcp" "$signal/udp" "$relay/tcp"
     echo "$(read_effective_console_setting API_PORT "${CLIENT_API_PORT:-21121}")/tcp"
     value=$(read_effective_console_setting CDAP_ENABLED Y | tr '[:upper:]' '[:lower:]')
     case "$value" in n|no|0|false|off) ;; *) echo "21122/tcp" ;; esac
