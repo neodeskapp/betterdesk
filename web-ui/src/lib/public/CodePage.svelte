@@ -258,7 +258,9 @@
 					{#if data.deep_link && !macOpen}
 						<div class="open-app">
 							<Button href={data.deep_link} class="open-neodesk"
-								>{t(data.kind === 'join' ? 'onboard.public.open_app' : 'onboard.public.open_support_app')}</Button
+								>{t(
+									data.kind === 'join' ? 'onboard.public.open_app' : 'onboard.public.open_support_app'
+								)}</Button
 							>
 						</div>
 					{/if}
