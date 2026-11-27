@@ -35,10 +35,20 @@ var deployPeerIDRegexp = regexp.MustCompile(`^[A-Za-z0-9_-]{6,16}$`)
 // deployMaxUUID is the longest uuid RegisterPk takes, in bytes.
 const deployMaxUUID = 128
 
-// deployMu runs one deploy at a time from the identity checks to the peer
-// row, so two machines deploying one id at once can't both pass the checks
-// and the second overwrite the first one's key.
-var deployMu sync.Mutex
+// enrollmentDecisionMu runs deploys, approvals and rejections one at a
+// time. A deploy holds it from its identity checks to the peer row, so two
+// machines deploying one id at once can't both pass the checks and the
+// second overwrite the first one's key, and an admin's Reject can't land
+// between the checks and the write.
+var enrollmentDecisionMu sync.Mutex
+
+// deployTokenPeerPrefix marks the binding of a token a deploy used:
+// peer_id "deploy:<id>". No device has such an id, so the token is never
+// taken as that device's credential (device self routes, CDAP, token
+// reissue), only for deploying the same id again.
+const deployTokenPeerPrefix = "deploy:"
+
+func deployTokenPeer(id string) string { return deployTokenPeerPrefix + id }
 
 // deployRequest is the body `rustdesk --deploy --token <token>` posts: the
 // id to deploy (the client's own, or the one given with --id), and the
@@ -123,32 +133,83 @@ func (s *Server) handleDeviceDeploy(w http.ResponseWriter, r *http.Request) {
 	pk, pkErr := base64.StdEncoding.DecodeString(strings.TrimSpace(req.PK))
 	if !deployPeerIDRegexp.MatchString(id) || uuidErr != nil || len(uuidRaw) == 0 || len(uuidRaw) > deployMaxUUID ||
 		pkErr != nil || len(pk) != 32 {
+		s.auditDeployRefusal(clientIP, id, "invalid_input", tok)
 		writeDeployResult(w, http.StatusBadRequest, deployInvalidInput)
 		return
 	}
 
-	if tok.PeerID != "" && tok.PeerID != id {
+	// A token an admin bound to this id in the console is that device's
+	// already; any other binding is to another device.
+	if tok.PeerID != "" && tok.PeerID != id && tok.PeerID != deployTokenPeer(id) {
 		s.auditDeployRefusal(clientIP, id, "deploy_token_bound_elsewhere", tok)
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "This device token belongs to another device"})
 		return
 	}
 
-	deployMu.Lock()
-	defer deployMu.Unlock()
+	enrollmentDecisionMu.Lock()
+	defer enrollmentDecisionMu.Unlock()
 
 	// An admin's decision about the id stands over a token, as at
-	// registration.
-	if banned, _ := s.db.IsPeerBanned(id); banned {
+	// registration. A lookup that fails stops the deploy.
+	internalError := func(what string, err error) {
+		log.Printf("[API] deploy: %s %s: %v", what, id, err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
+	}
+	banned, err := s.db.IsPeerBanned(id)
+	if err != nil {
+		internalError("ban check of", err)
+		return
+	}
+	if banned {
+		s.auditDeployRefusal(clientIP, id, "banned", tok)
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Device is banned"})
 		return
 	}
-	if removed, _ := s.db.IsPeerSoftDeleted(id); removed {
+	removed, err := s.db.IsPeerSoftDeleted(id)
+	if err != nil {
+		internalError("removal check of", err)
+		return
+	}
+	if removed {
+		s.auditDeployRefusal(clientIP, id, "soft_deleted", tok)
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Device has been removed"})
 		return
 	}
-	if rejected, _ := s.db.GetConfig(rejectedDevicePrefix + id); rejected != "" {
+	rejected, err := s.db.GetConfig(rejectedDevicePrefix + id)
+	if err != nil {
+		internalError("rejection check of", err)
+		return
+	}
+	if rejected != "" {
+		s.auditDeployRefusal(clientIP, id, "rejected", tok)
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Device enrollment was rejected"})
 		return
+	}
+	// An id renamed in the console belongs to the device under its new id
+	// while that one exists.
+	renamed, err := s.db.IsRenamedPeerID(id)
+	if err != nil {
+		internalError("rename check of", err)
+		return
+	}
+	if renamed {
+		newID, err := s.db.GetLatestRenameTarget(id)
+		if err != nil {
+			internalError("rename target of", err)
+			return
+		}
+		var successor *db.Peer
+		if newID != "" {
+			if successor, err = s.db.GetPeer(newID); err != nil {
+				internalError("rename successor of", err)
+				return
+			}
+		}
+		if newID == "" || successor != nil {
+			s.auditDeployRefusal(clientIP, id, "renamed", tok)
+			writeDeployResult(w, http.StatusConflict, deployIDTaken)
+			return
+		}
 	}
 
 	existing, err := s.db.GetPeer(id)
@@ -165,6 +226,7 @@ func (s *Server) handleDeviceDeploy(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if existing.Disabled {
+			s.auditDeployRefusal(clientIP, id, "disabled", tok)
 			writeJSON(w, http.StatusForbidden, map[string]string{"error": "Device is disabled"})
 			return
 		}
@@ -175,7 +237,12 @@ func (s *Server) handleDeviceDeploy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pending pendingDeployEntry
-	if raw, _ := s.db.GetConfig(pendingDevicePrefix + id); raw != "" {
+	raw, err := s.db.GetConfig(pendingDevicePrefix + id)
+	if err != nil {
+		internalError("waiting request of", err)
+		return
+	}
+	if raw != "" {
 		_ = json.Unmarshal([]byte(raw), &pending)
 		for _, stored := range []string{pending.RegisterUUID, pending.UUID} {
 			if stored != "" && !deployUUIDMatches(stored, uuidRaw) {
@@ -187,7 +254,7 @@ func (s *Server) handleDeviceDeploy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tok.PeerID == "" {
-		if err := s.db.BindTokenToPeer(tok.TokenHash, id); err != nil {
+		if err := s.db.BindTokenToPeer(tok.TokenHash, deployTokenPeer(id)); err != nil {
 			log.Printf("[API] deploy: bind token %d to %s: %v", tok.ID, id, err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
 			return
@@ -195,7 +262,7 @@ func (s *Server) handleDeviceDeploy(w http.ResponseWriter, r *http.Request) {
 		// Only a new token binds. Of two deploys with one new token at
 		// once, only the one whose id the token now names goes on.
 		bound, err := s.db.GetDeviceTokenByHash(tok.TokenHash)
-		if err != nil || bound == nil || bound.PeerID != id {
+		if err != nil || bound == nil || bound.PeerID != deployTokenPeer(id) {
 			s.auditDeployRefusal(clientIP, id, "deploy_token_bound_elsewhere", tok)
 			writeJSON(w, http.StatusForbidden, map[string]string{"error": "This device token belongs to another device"})
 			return

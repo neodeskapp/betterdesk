@@ -1267,6 +1267,8 @@ func (s *Server) listEnrollmentHistory(statusFilter string) []enrollmentDecision
 // handleApproveDevice approves a pending enrollment request.
 // POST /api/enrollment/approve/{id}
 func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
+	enrollmentDecisionMu.Lock()
+	defer enrollmentDecisionMu.Unlock()
 	deviceID := r.PathValue("id")
 	if deviceID == "" {
 		http.Error(w, "Device ID required", http.StatusBadRequest)
@@ -1399,6 +1401,8 @@ func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
 // handleRejectDevice rejects a pending enrollment request.
 // POST /api/enrollment/reject/{id}
 func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
+	enrollmentDecisionMu.Lock()
+	defer enrollmentDecisionMu.Unlock()
 	deviceID := r.PathValue("id")
 	if deviceID == "" {
 		http.Error(w, "Device ID required", http.StatusBadRequest)

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -132,8 +133,8 @@ func TestDeployApprovesAWaitingDeviceAndBindsItsKey(t *testing.T) {
 				t.Fatalf("the waiting request stayed: %s", raw)
 			}
 			tok, _ := srv.db.GetDeviceTokenByHash(hashToken(token))
-			if tok.PeerID != "123456789" || tok.Status != db.TokenStatusActive || tok.UseCount != 1 {
-				t.Fatalf("token peer %q status %q uses %d, want bound, active, 1", tok.PeerID, tok.Status, tok.UseCount)
+			if tok.PeerID != "deploy:123456789" || tok.Status != db.TokenStatusActive || tok.UseCount != 1 {
+				t.Fatalf("token peer %q status %q uses %d, want deploy:123456789, active, 1", tok.PeerID, tok.Status, tok.UseCount)
 			}
 			events := logger.RecentByAction("device_enrolled", 5)
 			if len(events) != 1 || events[0].Target != "123456789" || events[0].Details["method"] != "deploy" || events[0].Details["token_name"] != "rollout" {
@@ -268,12 +269,13 @@ func TestDeployRefusesTokensThatDontWork(t *testing.T) {
 	}
 }
 
-// Removed, banned and rejected ids stay out.
+// Removed, banned, rejected and disabled ids stay out, and the audit log
+// says why.
 func TestDeployKeepsTheAdminsDecisions(t *testing.T) {
-	srv, _ := deployFixture(t, config.EnrollmentModeManaged)
+	srv, logger := deployFixture(t, config.EnrollmentModeManaged)
 	m := newDeployMachine(11)
-	for _, id := range []string{"REMOVED01", "BANNED001"} {
-		if err := srv.db.UpsertPeer(&db.Peer{ID: id, UUID: hex.EncodeToString(m.uuid), PK: m.pk, Status: "OFFLINE"}); err != nil {
+	for _, id := range []string{"REMOVED01", "BANNED001", "DISABLED1"} {
+		if err := srv.db.UpsertPeer(&db.Peer{ID: id, UUID: hex.EncodeToString(m.uuid), PK: m.pk, Status: "OFFLINE", Disabled: id == "DISABLED1"}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -286,14 +288,174 @@ func TestDeployKeepsTheAdminsDecisions(t *testing.T) {
 	if err := srv.db.SetConfig(rejectedDevicePrefix+"REJECTED1", `{"device_id":"REJECTED1"}`); err != nil {
 		t.Fatal(err)
 	}
-	for _, id := range []string{"REMOVED01", "BANNED001", "REJECTED1"} {
+	reasons := map[string]string{"REMOVED01": "soft_deleted", "BANNED001": "banned", "REJECTED1": "rejected", "DISABLED1": "disabled"}
+	for _, id := range []string{"REMOVED01", "BANNED001", "REJECTED1", "DISABLED1"} {
 		token := addDeployToken(t, srv, nil)
 		if code, result := deploy(t, srv, token, id, m); code != http.StatusForbidden {
 			t.Fatalf("%s: deploy = %d %q, want 403", id, code, result)
 		}
+		got := logger.RecentByAction(audit.ActionPeerRegistrationRejected, 1)
+		if len(got) != 1 || got[0].Target != id || got[0].Details["reason"] != reasons[id] || got[0].Details["stage"] != "deploy" {
+			t.Fatalf("%s: audit = %+v, want a deploy refusal with reason %s", id, got, reasons[id])
+		}
 	}
 	if p := getPeer(t, srv, "REJECTED1"); p != nil {
 		t.Fatal("a rejected id was deployed")
+	}
+}
+
+// lookupFailDB fails the lookups a deploy makes for the admin's decisions
+// about an id.
+type lookupFailDB struct {
+	db.Database
+	fail string
+}
+
+var errLookup = errors.New("database is down")
+
+func (f *lookupFailDB) IsPeerBanned(id string) (bool, error) {
+	if f.fail == "banned" {
+		return false, errLookup
+	}
+	return f.Database.IsPeerBanned(id)
+}
+
+func (f *lookupFailDB) IsPeerSoftDeleted(id string) (bool, error) {
+	if f.fail == "removed" {
+		return false, errLookup
+	}
+	return f.Database.IsPeerSoftDeleted(id)
+}
+
+func (f *lookupFailDB) GetConfig(key string) (string, error) {
+	if (f.fail == "rejected" && strings.HasPrefix(key, rejectedDevicePrefix)) ||
+		(f.fail == "pending" && strings.HasPrefix(key, pendingDevicePrefix)) {
+		return "", errLookup
+	}
+	return f.Database.GetConfig(key)
+}
+
+func (f *lookupFailDB) IsRenamedPeerID(id string) (bool, error) {
+	if f.fail == "renamed" {
+		return false, errLookup
+	}
+	return f.Database.IsRenamedPeerID(id)
+}
+
+// A lookup of the admin's decisions that fails stops the deploy with 500:
+// a rejected id whose marker can't be read must not be approved.
+func TestDeployStopsWhenALookupFails(t *testing.T) {
+	t.Run("rejected", func(t *testing.T) {
+		srv, _ := deployFixture(t, config.EnrollmentModeManaged)
+		if err := srv.db.SetConfig(rejectedDevicePrefix+"LOOKUP001", `{"device_id":"LOOKUP001"}`); err != nil {
+			t.Fatal(err)
+		}
+		token := addDeployToken(t, srv, nil)
+		real := srv.db
+		srv.db = &lookupFailDB{Database: real, fail: "rejected"}
+		if code, result := deploy(t, srv, token, "LOOKUP001", newDeployMachine(14)); code != http.StatusInternalServerError || result == deployOK {
+			t.Fatalf("deploy = %d %q, want 500", code, result)
+		}
+		if p, _ := real.GetPeer("LOOKUP001"); p != nil {
+			t.Fatal("a rejected id whose marker could not be read was deployed")
+		}
+	})
+	for _, fail := range []string{"banned", "removed", "renamed", "pending"} {
+		t.Run(fail, func(t *testing.T) {
+			srv, _ := deployFixture(t, config.EnrollmentModeManaged)
+			token := addDeployToken(t, srv, nil)
+			real := srv.db
+			srv.db = &lookupFailDB{Database: real, fail: fail}
+			if code, result := deploy(t, srv, token, "LOOKUP002", newDeployMachine(15)); code != http.StatusInternalServerError || result == deployOK {
+				t.Fatalf("deploy = %d %q, want 500", code, result)
+			}
+			if p, _ := real.GetPeer("LOOKUP002"); p != nil {
+				t.Fatal("the deploy went on after a failed lookup")
+			}
+		})
+	}
+}
+
+// Approve and Reject in the console wait for a running deploy, so a
+// rejection can't land between a deploy's checks and its write.
+func TestEnrollmentDecisionsWaitForADeploy(t *testing.T) {
+	srv, _ := deployFixture(t, config.EnrollmentModeManaged)
+	for _, route := range []struct {
+		name string
+		call func(w http.ResponseWriter, r *http.Request)
+	}{{"reject", srv.handleRejectDevice}, {"approve", srv.handleApproveDevice}} {
+		t.Run(route.name, func(t *testing.T) {
+			if err := srv.db.SetConfig(pendingDevicePrefix+"RACE00001", `{"device_id":"RACE00001"}`); err != nil {
+				t.Fatal(err)
+			}
+			enrollmentDecisionMu.Lock()
+			done := make(chan struct{})
+			go func() {
+				defer close(done)
+				req := httptest.NewRequest(http.MethodPost, "/api/enrollment/"+route.name+"/RACE00001", strings.NewReader(`{}`))
+				req.SetPathValue("id", "RACE00001")
+				route.call(httptest.NewRecorder(), req)
+			}()
+			select {
+			case <-done:
+				enrollmentDecisionMu.Unlock()
+				t.Fatalf("%s ran while a deploy held the lock", route.name)
+			case <-time.After(200 * time.Millisecond):
+			}
+			enrollmentDecisionMu.Unlock()
+			<-done
+			_ = srv.db.DeleteConfig(rejectedDevicePrefix + "RACE00001")
+		})
+	}
+}
+
+// An id renamed in the console belongs to the device under its new id: a
+// deploy of the old id is ID_TAKEN and writes no second row.
+func TestDeployRefusesARenamedID(t *testing.T) {
+	srv, _ := deployFixture(t, config.EnrollmentModeManaged)
+	owner := newDeployMachine(16)
+	if err := srv.db.UpsertPeer(&db.Peer{ID: "OLDNAME01", UUID: hex.EncodeToString(owner.uuid), PK: owner.pk, Status: "ONLINE"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := srv.db.ChangePeerID("OLDNAME01", "NEWNAME01", "test"); err != nil {
+		t.Fatal(err)
+	}
+	token := addDeployToken(t, srv, nil)
+	if code, result := deploy(t, srv, token, "OLDNAME01", newDeployMachine(17)); code != http.StatusConflict || result != deployIDTaken {
+		t.Fatalf("deploy of the old id = %d %q, want 409 ID_TAKEN", code, result)
+	}
+	if p := getPeer(t, srv, "OLDNAME01"); p != nil {
+		t.Fatalf("the deploy wrote a row for the old id: %+v", p)
+	}
+}
+
+// A token a deploy used never works as the device's credential, even
+// without a limit of uses: not on the device self routes, not for a token
+// reissue. It still deploys the same computer again.
+func TestDeployTokenIsNoDeviceCredential(t *testing.T) {
+	srv, _ := deployFixture(t, config.EnrollmentModeManaged)
+	token := addDeployToken(t, srv, func(tok *db.DeviceToken) { tok.MaxUses = 0 })
+	m := newDeployMachine(18)
+	if code, result := deploy(t, srv, token, "CRED00001", m); code != http.StatusOK || result != deployOK {
+		t.Fatalf("deploy = %d %q, want 200 OK", code, result)
+	}
+	if srv.hasBoundActiveDeviceToken("CRED00001", token) {
+		t.Fatal("the deploy token works on the device self routes")
+	}
+	if srv.hasEnrollmentCredential("CRED00001", []string{token}, true) || srv.hasEnrollmentCredential("CRED00001", []string{token}, false) {
+		t.Fatal("the deploy token counts as the device's enrollment credential")
+	}
+	body := `{"device_id":"CRED00001","action":"setup","device_token":"` + token + `"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/devices/self/totp", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.RemoteAddr = "198.51.100.21:50000"
+	rec := httptest.NewRecorder()
+	srv.ListenerHandler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("self totp setup with the deploy token = %d %s, want 403", rec.Code, rec.Body.String())
+	}
+	if code, result := deploy(t, srv, token, "CRED00001", m); code != http.StatusOK || result != deployOK {
+		t.Fatalf("deploying the same computer again = %d %q, want 200 OK", code, result)
 	}
 }
 
@@ -310,9 +472,9 @@ func TestDeployInOpenModeIsNotEnabled(t *testing.T) {
 }
 
 // Ids the signal server refuses and keys that aren't Ed25519 keys are
-// INVALID_INPUT, and the token stays unused.
+// INVALID_INPUT, logged, and the token stays unused.
 func TestDeployRefusesInvalidInput(t *testing.T) {
-	srv, _ := deployFixture(t, config.EnrollmentModeManaged)
+	srv, logger := deployFixture(t, config.EnrollmentModeManaged)
 	token := addDeployToken(t, srv, nil)
 	good := newDeployMachine(13)
 	cases := map[string]struct {
@@ -328,6 +490,10 @@ func TestDeployRefusesInvalidInput(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			if code, result := deploy(t, srv, token, c.id, c.m); code != http.StatusBadRequest || result != deployInvalidInput {
 				t.Fatalf("deploy = %d %q, want 400 INVALID_INPUT", code, result)
+			}
+			got := logger.RecentByAction(audit.ActionPeerRegistrationRejected, 1)
+			if len(got) != 1 || got[0].Details["reason"] != "invalid_input" {
+				t.Fatalf("audit = %+v, want an invalid_input refusal", got)
 			}
 		})
 	}
