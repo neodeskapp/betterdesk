@@ -78,3 +78,29 @@ func TestStartRefusesTwoListenersOnOnePort(t *testing.T) {
 		}
 	})
 }
+
+// A stock RustDesk client with an empty API server setting calls the ID
+// server's port minus 2. Docker's API is on 21121, so the API answers on
+// 21114 too; where the API is on 21114 already, or another listener has
+// the port, there is no second listener.
+func TestDerivedClientPort(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		env  map[string]string
+		args []string
+		want int
+	}{
+		{"docker", map[string]string{"API_ENABLED": "false"}, []string{"-api-port", "21121"}, 21114},
+		{"api on 21114", map[string]string{"GO_API_PORT": "21114"}, nil, 0},
+		{"other signal port", map[string]string{"GO_API_PORT": "21114"}, []string{"-port", "31116"}, 31114},
+		{"console's client API there", map[string]string{"GO_API_PORT": "21000", "API_PORT": "21114"}, nil, 0},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			listeners := portsOf(t, c.env, c.args...)
+			cfg := configureWith(t, c.args...)
+			if got := derivedClientPort(cfg, listeners); got != c.want {
+				t.Errorf("derived client port %d, want %d", got, c.want)
+			}
+		})
+	}
+}
