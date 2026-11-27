@@ -162,3 +162,22 @@ describe('device row menu', () => {
 		expect(menu.style.top).not.toBe('200px');
 	});
 });
+
+describe('Platform column', () => {
+	test('shows the system and its main version until Full OS details is on', async () => {
+		localStorage.removeItem('devices-os-details');
+		const full = 'windows / Windows 11 Pro - 11 (26200)';
+		devices = [{ id: '987654321', hostname: 'desk-1', online: true, tags: [], platform: full }];
+		render(Page, early());
+		const name = await screen.findByText('Windows 11');
+		expect(name).toHaveAttribute('title', full);
+		expect(screen.queryByText(full)).toBeNull();
+
+		await userEvent.click(screen.getByRole('button', { name: 'devices.columns' }));
+		await userEvent.click(screen.getByRole('checkbox', { name: 'Full OS details' }));
+		expect(await screen.findByText(full)).toBeInTheDocument();
+		expect(screen.queryByText('Windows 11')).toBeNull();
+		expect(localStorage.getItem('devices-os-details')).toBe('1');
+		localStorage.removeItem('devices-os-details');
+	});
+});

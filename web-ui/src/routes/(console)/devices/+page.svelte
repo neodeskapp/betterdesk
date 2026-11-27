@@ -336,6 +336,21 @@
 
 	const shown = (id: string) => !hiddenColumns.includes(id);
 
+	/** Platform shows the full text the client reports, not only the system and its main version */
+	const PREF_OS_DETAILS = 'devices-os-details';
+	let osDetails = $state(readPref(PREF_OS_DETAILS) === '1');
+	const columnOptions = $derived(
+		shown('platform')
+			? [{ id: 'os-details', label: tf('devices.os_details', 'Full OS details'), checked: osDetails }]
+			: []
+	);
+
+	function setColumnOption(id: string, on: boolean) {
+		if (id !== 'os-details') return;
+		osDetails = on;
+		writePref(PREF_OS_DETAILS, on ? '1' : '0');
+	}
+
 	const columns = $derived<Column<Device>[]>([
 		{ id: 'id', label: t('devices.id'), cell: idCell, sortValue: (d) => d.id, class: 'col-id' },
 		{
@@ -665,7 +680,7 @@
 			<span class="mono">{d.linked_peer_id}</span></span
 		>{/if}{/snippet}
 
-{#snippet platformCell(d: Device)}<Platform platform={d.platform || d.os} />{/snippet}
+{#snippet platformCell(d: Device)}<Platform platform={d.platform || d.os} short={!osDetails} />{/snippet}
 
 {#snippet seenCell(d: Device)}<Time value={d.last_online} empty={t('time.never')} />{/snippet}
 
@@ -754,7 +769,13 @@
 					onchange={(next) => (tagFilter = next)}
 					onmanage={canEdit ? () => (manageTags = true) : undefined}
 				/>
-				<ColumnChooser {columns} onchange={setColumn} label={t('devices.columns')} />
+				<ColumnChooser
+					{columns}
+					onchange={setColumn}
+					options={columnOptions}
+					onoption={setColumnOption}
+					label={t('devices.columns')}
+				/>
 			</div>
 		</div>
 

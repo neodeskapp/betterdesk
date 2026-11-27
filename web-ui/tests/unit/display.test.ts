@@ -7,6 +7,7 @@ import {
 	iconName,
 	initials,
 	platformId,
+	shortPlatform,
 	statusTone
 } from '../../src/lib/util/display.ts';
 import { readPref, writePref } from '../../src/lib/util/storage.ts';
@@ -71,6 +72,24 @@ describe('platform, version, icons', () => {
 		expect(platformId('ChromeOS')).toBe('chrome');
 		expect(platformId('Plan 9')).toBe('');
 		expect(platformId(null)).toBe('');
+	});
+	test('short platform: the system and its main version', () => {
+		expect(shortPlatform('windows / Windows 11 Pro - 11 (26200)')).toBe('Windows 11');
+		expect(shortPlatform('windows / Windows Server 2025 Standard Evaluation - 11 (26100)')).toBe(
+			'Windows Server 2025'
+		);
+		expect(shortPlatform('windows / Windows 10 Pro - 10 (19045)')).toBe('Windows 10');
+		expect(shortPlatform('cachyos / Linux rolling CachyOS Linux')).toBe('CachyOS Linux');
+		expect(shortPlatform('ubuntu / Linux 24.04 Ubuntu')).toBe('Ubuntu 24.04');
+		expect(shortPlatform('debian / Linux 12 Debian GNU/Linux')).toBe('Debian 12');
+		expect(shortPlatform('macos / macOS 14.5 Sonoma')).toBe('macOS 14');
+		expect(shortPlatform('macOS 10.15.7')).toBe('macOS 10.15');
+		expect(shortPlatform('Windows 11 Pro')).toBe('Windows 11');
+		expect(shortPlatform('Ubuntu 24.04')).toBe('Ubuntu 24.04');
+		expect(shortPlatform('Android 14')).toBe('Android 14');
+		expect(shortPlatform('Linux')).toBe('Linux');
+		expect(shortPlatform('')).toBe('');
+		expect(shortPlatform(null)).toBe('');
 	});
 	test('versions lose a leading v', () => {
 		expect(cleanVersion('v1.4.2')).toBe('1.4.2');
