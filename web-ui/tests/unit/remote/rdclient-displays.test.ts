@@ -191,3 +191,53 @@ describe('the device changes its displays during the session', () => {
 		c.disconnect();
 	});
 });
+
+describe('virtual displays after the device adds or removes one', () => {
+	/** A signed-in Windows device with Amyuni virtual displays; `n` of them plugged in */
+	async function amyuni(n: number) {
+		const { c } = await session('1.4.2');
+		const additions = {
+			is_installed: true,
+			idd_impl: 'amyuni_idd',
+			supported_privacy_mode_impl: [] as string[]
+		};
+		c._peerInfo!.platformAdditions = JSON.stringify(
+			n ? { ...additions, amyuni_virtual_displays: n } : additions
+		);
+		c._processPeerInfo(c._peerInfo);
+		return c;
+	}
+	/** The peer info RustDesk's display service sends when the displays change */
+	const changed = (additions: object) =>
+		({
+			displays: DISPLAYS,
+			currentDisplay: 0,
+			platformAdditions: JSON.stringify(additions)
+		}) as unknown as PeerInfo;
+
+	test('an added one keeps the menu and counts it, so it can be removed', async () => {
+		const c = await amyuni(0);
+		c._handlePeerInfo(changed({ idd_impl: 'amyuni_idd', amyuni_virtual_displays: 1 }));
+		expect(c.getVirtualDisplaySupport()).toMatchObject({
+			supported: true,
+			impl: 'amyuni_idd',
+			amyuniCount: 1
+		});
+	});
+
+	test('the last one removed counts none', async () => {
+		const c = await amyuni(2);
+		c._handlePeerInfo(changed({ idd_impl: 'amyuni_idd' }));
+		expect(c.getVirtualDisplaySupport()).toMatchObject({ supported: true, amyuniCount: 0 });
+	});
+
+	test('RustDesk virtual displays follow the device', async () => {
+		const { c } = await session('1.4.2');
+		c._peerInfo!.platformAdditions = JSON.stringify({ is_installed: true, idd_impl: 'rustdesk_idd' });
+		c._processPeerInfo(c._peerInfo);
+		c._handlePeerInfo(changed({ idd_impl: 'rustdesk_idd', rustdesk_virtual_displays: [1, 3] }));
+		expect(c.getVirtualDisplaySupport()).toMatchObject({ supported: true, rustdeskDisplays: [1, 3] });
+		c._handlePeerInfo(changed({ idd_impl: 'rustdesk_idd' }));
+		expect(c.getVirtualDisplaySupport()).toMatchObject({ supported: true, rustdeskDisplays: [] });
+	});
+});
