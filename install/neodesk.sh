@@ -2120,6 +2120,12 @@ apply_console_reverse_proxy_mode() {
     if [ -n "$panel_host" ]; then
         _upsert_env_line "$env_file" PANEL_PUBLIC_HOST "$panel_host"
         _upsert_env_line "$env_file" PANEL_PUBLIC_URL "https://${panel_host}"
+        # The console's port carries the client API under /client-api, so
+        # clients reach it through the same host name. An address set
+        # before stays.
+        if ! grep -q '^PUBLIC_API_URL=.' "$env_file" 2>/dev/null; then
+            _upsert_env_line "$env_file" PUBLIC_API_URL "https://${panel_host}/client-api"
+        fi
     fi
     if [ -n "$server_id" ]; then
         _upsert_env_line "$env_file" PUBLIC_SERVER_ID "$server_id"
@@ -2220,6 +2226,7 @@ PORT=$(resolve_panel_http_port)
 PANEL_PUBLIC_HOST=${panel_host}
 PANEL_PUBLIC_URL=https://${panel_host}
 PUBLIC_SERVER_ID=${server_id}
+PUBLIC_API_URL=https://${panel_host}/client-api
 WS_ALLOWED_ORIGINS=${ws_origins}
 EOF
 
@@ -2352,11 +2359,11 @@ WAN (clients reach these directly — cannot be HTTP-proxied):
   - 21117/tcp              Relay data
 
 Client API (needed for branding, enrollment, short-code pairing):
-  - 21114/tcp              Go Client API — expose only over TLS, or via the proxy on 443
-  - 21121/tcp              Legacy compat proxy (existing fleets only)
+  - Through the proxy: https://${panel_host}/client-api (the console's port carries it)
+  - 21121/tcp              Client API port, for clients set up with http://<host>:21121
 
 Through your reverse proxy (HTTPS :443):
-  - Panel + console WebSockets -> http://${upstream_addr}:$(resolve_panel_http_port)
+  - Panel, console WebSockets and the client API under /client-api -> http://${upstream_addr}:$(resolve_panel_http_port)
 $( [ "$route_wss" = "yes" ] && echo "  - RustDesk WSS /ws/id -> ${upstream_addr}:21118, /ws/relay -> ${upstream_addr}:21119" )
 $( [ "$panel_bind" = "0.0.0.0" ] && echo "  - Panel bind: 0.0.0.0:$(resolve_panel_http_port) (remote proxy) — restrict :$(resolve_panel_http_port) to proxy IP in firewall" )
 
