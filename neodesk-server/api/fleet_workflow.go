@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	"github.com/neodeskapp/neodesk/neodesk-server/internal/cron"
 )
@@ -816,6 +817,11 @@ func (s *Server) handleExecuteFleetWorkflow(w http.ResponseWriter, r *http.Reque
 		taskIDs, _ := json.Marshal(ids)
 		_ = s.db.Fleet().AddFleetWorkflowRun(&db.FleetWorkflowRun{WorkflowID: wf.ID, DryRun: body.DryRun, Status: status,
 			Output: output, TaskIDs: string(taskIDs), StartedBy: actor})
+	}
+	if !body.DryRun && len(problems) == 0 {
+		taskIDs, _ := json.Marshal(ids)
+		s.auditFleet(r, audit.ActionFleetWorkflowRun, strconv.FormatInt(wf.ID, 10), map[string]string{
+			"name": wf.Name, "tasks": string(taskIDs)})
 	}
 	if len(problems) > 0 && !body.DryRun {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": strings.Join(problems, "; "), "output": output, "problems": problems})

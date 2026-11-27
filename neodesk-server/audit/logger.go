@@ -63,6 +63,16 @@ const (
 	ActionTelemetrySnapshotError Action = "telemetry_snapshot_error"
 	ActionTelemetryCommandResult Action = "telemetry_command_result"
 	ActionTelemetryCommandQueued Action = "telemetry_command_queued"
+	// Fleet work someone asked for, once per action whatever the number
+	// of devices; what the server queues by itself (resource rollout,
+	// daily scans, schedules, retries) is not audited.
+	ActionFleetTaskCreated     Action = "fleet_task_created"
+	ActionFleetTaskChanged     Action = "fleet_task_changed"
+	ActionFleetTaskDeleted     Action = "fleet_task_deleted"
+	ActionFleetTaskRetried     Action = "fleet_task_retried"
+	ActionFleetResourceChanged Action = "fleet_resource_changed"
+	ActionFleetScanRequested   Action = "fleet_scan_requested"
+	ActionFleetWorkflowRun     Action = "fleet_workflow_run"
 	// Help requests and chat (raised by agent devices via CDAP).
 	ActionHelpRequestCreated Action = "help_request_created"
 	ActionHelpRequestUpdated Action = "help_request_updated"

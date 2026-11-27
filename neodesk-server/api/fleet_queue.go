@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -67,8 +68,10 @@ func (f *fleetState) init() {
 func dbTime(t time.Time) string { return t.UTC().Format("2006-01-02 15:04:05") }
 
 // queueFleetCommand queues one fleet command for a device, which takes it
-// with its next verified heartbeat.
-func (s *Server) queueFleetCommand(actor, deviceID, command string, args any, ttl time.Duration) (int64, error) {
+// with its next verified heartbeat. It writes no audit entry: a fleet
+// action can queue for thousands of devices, and the handlers audit the
+// action itself once (auditFleet).
+func (s *Server) queueFleetCommand(deviceID, command string, args any, ttl time.Duration) (int64, error) {
 	raw, err := json.Marshal(args)
 	if err != nil {
 		return 0, err
@@ -83,11 +86,15 @@ func (s *Server) queueFleetCommand(actor, deviceID, command string, args any, tt
 	if err != nil {
 		return 0, err
 	}
-	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionTelemetryCommandQueued, actor, deviceID,
-			map[string]string{"command": command, "command_id": fmt.Sprint(id)})
-	}
 	return id, nil
+}
+
+// auditFleet records a fleet action someone asked for, once, with who
+// asked.
+func (s *Server) auditFleet(r *http.Request, action audit.Action, target string, details map[string]string) {
+	if s.auditLog != nil {
+		s.auditLog.Log(action, s.eventActor(r), target, details)
+	}
 }
 
 // ── Tasks ──────────────────────────────────────────────────────────────
@@ -117,7 +124,7 @@ func fleetTimeout(seconds int) int {
 // run. A command that cannot be queued fails the run.
 func (s *Server) queueFleetRun(actor string, task *db.FleetTask, run *db.FleetRun) error {
 	timeout := fleetTimeout(task.Timeout)
-	id, err := s.queueFleetCommand(actor, run.DeviceID, fleetRunCommand, fleetRunArgs{
+	id, err := s.queueFleetCommand(run.DeviceID, fleetRunCommand, fleetRunArgs{
 		RunID: run.ID, TaskID: task.ID, Type: task.Type, Script: task.Script, Shell: "auto", Timeout: timeout,
 	}, fleetDeliveryWait+time.Duration(timeout)*time.Second)
 	run.ExitCode, run.StartedAt, run.FinishedAt = nil, "", ""
@@ -418,7 +425,7 @@ func (s *Server) syncFleetResources(actor, deviceID string, resources []*db.Flee
 	if s.isSupportAgent(deviceID) {
 		return false
 	}
-	id, err := s.queueFleetCommand(actor, deviceID, fleetResourcesCommand,
+	id, err := s.queueFleetCommand(deviceID, fleetResourcesCommand,
 		fleetResourcesArgs{Revision: want, Resources: items}, fleetResourcesTTL)
 	if err != nil {
 		log.Printf("[fleet] resources of %s: %v", deviceID, err)
@@ -519,7 +526,7 @@ type fleetSoftware struct {
 // queueFleetScan asks the device for a compliance scan, first fixing what
 // it can when remediate is set.
 func (s *Server) queueFleetScan(actor, deviceID string, remediate bool) (int64, error) {
-	id, err := s.queueFleetCommand(actor, deviceID, fleetComplianceCommand, map[string]bool{"remediate": remediate}, fleetComplianceTTL)
+	id, err := s.queueFleetCommand(deviceID, fleetComplianceCommand, map[string]bool{"remediate": remediate}, fleetComplianceTTL)
 	if err != nil {
 		return 0, err
 	}

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
@@ -289,6 +290,7 @@ func (s *Server) handleCreateFleetResource(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	queued := s.syncFleetOrg(s.eventActor(r), orgID)
+	s.auditFleetResource(r, "created", res, queued)
 	writeJSON(w, http.StatusCreated, map[string]any{"success": true, "id": res.ID, "resource": res, "queued": queued})
 }
 
@@ -321,6 +323,7 @@ func (s *Server) handleUpdateFleetResource(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	queued := s.syncFleetOrg(s.eventActor(r), orgID)
+	s.auditFleetResource(r, "changed", res, queued)
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "id": res.ID, "resource": res, "queued": queued})
 }
 
@@ -340,7 +343,28 @@ func (s *Server) handleDeleteFleetResource(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	queued := s.syncFleetOrg(s.eventActor(r), orgID)
+	s.auditFleetResource(r, "deleted", &db.FleetResource{ID: id, OrgID: orgID}, queued)
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "queued": queued})
+}
+
+// auditFleetResource records a change of an organization's resources.
+func (s *Server) auditFleetResource(r *http.Request, change string, res *db.FleetResource, queued int) {
+	details := map[string]string{"change": change, "org_id": res.OrgID, "resource_id": strconv.FormatInt(res.ID, 10),
+		"devices_queued": strconv.Itoa(queued)}
+	if res.Name != "" {
+		details["name"], details["type"] = res.Name, res.Type
+	}
+	s.auditFleet(r, audit.ActionFleetResourceChanged, res.OrgID, details)
+}
+
+// fleetTaskDetails are the audit details of a task.
+func fleetTaskDetails(task *db.FleetTask, extra map[string]string) map[string]string {
+	details := map[string]string{"task_id": strconv.FormatInt(task.ID, 10), "name": task.Name, "type": task.Type,
+		"targets": task.Targets, "schedule_type": task.ScheduleType}
+	for k, v := range extra {
+		details[k] = v
+	}
+	return details
 }
 
 // ── Tasks ──────────────────────────────────────────────────────────────
@@ -584,6 +608,8 @@ func (s *Server) handleCreateFleetTask(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	s.auditFleet(r, audit.ActionFleetTaskCreated, strconv.FormatInt(task.ID, 10), fleetTaskDetails(task, map[string]string{
+		"devices": strconv.Itoa(len(targets.Devices)), "devices_queued": strconv.Itoa(queued)}))
 	saved, _ := fleet.GetFleetTask(task.ID)
 	if saved == nil {
 		saved = task
@@ -630,6 +656,7 @@ func (s *Server) handleUpdateFleetTask(w http.ResponseWriter, r *http.Request) {
 		writeInternalError(w, err, "update fleet task")
 		return
 	}
+	s.auditFleet(r, audit.ActionFleetTaskChanged, strconv.FormatInt(task.ID, 10), fleetTaskDetails(task, nil))
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "id": task.ID, "task": task})
 }
 
@@ -642,6 +669,7 @@ func (s *Server) handleDeleteFleetTask(w http.ResponseWriter, r *http.Request) {
 		writeInternalError(w, err, "delete fleet task")
 		return
 	}
+	s.auditFleet(r, audit.ActionFleetTaskDeleted, strconv.FormatInt(task.ID, 10), fleetTaskDetails(task, nil))
 	writeJSON(w, http.StatusOK, map[string]any{"success": true})
 }
 
@@ -744,6 +772,8 @@ func (s *Server) handleRetryFleetTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status, _ := fleet.RefreshFleetTaskStatus(task.ID)
+	s.auditFleet(r, audit.ActionFleetTaskRetried, strconv.FormatInt(task.ID, 10), fleetTaskDetails(task, map[string]string{
+		"devices_queued": strconv.Itoa(queued)}))
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "queued": queued, "status": status})
 }
 
@@ -895,6 +925,8 @@ func (s *Server) fleetScan(w http.ResponseWriter, r *http.Request, remediate boo
 		writeJSON(w, http.StatusInternalServerError, map[string]any{"error": "command_queue_failed"})
 		return
 	}
+	s.auditFleet(r, audit.ActionFleetScanRequested, p.ID, map[string]string{
+		"remediate": strconv.FormatBool(remediate), "command_id": strconv.FormatInt(id, 10)})
 	writeJSON(w, http.StatusAccepted, map[string]any{"success": true, "accepted": true, "command_id": id, "device_id": p.ID})
 }
 

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
@@ -621,5 +622,56 @@ func TestFleetResourcesGoOutWithTheHeartbeat(t *testing.T) {
 	args, _ := cmd["args"].(map[string]any)
 	if cmd["command"] != fleetResourcesCommand || args["revision"] == "" || len(args["resources"].([]any)) != 1 {
 		t.Errorf("command %v", cmd)
+	}
+}
+
+// What the server queues by itself writes no audit entry per device: the
+// daily scan and the resource rollout reach every device of every
+// organization, which would flood the security audit. What someone asks
+// for is audited once per action, with who asked.
+func TestFleetAuditsActionsNotDevices(t *testing.T) {
+	srv, database := fleetServer(t)
+	count := func() map[audit.Action]int {
+		out := map[audit.Action]int{}
+		for _, e := range srv.auditLog.Recent(500) {
+			out[e.Action]++
+		}
+		return out
+	}
+	before := count()
+
+	if n := srv.scheduleFleetScans(time.Now()); n != 3 {
+		t.Fatalf("the daily scan queued %d", n)
+	}
+	srv.fleetTick(time.Now())
+	if got := count(); got[audit.ActionTelemetryCommandQueued] != before[audit.ActionTelemetryCommandQueued] || len(got) != len(before) {
+		t.Errorf("the daily scan wrote audit entries: %v, before %v", got, before)
+	}
+
+	if status, body := asConsole(t, srv, http.MethodPost, "/api/fleet/resources/org-a", `{"name":"DNS","type":"dns","address":"1.1.1.1"}`); status != http.StatusCreated {
+		t.Fatalf("resource: %d %s", status, body)
+	}
+	if status, out := createTask(t, srv, map[string]any{"name": "All", "type": "update", "targets": "org:org-a"}); status != http.StatusCreated || out["queued"].(float64) != 2 {
+		t.Fatalf("task: %d %v", status, out)
+	}
+	if status, _ := asConsole(t, srv, http.MethodPost, "/api/fleet/compliance/PEERAAA1/scan", "{}"); status != http.StatusAccepted {
+		t.Fatalf("scan: %d", status)
+	}
+	got := count()
+	if got[audit.ActionTelemetryCommandQueued] != 0 {
+		t.Errorf("%d telemetry_command_queued entries for fleet work, want none", got[audit.ActionTelemetryCommandQueued])
+	}
+	for _, action := range []audit.Action{audit.ActionFleetResourceChanged, audit.ActionFleetTaskCreated, audit.ActionFleetScanRequested} {
+		if got[action] != 1 {
+			t.Errorf("%s written %d times, want once", action, got[action])
+		}
+	}
+	for _, e := range srv.auditLog.RecentByAction(audit.ActionFleetTaskCreated, 5) {
+		if e.Actor != consoleBridge.Username || e.Details["devices_queued"] != "2" || e.Details["targets"] != "org:org-a" {
+			t.Errorf("task entry %+v", e)
+		}
+	}
+	if pending, _ := database.GetPendingTelemetryCommands("PEERAAA1", 20); len(pending) < 3 {
+		t.Errorf("PEERAAA1 has %d commands, want the scans, the resources and the task", len(pending))
 	}
 }
