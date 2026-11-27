@@ -3,7 +3,7 @@
  * comes from. A value of the server's environment is not "Set on this
  * page"; it names its variable.
  */
-import { ENDPOINT_VARIABLES, endpointSourceLabel } from '#lib/settings/general.ts';
+import { ENDPOINT_VARIABLES, emptyEndpointLine, endpointSourceLabel } from '#lib/settings/general.ts';
 
 const t = (key: string, params?: Record<string, string>) =>
 	params ? `${key}(${Object.values(params).join(',')})` : key;
@@ -37,5 +37,18 @@ describe('endpointSourceLabel', () => {
 		for (const source of ['config', 'request', 'derived', 'default', 'query', undefined]) {
 			expect(endpointSourceLabel(source, ENDPOINT_VARIABLES.api, t)).toBe('settings.side.src_auto');
 		}
+	});
+});
+
+describe('emptyEndpointLine', () => {
+	it('names RELAY_SERVERS for the address the Docker installer wrote, not "found automatically"', () => {
+		const line = emptyEndpointLine({
+			value: 'neodesk.example.com',
+			source: 'relay_servers',
+			variable: ENDPOINT_VARIABLES.host,
+			clearedHere: false
+		});
+		expect(line).toContain('RELAY_SERVERS');
+		expect(line).not.toContain('automatically');
 	});
 });

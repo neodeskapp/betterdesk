@@ -6,9 +6,11 @@
   changes in the bar and the message says which part was saved and which
   not, and why. Each row says where its value comes from
   (lib/settings/sources.ts); an address the environment locks can't be
-  changed here. The summary column shows the addresses clients get now and
-  the server information. Without server.config only the server
-  information.
+  changed here. An empty address field says under it which address
+  clients get instead (from the client setup the server hands out). The
+  page has no side column, so its rows are two columns on a wide screen;
+  the server information follows the settings. Without server.config only
+  the server information.
 
   Element ids are the old page's (the rows carry them): links
   (/settings#public-server-id) and the settings search (search-index.ts)
@@ -36,19 +38,16 @@
 	import { can, session } from '#lib/state/session.svelte.ts';
 	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import ConnectionDiagram from '#lib/ui/ConnectionDiagram.svelte';
-	import Disclosure from '#lib/ui/Disclosure.svelte';
-	import Facts from '#lib/ui/Facts.svelte';
 	import IdFacts from '#lib/settings-b/IdFacts.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import States from '#lib/ui/States.svelte';
-	import Tag from '#lib/ui/Tag.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import Version from '#lib/ui/Version.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
-	import SettingRow, { type ValueSource } from '#lib/ui/settings/SettingRow.svelte';
+	import SettingRow from '#lib/ui/settings/SettingRow.svelte';
 	import SettingsBody from '#lib/ui/settings/SettingsBody.svelte';
 	import SettingsGroup from '#lib/ui/settings/SettingsGroup.svelte';
 	import { SettingsDraft, saveAndConfirm } from '#lib/ui/settings/draft.svelte.ts';
@@ -58,7 +57,7 @@
 		changedParts,
 		connectionFacts,
 		connectionNotes,
-		endpointSourceLabel,
+		emptyEndpointLine,
 		generalProblems,
 		partFields,
 		saveInParts,
@@ -116,7 +115,6 @@
 	let loadError = $state('');
 	/** What a save refused, by field (the server names the address it refused) */
 	let refused = $state<Partial<Record<string, string>>>({});
-	let advancedOpen = $state(false);
 
 	const v = $derived(draft.values);
 	const problems = $derived(generalProblems(v));
@@ -126,26 +124,41 @@
 	// Connection strategy: whether this console can store it, what the server runs with
 	let connWritable = $state(false);
 	let connProblem = $state('');
-	let connRuntime = $state('');
+	/** What the running server uses, when it answered */
+	let connRuntime = $state.raw<{ relayOnly: boolean; ms: string } | null>(null);
 	/** Addresses the server's environment sets at every start (the older answer, without sources) */
 	let envLocked = $state.raw<readonly string[]>([]);
 	let sources = $state.raw<SettingSources>({});
 
 	const src = (key: string): SourceInfo => sourceInfo(sources[key]);
 
-	/** A row's source: an empty address is the one found automatically (the group says what that means) */
-	function endpointRow(field: 'public_server_id' | 'public_relay_server' | 'public_api_url') {
+	/** A row's source: an empty address says under its field what clients get instead */
+	function endpointRow(field: EndpointField) {
 		const info = src(`public_endpoints.${field}`);
 		const row = sourceRow(draft, field, info);
-		const source: ValueSource | null =
-			info.source?.kind === 'default'
-				? {
-						kind: 'default',
-						text: tf('settings.general.endpoint_auto_short', 'Found automatically')
-					}
-				: info.source;
+		const source = info.source?.kind === 'default' ? null : info.source;
 		const locked = info.lockedBy !== '' || envLocked.includes(field);
 		return { ...row, source, onreset: undefined, locked };
+	}
+
+	type EndpointField = 'public_server_id' | 'public_relay_server' | 'public_api_url';
+	const CLIENT_KEYS = {
+		public_server_id: ['server_id', 'host'],
+		public_relay_server: ['relay_server', 'relay'],
+		public_api_url: ['api_url', 'api']
+	} as const;
+
+	/** Under an empty address field: the address clients get instead, and where it comes from */
+	function emptyLine(field: EndpointField): string {
+		if (v[field].trim() !== '') return '';
+		const [valueKey, sourceKey] = CLIENT_KEYS[field];
+		return emptyEndpointLine({
+			value: clientConfig?.[valueKey] ?? '',
+			source: clientConfig?.endpoint_sources?.[sourceKey] ?? undefined,
+			variable: ENDPOINT_VARIABLES[sourceKey],
+			// A stored address cleared here: what clients get after saving is not known yet
+			clearedHere: String(draft.loaded[field] ?? '').trim() !== ''
+		});
 	}
 
 	function connectionRow(field: keyof GeneralValues & string) {
@@ -167,12 +180,7 @@
 			const facts = connectionFacts(await getConnectionMode());
 			connWritable = facts.writable;
 			connProblem = facts.writable ? '' : t('settings.general.conn_readonly');
-			connRuntime = facts.runtime
-				? t('settings.general.conn_running', {
-						mode: facts.runtime.relayOnly ? t('settings.general.conn_relay') : t('settings.general.conn_p2p'),
-						ms: facts.runtime.ms
-					})
-				: '';
+			connRuntime = facts.runtime;
 			return facts.settings;
 		} catch (err) {
 			connWritable = false;
@@ -258,7 +266,6 @@
 				'settings_ui.fix_marked',
 				'Some values are not right yet. They are marked on the page.'
 			);
-			if (wrong.includes('p2p_fallback_ms')) advancedOpen = true;
 			document.getElementById(`${idOf(wrong[0] ?? '')}-control`)?.focus();
 			return;
 		}
@@ -310,18 +317,13 @@
 		})
 	);
 
-	/* ── What clients get now (summary column) ── */
+	/* ── What clients get now (under the empty address fields, and the diagram) ── */
 
 	let clientConfig = $state.raw<ClientConfig | null>(null);
 	let clientError = $state('');
-	// The summary shows once the addresses, the form and the server information are in;
-	// parts that grow one after the other would push the rest down (a layout shift)
-	const sideSettled = $derived(
-		!canConfig ||
-			((clientConfig !== null || clientError !== '') &&
-				(loaded || !!loadError) &&
-				(info !== null || infoError !== ''))
-	);
+	// The form shows once the addresses clients get are in too (or failed):
+	// lines that come later under the fields would push the rest down
+	const clientSettled = $derived(clientConfig !== null || clientError !== '');
 
 	async function loadClientConfig() {
 		try {
@@ -331,9 +333,6 @@
 			clientError = errText(err);
 		}
 	}
-
-	const sourceLabel = (source: string | undefined, variable: string) =>
-		endpointSourceLabel(source, variable, t);
 
 	// The diagram: the addresses typed above, or the ones clients get now
 	const diagram = $derived.by(() => {
@@ -359,18 +358,26 @@
 		void loadClientConfig();
 	});
 
-	// A rule behind Advanced that is changed, refused or reached by a link shows
-	const advancedChanged = $derived(
-		partFields.connection.slice(1).some((f) => draft.isChanged(f) || !!refused[f])
-	);
-	$effect(() => {
-		if (advancedChanged) advancedOpen = true;
-	});
-
 	const sections = $derived([
 		{ id: 'public-endpoints', label: t('settings.public_endpoints_title') },
-		{ id: 'connection-mode-section', label: t('settings.connection_mode_title') }
+		{ id: 'connection-mode-section', label: t('settings.connection_mode_title') },
+		{ id: 'server-info', label: t('settings.server_info') }
 	]);
+
+	/** The running server uses something else than the saved strategy (a restart is still to come) */
+	const runtimeLine = $derived.by(() => {
+		const r = connRuntime;
+		const saved = draft.loaded;
+		if (!r) return '';
+		const same =
+			r.relayOnly === (saved.mode === 'relay_only') &&
+			(r.relayOnly || r.ms === String(saved.p2p_fallback_ms));
+		if (same) return '';
+		return t('settings.general.conn_running', {
+			mode: r.relayOnly ? t('settings.general.conn_relay') : t('settings.general.conn_p2p'),
+			ms: r.ms
+		});
+	});
 
 	function numberFrom(e: Event): number | null {
 		const raw = (e.currentTarget as HTMLInputElement).value;
@@ -421,75 +428,10 @@
 	</section>
 {/snippet}
 
-{#snippet address(value: string, source: string | undefined, variable: string, label: string)}
-	<span class="side-value">
-		<ValueCopy {value} {label} />
-		<span><Tag label={sourceLabel(source, variable)} /></span>
-	</span>
-{/snippet}
-{#snippet idValue()}
-	{@render address(
-		clientConfig?.server_id ?? '',
-		clientConfig?.endpoint_sources?.host,
-		ENDPOINT_VARIABLES.host,
-		t('dashboard.config_server_id')
-	)}
-{/snippet}
-{#snippet relayValue()}
-	{@render address(
-		clientConfig?.relay_server ?? '',
-		clientConfig?.endpoint_sources?.relay,
-		ENDPOINT_VARIABLES.relay,
-		t('dashboard.config_relay_server')
-	)}
-{/snippet}
-{#snippet apiValue()}
-	{@render address(
-		clientConfig?.api_url ?? '',
-		clientConfig?.endpoint_sources?.api,
-		ENDPOINT_VARIABLES.api,
-		t('dashboard.config_api_server')
-	)}
-{/snippet}
-
-{#snippet side()}
-	<!-- All at once when its data is in: parts that grow one after the other would push the rest down -->
-	{#if !sideSettled}
-		<States kind="loading" />
-	{:else}
-		<div class="summary-stack">
-			<section class="section" aria-labelledby="general-side-title">
-				<h2 id="general-side-title">{t('settings.side.general_title')}</h2>
-				<p class="section-note">{t('settings.side.general_note')}</p>
-				{#if clientError || !clientConfig}
-					<States kind="error" message={clientError} onretry={() => void loadClientConfig()} />
-				{:else}
-					<Facts
-						items={[
-							{ label: t('dashboard.config_server_id'), value: idValue },
-							{ label: t('dashboard.config_relay_server'), value: relayValue },
-							{ label: t('dashboard.config_api_server'), value: apiValue }
-						]}
-					/>
-					{#if clientConfig.phone_unreachable_host}<Notice
-							tone="warning"
-							message={t('settings.side.local_warning')}
-						/>{/if}
-				{/if}
-				{#if connRuntime}<p class="side-line" id="connection-mode-runtime">{connRuntime}</p>{/if}
-			</section>
-			{@render serverInfo()}
-			<GuideLink />
-		</div>
-	{/if}
-{/snippet}
-
-{#snippet endpoint(
-	field: 'public_server_id' | 'public_relay_server' | 'public_api_url',
-	label: string,
-	help: string
-)}
+{#snippet endpoint(field: EndpointField, label: string, help: string)}
 	{@const r = endpointRow(field)}
+	{@const now = r.locked ? '' : emptyLine(field)}
+	{@const nowId = `${idOf(field)}-now`}
 	<SettingRow
 		id={idOf(field)}
 		{label}
@@ -502,7 +444,7 @@
 		{#snippet control(f)}
 			<Input
 				id={f.id}
-				describedby={f.describedby}
+				describedby={[f.describedby, now && nowId].filter(Boolean).join(' ') || undefined}
 				invalid={f.invalid}
 				class="mono"
 				value={v[field]}
@@ -515,6 +457,7 @@
 					if (refused[field]) refused = { ...refused, [field]: undefined };
 				}}
 			/>
+			{#if now}<p class="field-now" id={nowId}>{now}</p>{/if}
 		{/snippet}
 	</SettingRow>
 {/snippet}
@@ -545,10 +488,10 @@
 	<ReadOnlyHint writes={['server.config']} />
 	{@render serverInfo()}
 {:else}
-	<SettingsBody {sections} summary={side} summaryLabel={t('settings.side.general_title')} {bar}>
+	<SettingsBody {sections} {bar}>
 		{#if loadError && !loaded}
 			<States kind="error" message={loadError} onretry={() => void loadForm()} />
-		{:else if !loaded}
+		{:else if !loaded || !clientSettled}
 			<States kind="loading" />
 		{:else}
 			<SettingsGroup
@@ -558,12 +501,16 @@
 				consequence={t('settings.general.endpoints_effect')}
 			>
 				{#snippet note()}
-					<p class="endpoints-note">
-						{tf(
-							'settings.general.endpoint_auto_note',
-							'An empty field gives clients the address found automatically, shown under What clients get now.'
-						)}
-					</p>
+					{#if clientConfig?.phone_unreachable_host}<Notice
+							tone="warning"
+							id="public-endpoints-local"
+							message={t('settings.side.local_warning')}
+						/>{/if}
+					{#if clientError}<States
+							kind="error"
+							message={clientError}
+							onretry={() => void loadClientConfig()}
+						/>{/if}
 					{#if envLocked.length && !Object.keys(sources).some( (k) => k.startsWith('public_endpoints.') )}<Notice
 							id="public-endpoints-env-locked"
 							message={t('settings.public_endpoints_env_locked')}
@@ -603,6 +550,7 @@
 			>
 				{#snippet note()}
 					{#if connProblem}<Notice id="connection-mode-source" message={connProblem} />{/if}
+					{#if runtimeLine}<p class="group-line" id="connection-mode-runtime">{runtimeLine}</p>{/if}
 				{/snippet}
 				{@const mode = connectionRow('mode')}
 				<SettingRow
@@ -642,62 +590,60 @@
 					{/snippet}
 				</SettingRow>
 
-				<div class="advanced" id="connection-mode-advanced">
-					<Disclosure title={t('settings.connection_mode_advanced')} level={3} bind:open={advancedOpen}>
-						{@const fallback = connectionRow('p2p_fallback_ms')}
-						<SettingRow
-							id="conn-p2p-fallback-ms"
-							label={t('settings.general.conn_fallback_label')}
-							help={t('settings.general.conn_fallback_hint')}
-							error={errorOf('p2p_fallback_ms')}
-							noEffect={notes.p2p_fallback_ms}
-							{...fallback}
-						>
-							{#snippet control(f)}
-								<Input
-									id={f.id}
-									describedby={f.describedby}
-									invalid={f.invalid}
-									type="number"
-									min="0"
-									max="30000"
-									step="100"
-									width="short"
-									disabled={connLocked}
-									value={v.p2p_fallback_ms}
-									oninput={(e) => draft.set('p2p_fallback_ms', numberFrom(e))}
-								/>
-							{/snippet}
-						</SettingRow>
-						{@render connSwitch(
-							'same_nat_relay',
-							'conn-same-nat-relay',
-							t('settings.general.conn_same_nat'),
-							t('settings.general.conn_same_nat_hint')
-						)}
-						{@render connSwitch(
-							'allow_shared_nat_initiator',
-							'conn-allow-shared-nat-initiator',
-							t('settings.general.conn_shared_nat'),
-							t('settings.general.conn_shared_nat_hint')
-						)}
-						{@render connSwitch(
-							'logged_in_only_initiator',
-							'conn-logged-in-only-initiator',
-							t('settings.general.conn_logged_in'),
-							t('settings.general.conn_logged_in_hint')
-						)}
-						{@render connSwitch(
-							'operator_only_outbound',
-							'conn-operator-only-outbound',
-							t('settings.general.conn_operator_only'),
-							tf(
-								'settings.general.conn_operator_only_help',
-								'The RustDesk app must be signed in to an account whose role may connect to devices (Connect to devices). Other devices cannot start sessions. Sessions from the browser still work.'
-							)
-						)}
-					</Disclosure>
-				</div>
+				<!-- The finer rules, shown at once: one line each on a wide screen -->
+				<h3 class="rows-subhead" id="connection-mode-advanced">{t('settings.connection_mode_advanced')}</h3>
+				{@const fallback = connectionRow('p2p_fallback_ms')}
+				<SettingRow
+					id="conn-p2p-fallback-ms"
+					label={t('settings.general.conn_fallback_label')}
+					help={t('settings.general.conn_fallback_hint')}
+					error={errorOf('p2p_fallback_ms')}
+					noEffect={notes.p2p_fallback_ms}
+					{...fallback}
+				>
+					{#snippet control(f)}
+						<Input
+							id={f.id}
+							describedby={f.describedby}
+							invalid={f.invalid}
+							type="number"
+							min="0"
+							max="30000"
+							step="100"
+							width="short"
+							disabled={connLocked}
+							value={v.p2p_fallback_ms}
+							oninput={(e) => draft.set('p2p_fallback_ms', numberFrom(e))}
+						/>
+					{/snippet}
+				</SettingRow>
+				{@render connSwitch(
+					'same_nat_relay',
+					'conn-same-nat-relay',
+					t('settings.general.conn_same_nat'),
+					t('settings.general.conn_same_nat_hint')
+				)}
+				{@render connSwitch(
+					'allow_shared_nat_initiator',
+					'conn-allow-shared-nat-initiator',
+					t('settings.general.conn_shared_nat'),
+					t('settings.general.conn_shared_nat_hint')
+				)}
+				{@render connSwitch(
+					'logged_in_only_initiator',
+					'conn-logged-in-only-initiator',
+					t('settings.general.conn_logged_in'),
+					t('settings.general.conn_logged_in_hint')
+				)}
+				{@render connSwitch(
+					'operator_only_outbound',
+					'conn-operator-only-outbound',
+					t('settings.general.conn_operator_only'),
+					tf(
+						'settings.general.conn_operator_only_help',
+						'The RustDesk app must be signed in to an account whose role may connect to devices (Connect to devices). Other devices cannot start sessions. Sessions from the browser still work.'
+					)
+				)}
 
 				<div class="diagram-block" data-search-skip>
 					<h3 id="connection-diagram-title">{t('diagram.how_title')}</h3>
@@ -707,41 +653,33 @@
 					<p class="form-hint" id="connection-mode-info">{t('settings.general.conn_ports_hint')}</p>
 				</div>
 			</SettingsGroup>
+
+			<!-- Facts about this server after the settings, the setup guide beside them -->
+			<div class="general-foot">
+				{@render serverInfo()}
+				<GuideLink />
+			</div>
 		{/if}
 	</SettingsBody>
 {/if}
 
 <style>
-	/* The summary column is narrow: sections apart, labels take what they need and values the rest */
-	.summary-stack {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-6);
-		min-width: 0;
-	}
-	.summary-stack :global(.facts) {
-		grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
-	}
-	.summary-stack :global(.facts > dt) {
-		max-width: 160px;
-	}
-	/* The column is narrow: an address or path wraps instead of being cut off */
-	.summary-stack :global(.value-copy > :first-child),
-	.summary-stack :global(.facts > dd) {
-		white-space: normal;
+	/* Under an empty address field: the address clients get instead */
+	.field-now {
+		margin: var(--space-1) 0 0;
+		color: var(--text-muted);
+		font-size: var(--text-sm);
 		overflow-wrap: anywhere;
 	}
-	.endpoints-note {
+	.group-line {
 		margin: 0;
-		max-width: var(--measure);
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
-	.advanced {
-		padding: var(--space-2) var(--row-pad-x) 0;
-	}
-	.advanced :global(.setting-row:last-child) {
-		border-bottom: 0;
+	/* A heading inside a group's rows, lined up with the row names */
+	.rows-subhead {
+		padding: var(--space-4) var(--row-pad-x) var(--space-2);
+		border-bottom: 1px solid var(--rule);
 	}
 	.diagram-block {
 		display: flex;
@@ -765,23 +703,21 @@
 		margin: 0;
 		color: var(--text-muted);
 	}
-	.side-value {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 2px;
-		min-width: 0;
+	/* Server information and the setup guide side by side once there is room */
+	.general-foot {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-6);
+		max-width: var(--settings-max, 72rem);
 	}
-	/* A source names a variable ("From RELAY_SERVERS in the server's
-	   environment"): it wraps inside the column instead of widening it */
-	.side-value > span {
-		max-width: 100%;
-	}
-	.side-value :global(.tag) {
-		padding-block: 2px;
+	.general-foot :global(.value-copy > :first-child),
+	.general-foot :global(.facts > dd) {
 		white-space: normal;
+		overflow-wrap: anywhere;
 	}
-	.side-line {
-		margin: 0;
+	@container settings-main (min-width: 900px) {
+		.general-foot {
+			grid-template-columns: minmax(0, 1fr) var(--setting-control-w, 30rem);
+		}
 	}
 </style>
