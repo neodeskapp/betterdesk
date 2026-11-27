@@ -8,8 +8,8 @@
   once the stored values loaded, so a save never writes the start values.
   The settings pattern (PATTERN.md rules 1, 5, 6 and 11): a change waits
   in the save bar until Save, the toast names it, each option says what it
-  does, and an option that cannot have an effect says why (no email
-  sending; nobody to mail).
+  does. That no mail goes out without email sending is said once on the
+  group, with its link; nobody to mail is said under the main option.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -127,8 +127,8 @@
 <div id="billing-settings-panel" class="settings" bind:this={host}>
 	<Disclosure class="section" title={t('commercialization.ui.settings_title')} bind:open={isOpen}>
 		<div class="body">
-			<p class="section-note">{t('commercialization.ui.settings_note')}</p>
-			<p class="line">
+			<p class="section-note">
+				{t('commercialization.ui.settings_note')}
 				<a href={link('/settings?tab=time')}>{t('commercialization.clock.open_time_settings')}</a>
 			</p>
 			{#if loadError}
@@ -143,20 +143,18 @@
 					consequence={t('commercialization.ui.applies_now')}
 				>
 					{#snippet note()}
-						<p class="line smtp">
-							{#if smtp === true}{t('commercialization.notifications.smtp_configured')}{/if}
+						<!-- Whether any of these mails can go out holds for the whole group: said once, here, with the way to fix it -->
+						<p class={['line', 'smtp', smtp === false && 'is-warning']}>
+							{#if smtp === true}{t(
+									'commercialization.notifications.smtp_configured'
+								)}{:else if smtp === false}{tf(
+									'commercialization.notifications.no_smtp_note',
+									'Email sending is not set up, so none of these mails go out yet.'
+								)}{/if}
 							<a href={link('/settings?tab=email')}>{t('commercialization.notifications.smtp_link')}</a>
 						</p>
 					{/snippet}
-					{@render row(
-						'help_requests_enabled',
-						smtp === false
-							? tf(
-									'commercialization.notifications.no_smtp_effect',
-									'Has no effect until email sending is set up in Settings › Email.'
-								)
-							: undefined
-					)}
+					{@render row('help_requests_enabled')}
 					{#if draft.values.help_requests_enabled}
 						{#if noRecipient}
 							<p class="warn" role="status">
@@ -195,6 +193,9 @@
 	}
 	.line {
 		margin: 0;
+	}
+	.smtp.is-warning {
+		color: var(--warning);
 	}
 	.smtp {
 		display: flex;
