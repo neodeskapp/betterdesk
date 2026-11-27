@@ -125,13 +125,14 @@ func (s *Server) saveClientTelemetry(deviceID string, raw json.RawMessage) {
 	for _, snapshot := range envelope.Snapshots {
 		s.saveDeviceSnapshot(deviceID, snapshot)
 	}
-	var pending map[int64]bool
+	var open map[int64]string
 	if len(envelope.Results) > 0 {
-		pending = s.pendingTelemetryCommandIDs(deviceID)
+		open = s.openTelemetryCommands(deviceID, envelope.Results)
 	}
 	for _, result := range envelope.Results {
 		// A device completes only commands queued for it.
-		if result.ID <= 0 || !pending[result.ID] {
+		command := open[result.ID]
+		if result.ID <= 0 || command == "" {
 			continue
 		}
 		var resultObject struct {
@@ -146,15 +147,27 @@ func (s *Server) saveClientTelemetry(deviceID string, raw json.RawMessage) {
 			resultJSON = `{"status":"error","code":"invalid_result"}`
 		}
 		status := result.Status
+		if status == "running" {
+			// The device started it and answers again when it is done: the
+			// command stays open for that answer and is not handed out again.
+			keep := s.fleetAnswer(deviceID, command, result.ID, status, result.Result)
+			if err := s.db.MarkTelemetryCommandRunning(deviceID, result.ID, time.Now().Add(keep)); err != nil {
+				s.auditLog.Log(audit.ActionTelemetryCommandResult, deviceID, fmt.Sprint(result.ID),
+					map[string]string{"error": err.Error()})
+			}
+			continue
+		}
 		switch status {
-		case "queued", "ok", "rejected", "unsupported", "permission_denied", "error":
+		case "queued", "ok", "rejected", "unsupported", "permission_denied", "error", "timeout":
 		default:
 			status = "error"
 		}
 		if err := s.db.CompleteTelemetryCommand(deviceID, result.ID, status, resultJSON); err != nil {
 			s.auditLog.Log(audit.ActionTelemetryCommandResult, deviceID, fmt.Sprint(result.ID),
 				map[string]string{"error": err.Error()})
+			continue
 		}
+		s.fleetAnswer(deviceID, command, result.ID, status, result.Result)
 	}
 }
 
@@ -226,18 +239,21 @@ func (s *Server) saveDeviceSnapshot(deviceID string, snapshot clientTelemetrySna
 		snapshot.Status, snapshot.CollectedAt, snapshot.Data)
 }
 
-// pendingTelemetryCommandIDs are the ids of the commands waiting for the
-// device's result: the ones the heartbeat hands out, and more.
-func (s *Server) pendingTelemetryCommandIDs(deviceID string) map[int64]bool {
-	commands, err := s.db.GetPendingTelemetryCommands(deviceID, 20)
+// openTelemetryCommands are the commands of the results that wait for
+// the device's answer, by id with their names: queued for this device,
+// pending or running, and not expired.
+func (s *Server) openTelemetryCommands(deviceID string, results []clientTelemetryCommandResult) map[int64]string {
+	ids := make([]int64, 0, len(results))
+	for _, result := range results {
+		if result.ID > 0 && len(ids) < 64 {
+			ids = append(ids, result.ID)
+		}
+	}
+	open, err := s.db.OpenTelemetryCommands(deviceID, ids)
 	if err != nil {
 		return nil
 	}
-	ids := make(map[int64]bool, len(commands))
-	for _, command := range commands {
-		ids[command.ID] = true
-	}
-	return ids
+	return open
 }
 
 func (s *Server) telemetryCommandsForDevice(deviceID string) []queuedTelemetryCommand {
@@ -336,15 +352,9 @@ func (s *Server) queueTelemetryCommand(w http.ResponseWriter, r *http.Request, c
 		writeJSON(w, http.StatusNotFound, map[string]any{"error": "device_not_found"})
 		return
 	}
-	if snapshot, err := s.db.GetTelemetrySnapshot(deviceID, "identity"); err == nil && snapshot != nil {
-		var identity struct {
-			ProductSKU string `json:"product_sku"`
-		}
-		if json.Unmarshal([]byte(snapshot.Payload), &identity) == nil &&
-			identity.ProductSKU == "neodesk-support" && command != "collect.metrics" {
-			writeJSON(w, http.StatusForbidden, map[string]any{"error": "support_agent_restricted"})
-			return
-		}
+	if command != "collect.metrics" && s.isSupportAgent(deviceID) {
+		writeJSON(w, http.StatusForbidden, map[string]any{"error": "support_agent_restricted"})
+		return
 	}
 	if len(args) == 0 {
 		args = json.RawMessage(`{}`)

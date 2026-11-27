@@ -90,8 +90,9 @@ func TestFleetResourcesStore(t *testing.T) {
 func TestFleetResourceRevision(t *testing.T) {
 	a := FleetResourceItem{ID: 1, Type: "dns", Name: "DNS", Address: "1.1.1.1"}
 	b := FleetResourceItem{ID: 2, Type: "proxy", Name: "Proxy", Address: "http://p:8080"}
-	if FleetResourceRevision(nil) != "" {
-		t.Error("an empty list has a revision")
+	if FleetResourceRevision(nil) != FleetEmptyRevision || FleetEmptyRevision == "" ||
+		FleetResourceRevision([]FleetResourceItem{a}) == FleetEmptyRevision {
+		t.Error("the empty list's revision is off")
 	}
 	if FleetResourceRevision([]FleetResourceItem{a, b}) != FleetResourceRevision([]FleetResourceItem{b, a}) {
 		t.Error("the revision depends on the order")
@@ -231,6 +232,9 @@ func TestFleetRunsGoStale(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
+		if open, err := fleet.ListOpenFleetRuns(task.ID); err != nil || len(open) != 4 {
+			t.Errorf("open runs: %d %v", len(open), err)
+		}
 		stale, err := fleet.ListStaleFleetRuns()
 		if err != nil {
 			t.Fatal(err)
@@ -263,8 +267,8 @@ func TestTelemetryCommandRunning(t *testing.T) {
 	freshStores(t, func(t *testing.T, store Database) {
 		id := queueTestCommand(t, store, "d1", "fleet.run", time.Now().Add(time.Hour))
 		other := queueTestCommand(t, store, "d2", "fleet.run", time.Now().Add(time.Hour))
-		open, err := store.OpenTelemetryCommandIDs("d1", []int64{id, other, 424242})
-		if err != nil || len(open) != 1 || !open[id] {
+		open, err := store.OpenTelemetryCommands("d1", []int64{id, other, 424242})
+		if err != nil || len(open) != 1 || open[id] != "fleet.run" {
 			t.Fatalf("open commands of d1: %v %v", open, err)
 		}
 		if err := store.MarkTelemetryCommandRunning("d2", id, time.Now().Add(2*time.Hour)); err != nil {
@@ -279,13 +283,13 @@ func TestTelemetryCommandRunning(t *testing.T) {
 		if pending, _ := store.GetPendingTelemetryCommands("d1", 10); len(pending) != 0 {
 			t.Errorf("a running command is handed out again: %+v", pending)
 		}
-		if open, _ := store.OpenTelemetryCommandIDs("d1", []int64{id}); !open[id] {
+		if open, _ := store.OpenTelemetryCommands("d1", []int64{id}); open[id] == "" {
 			t.Error("a running command takes no answer")
 		}
 		if err := store.CompleteTelemetryCommand("d1", id, "ok", `{"exit_code":0}`); err != nil {
 			t.Fatal(err)
 		}
-		if open, _ := store.OpenTelemetryCommandIDs("d1", []int64{id}); open[id] {
+		if open, _ := store.OpenTelemetryCommands("d1", []int64{id}); open[id] != "" {
 			t.Error("a completed command still takes answers")
 		}
 		// Running with an expiry in the past: it takes no answer
@@ -293,7 +297,7 @@ func TestTelemetryCommandRunning(t *testing.T) {
 		if err := store.MarkTelemetryCommandRunning("d1", late, time.Now().Add(-time.Minute)); err != nil {
 			t.Fatal(err)
 		}
-		if open, _ := store.OpenTelemetryCommandIDs("d1", []int64{late}); open[late] {
+		if open, _ := store.OpenTelemetryCommands("d1", []int64{late}); open[late] != "" {
 			t.Error("an expired running command takes answers")
 		}
 	})

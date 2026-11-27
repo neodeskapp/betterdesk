@@ -1045,6 +1045,11 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	if len(body.Telemetry) > 0 {
 		s.saveClientTelemetry(deviceID, body.Telemetry)
 	}
+	// A verified device gets the resources it has not applied with this
+	// answer (fleet.resources)
+	if envelopeVerified {
+		s.fleetHeartbeat(deviceID)
+	}
 
 	serverModifiedAt := s.clientBrandingModifiedAt()
 	resp := map[string]any{

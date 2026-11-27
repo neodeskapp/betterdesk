@@ -3088,10 +3088,11 @@ func (s *SQLiteDB) CompleteTelemetryCommand(deviceID string, id int64, status, r
 	return err
 }
 
-// OpenTelemetryCommandIDs returns which of ids are commands of deviceID
-// that still take an answer: pending or running, and not expired.
-func (s *SQLiteDB) OpenTelemetryCommandIDs(deviceID string, ids []int64) (map[int64]bool, error) {
-	open := map[int64]bool{}
+// OpenTelemetryCommands returns which of ids are commands of deviceID
+// that still take an answer (pending or running, and not expired), with
+// the name of each command.
+func (s *SQLiteDB) OpenTelemetryCommands(deviceID string, ids []int64) (map[int64]string, error) {
+	open := map[int64]string{}
 	if len(ids) == 0 {
 		return open, nil
 	}
@@ -3102,7 +3103,7 @@ func (s *SQLiteDB) OpenTelemetryCommandIDs(deviceID string, ids []int64) (map[in
 		args = append(args, id)
 	}
 	rows, err := s.db.Query(`
-		SELECT id FROM device_telemetry_commands
+		SELECT id, command FROM device_telemetry_commands
 		WHERE device_id = ? AND id IN (`+inList(len(ids))+`) AND status IN ('pending', 'running')
 		  AND (expires_at = '' OR expires_at > datetime('now'))`, args...)
 	if err != nil {
@@ -3111,10 +3112,11 @@ func (s *SQLiteDB) OpenTelemetryCommandIDs(deviceID string, ids []int64) (map[in
 	defer rows.Close()
 	for rows.Next() {
 		var id int64
-		if err := rows.Scan(&id); err != nil {
+		var command string
+		if err := rows.Scan(&id, &command); err != nil {
 			return nil, err
 		}
-		open[id] = true
+		open[id] = command
 	}
 	return open, rows.Err()
 }

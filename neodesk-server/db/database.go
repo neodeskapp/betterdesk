@@ -729,9 +729,10 @@ type Database interface {
 	// CompleteTelemetryCommand completes command id only when it is pending
 	// or running for deviceID.
 	CompleteTelemetryCommand(deviceID string, id int64, status, result string) error
-	// OpenTelemetryCommandIDs returns which of ids are commands of
-	// deviceID that still take an answer (pending or running, not expired).
-	OpenTelemetryCommandIDs(deviceID string, ids []int64) (map[int64]bool, error)
+	// OpenTelemetryCommands returns which of ids are commands of deviceID
+	// that still take an answer (pending or running, not expired), with
+	// the name of each.
+	OpenTelemetryCommands(deviceID string, ids []int64) (map[int64]string, error)
 	// MarkTelemetryCommandRunning notes that the device started command
 	// id: it is no longer handed out, takes the final answer until
 	// expiresAt.

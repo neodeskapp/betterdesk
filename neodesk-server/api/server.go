@@ -163,6 +163,8 @@ type Server struct {
 	wg           sync.WaitGroup
 	version      string
 	now          func() time.Time // the clock of the export file names
+	// fleet is the fleet scheduler's state (fleet_queue.go)
+	fleet fleetState
 }
 
 // SetPanelStore attaches the panel data source for RustDesk group/folder sync.
@@ -177,7 +179,7 @@ func (s *Server) SetConsoleAuth(c *db.ConsoleAuthDB) {
 
 // New creates a new API server.
 func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *relay.Server, version string) *Server {
-	return &Server{
+	s := &Server{
 		cfg:                    cfg,
 		db:                     database,
 		peers:                  peerMap,
@@ -200,6 +202,8 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		panelNonces:       newPanelNonceCache(),
 		now:               time.Now,
 	}
+	s.fleet.init()
+	return s
 }
 
 // rateLimitPublic wraps a public (no-auth) handler with the supplied IP limiter.
@@ -725,6 +729,8 @@ func (s *Server) routes() *http.ServeMux {
 	s.connectAnswerRoutes(mux)
 	s.signinRoutes(mux)
 	s.supportCallerRoutes(mux)
+	// Fleet tasks, resources, workflows and compliance (fleet_handlers.go)
+	s.fleetRoutes(mux)
 
 	// CDAP device management (requires CDAP gateway to be enabled)
 	mux.HandleFunc("GET /api/cdap/status", s.requirePermission(auth.PermCDAPView, s.handleCDAPStatus))
@@ -878,6 +884,8 @@ func (s *Server) Start(ctx context.Context) error {
 		log.Printf("[api] relay compatibility enabled on %s (portless relay-server clients)", addr)
 	}
 
+	s.startFleetScheduler()
+
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -903,6 +911,7 @@ func (s *Server) Stop() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	s.httpSrv.Shutdown(ctx)
+	s.stopFleetScheduler()
 	s.wg.Wait()
 	log.Printf("[api] Stopped")
 }

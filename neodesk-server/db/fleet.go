@@ -67,18 +67,18 @@ type FleetResourceItem struct {
 }
 
 // FleetResourceRevision is the revision of a device's resource list: the
-// SHA-256 of its JSON with the items in id order. An empty list has the
-// revision "", which a device that never got any has too.
+// SHA-256 of its JSON with the items in id order.
 func FleetResourceRevision(items []FleetResourceItem) string {
-	if len(items) == 0 {
-		return ""
-	}
-	sorted := append([]FleetResourceItem(nil), items...)
+	sorted := append([]FleetResourceItem{}, items...)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].ID < sorted[j].ID })
 	raw, _ := json.Marshal(sorted)
 	sum := sha256.Sum256(raw)
 	return hex.EncodeToString(sum[:])
 }
+
+// FleetEmptyRevision is the revision of the empty list. A device that
+// never got a list has applied it.
+var FleetEmptyRevision = FleetResourceRevision(nil)
 
 // FleetDeviceResources is what the server sent a device of its resources
 // and what the device applied.
@@ -232,6 +232,9 @@ type FleetStore interface {
 	// ListFleetRuns are the device runs of one run of the task (batch 0:
 	// the last one), in device order.
 	ListFleetRuns(taskID int64, batch int) ([]*FleetRun, error)
+	// ListOpenFleetRuns are the task's device runs that wait for their
+	// device, of any of its runs.
+	ListOpenFleetRuns(taskID int64) ([]*FleetRun, error)
 	// ListStaleFleetRuns are the open runs whose command the device can no
 	// longer answer: expired, closed without a result, or gone.
 	ListStaleFleetRuns() ([]*FleetRun, error)
@@ -913,6 +916,19 @@ func (f *fleetStore) ListFleetRuns(taskID int64, batch int) ([]*FleetRun, error)
 		}
 		return err
 	})
+	return out, err
+}
+
+func (f *fleetStore) ListOpenFleetRuns(taskID int64) ([]*FleetRun, error) {
+	out := []*FleetRun{}
+	err := f.b.each(`SELECT `+fleetRunColumns+` FROM fleet_task_runs WHERE task_id = ? AND status IN ('pending', 'running') ORDER BY id`,
+		[]any{taskID}, func(scan func(dest ...any) error) error {
+			r, err := scanFleetRun(scan)
+			if err == nil {
+				out = append(out, r)
+			}
+			return err
+		})
 	return out, err
 }
 
