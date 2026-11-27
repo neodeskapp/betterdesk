@@ -264,7 +264,7 @@
     "intune_script_title": "Windows 安装脚本",
     "intune_script_hint": "请在 RustDesk 安装程序完成后以管理员身份运行，例如作为 Intune 或 PSADT 步骤。它设置的值与部署字符串相同。",
     "deploy_string_not_ready": "在加载服务器公钥之前，部署字符串不可用。",
-    "client_server_host_env_hint": "地址已在“设置”>“公共客户端端点”中设置。在那里清空后，即可重新使用这里输入的地址。",
+    "client_server_host_env_hint": "ID 服务器已在“设置”>“公共客户端端点”中设置。在那里清空后，即可重新使用这里输入的地址。",
     "client_config_qr_unreachable_host": "此代码只指向这台计算机（localhost 或 .local 名称），手机通常无法访问。请先在“客户端服务器地址”中输入服务器的网络地址，或在“设置”中永久设置。",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -723,7 +723,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "还没有设备。",
+    "empty_join_requests": "在“加入请求”中批准新电脑"
   },
   "keys": {
     "title": "服务器密钥",
@@ -1127,8 +1129,6 @@
     "public_endpoints_relay": "公共中继服务器",
     "public_endpoints_relay_placeholder": "例如 remote.example.com（默认：ID 服务器）",
     "public_endpoints_api_url": "公共 API URL",
-    "public_endpoints_api_url_placeholder": "例如 https://api.example.com",
-    "public_endpoints_api_url_hint": "RustDesk 登录/API 的完整 URL（默认端口 21114）。",
     "public_endpoints_save": "保存端点",
     "public_endpoints_saved": "已保存公共客户端端点",
     "public_endpoints_invalid_host": "ID 或中继服务器 hostname 无效",
@@ -1302,8 +1302,8 @@
       "rec_type": "类型",
       "rec_size": "大小",
       "audit_moved": "控制台活动日志位于",
-      "audit_link": "活动 › 安全与审计",
-      "endpoint_api_hint": "客户端登录时使用的完整地址，例如 https://api.example.com。除非您已更改，服务器使用端口 21114。",
+      "audit_link": "活动 › 审计日志",
+      "endpoint_api_hint": "客户端登录时使用的完整地址，例如 https://api.example.com。除非您已更改，服务器使用端口 21121。",
       "endpoints_when": "当客户端通过与此控制台不同的地址访问服务器时 (例如在反向代理之后) 请填写。空白字段使用自动找到的地址，显示在“客户端当前获得的内容”中。",
       "conn_p2p_desc": "网络允许时计算机直接连接，否则通过中继服务器。",
       "conn_relay_desc": "每个会话都经过中继服务器。",
@@ -1379,7 +1379,7 @@
       "auto": "自动检测",
       "endpoint_id_help": "互联网上的客户端访问 ID 服务器时使用的主机名或 IP 地址。如果客户端通过与本控制台不同的地址访问此服务器（例如在反向代理后面），请填写。例如 remote.example.com。",
       "endpoint_relay_help": "中继服务器的主机名或 IP 地址。留空则使用 ID 服务器地址。",
-      "endpoint_api_help": "客户端登录时使用的完整地址。除非您改过，服务器使用端口 21114。例如 https://api.example.com 或 http://203.0.113.10:21114。",
+      "endpoint_api_help": "客户端登录时使用的完整地址。除非您改过，服务器使用端口 21121。例如 https://api.example.com 或 http://203.0.113.10:21121。",
       "conn_mode_help": "直接连接更快。中继在任何网络中都能工作。",
       "conn_operator_only_help": "RustDesk 应用必须登录到一个角色可以连接设备（连接设备）的账户。其他设备无法发起会话。从浏览器发起的会话仍然可用。",
       "host_extra": "只填主机名或 IP 地址，不带 http://、端口或路径。",
@@ -9191,7 +9191,7 @@
       },
       "backup": {
         "title": "创建备份",
-        "hint": "备份包含服务器密钥。没有此密钥，每台电脑都必须重新设置。"
+        "hint": "备份包含服务器密钥。没有此密钥，每台电脑都必须重新设置。在“服务器”>“备份”中手动或按计划创建的备份会完成此步骤；安装脚本的备份不算。"
       }
     }
   },

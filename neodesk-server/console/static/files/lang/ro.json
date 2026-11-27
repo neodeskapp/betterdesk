@@ -270,7 +270,7 @@
     "intune_script_title": "Script de instalare Windows",
     "intune_script_hint": "Rulați-l ca administrator după ce programul de instalare RustDesk s-a terminat, de exemplu ca pas Intune sau PSADT. Setează aceleași valori ca șirul de deploy.",
     "deploy_string_not_ready": "Șirul de deploy nu este disponibil până când cheia publică a serverului este încărcată.",
-    "client_server_host_env_hint": "Adresele sunt setate în Setări, Endpoint-uri publice client. Goliți-le acolo pentru a folosi din nou adresa introdusă aici.",
+    "client_server_host_env_hint": "Serverul ID este setat în Setări, Endpoint-uri publice client. Goliți-l acolo pentru a folosi din nou adresa introdusă aici.",
     "client_config_qr_unreachable_host": "Acest cod indică doar spre acest computer (localhost sau un nume .local), așa că de obicei telefoanele nu îl pot accesa. Introduceți mai întâi adresa de rețea a serverului la Adresa serverului pentru clienți sau setați-o permanent în Setări.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -729,7 +729,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "Încă nu există dispozitive.",
+    "empty_join_requests": "Aprobați computerele noi în Cereri de alăturare"
   },
   "keys": {
     "title": "Cheile serverului",
@@ -1133,8 +1135,6 @@
     "public_endpoints_relay": "Server relay public",
     "public_endpoints_relay_placeholder": "ex. remote.example.com (implicit: ID)",
     "public_endpoints_api_url": "URL API public",
-    "public_endpoints_api_url_placeholder": "ex. https://api.example.com",
-    "public_endpoints_api_url_hint": "URL complet pentru login și API RustDesk (port implicit 21114).",
     "public_endpoints_save": "Salvează endpoint-urile",
     "public_endpoints_saved": "Endpoint-uri publice client salvate",
     "public_endpoints_invalid_host": "Hostname ID sau relay invalid",
@@ -1308,8 +1308,8 @@
       "rec_type": "Tip",
       "rec_size": "Dimensiune",
       "audit_moved": "Jurnalul de activitate al consolei se află în",
-      "audit_link": "Activitate › Securitate și audit",
-      "endpoint_api_hint": "Adresa completă prin care clienții se conectează, de exemplu https://api.example.com. Serverul folosește portul 21114, dacă nu l-ați schimbat.",
+      "audit_link": "Activitate › Jurnal de audit",
+      "endpoint_api_hint": "Adresa completă prin care clienții se conectează, de exemplu https://api.example.com. Serverul folosește portul 21121, dacă nu l-ați schimbat.",
       "endpoints_when": "Completați-le când clienții ajung la server pe altă adresă decât această consolă, de exemplu în spatele unui reverse proxy. Câmpurile goale folosesc adresa găsită automat, afișată la Ce primesc clienții acum.",
       "conn_p2p_desc": "Calculatoarele se conectează direct când rețelele permit, altfel prin serverul releu.",
       "conn_relay_desc": "Fiecare sesiune trece prin serverul releu.",
@@ -1385,7 +1385,7 @@
       "auto": "găsită automat",
       "endpoint_id_help": "Numele de gazdă sau adresa IP a serverului ID, așa cum îl ating clienții de pe internet. Completați-l când clienții ajung la acest server pe altă adresă decât această consolă, de exemplu în spatele unui reverse proxy. De exemplu remote.example.com.",
       "endpoint_relay_help": "Numele de gazdă sau adresa IP a serverului de releu. Lăsați gol pentru a folosi adresa serverului ID.",
-      "endpoint_api_help": "Adresa completă pe care clienții o folosesc pentru conectare. Serverul folosește portul 21114, dacă nu l-ați schimbat. De exemplu https://api.example.com sau http://203.0.113.10:21114.",
+      "endpoint_api_help": "Adresa completă pe care clienții o folosesc pentru conectare. Serverul folosește portul 21121, dacă nu l-ați schimbat. De exemplu https://api.example.com sau http://203.0.113.10:21121.",
       "conn_mode_help": "Conexiunile directe sunt mai rapide. Releul funcționează în orice rețea.",
       "conn_operator_only_help": "Aplicația RustDesk trebuie să fie conectată la un cont al cărui rol se poate conecta la dispozitive (Conectați-vă la dispozitive). Alte dispozitive nu pot porni sesiuni. Sesiunile din browser funcționează în continuare.",
       "host_extra": "Doar numele de gazdă sau adresa IP, fără http://, port sau cale.",
@@ -9197,7 +9197,7 @@
       },
       "backup": {
         "title": "Creați o copie de rezervă",
-        "hint": "Conține cheia serverului. Fără cheie, fiecare computer trebuie configurat din nou."
+        "hint": "Conține cheia serverului. Fără cheie, fiecare computer trebuie configurat din nou. Pasul se bifează cu o copie de rezervă din Server, Copii de rezervă, manuală sau programată; copiile scriptului de instalare nu contează."
       }
     }
   },

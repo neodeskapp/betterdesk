@@ -196,9 +196,13 @@ test('each step leads to its place and back, and the server ticks it', async ({ 
 		expect((await saved).ok()).toBe(true);
 	});
 
-	// HTTPS is set up outside the console: the step leads to the docs, and plain HTTP does not tick it
+	// HTTPS is set up outside the console: the step leads to the docs, and plain HTTP does not tick it.
+	// The test server runs in a container, so the link names the Docker way (--domain)
 	const https = step(page, 'https').getByRole('link');
-	await expect(https).toHaveAttribute('href', 'https://neode.sk/docs/operations/reverse-proxy-tls');
+	await expect(https).toHaveAttribute(
+		'href',
+		'https://neode.sk/docs/operations/reverse-proxy-tls#https-with-lets-encrypt-on-docker'
+	);
 	await expect(https).toHaveAttribute('target', '_blank');
 	await expect(step(page, 'https')).not.toHaveClass(/is-done/);
 

@@ -270,7 +270,7 @@
     "intune_script_title": "สคริปต์ติดตั้ง Windows",
     "intune_script_hint": "เรียกใช้ในฐานะผู้ดูแลระบบหลังจากตัวติดตั้ง RustDesk ทำงานเสร็จ เช่น เป็นขั้นตอนหนึ่งของ Intune หรือ PSADT สคริปต์นี้กำหนดค่าเดียวกับสตริง deploy",
     "deploy_string_not_ready": "สตริง deploy จะใช้ไม่ได้จนกว่าจะโหลดคีย์สาธารณะของเซิร์ฟเวอร์",
-    "client_server_host_env_hint": "ที่อยู่ถูกกำหนดไว้ที่ การตั้งค่า, จุดปลายทางไคลเอนต์สาธารณะ ล้างค่าที่นั่นเพื่อกลับมาใช้ที่อยู่ที่ป้อนไว้ที่นี่",
+    "client_server_host_env_hint": "เซิร์ฟเวอร์ ID ถูกกำหนดไว้ที่ การตั้งค่า, จุดปลายทางไคลเอนต์สาธารณะ ล้างค่าที่นั่นเพื่อกลับมาใช้ที่อยู่ที่ป้อนไว้ที่นี่",
     "client_config_qr_unreachable_host": "โค้ดนี้ชี้ไปยังคอมพิวเตอร์เครื่องนี้เท่านั้น (localhost หรือชื่อ .local) โทรศัพท์จึงมักเข้าถึงไม่ได้ โปรดป้อนที่อยู่เครือข่ายของเซิร์ฟเวอร์ในช่อง ที่อยู่เซิร์ฟเวอร์สำหรับไคลเอนต์ ก่อน หรือกำหนดไว้ถาวรในการตั้งค่า",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -729,7 +729,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "ยังไม่มีอุปกรณ์",
+    "empty_join_requests": "อนุมัติคอมพิวเตอร์ใหม่ที่ คำขอเข้าร่วม"
   },
   "keys": {
     "title": "คีย์เซิร์ฟเวอร์",
@@ -1133,8 +1135,6 @@
     "public_endpoints_relay": "เซิร์ฟเวอร์ relay สาธารณะ",
     "public_endpoints_relay_placeholder": "เช่น remote.example.com (ค่าเริ่มต้น: ID)",
     "public_endpoints_api_url": "URL API สาธารณะ",
-    "public_endpoints_api_url_placeholder": "เช่น https://api.example.com",
-    "public_endpoints_api_url_hint": "URL เต็มสำหรับล็อกอินและ API ของ RustDesk (พอร์ตเริ่มต้น 21114)",
     "public_endpoints_save": "บันทึกจุดปลายทาง",
     "public_endpoints_saved": "บันทึกจุดปลายทางไคลเอนต์สาธารณะแล้ว",
     "public_endpoints_invalid_host": "ชื่อโฮสต์ ID หรือ relay ไม่ถูกต้อง",
@@ -1308,8 +1308,8 @@
       "rec_type": "ประเภท",
       "rec_size": "ขนาด",
       "audit_moved": "บันทึกกิจกรรมของคอนโซลอยู่ที่",
-      "audit_link": "กิจกรรม › ความปลอดภัยและการตรวจสอบ",
-      "endpoint_api_hint": "ที่อยู่เต็มที่ไคลเอนต์ใช้ลงชื่อเข้าใช้ เช่น https://api.example.com เซิร์ฟเวอร์ใช้พอร์ต 21114 หากคุณไม่ได้เปลี่ยน",
+      "audit_link": "กิจกรรม › บันทึกการตรวจสอบ",
+      "endpoint_api_hint": "ที่อยู่เต็มที่ไคลเอนต์ใช้ลงชื่อเข้าใช้ เช่น https://api.example.com เซิร์ฟเวอร์ใช้พอร์ต 21121 หากคุณไม่ได้เปลี่ยน",
       "endpoints_when": "กรอกเมื่อไคลเอนต์เข้าถึงเซิร์ฟเวอร์ด้วยที่อยู่อื่นที่ไม่ใช่ของคอนโซลนี้ เช่น อยู่หลัง reverse proxy ช่องที่ว่างจะใช้ที่อยู่ที่พบโดยอัตโนมัติ ซึ่งแสดงใน สิ่งที่ไคลเอนต์ได้รับตอนนี้",
       "conn_p2p_desc": "คอมพิวเตอร์เชื่อมต่อกันโดยตรงเมื่อเครือข่ายอนุญาต ไม่เช่นนั้นจะผ่านเซิร์ฟเวอร์รีเลย์",
       "conn_relay_desc": "ทุกเซสชันผ่านเซิร์ฟเวอร์รีเลย์",
@@ -1385,7 +1385,7 @@
       "auto": "พบโดยอัตโนมัติ",
       "endpoint_id_help": "ชื่อโฮสต์หรือที่อยู่ IP ของเซิร์ฟเวอร์ ID ตามที่ไคลเอนต์บนอินเทอร์เน็ตเข้าถึง กรอกเมื่อไคลเอนต์เข้าถึงเซิร์ฟเวอร์นี้ด้วยที่อยู่อื่นที่ไม่ใช่คอนโซลนี้ เช่น อยู่หลังรีเวิร์สพร็อกซี เช่น remote.example.com",
       "endpoint_relay_help": "ชื่อโฮสต์หรือที่อยู่ IP ของเซิร์ฟเวอร์รีเลย์ เว้นว่างไว้เพื่อใช้ที่อยู่ของเซิร์ฟเวอร์ ID",
-      "endpoint_api_help": "ที่อยู่เต็มที่ไคลเอนต์ใช้ลงชื่อเข้าใช้ เซิร์ฟเวอร์ใช้พอร์ต 21114 เว้นแต่คุณเปลี่ยนไว้ เช่น https://api.example.com หรือ http://203.0.113.10:21114",
+      "endpoint_api_help": "ที่อยู่เต็มที่ไคลเอนต์ใช้ลงชื่อเข้าใช้ เซิร์ฟเวอร์ใช้พอร์ต 21121 เว้นแต่คุณเปลี่ยนไว้ เช่น https://api.example.com หรือ http://203.0.113.10:21121",
       "conn_mode_help": "การเชื่อมต่อโดยตรงเร็วกว่า รีเลย์ใช้ได้กับทุกเครือข่าย",
       "conn_operator_only_help": "แอป RustDesk ต้องลงชื่อเข้าใช้ด้วยบัญชีที่บทบาทเชื่อมต่ออุปกรณ์ได้ (เชื่อมต่อกับอุปกรณ์) อุปกรณ์อื่นเริ่มเซสชันไม่ได้ เซสชันจากเบราว์เซอร์ยังใช้ได้ตามปกติ",
       "host_extra": "เฉพาะชื่อโฮสต์หรือที่อยู่ IP ไม่มี http:// พอร์ต หรือพาธ",
@@ -9197,7 +9197,7 @@
       },
       "backup": {
         "title": "สร้างข้อมูลสำรอง",
-        "hint": "ข้อมูลสำรองมีคีย์ของเซิร์ฟเวอร์ หากไม่มีคีย์ คอมพิวเตอร์ทุกเครื่องต้องตั้งค่าใหม่"
+        "hint": "ข้อมูลสำรองมีคีย์ของเซิร์ฟเวอร์ หากไม่มีคีย์ คอมพิวเตอร์ทุกเครื่องต้องตั้งค่าใหม่ ขั้นตอนนี้จะเสร็จเมื่อมีข้อมูลสำรองจาก เซิร์ฟเวอร์, ข้อมูลสำรอง ทั้งแบบทำเองหรือตามกำหนดเวลา ข้อมูลสำรองจากสคริปต์ติดตั้งไม่นับ"
       }
     }
   },

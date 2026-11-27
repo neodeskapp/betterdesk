@@ -264,7 +264,7 @@
     "intune_script_title": "Instalační skript pro Windows",
     "intune_script_hint": "Spusťte ho jako správce po dokončení instalačního programu RustDesk, například jako krok v Intune nebo PSADT. Nastavuje stejné hodnoty jako deploy string.",
     "deploy_string_not_ready": "Deploy string není k dispozici, dokud není načten veřejný klíč serveru.",
-    "client_server_host_env_hint": "Adresy jsou nastaveny v Nastavení, Veřejné koncové body klientů. Vymažte je tam, pokud chcete znovu použít adresu zadanou zde.",
+    "client_server_host_env_hint": "ID server je nastaven v Nastavení, Veřejné koncové body klientů. Vymažte ho tam, pokud chcete znovu použít adresu zadanou zde.",
     "client_config_qr_unreachable_host": "Tento kód ukazuje jen na tento počítač (localhost nebo název .local), takže se k němu telefony obvykle nedostanou. Nejprve zadejte síťovou adresu serveru do pole Adresa serveru pro klienty, nebo ji nastavte natrvalo v Nastavení.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -723,7 +723,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "Zatím žádná zařízení.",
+    "empty_join_requests": "Schvalte nové počítače v části Žádosti o připojení"
   },
   "keys": {
     "title": "Klíče serveru",
@@ -1127,8 +1129,6 @@
     "public_endpoints_relay": "Veřejný relay server",
     "public_endpoints_relay_placeholder": "např. remote.example.com (výchozí: ID server)",
     "public_endpoints_api_url": "Veřejná API URL",
-    "public_endpoints_api_url_placeholder": "např. https://api.example.com",
-    "public_endpoints_api_url_hint": "Plná URL pro přihlášení a API volání RustDesk klientů (výchozí port 21114).",
     "public_endpoints_save": "Uložit koncové body",
     "public_endpoints_saved": "Veřejné koncové body klientů uloženy",
     "public_endpoints_invalid_host": "Neplatný hostname ID nebo relay serveru",
@@ -1302,8 +1302,8 @@
       "rec_type": "Typ",
       "rec_size": "Velikost",
       "audit_moved": "Protokol aktivit konzole najdete v části",
-      "audit_link": "Aktivita › Zabezpečení a audit",
-      "endpoint_api_hint": "Úplná adresa, přes kterou se klienti přihlašují, například https://api.example.com. Server používá port 21114, pokud jste ho nezměnili.",
+      "audit_link": "Aktivity › Auditní protokol",
+      "endpoint_api_hint": "Úplná adresa, přes kterou se klienti přihlašují, například https://api.example.com. Server používá port 21121, pokud jste ho nezměnili.",
       "endpoints_when": "Vyplňte je, když klienti dosáhnou server na jiné adrese než tuto konzoli, například za reverzní proxy. Prázdná pole použijí automaticky nalezenou adresu, uvedenou v části Co klienti dostávají teď.",
       "conn_p2p_desc": "Počítače se spojí přímo, když to jejich sítě dovolí, jinak přes přenosový server.",
       "conn_relay_desc": "Každá relace jde přes přenosový server.",
@@ -1379,7 +1379,7 @@
       "auto": "zjištěno automaticky",
       "endpoint_id_help": "Název hostitele nebo IP adresa ID serveru, jak ho klienti z internetu dosáhnou. Vyplňte, když klienti tento server dosahují na jiné adrese než tuto konzoli, třeba za reverzní proxy. Například remote.example.com.",
       "endpoint_relay_help": "Název hostitele nebo IP adresa přenosového serveru. Nechte prázdné a použije se adresa ID serveru.",
-      "endpoint_api_help": "Celá adresa, kterou klienti používají k přihlášení. Server používá port 21114, pokud jste ho nezměnili. Například https://api.example.com nebo http://203.0.113.10:21114.",
+      "endpoint_api_help": "Celá adresa, kterou klienti používají k přihlášení. Server používá port 21121, pokud jste ho nezměnili. Například https://api.example.com nebo http://203.0.113.10:21121.",
       "conn_mode_help": "Přímá spojení jsou rychlejší. Přenos funguje v každé síti.",
       "conn_operator_only_help": "Aplikace RustDesk musí být přihlášená k účtu, jehož role se smí připojovat k zařízením (Připojit k zařízením). Ostatní zařízení nemohou zahájit relace. Relace z prohlížeče fungují dál.",
       "host_extra": "Jen název hostitele nebo IP adresa, bez http://, portu a cesty.",
@@ -9191,7 +9191,7 @@
       },
       "backup": {
         "title": "Vytvořit zálohu",
-        "hint": "Obsahuje klíč serveru. Bez klíče se musí každý počítač nastavit znovu."
+        "hint": "Obsahuje klíč serveru. Bez klíče se musí každý počítač nastavit znovu. Tento krok splní záloha v části Server, Zálohy, ručně nebo podle plánu; zálohy instalačního skriptu se nepočítají."
       }
     }
   },

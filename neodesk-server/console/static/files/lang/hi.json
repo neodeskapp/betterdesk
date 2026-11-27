@@ -270,7 +270,7 @@
     "intune_script_title": "Windows इंस्टॉल स्क्रिप्ट",
     "intune_script_hint": "RustDesk इंस्टॉलर पूरा होने के बाद इसे एडमिनिस्ट्रेटर के रूप में चलाएँ, उदाहरण के लिए Intune या PSADT चरण के रूप में। यह वही मान सेट करती है जो डिप्लॉय स्ट्रिंग करती है।",
     "deploy_string_not_ready": "सर्वर की सार्वजनिक कुंजी लोड होने तक डिप्लॉय स्ट्रिंग उपलब्ध नहीं है।",
-    "client_server_host_env_hint": "पते सेटिंग्स, सार्वजनिक क्लाइंट एंडपॉइंट में सेट हैं। यहाँ डाला गया पता फिर से इस्तेमाल करने के लिए उन्हें वहाँ खाली करें।",
+    "client_server_host_env_hint": "ID सर्वर सेटिंग्स, सार्वजनिक क्लाइंट एंडपॉइंट में सेट है। यहाँ डाला गया पता फिर से इस्तेमाल करने के लिए उसे वहाँ खाली करें।",
     "client_config_qr_unreachable_host": "यह कोड केवल इसी कंप्यूटर की ओर इशारा करता है (localhost या कोई .local नाम), इसलिए फ़ोन आम तौर पर इस तक नहीं पहुँच पाते। पहले क्लाइंट सर्वर पता में सर्वर का नेटवर्क पता डालें, या इसे सेटिंग्स में स्थायी रूप से सेट करें।",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -729,7 +729,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "अभी कोई उपकरण नहीं।",
+    "empty_join_requests": "नए कंप्यूटरों को जुड़ने के अनुरोध में स्वीकृत करें"
   },
   "keys": {
     "title": "सर्वर कुंजी",
@@ -1133,8 +1135,6 @@
     "public_endpoints_relay": "सार्वजनिक relay सर्वर",
     "public_endpoints_relay_placeholder": "जैसे remote.example.com (डिफ़ॉल्ट: ID)",
     "public_endpoints_api_url": "सार्वजनिक API URL",
-    "public_endpoints_api_url_placeholder": "जैसे https://api.example.com",
-    "public_endpoints_api_url_hint": "RustDesk लॉगिन/API के लिए पूर्ण URL (डिफ़ॉल्ट पोर्ट 21114)।",
     "public_endpoints_save": "एंडपॉइंट सहेजें",
     "public_endpoints_saved": "सार्वजनिक क्लाइंट एंडपॉइंट सहेजे गए",
     "public_endpoints_invalid_host": "अमान्य ID या relay होस्टनाम",
@@ -1308,8 +1308,8 @@
       "rec_type": "प्रकार",
       "rec_size": "आकार",
       "audit_moved": "कंसोल का गतिविधि लॉग यहाँ है:",
-      "audit_link": "गतिविधि › सुरक्षा और ऑडिट",
-      "endpoint_api_hint": "पूरा पता जिससे क्लाइंट साइन इन करते हैं, जैसे https://api.example.com. सर्वर पोर्ट 21114 इस्तेमाल करता है, जब तक आपने उसे बदला न हो।",
+      "audit_link": "गतिविधि › ऑडिट लॉग",
+      "endpoint_api_hint": "पूरा पता जिससे क्लाइंट साइन इन करते हैं, जैसे https://api.example.com. सर्वर पोर्ट 21121 इस्तेमाल करता है, जब तक आपने उसे बदला न हो।",
       "endpoints_when": "इन्हें तब भरें जब क्लाइंट इस सर्वर तक इस कंसोल से अलग पते पर पहुँचते हैं, जैसे रिवर्स प्रॉक्सी के पीछे। खाली फ़ील्ड अपने-आप मिला पता इस्तेमाल करते हैं, जो \"क्लाइंट को अभी क्या मिलता है\" में दिखता है।",
       "conn_p2p_desc": "नेटवर्क अनुमति दें तो कंप्यूटर सीधे जुड़ते हैं, नहीं तो रिले सर्वर के ज़रिए।",
       "conn_relay_desc": "हर सत्र रिले सर्वर से होकर जाता है।",
@@ -1385,7 +1385,7 @@
       "auto": "अपने आप मिला",
       "endpoint_id_help": "ID सर्वर का होस्ट नाम या IP पता, जैसा इंटरनेट पर क्लाइंट उस तक पहुँचते हैं। इसे तब भरें जब क्लाइंट इस सर्वर तक इस कंसोल से अलग पते पर पहुँचते हों, जैसे रिवर्स प्रॉक्सी के पीछे। उदाहरण के लिए remote.example.com।",
       "endpoint_relay_help": "रिले सर्वर का होस्ट नाम या IP पता। ID सर्वर का पता इस्तेमाल करने के लिए खाली छोड़ें।",
-      "endpoint_api_help": "वह पूरा पता जिससे क्लाइंट साइन इन करते हैं। जब तक आपने बदला न हो, सर्वर पोर्ट 21114 इस्तेमाल करता है। उदाहरण के लिए https://api.example.com या http://203.0.113.10:21114।",
+      "endpoint_api_help": "वह पूरा पता जिससे क्लाइंट साइन इन करते हैं। जब तक आपने बदला न हो, सर्वर पोर्ट 21121 इस्तेमाल करता है। उदाहरण के लिए https://api.example.com या http://203.0.113.10:21121।",
       "conn_mode_help": "सीधे कनेक्शन तेज़ होते हैं। रिले हर नेटवर्क पर काम करता है।",
       "conn_operator_only_help": "RustDesk ऐप ऐसे खाते से साइन इन होना चाहिए जिसकी भूमिका डिवाइस से कनेक्ट कर सके (उपकरणों से कनेक्ट करें)। दूसरे डिवाइस सत्र शुरू नहीं कर सकते। ब्राउज़र से सत्र पहले की तरह काम करते हैं।",
       "host_extra": "केवल होस्ट नाम या IP पता, http://, पोर्ट या पाथ के बिना।",
@@ -9197,7 +9197,7 @@
       },
       "backup": {
         "title": "बैकअप बनाएँ",
-        "hint": "इसमें सर्वर की कुंजी होती है। कुंजी के बिना हर कंप्यूटर को फिर से सेट करना पड़ता है।"
+        "hint": "इसमें सर्वर की कुंजी होती है। कुंजी के बिना हर कंप्यूटर को फिर से सेट करना पड़ता है। सर्वर, बैकअप में हाथ से या शेड्यूल पर बना बैकअप इस चरण को पूरा करता है; इंस्टॉल स्क्रिप्ट के बैकअप नहीं गिने जाते।"
       }
     }
   },

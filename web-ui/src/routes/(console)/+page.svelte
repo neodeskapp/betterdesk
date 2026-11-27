@@ -30,8 +30,10 @@
 		type DeviceStats,
 		type ServerStatus
 	} from '#lib/api/dashboard.ts';
+	import { listFolders, type Folder } from '#lib/api/devices.ts';
 	import { addTabs } from '#lib/devices-area/add-computers.ts';
 	import {
+		clientHostFixed,
 		configText,
 		deviceParts,
 		partLabelKey,
@@ -174,7 +176,7 @@
 
 	async function applyHost(e?: SubmitEvent) {
 		e?.preventDefault();
-		if (applying || config?.env_override_active) return;
+		if (applying || hostFixed) return;
 		applying = true;
 		// An empty field goes back to the server's own address
 		if (!host.trim()) writeClientHost('');
@@ -194,7 +196,9 @@
 		})
 	);
 
-	const envOverride = $derived(Boolean(config?.env_override_active));
+	// Only a public ID server in Settings fixes the address; a public relay
+	// or API address alone leaves the field for the rest
+	const hostFixed = $derived(clientHostFixed(config));
 	const fallbackHost = typeof location !== 'undefined' ? location.hostname : '';
 
 	const copyAll = new Copier();
@@ -220,6 +224,7 @@
 	const qrDialog = lazy(() => import('#lib/devices-area/ConfigQrDialog.svelte'));
 	const scriptSheet = lazy(() => import('#lib/devices-area/InstallScriptSheet.svelte'));
 	const pairDialog = lazy(() => import('#lib/devices-area/PairCodeDialog.svelte'));
+	const addComputer = lazy(() => import('#lib/onboard/AddComputerDialog.svelte'));
 	const activation = lazy(() => import('#lib/devices-area/AgentActivation.svelte'));
 	const trends = lazy(() => import('#lib/people/Trends.svelte'));
 
@@ -227,6 +232,19 @@
 	let scriptOpen = $state(false);
 	let pairOpen = $state(false);
 	let activationOpen = $state(false);
+	let addOpen = $state(false);
+	let folders = $state.raw<Folder[]>([]);
+
+	/** Add a computer opens here, as from the setup guide */
+	async function openAddComputer() {
+		folders = await listFolders().catch(() => []);
+		addOpen = true;
+	}
+
+	function closeAddComputer() {
+		addOpen = false;
+		void loadOverview();
+	}
 
 	function showQr() {
 		if (!config?.config_uri || !config.public_key) return void toast.warning(t('keys.no_qr'));
@@ -316,7 +334,18 @@
 							<a href={link('/devices')}>{t('dashboard.open_device_list')}</a>
 						</div>
 						<div class="devices-body" aria-live="polite">
-							{#if stats && parts}
+							{#if stats && stats.total === 0}
+								<!-- A new server: say what comes next instead of an empty bar -->
+								<p class="devices-none">{t('devices.empty_none')}</p>
+								{#if canApprove}
+									<div class="devices-none-actions">
+										<Button variant="primary" icon={ICONS.add} onclick={() => void openAddComputer()}
+											>{t('onboard.invite.button')}</Button
+										>
+										<a href={link('/registrations')}>{t('devices.empty_join_requests')}</a>
+									</div>
+								{/if}
+							{:else if stats && parts}
 								<CountLine text={t('dashboard.devices_total_line')} values={{ total: stats.total }} />
 								<ShareBar
 									label={t('nav.devices')}
@@ -378,7 +407,7 @@
 					<form class="host-form" onsubmit={applyHost}>
 						<Field
 							label={t('dashboard.client_server_host_label')}
-							hint={envOverride
+							hint={hostFixed
 								? t('dashboard.client_server_host_env_hint')
 								: t('dashboard.client_server_host_hint')}
 						>
@@ -390,16 +419,16 @@
 										placeholder={t('dashboard.client_server_host_placeholder')}
 										autocomplete="off"
 										spellcheck={false}
-										disabled={envOverride}
+										disabled={hostFixed}
 										bind:value={host}
 									/>
-									<Button type="submit" busy={applying} disabled={envOverride}
+									<Button type="submit" busy={applying} disabled={hostFixed}
 										>{t('dashboard.apply_client_host')}</Button
 									>
 								</div>
 							{/snippet}
 						</Field>
-						{#if envOverride}
+						{#if hostFixed}
 							<p class="env-link">
 								<a href={link('/settings#public-endpoints')}>{t('dashboard.client_host_settings_link')}</a>
 							</p>
@@ -467,6 +496,13 @@
 					</div>
 
 					<RowList>
+						{#if canApprove}
+							<ListRow
+								title={t('onboard.invite.button')}
+								sub={t('setup_guide.steps.computer.hint')}
+								onclick={() => void openAddComputer()}
+							/>
+						{/if}
 						<ExternalRow
 							href="https://github.com/rustdesk/rustdesk/releases/latest"
 							title={t('dashboard.get_rustdesk')}
@@ -542,6 +578,12 @@
 	{/await}
 {/if}
 
+{#if addOpen}
+	{#await addComputer.open(closeAddComputer) then { default: AddComputerDialog }}
+		<AddComputerDialog {folders} onclose={closeAddComputer} />
+	{/await}
+{/if}
+
 {#if activationOpen}
 	{#await activation.open(() => (activationOpen = false)) then { default: AgentActivation }}
 		<AgentActivation onclose={() => (activationOpen = false)} />
@@ -558,6 +600,15 @@
 	}
 	.devices-body :global(.share) {
 		max-width: var(--measure);
+	}
+	.devices-none {
+		margin: 0;
+	}
+	.devices-none-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2) var(--space-4);
 	}
 
 	/* Client setup: the address field with its button on one line */

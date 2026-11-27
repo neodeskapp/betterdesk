@@ -144,6 +144,22 @@ export function readPairingCode(raw: string, consoleHost: string): string | null
 
 /* ── The address typed into "Client server address", for this tab only ── */
 
+/**
+ * Whether Settings › Public client endpoints fixes the ID server, so an
+ * address typed on the overview changes nothing: the ID server comes
+ * from a saved or environment value. A public relay or API address alone
+ * leaves the field working for the rest. An answer without sources (an
+ * older server) goes by env_override_active.
+ */
+export function clientHostFixed(
+	config: Pick<ClientConfig, 'env_override_active' | 'endpoint_sources'> | null
+): boolean {
+	if (!config) return false;
+	const sources = config.endpoint_sources;
+	if (!sources) return config.env_override_active;
+	return sources.host === 'saved' || sources.host === 'env';
+}
+
 export const CLIENT_HOST_KEY = 'nd_client_config_host';
 
 export function readClientHost(): string {

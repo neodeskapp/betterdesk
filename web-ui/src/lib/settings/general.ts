@@ -280,7 +280,8 @@ export const ENDPOINT_VARIABLES = {
 /**
  * Where an address of the side column comes from, as its label says:
  * saved on this page, a variable of the server's environment (named), or
- * found automatically. PANEL_PUBLIC_HOST comes from the environment too.
+ * found automatically. PANEL_PUBLIC_HOST and RELAY_SERVERS (the address
+ * the Docker installer found) come from the environment too.
  */
 export function endpointSourceLabel(
 	source: string | undefined,
@@ -290,5 +291,6 @@ export function endpointSourceLabel(
 	if (source === 'saved') return t('settings.side.src_page');
 	if (source === 'env') return t('settings.side.src_env', { name: variable });
 	if (source === 'panel_host') return t('settings.side.src_env', { name: 'PANEL_PUBLIC_HOST' });
+	if (source === 'relay_servers') return t('settings.side.src_env', { name: 'RELAY_SERVERS' });
 	return t('settings.side.src_auto');
 }
