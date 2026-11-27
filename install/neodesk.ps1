@@ -78,6 +78,13 @@
     Give the account admin of the web console a new password without
     questions: ADMIN_PASSWORD, else a random one, shown once.
 
+.PARAMETER ResetTwoFactor
+    With -ResetPassword (implied): also turn off two-factor sign-in of admin
+    and delete its authenticator secret and recovery codes, for an admin
+    who lost both. Where two-factor sign-in is required, admin sets it up
+    again at the next sign-in. Needs a neodesk-server that has
+    reset-password --reset-two-factor.
+
 .PARAMETER RunAsRoot
     With NSSM, run the Windows service as LocalSystem instead of its own
     low-privilege account NT SERVICE\NeoDeskServer. Without NSSM the server
@@ -136,6 +143,11 @@
     powershell -NoProfile -ExecutionPolicy Bypass -File C:\NeoDesk\neodesk.ps1 -ResetPassword
     A new password for admin, from any elevated window whatever the
     machine's execution policy
+
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File C:\NeoDesk\neodesk.ps1 -ResetTwoFactor
+    A new password for admin and its two-factor sign-in off, for an admin
+    who lost the authenticator and the recovery codes
 #>
 
 param(
@@ -158,6 +170,7 @@ param(
     [string]$RelayMode = "",
     [string]$RelayServers = "",
     [switch]$ResetPassword,
+    [switch]$ResetTwoFactor,
     [switch]$RunAsRoot,
     [switch]$CheckPermissions,
     [switch]$RepairPermissions,
@@ -203,7 +216,10 @@ $script:CHECK_PERMISSIONS = $CheckPermissions
 $script:REPAIR_PERMISSIONS = $RepairPermissions
 $script:MANAGED_CONFIG_CHANGES = @($SetConfig)
 $script:UPDATE_MODE = $Update
-$script:RESET_PASSWORD_MODE = $ResetPassword
+# -ResetTwoFactor is a reset of the password that also turns two-factor
+# sign-in off, so it means -ResetPassword too
+$script:RESET_PASSWORD_MODE = $ResetPassword -or $ResetTwoFactor
+$script:RESET_TWO_FACTOR = [bool]$ResetTwoFactor
 # Windows PowerShell 5.1 downloads many times slower while it draws
 # Invoke-WebRequest's progress bar
 $ProgressPreference = 'SilentlyContinue'
@@ -1033,6 +1049,14 @@ function Test-BinaryHasSubcommands {
 }
 
 # True when the binary can make the install's certificate (cert).
+# True when the binary's reset-password can turn off the account's
+# two-factor sign-in (--reset-two-factor).
+function Test-BinaryResetsTwoFactor {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'reset-password [--reset-two-factor]' -SimpleMatch -Quiet)
+}
+
 function Test-BinaryHasCertCommand {
     param([string]$Path = (Get-ServerBinaryPath))
     if (-not $Path -or -not (Test-Path $Path)) { return $false }
@@ -2183,7 +2207,17 @@ function Do-ResetPassword {
 
     # The server sets it on the console's database (SQLite or PostgreSQL);
     # the password goes in on standard input, never in the arguments
-    $code = Invoke-ServerCommand -Arguments @("reset-password", "admin") -InputText $newPassword
+    $resetArgs = @("reset-password")
+    if ($script:RESET_TWO_FACTOR) {
+        # An older binary takes the switch for a second name and refuses
+        if (-not (Test-BinaryResetsTwoFactor)) {
+            Print-Error "The installed neodesk-server cannot turn off two-factor sign-in; update it first: $(Get-ManagerCommand '-Update')"
+            return $false
+        }
+        $resetArgs += "--reset-two-factor"
+    }
+    $resetArgs += "admin"
+    $code = Invoke-ServerCommand -Arguments $resetArgs -InputText $newPassword
     Write-Host ""
     if ($code -eq 0) {
         # DEFAULT_ADMIN_PASSWORD in .env must match, or the next start with a
@@ -2197,6 +2231,9 @@ function Do-ResetPassword {
         Write-Host "  Login:    " -NoNewline; Write-Host "admin" -ForegroundColor White
         Write-Host "  Password: " -NoNewline; Write-Host $newPassword -ForegroundColor White
         Write-Host "============================================================" -ForegroundColor Green
+        if ($script:RESET_TWO_FACTOR) {
+            Print-Info "Two-factor sign-in of admin is off; where it is required, admin sets it up again at the next sign-in"
+        }
         if ($script:STORE_ADMIN_CREDENTIALS) {
             "admin:$newPassword" | Out-File -FilePath (Join-Path $script:RUSTDESK_PATH ".admin_credentials") -Encoding UTF8
         }

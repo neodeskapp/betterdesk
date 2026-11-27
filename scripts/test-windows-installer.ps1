@@ -1599,6 +1599,36 @@ function Test-ResetPasswordWithoutQuestions {
     if ("$ok" -ne 'False' -or $script:resetCalls.Count -ne 0) { Fail 'a short ADMIN_PASSWORD was set' }
     if ($script:menuAsked) { Fail '-ResetPassword asked a question' }
     if ((Get-CommandsIn 'Main' 'Do-ResetPassword').Count -lt 2) { Fail 'Main does not run -ResetPassword' }
+
+    # -ResetTwoFactor: reset-password --reset-two-factor admin, on a binary
+    # that has it; an older one would take the switch for a second name, so
+    # nothing runs and it says to update. -ResetTwoFactor alone means
+    # -ResetPassword.
+    $env:ADMIN_PASSWORD = 'Given-Pass-123'
+    $script:RESET_TWO_FACTOR = $true
+    $script:resetCalls = @()
+    function Test-BinaryResetsTwoFactor { param($Path) $true }
+    $ok = Do-ResetPassword 6> $null
+    if ("$ok" -ne 'True' -or $script:resetCalls.Count -ne 1 -or $script:resetCalls[0][0] -ne 'reset-password --reset-two-factor admin' -or $script:resetCalls[0][1] -ne 'Given-Pass-123') {
+        Fail "-ResetTwoFactor ran: $ok, $(($script:resetCalls | ForEach-Object { $_ -join ' <- ' }) -join ' | ')"
+    }
+    $script:resetCalls = @()
+    function Test-BinaryResetsTwoFactor { param($Path) $false }
+    $out = (Do-ResetPassword 6>&1 | Out-String -Width 4096)
+    if ($script:resetCalls.Count -ne 0) { Fail "-ResetTwoFactor on an older binary ran: $($script:resetCalls[0][0])" }
+    if ($out -notmatch 'cannot turn off two-factor' -or $out -notmatch '-Update') { Fail "-ResetTwoFactor on an older binary says: $out" }
+    $script:RESET_TWO_FACTOR = $false
+    $mode = @($ast.EndBlock.Statements | Where-Object {
+            $_ -is [System.Management.Automation.Language.AssignmentStatementAst] -and $_.Left.Extent.Text -eq '$script:RESET_PASSWORD_MODE'
+        })
+    if ($mode.Count -ne 1 -or $mode[0].Right.Extent.Text -notmatch '\$ResetTwoFactor') { Fail '-ResetTwoFactor alone does not reset the password' }
+    # The binary says it has the switch in its usage line (PR #43)
+    $probe = Join-Path $dir 'probe.exe'
+    Set-Content -Path $probe -Value 'Usage: neodesk-server reset-password [--reset-two-factor] [--verbose] [username]'
+    Remove-Item function:Test-BinaryResetsTwoFactor -ErrorAction SilentlyContinue
+    if (-not (Test-BinaryResetsTwoFactor -Path $probe)) { Fail 'a binary with --reset-two-factor does not count as one that has it' }
+    Set-Content -Path $probe -Value 'Usage: neodesk-server reset-password [username]'
+    if (Test-BinaryResetsTwoFactor -Path $probe) { Fail 'an older binary counts as one with --reset-two-factor' }
     $script:RESET_PASSWORD_MODE = $false
     $env:ADMIN_PASSWORD = $saved
     Remove-Item -Recurse -Force $dir
