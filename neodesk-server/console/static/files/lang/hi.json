@@ -2249,7 +2249,14 @@
     "action_user_role_changed": "Role changed",
     "action_user_disabled": "Account disabled",
     "action_user_enabled": "Account enabled",
-    "action_role_permissions_changed": "भूमिका की अनुमतियाँ बदलीं"
+    "action_role_permissions_changed": "भूमिका की अनुमतियाँ बदलीं",
+    "action_fleet_task_created": "Fleet task created",
+    "action_fleet_task_changed": "Fleet task changed",
+    "action_fleet_task_deleted": "Fleet task deleted",
+    "action_fleet_task_retried": "Fleet task run again",
+    "action_fleet_resource_changed": "Fleet resource changed",
+    "action_fleet_scan_requested": "Compliance scan requested",
+    "action_fleet_workflow_run": "Workflow run"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
