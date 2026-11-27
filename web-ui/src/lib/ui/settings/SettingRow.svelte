@@ -330,9 +330,11 @@
 		flex: 1 1 12rem;
 		min-width: 0;
 	}
-	/* A set of segments keeps its width; Reset wraps under it instead */
+	/* A set of segments keeps its width; Reset wraps under it instead. A
+	   line of text beside them wraps within the row. */
 	.setting-control-main:has(> :global(.choice-segments)) {
 		flex: 0 0 auto;
+		max-width: 100%;
 	}
 	.setting-error {
 		flex-basis: 100%;

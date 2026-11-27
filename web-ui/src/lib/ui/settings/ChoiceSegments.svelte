@@ -77,9 +77,12 @@
 </div>
 
 <style>
-	/* One line: three short words fit at 390 px; the row puts Reset under it when they don't fit beside */
+	/* One line: four short words fit at 320 px; the row puts Reset under it
+	   when they don't fit beside. Longer words or a bigger font wrap to a
+	   second line instead of pushing the page sideways. */
 	.choice-segments {
 		display: inline-flex;
+		flex-wrap: wrap;
 		max-width: 100%;
 	}
 	.segment {
@@ -152,6 +155,23 @@
 	@media (pointer: coarse) {
 		.segment label {
 			min-height: 44px;
+		}
+	}
+	/* Narrow phones: less room around each word */
+	@media (max-width: 399.98px) {
+		.segment label {
+			min-width: 3rem;
+			padding: 0 var(--control-pad-x-sm);
+		}
+	}
+	/* Windows contrast themes drop the tint and the accent border: the
+	   picked one takes the system's selection colours */
+	@media (forced-colors: active) {
+		.segment input:checked + label {
+			border-color: Highlight;
+			background: Highlight;
+			color: HighlightText;
+			forced-color-adjust: none;
 		}
 	}
 </style>
