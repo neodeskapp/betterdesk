@@ -280,6 +280,22 @@ describe('the welcome page of an invite', () => {
 		expect(screen.getByText('onboard.public.join_steps_macos_4')).toBeInTheDocument();
 	});
 
+	test('Open in NeoDesk Quick Support carries the support link for an app that is already there', async () => {
+		answer.body = {
+			success: true,
+			...code({ kind: 'support', deep_link: 'neodesk://support/desk.example.com/ABCD2345' })
+		};
+		for (const agent of [WIN, LINUX, MAC]) {
+			ua = agent;
+			render(CodePage, { code: 'ABCD2345', kind: 'support' });
+			const open = await screen.findAllByRole('link', { name: 'onboard.public.open_support_app' });
+			expect(open).toHaveLength(1);
+			expect(open[0]).toHaveAttribute('href', 'neodesk://support/desk.example.com/ABCD2345');
+			expect(screen.queryByRole('link', { name: 'onboard.public.open_app' })).toBeNull();
+			cleanup();
+		}
+	});
+
 	test('a quick support link keeps its own steps', async () => {
 		answer.body = { success: true, ...code({ kind: 'support', supporter: 'Linus Rath' }) };
 		render(CodePage, { code: 'ABCD2345', kind: 'support' });

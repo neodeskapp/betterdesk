@@ -135,7 +135,9 @@
 	/**
 	 * Open NeoDesk with the join link: on a Mac right after the install
 	 * steps, elsewhere in the box for a NeoDesk that is already there. The
-	 * app (1.5.0 and later) asks before it joins and names the server.
+	 * app (1.5.0 and later) asks before it joins and names the server. A
+	 * support link opens a Quick Support that was kept installed, or a
+	 * NeoDesk, in the box; the app asks before anyone connects.
 	 */
 	const macOpen = $derived(
 		!!data &&
@@ -253,9 +255,11 @@
 							{before}{@render copyable(data.server.address, addressCopier)}{after}
 						</p>
 					{/if}
-					{#if data.kind === 'join' && data.deep_link && !macOpen}
+					{#if data.deep_link && !macOpen}
 						<div class="open-app">
-							<Button href={data.deep_link} class="open-neodesk">{t('onboard.public.open_app')}</Button>
+							<Button href={data.deep_link} class="open-neodesk"
+								>{t(data.kind === 'join' ? 'onboard.public.open_app' : 'onboard.public.open_support_app')}</Button
+							>
 						</div>
 					{/if}
 				</div>
