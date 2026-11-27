@@ -995,6 +995,16 @@ function Set-ServerServicePath {
     return ($result.ReturnValue -eq 0)
 }
 
+# Gives the service this account through Win32_Service.Change, which takes
+# a virtual account's empty password as it is. $false when Windows refused.
+function Set-ServerServiceAccount {
+    param([string]$Account)
+    $svc = Get-CimInstance -ClassName Win32_Service -Filter "Name='$($script:SERVER_SERVICE)'" -ErrorAction SilentlyContinue
+    if (-not $svc) { return $false }
+    $result = Invoke-CimMethod -InputObject $svc -MethodName Change -Arguments @{ StartName = $Account; StartPassword = "" }
+    return ($result.ReturnValue -eq 0)
+}
+
 # sc.exe with these arguments; returns its exit code.
 function Invoke-ServiceControl {
     & sc.exe @args | Out-Null
@@ -1707,7 +1717,7 @@ function Set-ServerService {
     # An older install's NSSM settings; the binary reads none of them
     Remove-NssmSettings
     $account = if ($script:RUN_AS_ROOT) { "LocalSystem" } else { "NT SERVICE\$name" }
-    if ((Invoke-ServiceControl config $name obj= $account) -ne 0) {
+    if ((Invoke-ServiceControl config $name obj= $account) -ne 0 -and -not (Set-ServerServiceAccount -Account $account)) {
         Print-Warning "Could not make $account the account of the service $name (sc.exe config)"
     }
     if ((Invoke-ServiceControl failure $name reset= 86400 actions= restart/2000/restart/5000/restart/10000) -ne 0 -or

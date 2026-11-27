@@ -44,6 +44,7 @@ function Invoke-ServiceControl {
     if ($call[0] -eq 'delete' -and $call[1] -eq 'NeoDeskServer') { $script:fakeService = $null }
     return 0
 }
+function Set-ServerServiceAccount { param($Account) $script:fakeService.StartName = $Account; return $true }
 function Get-NssmSetting { param($Name) $script:nssmSettings[$Name] }
 function Remove-NssmSettings { $script:nssmSettings = @{} }
 function Stop-Service { param($Name, [switch]$Force, $ErrorAction) }

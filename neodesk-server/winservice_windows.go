@@ -28,6 +28,11 @@ func runAsWindowsService(server func(stop <-chan struct{}) int) (int, bool) {
 	if err != nil || !isService {
 		return 0, false
 	}
+	// The service manager starts it in System32; the server's folder is
+	// where NSSM and the scheduled task started it, for relative paths
+	if exe, err := os.Executable(); err == nil {
+		_ = os.Chdir(filepath.Dir(exe))
+	}
 	logFile, err := openServiceLog()
 	if err == nil {
 		log.SetOutput(logFile)
