@@ -2,7 +2,7 @@
 
 <#
 .SYNOPSIS
-    NeoDesk Console Manager v3.6.55 - All-in-One Interactive Tool for Windows
+    NeoDesk Console Manager v3.6.56 - All-in-One Interactive Tool for Windows
 
 .DESCRIPTION
     Features:
@@ -187,7 +187,7 @@ if ($Help) {
 # Configuration
 #===============================================================================
 
-$script:VERSION = "3.6.55"
+$script:VERSION = "3.6.56"
 # Where people ask for help: the NeoDesk Discord
 $script:HELP_URL = "https://discord.gg/nwERSawufr"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
