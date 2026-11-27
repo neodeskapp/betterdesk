@@ -63,7 +63,7 @@ func (s *Server) serveWS() {
 		}
 	} else {
 		if len(s.cfg.GetAllowedWSOrigins()) == 0 {
-			log.Printf("[relay] WS origin allowlist not configured — only localhost browser origins are accepted by default")
+			log.Printf("[relay] DEBUG: WS origin allowlist not configured: only localhost browser origins are accepted")
 		}
 		log.Printf("[relay] WS listening on %s", addr)
 		if err := s.wsHTTP.ListenAndServe(); err != nil && err != http.ErrServerClosed {
