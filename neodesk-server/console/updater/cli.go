@@ -23,16 +23,22 @@ func (c CLI) say(format string, args ...any) { fmt.Fprintf(c.Out, format+"\n", a
 // reYes is an answer that means yes.
 var reYes = regexp.MustCompile(`(?i)^y(es)?$`)
 
-// Update is "neodesk-server update [--check] [--yes] [--no-backup]"
-// (scripts/update-cli.js): it checks the release of the channel, shows
-// what changed, asks (unless --yes, -y or --auto), and installs it into
-// the binary that runs the command. --check (or --dry-run) stops before
-// the install, --no-backup skips the backup. The service is not
-// restarted: the command says how. The exit status is 0 when the binary
-// is current or was installed, 1 on a failure and 2 for an unknown
-// argument.
+// updateUsage lists the options of Update. The Linux installer looks for
+// --no-restart-hint in the binary before it passes it.
+const updateUsage = "neodesk-server update [--check] [--yes] [--no-backup] [--no-restart-hint]"
+
+// Update is "neodesk-server update [--check] [--yes] [--no-backup]
+// [--no-restart-hint]" (scripts/update-cli.js): it checks the release of
+// the channel, shows what changed, asks (unless --yes, -y or --auto), and
+// installs it into the binary that runs the command. --check (or
+// --dry-run) stops before the install, --no-backup skips the backup. The
+// service is not restarted: the command says how, with the command of
+// this platform, unless --no-restart-hint is given (the installer restarts
+// the service and puts the previous binary back itself). The exit status
+// is 0 when the binary is current or was installed, 1 on a failure and 2
+// for an unknown argument.
 func (c CLI) Update(ctx context.Context, args []string) int {
-	var yes, check, backup = false, false, true
+	var yes, check, backup, restartHint = false, false, true, true
 	for _, arg := range args {
 		switch arg {
 		case "--yes", "-y", "--auto":
@@ -41,8 +47,10 @@ func (c CLI) Update(ctx context.Context, args []string) int {
 			check = true
 		case "--no-backup":
 			backup = false
+		case "--no-restart-hint":
+			restartHint = false
 		default:
-			c.say("Unknown argument %q. Use: neodesk-server update [--check] [--yes] [--no-backup]", arg)
+			c.say("Unknown argument %q. Use: %s", arg, updateUsage)
 			return 2
 		}
 	}
@@ -145,9 +153,20 @@ func (c CLI) Update(ctx context.Context, args []string) int {
 	} else {
 		c.say("  Backup: not created")
 	}
-	c.say("Restart the service to start the new version (systemctl restart neodesk-server, or Restart-Service NeoDeskServer).")
-	c.say("If it does not start three times in a row, the previous version is put back; `neodesk-server rollback` does it by hand.")
+	if restartHint {
+		c.say("Restart the service to start the new version: %s", c.restartCommand())
+		c.say("If it does not start three times in a row, the previous version is put back; `neodesk-server rollback` does it by hand.")
+	}
 	return 0
+}
+
+// restartCommand is the command that restarts the service on the platform
+// whose binary is installed.
+func (c CLI) restartCommand() string {
+	if c.Service.opts.GOOS == "windows" {
+		return "Restart-Service NeoDeskServer"
+	}
+	return "sudo systemctl restart neodesk-server"
 }
 
 // Rollback is "neodesk-server rollback": the binary before the last
@@ -165,7 +184,7 @@ func (c CLI) Rollback(args []string) int {
 		return 1
 	}
 	c.say("Put the previous binary back in place of %s; the replaced one is now %s.prev.", binary, binary)
-	c.say("Restart the service to start it (systemctl restart neodesk-server, or Restart-Service NeoDeskServer).")
+	c.say("Restart the service to start it: %s", c.restartCommand())
 	return 0
 }
 

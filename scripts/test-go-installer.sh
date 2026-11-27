@@ -893,6 +893,82 @@ FAKE
     rm -rf "$TEST_DIR"
 )
 
+# LINUX-NATIVE-1: the installer's backups hold the server's private key and
+# every secret of .env, so only root reads them: the folder is 0700, each
+# backup 0600, also inside the archive, and backups an older installer left
+# readable are closed at the next run. A BACKUP_DIR given keeps its mode.
+test_backups_are_for_root_only() (
+    load
+    print_step() { :; }
+    print_success() { :; }
+    print_warning() { :; }
+    BACKUP_DIR="$TEST_DIR/backups"
+    DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
+    printf 'sqlite file\n' > "$DB_PATH"
+    printf 'private key\n' > "$RUSTDESK_PATH/id_ed25519"
+    printf 'api key\n' > "$RUSTDESK_PATH/.api_key"
+    chmod 644 "$DB_PATH" "$RUSTDESK_PATH/id_ed25519" "$RUSTDESK_PATH/.api_key"
+    mkdir -p "$BACKUP_DIR" "$BACKUP_DIR/pre-go-20260101-000000"
+    printf 'older\n' > "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
+    chmod 755 "$BACKUP_DIR" "$BACKUP_DIR/pre-go-20260101-000000"
+    chmod 644 "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
+    umask 022
+    do_backup_silent >/dev/null 2>&1 || fail "the backup failed"
+    [ "$(umask)" = 0022 ] || fail "the backup left the umask at $(umask)"
+    [ "$(stat -c %a "$BACKUP_DIR")" = 700 ] || fail "the backup folder has mode $(stat -c %a "$BACKUP_DIR")"
+    local f
+    for f in "$BACKUP_DIR"/neodesk_backup_*.tar.gz; do
+        [ "$(stat -c %a "$f")" = 600 ] || fail "$(basename "$f") has mode $(stat -c %a "$f")"
+    done
+    [ "$(stat -c %a "$BACKUP_DIR/pre-go-20260101-000000")" = 700 ] || fail "the upgrade's backup folder has mode $(stat -c %a "$BACKUP_DIR/pre-go-20260101-000000")"
+    f=$(ls "$BACKUP_DIR"/neodesk_backup_2*.tar.gz | tail -n 1)
+    tar -tvzf "$f" > "$TEST_DIR/list" || fail "the backup can't be listed"
+    grep -q 'id_ed25519$' "$TEST_DIR/list" || fail "the backup has no key: $(cat "$TEST_DIR/list")"
+    if awk '{ print $1 }' "$TEST_DIR/list" | grep -v -- '------$'; then
+        fail "an entry in the backup is readable by others: $(cat "$TEST_DIR/list")"
+    fi
+    [ ! -e "$BACKUP_DIR/$(basename "$f" .tar.gz)" ] || fail "the backup's folder stayed beside its archive"
+
+    # A BACKUP_DIR given to the installer keeps its mode; its backups don't
+    local given="$TEST_DIR/given"
+    mkdir -p "$given" && chmod 755 "$given"
+    printf 'older\n' > "$given/neodesk_backup_20260101_000000.tar.gz" && chmod 644 "$given/neodesk_backup_20260101_000000.tar.gz"
+    BACKUP_DIR_GIVEN="$given" BACKUP_DIR="$given" secure_backup_folder
+    [ "$(stat -c %a "$given")" = 755 ] || fail "a given BACKUP_DIR got mode $(stat -c %a "$given")"
+    [ "$(stat -c %a "$given/neodesk_backup_20260101_000000.tar.gz")" = 600 ] || fail "a backup in a given BACKUP_DIR stayed readable"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-16: the newest BACKUP_KEEP (5) of the installer's backups
+# stay, older ones go; BACKUP_KEEP=0 keeps every one, and other files in the
+# folder stay.
+test_old_backups_are_pruned() (
+    load
+    print_step() { :; }
+    print_success() { :; }
+    print_warning() { :; }
+    BACKUP_DIR="$TEST_DIR/backups"
+    DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
+    mkdir -p "$BACKUP_DIR"
+    local day
+    for day in 01 02 03 04 05 06; do
+        printf 'old\n' > "$BACKUP_DIR/neodesk_backup_202601${day}_000000.tar.gz"
+    done
+    printf 'mine\n' > "$BACKUP_DIR/notes.txt"
+    do_backup_silent >/dev/null 2>&1 || fail "the backup failed"
+    [ "$(ls "$BACKUP_DIR"/neodesk_backup_*.tar.gz | wc -l)" = 5 ] || fail "not five backups stay: $(ls "$BACKUP_DIR")"
+    [ ! -e "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz" ] && [ ! -e "$BACKUP_DIR/neodesk_backup_20260102_000000.tar.gz" ] \
+        || fail "the oldest backups stayed: $(ls "$BACKUP_DIR")"
+    [ -e "$BACKUP_DIR/neodesk_backup_20260106_000000.tar.gz" ] || fail "a newer backup was removed: $(ls "$BACKUP_DIR")"
+    [ -e "$BACKUP_DIR/notes.txt" ] || fail "a file that is no backup was removed"
+    sleep 1
+    BACKUP_KEEP=0 do_backup_silent >/dev/null 2>&1 || fail "the backup with BACKUP_KEEP=0 failed"
+    sleep 1
+    BACKUP_KEEP=0 do_backup_silent >/dev/null 2>&1 || fail "the backup with BACKUP_KEEP=0 failed"
+    [ "$(ls "$BACKUP_DIR"/neodesk_backup_*.tar.gz | wc -l)" = 7 ] || fail "BACKUP_KEEP=0 removed backups: $(ls "$BACKUP_DIR")"
+    rm -rf "$TEST_DIR"
+)
+
 # workflow_step NAME|ID: the run script of a step of release-go.yml, as
 # bash runs it (the block below its run: |, without the YAML indent)
 workflow_step() {
@@ -1191,6 +1267,115 @@ test_uninstall_says_what_stays() (
     printf '#!/bin/sh\necho mine\n' > "$CLI_COMMAND"
     do_uninstall >/dev/null 2>&1
     grep -qx 'echo mine' "$CLI_COMMAND" || fail "--purge removed a neodesk of someone else"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-1, LINUX-NATIVE-7: --uninstall --purge on a terminal offers
+# to remove the backups and then makes none; without a terminal it keeps
+# them and says so. The list names the PostgreSQL database the settings
+# named, with the commands that remove it.
+test_purge_handles_backups_and_the_database() (
+    load
+    systemctl() { :; }
+    print_header() { :; }
+    AUTO_MODE=true
+    UNINSTALL_MODE=true
+    PURGE_MODE=true
+    commands_in_test_dir
+    BACKUP_DIR="$TEST_DIR/backups"
+    mkdir -p "$BACKUP_DIR"
+    printf 'old\n' > "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
+    printf 'DATABASE_URL=postgres://neodesk:secret@localhost:5432/neodesk?sslmode=disable\n' > "$CONSOLE_PATH/.env"
+    do_backup_silent() { echo "a backup was made" >> "$TEST_DIR/calls"; }
+    has_terminal() { true; }
+    local out
+    out=$(printf 'y\n' | do_uninstall 2>&1)
+    [ ! -e "$BACKUP_DIR" ] || fail "purge with yes to the backups left $(ls -A "$BACKUP_DIR")"
+    if grep -q 'a backup was made' "$TEST_DIR/calls" 2>/dev/null; then fail "a purge that removes the backups made one"; fi
+    case "$out" in *"sudo -u postgres dropdb neodesk && sudo -u postgres dropuser neodesk"*) ;; *) fail "the purge does not name the PostgreSQL database: $out" ;; esac
+    case "$out" in *secret*) fail "the uninstall shows the database password: $out" ;; esac
+
+    # No terminal: the backups stay, a new one is made, the list says where
+    mkdir -p "$RUSTDESK_PATH" "$CONSOLE_PATH" "$BACKUP_DIR"
+    printf 'old\n' > "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
+    printf 'DATABASE_URL=postgres://nd:secret@db.example.org/desk\n' > "$CONSOLE_PATH/.env"
+    has_terminal() { false; }
+    out=$(do_uninstall 2>&1 < /dev/null)
+    [ -e "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz" ] || fail "a purge without a terminal removed the backups"
+    grep -q 'a backup was made' "$TEST_DIR/calls" || fail "a purge without a terminal made no backup"
+    case "$out" in *"$BACKUP_DIR: the backups, readable by root only"*) ;; *) fail "the list does not name the backups: $out" ;; esac
+    case "$out" in *"the PostgreSQL database desk on db.example.org"*) ;; *) fail "the list does not name the remote database: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-16, LINUX-NATIVE-17: an update that finds the release
+# installed already makes no backup, and when the unit and .env stay as
+# they were the running server is not restarted. A new release gets the
+# backup first, the restart, and --no-restart-hint when the binary has it.
+# The unit's description names no version.
+test_update_without_a_new_release_changes_nothing() (
+    load
+    print_step() { :; }
+    print_success() { :; }
+    print_warning() { :; }
+    print_error() { echo "$1"; }
+    SERVER_BINARY_FILE=""
+    FROM_SOURCE=false
+    unset RELEASE_BASE_URL
+    printf '#!/bin/sh\n# upgrade-env --from FILE; verify-release --manifest FILE; update [--no-restart-hint] (its commands)\necho neodesk-server 3.6.0\n' > "$RUSTDESK_PATH/neodesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
+    write_server_unit "-mode all -api-port 21114" ""
+    grep -qx 'Description=NeoDesk server and web console' "$SERVER_UNIT" || fail "the unit's description: $(grep '^Description=' "$SERVER_UNIT")"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    do_backup_silent() { echo "backup" >> "$TEST_DIR/calls"; }
+    merge_console_env() { :; }
+    set_server_folder_permissions() { :; }
+    install_manager_command() { :; }
+    verify_go_install() { :; }
+    systemctl() {
+        case "$1" in
+            is-active) return 0 ;;
+            *) echo "systemctl $*" >> "$TEST_DIR/calls" ;;
+        esac
+    }
+    server_cmd() {
+        echo "server $*" >> "$TEST_DIR/calls"
+        case "$*" in *"--check"*) echo "Already up to date (2222222)." ;; esac
+    }
+    update_go_install >/dev/null 2>&1 || fail "an update without a new release failed"
+    if grep -q '^backup' "$TEST_DIR/calls"; then fail "an update without a new release made a backup: $(cat "$TEST_DIR/calls")"; fi
+    if grep -q 'systemctl restart' "$TEST_DIR/calls"; then fail "an update that changed nothing restarted the server: $(cat "$TEST_DIR/calls")"; fi
+    if grep -q -- '--yes' "$TEST_DIR/calls"; then fail "an update without a new release ran the install: $(cat "$TEST_DIR/calls")"; fi
+
+    # A change to .env restarts it, still without a backup
+    : > "$TEST_DIR/calls"
+    merge_console_env() { printf 'NEW_KEY=1\n' >> "$CONSOLE_PATH/.env"; }
+    update_go_install >/dev/null 2>&1 || fail "an update that changed .env failed"
+    grep -q 'systemctl restart neodesk-server' "$TEST_DIR/calls" || fail "a changed .env did not restart the server: $(cat "$TEST_DIR/calls")"
+    if grep -q '^backup' "$TEST_DIR/calls"; then fail "an update with the same binary made a backup"; fi
+
+    # A new release: the backup first, then the install with --no-restart-hint
+    : > "$TEST_DIR/calls"
+    merge_console_env() { :; }
+    server_cmd() {
+        echo "server $*" >> "$TEST_DIR/calls"
+        case "$*" in
+            *"--check"*) echo "Release: neodesk-server 3.6.1" ;;
+            *"--yes"*) printf '#!/bin/sh\n# upgrade-env --from FILE; verify-release --manifest FILE\necho neodesk-server 3.6.1\n' > "$RUSTDESK_PATH/neodesk-server" ;;
+        esac
+    }
+    update_go_install >/dev/null 2>&1 || fail "the update to a new release failed"
+    [ "$(grep -n '' "$TEST_DIR/calls" | grep -m1 -E 'backup|--yes' | cut -d: -f2-)" = backup ] || fail "the backup did not come before the install: $(cat "$TEST_DIR/calls")"
+    grep -q -- 'update --yes --no-restart-hint' "$TEST_DIR/calls" || fail "the install did not get --no-restart-hint: $(cat "$TEST_DIR/calls")"
+    grep -q 'systemctl restart neodesk-server' "$TEST_DIR/calls" || fail "a new release did not restart the server"
+
+    # A failed check stops before the backup
+    : > "$TEST_DIR/calls"
+    server_cmd() { echo "server $*" >> "$TEST_DIR/calls"; echo "Update failed: GitHub API 404"; return 1; }
+    local out
+    out=$(update_go_install 2>&1) && fail "an update whose check failed reported success"
+    case "$out" in *"GitHub API 404"*) ;; *) fail "the failed check is not shown: $out" ;; esac
+    if grep -q '^backup' "$TEST_DIR/calls"; then fail "an update whose check failed made a backup"; fi
     rm -rf "$TEST_DIR"
 )
 
@@ -1643,6 +1828,8 @@ test_no_settings_go_to_the_old_console_service
 test_runs_without_term
 test_apt_source_failure_goes_on
 test_backup_uses_the_servers_backup
+test_backups_are_for_root_only
+test_old_backups_are_pruned
 test_release_workflow_publishes_candidates_as_prereleases
 test_release_workflow_takes_the_notes_file
 test_no_stable_release_installs_the_newest_prerelease
@@ -1651,6 +1838,8 @@ test_rerun_updates_and_forgets_the_password
 test_panel_public_host
 test_install_summary
 test_uninstall_says_what_stays
+test_purge_handles_backups_and_the_database
+test_update_without_a_new_release_changes_nothing
 test_update_asks_the_fork
 test_firewall_ports
 test_reverse_proxy_closes_the_console_ports
