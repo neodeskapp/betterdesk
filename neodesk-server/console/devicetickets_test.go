@@ -235,3 +235,76 @@ func TestAComputerGetsNoOtherComputersChat(t *testing.T) {
 		t.Errorf("the first computer's own file: %d %s", status, body)
 	}
 }
+
+// TestStaffHearOfTheComputersTickets: the bell lists a ticket the person
+// at a computer opened and the person's reply, with the link to the
+// ticket, for an account that may read the ticket; a viewer the ticket
+// isn't assigned to gets neither. Mark all read covers them.
+func TestStaffHearOfTheComputersTickets(t *testing.T) {
+	w, front := twoComputersWorld(t)
+	status, body := asComputer(t, front.URL, chatDeviceToken, "POST", "/api/tickets/nd", `{"description":"Outlook keeps asking for my password","reporter":"Erika Muster"}`)
+	if status != http.StatusCreated {
+		t.Fatalf("open a ticket: %d %s", status, body)
+	}
+	var created struct {
+		TicketID int64 `json:"ticket_id"`
+	}
+	_ = json.Unmarshal([]byte(body), &created)
+	id := strconv.FormatInt(created.TicketID, 10)
+	if status, body := asComputer(t, front.URL, chatDeviceToken, "POST", "/api/tickets/nd/"+id+"/comments", `{"body":"It happens again after the restart"}`); status != http.StatusCreated {
+		t.Fatalf("reply: %d %s", status, body)
+	}
+	// Staff's own comment is no news for the bell
+	admin := w.agent().signIn("admin")
+	if res := admin.post("/api/tickets/"+id+"/comments", `{"body":"Looking at it"}`); res.status != http.StatusCreated {
+		t.Fatalf("staff comment: %d %s", res.status, res.body)
+	}
+
+	type item struct {
+		ID, Kind, Title, Message, Link, Reporter string
+		DeviceID                                 string `json:"device_id"`
+		Read                                     bool
+	}
+	bell := func(a *agent) ([]item, float64) {
+		res := a.get("/api/nd/notifications?limit=50")
+		var out struct {
+			Items  []item  `json:"items"`
+			Unread float64 `json:"unread_count"`
+		}
+		if res.status != http.StatusOK || json.Unmarshal([]byte(res.body), &out) != nil {
+			t.Fatalf("notifications: %d %s", res.status, res.body)
+		}
+		var mine []item
+		for _, i := range out.Items {
+			if strings.HasPrefix(i.Kind, "ticket") {
+				mine = append(mine, i)
+			}
+		}
+		return mine, out.Unread
+	}
+	items, unread := bell(admin)
+	if len(items) != 2 || unread < 2 {
+		t.Fatalf("admin's bell: %+v (unread %v)", items, unread)
+	}
+	byKind := map[string]item{}
+	for _, i := range items {
+		byKind[i.Kind] = i
+	}
+	ticket, reply := byKind["ticket"], byKind["ticket_reply"]
+	if ticket.Title != "Outlook keeps asking for my password" || ticket.Reporter != "Erika Muster" || ticket.DeviceID != chatDevice ||
+		ticket.Link != "/tickets?ticket="+id || ticket.ID != "ticket:"+id || ticket.Read {
+		t.Errorf("the new ticket: %+v", ticket)
+	}
+	if reply.Message != "It happens again after the restart" || reply.Link != "/tickets?ticket="+id || !strings.HasPrefix(reply.ID, "ticket_reply:") {
+		t.Errorf("the reply: %+v", reply)
+	}
+	if items, _ := bell(w.agent().signIn("viewer")); len(items) != 0 {
+		t.Errorf("a viewer the ticket isn't assigned to: %+v", items)
+	}
+	if res := admin.post("/api/nd/notifications/read-all", `{}`); res.status != http.StatusOK {
+		t.Fatalf("read all: %d %s", res.status, res.body)
+	}
+	if items, _ := bell(admin); len(items) != 2 || !items[0].Read || !items[1].Read {
+		t.Errorf("after read all: %+v", items)
+	}
+}

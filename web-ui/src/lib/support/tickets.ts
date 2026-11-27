@@ -9,15 +9,50 @@ import { parseDate } from '#lib/i18n/format.ts';
 
 export type StatusFilter = '' | 'open' | 'in_progress' | 'resolved' | 'closed';
 export type PriorityFilter = '' | 'critical' | 'high' | 'medium' | 'low';
+/** '' every ticket, 'device' the ones people opened at their computer */
+export type SourceFilter = '' | 'device';
 
 export interface TicketFilters {
 	status: StatusFilter;
 	priority: PriorityFilter;
 	search: string;
+	source?: SourceFilter;
 }
 
 export function isFiltered(f: TicketFilters): boolean {
-	return Boolean(f.status || f.priority || f.search.trim());
+	return Boolean(f.status || f.priority || f.source || f.search.trim());
+}
+
+/** The person at the computer opened it, in the app on the computer */
+export function fromComputer(t: Pick<Ticket, 'source'>): boolean {
+	return t.source === 'device';
+}
+
+/** What the app on a computer wrote: its author is agent:<device id> */
+export function byComputer(author: string): boolean {
+	return author.startsWith('agent:');
+}
+
+/**
+ * The line under the title of a ticket a computer opened, around the link
+ * to the computer: the translated text with {name} filled in, cut at
+ * {device}. Staff's tickets get none.
+ */
+export function computerMark(
+	t: Pick<Ticket, 'source' | 'device_id' | 'reporter'>,
+	text: { named: string; unnamed: string }
+): { before: string; device: string; after: string } | null {
+	if (!fromComputer(t)) return null;
+	const name = t.reporter.trim();
+	const template = name ? text.named.replaceAll('{name}', name) : text.unnamed;
+	const at = template.indexOf('{device}');
+	if (at < 0 || !t.device_id)
+		return { before: template.replace('{device}', '').trim(), device: '', after: '' };
+	return {
+		before: template.slice(0, at),
+		device: t.device_id,
+		after: template.slice(at + '{device}'.length)
+	};
 }
 
 /**
@@ -29,6 +64,7 @@ export function filterTickets(list: readonly Ticket[], f: TicketFilters): Ticket
 	const q = f.search.trim().toLowerCase();
 	const idQuery = /^#?\d+$/.test(q) ? Number(q.replace('#', '')) : null;
 	return list.filter((t) => {
+		if (f.source && t.source !== f.source) return false;
 		if (f.status && t.status !== f.status) return false;
 		if (f.priority && t.priority !== f.priority) return false;
 		if (!q) return true;

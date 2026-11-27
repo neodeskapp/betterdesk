@@ -2,10 +2,13 @@ import * as v from 'valibot';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { DetailSchema, TicketSchema, type Ticket } from '../../../src/lib/api/tickets.ts';
 import {
+	byComputer,
+	computerMark,
 	countByStatus,
 	createdIsOld,
 	filterTickets,
 	isFiltered,
+	fromComputer,
 	isOverdue,
 	openByPriority,
 	overdueTickets,
@@ -33,6 +36,8 @@ function ticket(id: number, extra: Partial<Ticket> = {}): Ticket {
 		closed_at: '',
 		created_at: '2026-11-08 17:54:40',
 		updated_at: '',
+		source: 'staff',
+		reporter: '',
 		...extra
 	};
 }
@@ -71,6 +76,29 @@ describe('ticket schemas', () => {
 		expect(v.parse(DetailSchema, { id: 4, title: 'y' }).comments).toEqual([]);
 	});
 
+	test('a ticket names who opened it, staff when the server says nothing', () => {
+		const fromApp = v.parse(TicketSchema, {
+			id: 5,
+			title: 'Printer',
+			source: 'device',
+			reporter: 'Erika Muster'
+		});
+		expect(fromApp).toMatchObject({ source: 'device', reporter: 'Erika Muster' });
+		expect(v.parse(TicketSchema, { id: 6, title: 'Old', reporter: null })).toMatchObject({
+			source: 'staff',
+			reporter: ''
+		});
+		const d = v.parse(DetailSchema, {
+			id: 5,
+			title: 'Printer',
+			comments: [
+				{ id: 1, author: 'agent:900100001', body: 'It stopped again', from: 'device' },
+				{ id: 2, author: 'admin', body: 'On my way' }
+			]
+		});
+		expect(d.comments.map((c) => c.from)).toEqual(['device', 'staff']);
+	});
+
 	test('a ticket without an id is refused', () => {
 		expect(v.safeParse(TicketSchema, { title: 'x' }).success).toBe(false);
 	});
@@ -105,6 +133,63 @@ describe('filters', () => {
 	test('a blank search is no filter', () => {
 		expect(isFiltered({ status: '', priority: '', search: '  ' })).toBe(false);
 		expect(isFiltered({ status: 'closed', priority: '', search: '' })).toBe(true);
+	});
+
+	test('From computers keeps the tickets people opened at their computer', () => {
+		const mixed = [
+			...list,
+			ticket(8, { source: 'device', device_id: '900100001' }),
+			ticket(9, { source: 'device', status: 'closed' })
+		];
+		expect(
+			filterTickets(mixed, { status: '', priority: '', search: '', source: 'device' }).map((x) => x.id)
+		).toEqual([8, 9]);
+		expect(
+			filterTickets(mixed, { status: 'open', priority: '', search: '', source: 'device' }).map((x) => x.id)
+		).toEqual([8]);
+		expect(filterTickets(mixed, { status: '', priority: '', search: '', source: '' })).toHaveLength(5);
+		expect(isFiltered({ status: '', priority: '', search: '', source: 'device' })).toBe(true);
+	});
+});
+
+describe('the mark of a ticket from a computer', () => {
+	const text = {
+		named: 'Opened by {name} at the computer {device}',
+		unnamed: 'Opened at the computer {device}'
+	};
+
+	test('names the person and cuts the text at the computer, which becomes a link', () => {
+		const t = ticket(8, { source: 'device', device_id: '900100001', reporter: ' Erika Muster ' });
+		expect(fromComputer(t)).toBe(true);
+		expect(computerMark(t, text)).toEqual({
+			before: 'Opened by Erika Muster at the computer ',
+			device: '900100001',
+			after: ''
+		});
+	});
+
+	test('without a name, and with the computer first in the sentence', () => {
+		const t = ticket(8, { source: 'device', device_id: '900100001' });
+		expect(computerMark(t, text)).toEqual({
+			before: 'Opened at the computer ',
+			device: '900100001',
+			after: ''
+		});
+		expect(computerMark(t, { named: '', unnamed: 'Auf {device} erstellt' })).toEqual({
+			before: 'Auf ',
+			device: '900100001',
+			after: ' erstellt'
+		});
+	});
+
+	test('staff tickets get none, also when they name a computer', () => {
+		expect(computerMark(ticket(1, { device_id: '900100001', reporter: 'x' }), text)).toBeNull();
+		expect(fromComputer(ticket(1))).toBe(false);
+	});
+
+	test('what the app wrote is the computer', () => {
+		expect(byComputer('agent:900100001')).toBe(true);
+		expect(byComputer('admin')).toBe(false);
 	});
 });
 

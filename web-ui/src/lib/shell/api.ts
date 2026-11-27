@@ -27,6 +27,8 @@ export interface Notification {
 	status: string;
 	read: boolean;
 	created_at: string;
+	/** Tickets from computers: the name the person at the computer gave */
+	reporter: string;
 }
 
 export const Notification = v.pipe(
@@ -42,7 +44,8 @@ export const Notification = v.pipe(
 		link: Text,
 		status: Text,
 		read: BoolLike,
-		created_at: Text
+		created_at: Text,
+		reporter: Text
 	}),
 	v.transform((n): Notification => ({
 		id: n.id,
@@ -56,7 +59,8 @@ export const Notification = v.pipe(
 		link: n.link ?? '',
 		status: n.status ?? '',
 		read: n.read ?? false,
-		created_at: n.created_at ?? ''
+		created_at: n.created_at ?? '',
+		reporter: n.reporter ?? ''
 	}))
 );
 

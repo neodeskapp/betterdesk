@@ -36,6 +36,10 @@ export interface Ticket {
 	closed_at: string;
 	created_at: string;
 	updated_at: string;
+	/** 'device' when the person at the computer opened it in the app, else 'staff' */
+	source: string;
+	/** The name the person at the computer gave; '' for none */
+	reporter: string;
 }
 
 export interface TicketComment {
@@ -44,6 +48,8 @@ export interface TicketComment {
 	body: string;
 	is_internal: boolean;
 	created_at: string;
+	/** 'device' when the person at the computer wrote it, else 'staff' */
+	from: string;
 }
 
 export interface TicketAttachment {
@@ -76,7 +82,9 @@ const TicketEntries = {
 	resolved_at: Text,
 	closed_at: Text,
 	created_at: Text,
-	updated_at: Text
+	updated_at: Text,
+	source: Text,
+	reporter: Text
 };
 
 type RawTicket = v.InferOutput<v.LooseObjectSchema<typeof TicketEntries, undefined>>;
@@ -96,20 +104,30 @@ function clean(o: RawTicket): Ticket {
 		resolved_at: s(o.resolved_at),
 		closed_at: s(o.closed_at),
 		created_at: s(o.created_at),
-		updated_at: s(o.updated_at)
+		updated_at: s(o.updated_at),
+		source: o.source || 'staff',
+		reporter: s(o.reporter)
 	};
 }
 
 export const TicketSchema = v.pipe(v.looseObject(TicketEntries), v.transform(clean));
 
 const CommentSchema = v.pipe(
-	v.looseObject({ id: NumLike, author: Text, body: Text, is_internal: BoolLike, created_at: Text }),
+	v.looseObject({
+		id: NumLike,
+		author: Text,
+		body: Text,
+		is_internal: BoolLike,
+		created_at: Text,
+		from: Text
+	}),
 	v.transform((c): TicketComment => ({
 		id: c.id,
 		author: s(c.author),
 		body: s(c.body),
 		is_internal: c.is_internal ?? false,
-		created_at: s(c.created_at)
+		created_at: s(c.created_at),
+		from: c.from || 'staff'
 	}))
 );
 

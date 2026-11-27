@@ -4283,7 +4283,14 @@
     "attach_hint": "Dateien bis 25 MB. Alle, die dieses Ticket sehen, können sie herunterladen.",
     "attach_too_large": "Diese Datei ist größer als 25 MB.",
     "attach_uploading": "{name} wird hochgeladen…",
-    "attach_done": "{name} angehängt."
+    "attach_done": "{name} angehängt.",
+    "source_label": "Herkunft",
+    "source_all": "Alle Tickets",
+    "source_device": "Von Computern",
+    "opened_at_computer": "Von {name} am Computer {device} erstellt",
+    "opened_at_computer_unnamed": "Am Computer {device} erstellt",
+    "at_computer_named": "{name}, am Computer",
+    "at_computer": "Die Person am Computer"
   },
   "activity": {
     "title": "App-Nutzung",
@@ -8428,7 +8435,9 @@
     "unread": "Ungelesen",
     "empty_hint": "Keine Hilfeanfragen und keine Geräte, die beitreten möchten.",
     "loading": "Benachrichtigungen werden geladen…",
-    "load_failed": "Benachrichtigungen konnten nicht geladen werden."
+    "load_failed": "Benachrichtigungen konnten nicht geladen werden.",
+    "kind_ticket": "Neues Ticket von einem Computer",
+    "kind_ticket_reply": "Antwort von einem Computer"
   },
   "accessibility": {
     "title": "Barrierefreiheit",

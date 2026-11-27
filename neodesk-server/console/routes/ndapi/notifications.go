@@ -3,18 +3,22 @@ package ndapi
 import (
 	"net/http"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/tickets"
 )
 
 // The notification bell of the web app: the help requests of the API
-// server and, for accounts that may approve them, the registrations
-// waiting for approval, with a read mark per account
-// (notification_reads). These routes take the session, not a token.
+// server, for accounts that may approve them the registrations waiting
+// for approval, and for accounts that may read them the tickets the
+// computers opened and their replies (tickets.Notices), with a read mark
+// per account (notification_reads). These routes take the session, not a
+// token.
 
 // isoTime is new Date(ms).toISOString().
 func isoTime(ms float64) string {
@@ -53,6 +57,29 @@ func (h *handlers) registrationNotifications(r *http.Request, read map[string]bo
 		item.Set("read", read[jsreq.String(item.Get("id"))])
 	}
 	return items
+}
+
+// ticketNotification is a ticket a computer opened or its reply. The
+// link opens the ticket on the tickets page.
+func ticketNotification(n tickets.Notice, read map[string]bool) *goapi.Object {
+	created := ""
+	if at, ok := n.CreatedAt.Instant(); ok {
+		created = isoTime(float64(at.UnixMilli()))
+	}
+	return goapi.NewObject(
+		"id", n.ID,
+		"title", n.Title,
+		"message", n.Message,
+		"icon", "confirmation_number",
+		"link", "/tickets?ticket="+strconv.FormatInt(n.TicketID, 10),
+		"read", read[n.ID],
+		"created_at", created,
+		"kind", n.Kind,
+		"device_id", n.DeviceID,
+		"hostname", "",
+		"reporter", n.Reporter,
+		"ticket_id", float64(n.TicketID),
+	)
 }
 
 type notificationList struct {
@@ -104,6 +131,15 @@ func (h *handlers) notifications(w http.ResponseWriter, r *http.Request) {
 		at, _ := jsreq.ParseDate(jsreq.String(item.Get("created_at")), time.Local)
 		all = append(all, entry{obj: item, at: float64(at)})
 	}
+	ticketNotices, err := tickets.Notices(r, h.d)
+	if err != nil {
+		h.serverError(w, r, "List notifications error:", err, "Failed to list notifications")
+		return
+	}
+	for _, n := range ticketNotices {
+		at, _ := n.CreatedAt.Instant()
+		all = append(all, entry{obj: ticketNotification(n, read), at: float64(at.UnixMilli())})
+	}
 	sort.SliceStable(all, func(i, j int) bool { return all[i].at > all[j].at })
 	items := []*goapi.Object{}
 	unreadCount := 0
@@ -131,8 +167,8 @@ func (h *handlers) markRead(w http.ResponseWriter, r *http.Request) {
 }
 
 // markAllRead answers POST /api/nd/notifications/read-all: every help
-// request of the API server and every registration the account sees is
-// read for it.
+// request of the API server, every registration and every ticket notice
+// the account sees is read for it.
 func (h *handlers) markAllRead(w http.ResponseWriter, r *http.Request) {
 	help, _, err := h.helpList(r.Context(), goapi.NewObject("limit", float64(200)))
 	if err != nil {
@@ -145,6 +181,14 @@ func (h *handlers) markAllRead(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, item := range h.registrationNotifications(r, map[string]bool{}) {
 		ids = append(ids, jsreq.String(item.Get("id")))
+	}
+	ticketNotices, err := tickets.Notices(r, h.d)
+	if err != nil {
+		h.serverError(w, r, "Mark all read error:", err, "Failed to mark all notifications read")
+		return
+	}
+	for _, n := range ticketNotices {
+		ids = append(ids, n.ID)
 	}
 	if err := markRead(r.Context(), h.d.Store, kit.UserID(r), ids); err != nil {
 		h.serverError(w, r, "Mark all read error:", err, "Failed to mark all notifications read")

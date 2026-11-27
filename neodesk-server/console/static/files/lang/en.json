@@ -4363,7 +4363,14 @@
         "attach_hint": "Files up to 25 MB. Everyone who can see this ticket can download them.",
         "attach_too_large": "This file is larger than 25 MB.",
         "attach_uploading": "Uploading {name}…",
-        "attach_done": "{name} attached."
+        "attach_done": "{name} attached.",
+        "source_label": "Source",
+        "source_all": "All tickets",
+        "source_device": "From computers",
+        "opened_at_computer": "Opened by {name} at the computer {device}",
+        "opened_at_computer_unnamed": "Opened at the computer {device}",
+        "at_computer_named": "{name}, at the computer",
+        "at_computer": "The person at the computer"
     },
     "activity": {
         "title": "App usage",
@@ -5533,7 +5540,9 @@
         "unread": "Unread",
         "empty_hint": "No help requests or devices asking to join.",
         "loading": "Loading notifications…",
-        "load_failed": "Could not load notifications."
+        "load_failed": "Could not load notifications.",
+        "kind_ticket": "New ticket from a computer",
+        "kind_ticket_reply": "Reply from a computer"
     },
     "desktop": {
         "switch_mode": "Desktop Mode",

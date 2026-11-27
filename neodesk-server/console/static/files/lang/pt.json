@@ -4283,7 +4283,14 @@
     "attach_hint": "Ficheiros até 25 MB. Qualquer pessoa que veja este ticket pode transferi-los.",
     "attach_too_large": "Este ficheiro tem mais de 25 MB.",
     "attach_uploading": "A carregar {name}…",
-    "attach_done": "{name} anexado."
+    "attach_done": "{name} anexado.",
+    "source_label": "Origem",
+    "source_all": "Todos os tickets",
+    "source_device": "Dos computadores",
+    "opened_at_computer": "Aberto por {name} no computador {device}",
+    "opened_at_computer_unnamed": "Aberto no computador {device}",
+    "at_computer_named": "{name}, no computador",
+    "at_computer": "A pessoa no computador"
   },
   "activity": {
     "title": "Monitorização de atividade",
@@ -8428,7 +8435,9 @@
     "unread": "Não lido",
     "empty_hint": "Nenhuma solicitação de ajuda nem dispositivo pedindo para entrar.",
     "loading": "Carregando notificações…",
-    "load_failed": "Não foi possível carregar as notificações."
+    "load_failed": "Não foi possível carregar as notificações.",
+    "kind_ticket": "Novo ticket de um computador",
+    "kind_ticket_reply": "Resposta de um computador"
   },
   "accessibility": {
     "title": "Acessibilidade",

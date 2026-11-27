@@ -4289,7 +4289,14 @@
     "attach_hint": "Filer på opptil 25 MB. Alle som kan se denne saken, kan laste dem ned.",
     "attach_too_large": "Filen er større enn 25 MB.",
     "attach_uploading": "Laster opp {name}…",
-    "attach_done": "{name} er lagt ved."
+    "attach_done": "{name} er lagt ved.",
+    "source_label": "Kilde",
+    "source_all": "Alle saker",
+    "source_device": "Fra datamaskiner",
+    "opened_at_computer": "Opprettet av {name} på datamaskinen {device}",
+    "opened_at_computer_unnamed": "Opprettet på datamaskinen {device}",
+    "at_computer_named": "{name}, ved datamaskinen",
+    "at_computer": "Personen ved datamaskinen"
   },
   "activity": {
     "title": "Aktivitetsovervåking",
@@ -8434,7 +8441,9 @@
     "unread": "Ulest",
     "empty_hint": "Ingen hjelpeforespørsler eller enheter som ber om å bli med.",
     "loading": "Laster inn varsler…",
-    "load_failed": "Kunne ikke laste inn varsler."
+    "load_failed": "Kunne ikke laste inn varsler.",
+    "kind_ticket": "Ny sak fra en datamaskin",
+    "kind_ticket_reply": "Svar fra en datamaskin"
   },
   "accessibility": {
     "title": "Tilgjengelighet",

@@ -4305,7 +4305,14 @@
     "attach_hint": "檔案上限 25 MB。能看到此工單的人都能下載。",
     "attach_too_large": "此檔案超過 25 MB。",
     "attach_uploading": "正在上傳 {name}…",
-    "attach_done": "已附加 {name}。"
+    "attach_done": "已附加 {name}。",
+    "source_label": "來源",
+    "source_all": "所有工單",
+    "source_device": "來自電腦",
+    "opened_at_computer": "由 {name} 在電腦 {device} 上建立",
+    "opened_at_computer_unnamed": "在電腦 {device} 上建立",
+    "at_computer_named": "{name}（電腦）",
+    "at_computer": "電腦前的使用者"
   },
   "activity": {
     "title": "活動監控",
@@ -5475,7 +5482,9 @@
     "unread": "未讀",
     "empty_hint": "沒有求助請求，也沒有請求加入的裝置。",
     "loading": "正在載入通知…",
-    "load_failed": "無法載入通知。"
+    "load_failed": "無法載入通知。",
+    "kind_ticket": "來自電腦的新工單",
+    "kind_ticket_reply": "來自電腦的回覆"
   },
   "desktop": {
     "switch_mode": "桌面模式",

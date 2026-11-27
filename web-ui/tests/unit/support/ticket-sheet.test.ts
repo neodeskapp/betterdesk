@@ -50,3 +50,43 @@ describe('ticket sheet', () => {
 		expect(!!screen.queryByLabelText('tickets.comment_label')).toBe(shown);
 	});
 });
+
+describe('a ticket from a computer', () => {
+	test('the creator and the replies from the app read as the person at the computer', async () => {
+		vi.stubGlobal('fetch', async () => {
+			const ticket = {
+				id: 4,
+				title: 'Printer',
+				status: 'open',
+				priority: 'medium',
+				source: 'device',
+				reporter: 'Erika Muster',
+				created_by: 'agent:900100001',
+				device_id: '900100001',
+				comments: [
+					{
+						id: 1,
+						author: 'agent:900100001',
+						body: 'It stopped again',
+						from: 'device',
+						created_at: '2026-11-27 10:00:00'
+					},
+					{ id: 2, author: 'demo', body: 'On my way', from: 'staff', created_at: '2026-11-27 10:05:00' }
+				],
+				attachments: [
+					{ id: 7, filename: 'computer-info.json', size_bytes: 900, uploaded_by: 'agent:900100001' }
+				]
+			};
+			return new Response(JSON.stringify(ticket), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json' }
+			});
+		});
+		signIn('operator', ['device.view', 'device.edit']);
+		render(TicketSheet, { ...props, id: 4 });
+		await vi.waitFor(() => expect(screen.queryByText('It stopped again')).not.toBeNull());
+		// Created by, the reply and the file: the person at the computer, never agent:<id>
+		expect(screen.getAllByText('tickets.at_computer_named').length).toBe(2);
+		expect(screen.queryByText(/agent:900100001/)).toBeNull();
+	});
+});

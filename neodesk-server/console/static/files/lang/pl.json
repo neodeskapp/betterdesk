@@ -4301,7 +4301,14 @@
     "attach_hint": "Pliki do 25 MB. Może je pobrać każdy, kto widzi to zgłoszenie.",
     "attach_too_large": "Ten plik jest większy niż 25 MB.",
     "attach_uploading": "Przesyłanie {name}…",
-    "attach_done": "Dołączono {name}."
+    "attach_done": "Dołączono {name}.",
+    "source_label": "Źródło",
+    "source_all": "Wszystkie zgłoszenia",
+    "source_device": "Z komputerów",
+    "opened_at_computer": "Utworzone przez: {name}, na komputerze {device}",
+    "opened_at_computer_unnamed": "Utworzone na komputerze {device}",
+    "at_computer_named": "{name}, przy komputerze",
+    "at_computer": "Osoba przy komputerze"
   },
   "activity": {
     "title": "Monitorowanie aktywności",
@@ -5471,7 +5478,9 @@
     "unread": "Nieprzeczytane",
     "empty_hint": "Brak próśb o pomoc i urządzeń proszących o dołączenie.",
     "loading": "Wczytywanie powiadomień…",
-    "load_failed": "Nie udało się wczytać powiadomień."
+    "load_failed": "Nie udało się wczytać powiadomień.",
+    "kind_ticket": "Nowe zgłoszenie z komputera",
+    "kind_ticket_reply": "Odpowiedź z komputera"
   },
   "desktop": {
     "switch_mode": "Tryb pulpitu",

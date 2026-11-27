@@ -4289,7 +4289,14 @@
     "attach_hint": "Файли до 25 МБ. Завантажити їх може кожен, хто бачить цей запит.",
     "attach_too_large": "Цей файл більший за 25 МБ.",
     "attach_uploading": "Завантаження {name}…",
-    "attach_done": "{name} додано."
+    "attach_done": "{name} додано.",
+    "source_label": "Джерело",
+    "source_all": "Усі тікети",
+    "source_device": "З комп'ютерів",
+    "opened_at_computer": "Створив(ла) {name} на комп'ютері {device}",
+    "opened_at_computer_unnamed": "Створено на комп'ютері {device}",
+    "at_computer_named": "{name}, за комп'ютером",
+    "at_computer": "Людина за комп'ютером"
   },
   "activity": {
     "title": "Моніторинг діяльності",
@@ -8434,7 +8441,9 @@
     "unread": "Непрочитане",
     "empty_hint": "Немає запитів на допомогу чи пристроїв, що просять приєднатися.",
     "loading": "Завантаження сповіщень…",
-    "load_failed": "Не вдалося завантажити сповіщення."
+    "load_failed": "Не вдалося завантажити сповіщення.",
+    "kind_ticket": "Новий тікет з комп'ютера",
+    "kind_ticket_reply": "Відповідь з комп'ютера"
   },
   "accessibility": {
     "title": "Доступність",

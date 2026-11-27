@@ -4283,7 +4283,14 @@
     "attach_hint": "최대 25MB 파일. 이 티켓을 볼 수 있는 사람은 누구나 다운로드할 수 있습니다.",
     "attach_too_large": "이 파일은 25MB보다 큽니다.",
     "attach_uploading": "{name} 업로드 중…",
-    "attach_done": "{name}을(를) 첨부했습니다."
+    "attach_done": "{name}을(를) 첨부했습니다.",
+    "source_label": "출처",
+    "source_all": "모든 티켓",
+    "source_device": "컴퓨터에서",
+    "opened_at_computer": "{name}님이 컴퓨터 {device}에서 작성",
+    "opened_at_computer_unnamed": "컴퓨터 {device}에서 작성",
+    "at_computer_named": "{name}님 (컴퓨터)",
+    "at_computer": "컴퓨터 사용자"
   },
   "activity": {
     "title": "활동 모니터링",
@@ -8428,7 +8435,9 @@
     "unread": "읽지 않음",
     "empty_hint": "도움 요청이나 가입을 요청하는 장치가 없습니다.",
     "loading": "알림을 불러오는 중…",
-    "load_failed": "알림을 불러올 수 없습니다."
+    "load_failed": "알림을 불러올 수 없습니다.",
+    "kind_ticket": "컴퓨터에서 온 새 티켓",
+    "kind_ticket_reply": "컴퓨터에서 온 답장"
   },
   "accessibility": {
     "title": "접근성",

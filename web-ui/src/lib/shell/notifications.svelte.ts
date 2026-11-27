@@ -1,6 +1,7 @@
 /**
- * The bell in the top bar (public/js/notif-center.js): help requests and
- * devices asking to join, newest first, at most ten; unread ones counted.
+ * The bell in the top bar (public/js/notif-center.js): help requests,
+ * devices asking to join, and tickets the people at computers opened or
+ * replied to (A277), newest first, at most ten; unread ones counted.
  *
  * Loaded at start, every 30 s while the tab is visible (poll() pauses in a
  * hidden tab), when the list opens, and when the panel events say something
@@ -120,7 +121,8 @@ export function onPanelEvent(payload: Record<string, unknown>): void {
 		link: '/help-requests',
 		status: status || 'pending',
 		read: false,
-		created_at: createdAt
+		created_at: createdAt,
+		reporter: ''
 	};
 	const rest = notifications.items.filter((i) => i.id !== item.id);
 	if (rest.length === notifications.items.length) notifications.unread += 1;
@@ -130,7 +132,10 @@ export function onPanelEvent(payload: Record<string, unknown>): void {
 
 /* ── How a row reads (notif-center.js describe()) ── */
 
+export type NotificationKind = 'help_request' | 'registration' | 'ticket' | 'ticket_reply';
+
 export interface NotificationView {
+	kind: NotificationKind;
 	isRegistration: boolean;
 	/** Old URL the row opens */
 	link: string;
@@ -158,6 +163,18 @@ export function describe(item: Notification): NotificationView {
 	const deviceId = item.device_id;
 	const title = item.title;
 	const name = item.hostname || (title && title !== deviceId ? title : '');
+	if (item.kind === 'ticket' || item.kind === 'ticket_reply') {
+		// A ticket the person at a computer opened, or their reply: who, the computer, the title
+		return {
+			kind: item.kind,
+			isRegistration: false,
+			link: safeLink(item.link, '/tickets'),
+			name: item.reporter,
+			deviceId,
+			platform: '',
+			detail: item.kind === 'ticket' ? title : item.message
+		};
+	}
 	if (isRegistration) {
 		const parts = item.message
 			.split(' · ')
@@ -167,6 +184,7 @@ export function describe(item: Notification): NotificationView {
 		const platform = item.platform || parts.find((p) => !looksLikeAddress(p)) || '';
 		const ip = item.ip || parts.find(looksLikeAddress) || '';
 		return {
+			kind: 'registration',
 			isRegistration,
 			link: safeLink(item.link, '/registrations'),
 			name,
@@ -176,6 +194,7 @@ export function describe(item: Notification): NotificationView {
 		};
 	}
 	return {
+		kind: 'help_request',
 		isRegistration,
 		link: safeLink(item.link, '/help-requests'),
 		name: name || (deviceId ? '' : title),

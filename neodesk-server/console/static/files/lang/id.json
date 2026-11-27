@@ -4289,7 +4289,14 @@
     "attach_hint": "File hingga 25 MB. Semua orang yang dapat melihat tiket ini dapat mengunduhnya.",
     "attach_too_large": "File ini lebih besar dari 25 MB.",
     "attach_uploading": "Mengunggah {name}…",
-    "attach_done": "{name} dilampirkan."
+    "attach_done": "{name} dilampirkan.",
+    "source_label": "Sumber",
+    "source_all": "Semua tiket",
+    "source_device": "Dari komputer",
+    "opened_at_computer": "Dibuka oleh {name} di komputer {device}",
+    "opened_at_computer_unnamed": "Dibuka di komputer {device}",
+    "at_computer_named": "{name}, di komputer",
+    "at_computer": "Orang di komputer"
   },
   "activity": {
     "title": "Pemantauan Aktivitas",
@@ -8434,7 +8441,9 @@
     "unread": "Belum dibaca",
     "empty_hint": "Tidak ada permintaan bantuan atau perangkat yang meminta bergabung.",
     "loading": "Memuat pemberitahuan…",
-    "load_failed": "Pemberitahuan tidak dapat dimuat."
+    "load_failed": "Pemberitahuan tidak dapat dimuat.",
+    "kind_ticket": "Tiket baru dari komputer",
+    "kind_ticket_reply": "Balasan dari komputer"
   },
   "accessibility": {
     "title": "Aksesibilitas",

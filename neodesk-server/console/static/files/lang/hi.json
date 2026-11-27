@@ -4289,7 +4289,14 @@
     "attach_hint": "25 MB तक की फ़ाइलें। जो भी यह टिकट देख सकता है, वह इन्हें डाउनलोड कर सकता है।",
     "attach_too_large": "यह फ़ाइल 25 MB से बड़ी है।",
     "attach_uploading": "{name} अपलोड हो रही है…",
-    "attach_done": "{name} संलग्न किया गया।"
+    "attach_done": "{name} संलग्न किया गया।",
+    "source_label": "स्रोत",
+    "source_all": "सभी टिकट",
+    "source_device": "कंप्यूटरों से",
+    "opened_at_computer": "{name} ने कंप्यूटर {device} पर खोला",
+    "opened_at_computer_unnamed": "कंप्यूटर {device} पर खोला गया",
+    "at_computer_named": "{name}, कंप्यूटर पर",
+    "at_computer": "कंप्यूटर पर मौजूद व्यक्ति"
   },
   "activity": {
     "title": "गतिविधि की निगरानी",
@@ -8434,7 +8441,9 @@
     "unread": "अपठित",
     "empty_hint": "कोई सहायता अनुरोध या जुड़ने का अनुरोध करने वाला डिवाइस नहीं है।",
     "loading": "सूचनाएं लोड हो रही हैं…",
-    "load_failed": "सूचनाएं लोड नहीं हो सकीं।"
+    "load_failed": "सूचनाएं लोड नहीं हो सकीं।",
+    "kind_ticket": "कंप्यूटर से नया टिकट",
+    "kind_ticket_reply": "कंप्यूटर से जवाब"
   },
   "accessibility": {
     "title": "पहुंच योग्यता",
