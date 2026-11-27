@@ -646,7 +646,7 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 
 	// NEW PEER — Dual Key System enrollment check.
 	if !s.checkEnrollmentPermission(id, raddr.IP.String()) {
-		log.Printf("[signal] Rejected new peer %s from %s (enrollment policy)", id, raddr.IP)
+		s.enrollmentLogf(id, "Rejected new peer %s from %s (enrollment policy)", id, raddr.IP)
 		if s.isPendingEnrollment(id) {
 			// Keep the UDP endpoint registered, but do not request its key
 			// until approval. The next heartbeat after approval will request
@@ -657,7 +657,6 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 					RegisterPeerResponse: &pb.RegisterPeerResponse{RequestPk: false},
 				},
 			}, raddr)
-			log.Printf("[signal] Retained pending peer transport: %s from %s", id, raddr)
 		}
 		s.auditRefusal(audit.ActionPeerRegistrationRejected, raddr.IP.String(), id, map[string]string{
 			"reason": "enrollment_policy",
@@ -847,10 +846,13 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 		return registerPkResponse(pb.RegisterPkResponse_TOO_FREQUENT)
 	}
 	if existingPeer == nil && !s.checkEnrollmentPermission(id, clientHost) {
-		log.Printf("[signal] Rejected new peer PK registration: %s from %s (enrollment policy)", id, clientHost)
+		s.enrollmentLogf(id, "Rejected new peer PK registration: %s from %s (enrollment policy)", id, clientHost)
 		// A pending managed peer may already have a retained signal transport.
 		// Keep it so approval can authorize the existing connection; an
 		// untracked registration is still removed as before.
+		if s.isPendingEnrollment(id) {
+			s.notePendingRegisterUUID(id, msg.Uuid)
+		}
 		if !s.isPendingEnrollment(id) || s.peers.Get(id) == nil {
 			s.peers.Remove(id)
 		}
@@ -3520,6 +3522,7 @@ func (s *Server) checkEnrollmentPermission(peerID, clientIP string) bool {
 
 	// Open mode — always allow (backward compatible)
 	if mode == config.EnrollmentModeOpen {
+		s.closePendingEnrollmentInOpenMode(peerID, clientIP)
 		return true
 	}
 
@@ -3542,7 +3545,7 @@ func (s *Server) checkEnrollmentPermission(peerID, clientIP string) bool {
 		// enrollment queue so an operator can review and approve/reject them.
 		// The connection is still denied until approval.
 		s.recordPendingEnrollment(peerID, clientIP, pendingEnrollmentMeta{})
-		log.Printf("[signal] Enrollment: queued unknown peer %s for approval (managed mode)", peerID)
+		s.enrollmentLogf(peerID, "Enrollment: %s from %s waits for approval (managed mode)", peerID, clientIP)
 		return false
 	}
 
@@ -3554,11 +3557,112 @@ func (s *Server) checkEnrollmentPermission(peerID, clientIP string) bool {
 				return true
 			}
 		}
-		log.Printf("[signal] Enrollment: rejected peer %s (locked mode, no valid token)", peerID)
+		s.enrollmentLogf(peerID, "Enrollment: rejected peer %s from %s (locked mode, no valid token)", peerID, clientIP)
 		return false
 	}
 
 	return true
+}
+
+// closePendingEnrollmentInOpenMode closes the approval request of a device
+// that waited in Managed mode and registers now that the mode is Open: the
+// request moves to the approved history, so the device is no longer listed
+// as waiting and may start sessions (finalizeAuthorizedInitiator refuses
+// initiators that still have a request).
+func (s *Server) closePendingEnrollmentInOpenMode(peerID, clientIP string) {
+	if s.db == nil || peerID == "" {
+		return
+	}
+	key := "pending_device_" + peerID
+	raw, err := s.db.GetConfig(key)
+	if err != nil || raw == "" {
+		return
+	}
+	if banned, err := s.db.IsPeerBanned(peerID); err != nil || banned {
+		return
+	}
+	// Same fields and key as the API's approval history
+	// (enrollmentDecision, enrollment_decision_<id>).
+	var decision struct {
+		DeviceID   string `json:"device_id"`
+		UUID       string `json:"uuid,omitempty"`
+		Hostname   string `json:"hostname"`
+		Platform   string `json:"platform"`
+		Version    string `json:"version"`
+		DeviceType string `json:"device_type,omitempty"`
+		BundleID   string `json:"bundle_id,omitempty"`
+		Tags       string `json:"tags,omitempty"`
+		IP         string `json:"ip"`
+		Status     string `json:"status"`
+		Banned     bool   `json:"banned"`
+		DecidedAt  string `json:"decided_at"`
+		CreatedAt  string `json:"created_at,omitempty"`
+	}
+	_ = json.Unmarshal([]byte(raw), &decision)
+	decision.DeviceID = peerID
+	if decision.IP == "" {
+		decision.IP = clientIP
+	}
+	decision.Status = "approved"
+	decision.Banned = false
+	decision.DecidedAt = time.Now().UTC().Format(time.RFC3339)
+	if data, err := json.Marshal(decision); err == nil {
+		if err := s.db.SetConfig("enrollment_decision_"+peerID, string(data)); err != nil {
+			log.Printf("[signal] Enrollment: could not save the open mode approval of %s: %v", peerID, err)
+		}
+	}
+	if err := s.db.DeleteConfig(key); err != nil {
+		log.Printf("[signal] Enrollment: could not close the request of %s: %v", peerID, err)
+		return
+	}
+	log.Printf("[signal] Enrollment: %s joined in open mode; its approval request is closed", peerID)
+	if s.auditLog != nil {
+		s.auditLog.Log("device_approved", clientIP, peerID, map[string]string{
+			"device_id": peerID, "ip": clientIP, "reason": "joined in open mode",
+		})
+	}
+	if s.eventBus != nil {
+		s.eventBus.Publish(events.Event{
+			Type: "device_approved",
+			Data: map[string]string{"device_id": peerID},
+		})
+	}
+}
+
+// pendingRegisterUUIDField holds, in a waiting request, the uuid of the
+// first RegisterPk the device sent for it (hex). The API fills the
+// request's name, system and version from system information that carries
+// the same uuid (a stock RustDesk client sends nothing else before it is
+// approved). Approval does not read it: the key and uuid are still bound by
+// the first RegisterPk after approval.
+const pendingRegisterUUIDField = "register_uuid"
+
+// notePendingRegisterUUID keeps the uuid of the first RegisterPk of a
+// waiting device in its request.
+func (s *Server) notePendingRegisterUUID(peerID string, uuid []byte) {
+	if s.db == nil || len(uuid) == 0 || len(uuid) > maxRegisterPkUUID {
+		return
+	}
+	key := "pending_device_" + peerID
+	raw, err := s.db.GetConfig(key)
+	if err != nil || raw == "" {
+		return
+	}
+	request := map[string]any{}
+	if json.Unmarshal([]byte(raw), &request) != nil {
+		return
+	}
+	if current, _ := request[pendingRegisterUUIDField].(string); current != "" {
+		return
+	}
+	request[pendingRegisterUUIDField] = fmt.Sprintf("%x", normalizePeerUUIDBytes(uuid))
+	data, err := json.Marshal(request)
+	if err != nil {
+		return
+	}
+	if err := s.db.SetConfig(key, string(data)); err != nil {
+		log.Printf("[signal] Enrollment: could not note the uuid of %s: %v", peerID, err)
+	}
 }
 
 // pendingEnrollmentInfo mirrors the JSON schema used by the API package
@@ -3602,26 +3706,20 @@ func (s *Server) recordPendingEnrollment(peerID, clientIP string, meta pendingEn
 
 	key := "pending_device_" + peerID
 	if v, err := s.db.GetConfig(key); err == nil && v != "" {
-		var existing pendingEnrollmentInfo
+		// Only empty fields are filled; fields this package does not know
+		// (those of a NeoDesk client's own request) stay as they are.
+		existing := map[string]any{}
 		if json.Unmarshal([]byte(v), &existing) != nil {
 			return
 		}
 		changed := false
-		if existing.Hostname == "" && meta.Hostname != "" {
-			existing.Hostname = meta.Hostname
-			changed = true
-		}
-		if existing.Platform == "" && meta.Platform != "" {
-			existing.Platform = meta.Platform
-			changed = true
-		}
-		if existing.Version == "" && meta.Version != "" {
-			existing.Version = meta.Version
-			changed = true
-		}
-		if existing.IP == "" && clientIP != "" {
-			existing.IP = clientIP
-			changed = true
+		for field, value := range map[string]string{
+			"hostname": meta.Hostname, "platform": meta.Platform, "version": meta.Version, "ip": clientIP,
+		} {
+			if current, _ := existing[field].(string); current == "" && value != "" {
+				existing[field] = value
+				changed = true
+			}
 		}
 		if !changed {
 			return
@@ -3638,7 +3736,7 @@ func (s *Server) recordPendingEnrollment(peerID, clientIP string, meta pendingEn
 	}
 
 	if queued, err := s.db.ListConfigByPrefix("pending_device_"); err != nil || len(queued) >= s.maxPendingEnrollments {
-		log.Printf("[signal] recordPendingEnrollment: %s from %s not queued: the approval queue is full (%d entries, err=%v)", peerID, clientIP, len(queued), err)
+		s.enrollmentLogf(peerID, "recordPendingEnrollment: %s from %s not queued: the approval queue is full (%d entries, err=%v)", peerID, clientIP, len(queued), err)
 		return
 	}
 

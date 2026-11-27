@@ -1339,6 +1339,16 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 
 	// Verify peer exists, by the uuid it registered with
 	peer, err := s.db.GetPeer(deviceID)
+	if err == nil && peer == nil {
+		// A waiting device: its request shows the name it sends here. The
+		// answer stays ID_NOT_FOUND, so the client sends it again after
+		// approval.
+		osValue := body.Platform
+		if osValue == "" {
+			osValue = body.OS
+		}
+		s.notePendingSysinfo(deviceID, body.UUID, truncate(body.Hostname, 255), truncate(osValue, 255), truncate(body.Version, 64))
+	}
 	if err != nil || peer == nil || !sameRegisteredUUID(peer.UUID, body.UUID) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("ID_NOT_FOUND")) //nolint:errcheck
@@ -1430,6 +1440,46 @@ func (s *Server) handleClientSysinfoVer(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte(hash)) //nolint:errcheck
+}
+
+// pendingRegisterUUIDField is the field of a waiting request in which the
+// signal server keeps the uuid of the device's first RegisterPk.
+const pendingRegisterUUIDField = "register_uuid"
+
+// notePendingSysinfo fills the empty name, system and version of a waiting
+// request from a stock RustDesk client's system information, which it
+// sends before it is approved. Only system information with the uuid of
+// the request's RegisterPk counts; fields the request has stay as they are.
+func (s *Server) notePendingSysinfo(deviceID, uuid, hostname, osValue, version string) {
+	raw, err := s.db.GetConfig(pendingDevicePrefix + deviceID)
+	if err != nil || raw == "" {
+		return
+	}
+	request := map[string]any{}
+	if json.Unmarshal([]byte(raw), &request) != nil {
+		return
+	}
+	registered, _ := request[pendingRegisterUUIDField].(string)
+	if !sameRegisteredUUID(registered, uuid) {
+		return
+	}
+	changed := false
+	for field, value := range map[string]string{"hostname": hostname, "platform": osValue, "version": version} {
+		if current, _ := request[field].(string); strings.TrimSpace(current) == "" && strings.TrimSpace(value) != "" {
+			request[field] = value
+			changed = true
+		}
+	}
+	if !changed {
+		return
+	}
+	data, err := json.Marshal(request)
+	if err != nil {
+		return
+	}
+	if err := s.db.SetConfig(pendingDevicePrefix+deviceID, string(data)); err != nil {
+		log.Printf("[API] Could not note the system information of waiting device %s: %v", deviceID, err)
+	}
 }
 
 // truncate returns s capped at maxLen bytes.

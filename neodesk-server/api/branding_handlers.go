@@ -1368,7 +1368,7 @@ func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if s.auditLog != nil {
-		s.auditLog.Log("device_approved", s.eventActor(r), actor, map[string]string{
+		s.auditLog.Log("device_approved", s.eventActor(r), deviceID, map[string]string{
 			"device_id": deviceID, "sync_mode": syncMode, "display_name": req.DisplayName, "tags": tags,
 		})
 	}
@@ -1500,7 +1500,7 @@ func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if s.auditLog != nil {
-		s.auditLog.Log("device_rejected", s.eventActor(r), actor, map[string]string{
+		s.auditLog.Log("device_rejected", s.eventActor(r), deviceID, map[string]string{
 			"device_id": deviceID,
 			"banned":    strconv.FormatBool(req.Ban),
 		})
@@ -1562,9 +1562,8 @@ func (s *Server) handleClearEnrollmentRejection(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	actor := getUsernameFromCtx(r)
 	if s.auditLog != nil {
-		s.auditLog.Log("enrollment_rejection_cleared", s.eventActor(r), actor, map[string]string{
+		s.auditLog.Log("enrollment_rejection_cleared", s.eventActor(r), deviceID, map[string]string{
 			"device_id":    deviceID,
 			"unbanned":     strconv.FormatBool(unbanned),
 			"peer_removed": strconv.FormatBool(peerRemoved),
