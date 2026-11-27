@@ -127,3 +127,33 @@ func withoutCarriedComments(node, got string) bool {
 	}
 	return j == len(gotLines)
 }
+
+// envMergeCommentedOut are the recorded runs whose .env has a template key
+// commented out ("# B=3"), by the run's name: Node appended the key again,
+// Go leaves it out, so the JSON names one key less and the .env lacks
+// that line and the comments above it. The values are Go's JSON line and
+// the SHA-256 of Go's .env.
+var envMergeCommentedOut = map[string][2]string{
+	"crlf/dup/merge":         {`{"success":true,"mode":"merge","added":["C"]}` + "\n", "d34a0295819084986a4cf6b2196a99a86852c370ec5fab5d1f6adbdf318496cf"},
+	"placeholders/dup/merge": {`{"success":true,"mode":"merge","added":["C","D","E"]}` + "\n", "d2d39d7906390e76544e5ffad6e69cd9aafd048ca03eca8a6673dde31bcda10c"},
+}
+
+// goEnvAfterCommentedOut checks the .env of a run in envMergeCommentedOut
+// and returns the files to compare, with Go's .env in place of Node's.
+func goEnvAfterCommentedOut(t *testing.T, c envMergeCase, dir, wantSum string) map[string]*fileState {
+	t.Helper()
+	got, err := os.ReadFile(filepath.Join(dir, ".env"))
+	if err != nil {
+		t.Errorf("%s: %v", c.Name, err)
+		return c.After
+	}
+	if sum := sha256.Sum256(got); hex.EncodeToString(sum[:]) != wantSum {
+		t.Errorf("%s: the .env has SHA-256 %x, recorded %s:\n%q", c.Name, sum, wantSum, got)
+	}
+	after := map[string]*fileState{}
+	for name, state := range c.After {
+		after[name] = state
+	}
+	after[".env"] = &fileState{Base64: base64.StdEncoding.EncodeToString(got), Mode: c.After[".env"].Mode}
+	return after
+}

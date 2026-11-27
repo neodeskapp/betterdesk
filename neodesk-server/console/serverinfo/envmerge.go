@@ -372,13 +372,29 @@ func AssertResolvedSubstitutions(subs []Substitution) error {
 	return nil
 }
 
+// commentedPair is a line that sets a key but is commented out, such as
+// "# WEB_UI_DIR=/opt/web-ui" as upgrade-env leaves it.
+var commentedPair = regexp.MustCompile(`^#[ \t]*([A-Za-z_][A-Za-z0-9_.-]*)[ \t]*=`)
+
 // MergeEnv adds to an env file the keys of a template it does not have.
-// The existing text stays as it is, with a line break added when it lacks
-// the last one. Each missing key is appended as KEY=value, after the
-// comment and blank lines that stand right before it in the template.
+// A key the file has commented out counts as present: someone, or
+// upgrade-env, turned it off on purpose, and adding it back at every
+// update would grow the file and change it on an update that changes
+// nothing. The existing text stays as it is, with a line break added when
+// it lacks the last one. Each missing key is appended as KEY=value, after
+// the comment and blank lines that stand right before it in the template.
 func MergeEnv(existingContent, templateContent string) (content string, added []string) {
 	existing := ParseEnvLines(existingContent)
 	template := ParseEnvLines(templateContent)
+	commented := map[string]bool{}
+	for _, entry := range existing.Entries {
+		if entry.Type != EnvComment {
+			continue
+		}
+		if m := commentedPair.FindStringSubmatch(jsTrim(entry.Raw)); m != nil {
+			commented[m[1]] = true
+		}
+	}
 
 	var b strings.Builder
 	b.WriteString(existingContent)
@@ -394,7 +410,7 @@ func MergeEnv(existingContent, templateContent string) (content string, added []
 			pending.WriteByte('\n')
 			continue
 		}
-		if _, ok := existing.Get(entry.Key); ok {
+		if _, ok := existing.Get(entry.Key); ok || commented[entry.Key] {
 			pending.Reset()
 			continue
 		}
