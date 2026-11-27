@@ -1714,7 +1714,8 @@
       "tools_console": "A konzol töltötte le",
       "tools_missing": "Nincs telepítve",
       "channel_now": "Most: {channel}. {installs}.",
-      "channel_applies": "A frissítések következő keresésére érvényes. Semmi sem települ, amíg nem kattint a Telepítés gombra."
+      "channel_applies": "A frissítések következő keresésére érvényes. Semmi sem települ, amíg nem kattint a Telepítés gombra.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Válasszon egy fájlt a megtekintéséhez és szerkesztéséhez. Minden mentés megőrzi az előző verzió másolatát.",
@@ -4454,7 +4455,13 @@
     "section_alert": "Riasztás",
     "saving": "Mentés…",
     "rules_checked": "A szabályokat az értékek beérkezésekor ellenőrzi a szerver: a processzort és a memóriát az eszköz minden használati jelentésekor, a lemezhasználatot a leltárával, a tétlen időt a tevékenységi jelentésével, az offline időt pedig percenként egyszer. Az egyéni szabályokat nem ellenőrzi.",
-    "custom_not_checked": "Az egyéni szabálynak nincs olyan értéke, amelyet a szerver mérni tudna, ezért magától nem vált ki riasztást."
+    "custom_not_checked": "Az egyéni szabálynak nincs olyan értéke, amelyet a szerver mérni tudna, ezért magától nem vált ki riasztást.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Fájlátvitel",
@@ -4769,7 +4776,13 @@
     "section_covers": "Mire vonatkozik",
     "policy_sheet_desc": "Mely átvitelekre vonatkozik az irányelv, és az eszközök letiltják, naplózzák vagy engedélyezik-e őket.",
     "saving": "Mentés…",
-    "older_events": "Régebbi események"
+    "older_events": "Régebbi események",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Jelentések",
@@ -7704,7 +7717,18 @@
     "fact_id": "Eszközazonosító",
     "tabs_save_hint": "Minden szabálytípusnak saját Mentés gombja van, és külön mentődik.",
     "save_rules": "Szabályok mentése",
-    "save_all_hint": "A Mentés minden módosított szabályfajtát elment. Minden fajta külön mentődik."
+    "save_all_hint": "A Mentés minden módosított szabályfajtát elment. Minden fajta külön mentődik.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "Az új szám a következő frissítés után érvényes.",
     "updates_title": "Frissítések előtt",
     "where": "Hová mentsen",
-    "where_help": "A NeoDesk adatmappája vagy egy saját mappa. A hálózati megosztást előbb az operációs rendszernek csatolnia kell."
+    "where_help": "A NeoDesk adatmappája vagy egy saját mappa. A hálózati megosztást előbb az operációs rendszernek csatolnia kell.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Bejelentkezés a NeoDesk alkalmazásba",

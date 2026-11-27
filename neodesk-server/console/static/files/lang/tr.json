@@ -1714,7 +1714,8 @@
       "tools_console": "Konsol tarafından indirildi",
       "tools_missing": "Kurulu değil",
       "channel_now": "Şu an: {channel}. {installs}.",
-      "channel_applies": "Bir sonraki güncelleme denetiminde geçerlidir. Siz Yükle'ye tıklayana kadar hiçbir şey yüklenmez."
+      "channel_applies": "Bir sonraki güncelleme denetiminde geçerlidir. Siz Yükle'ye tıklayana kadar hiçbir şey yüklenmez.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Görüntülemek ve düzenlemek için bir dosya seçin. Her kaydetme önceki sürümün bir kopyasını saklar.",
@@ -4454,7 +4455,13 @@
     "section_alert": "Uyarı",
     "saving": "Kaydediliyor…",
     "rules_checked": "Kurallar değerler geldikçe denetlenir: CPU ve bellek bir cihazın her kullanım raporuyla, disk kullanımı envanteriyle, boşta kalma süresi etkinlik raporuyla, çevrimdışı süre ise dakikada bir. Özel kurallar denetlenmez.",
-    "custom_not_checked": "Özel bir kuralın sunucunun ölçebileceği bir değeri yoktur, bu yüzden kendi başına uyarı oluşturmaz."
+    "custom_not_checked": "Özel bir kuralın sunucunun ölçebileceği bir değeri yoktur, bu yüzden kendi başına uyarı oluşturmaz.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Dosya Aktarımı",
@@ -4769,7 +4776,13 @@
     "section_covers": "Neleri kapsar",
     "policy_sheet_desc": "Politikanın hangi aktarımları kapsadığı ve cihazların bunları engelleyip kaydedip izin verip vermediği.",
     "saving": "Kaydediliyor…",
-    "older_events": "Daha eski olaylar"
+    "older_events": "Daha eski olaylar",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Raporlar",
@@ -7704,7 +7717,18 @@
     "fact_id": "Cihaz kimliği",
     "tabs_save_hint": "Her kural türünün kendi Kaydet düğmesi vardır ve ayrı kaydedilir.",
     "save_rules": "Kuralları kaydet",
-    "save_all_hint": "Kaydet, değiştirdiğiniz her kural türünü kaydeder. Her tür ayrı kaydedilir."
+    "save_all_hint": "Kaydet, değiştirdiğiniz her kural türünü kaydeder. Her tür ayrı kaydedilir.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "Yeni sayı bir sonraki güncellemeden sonra geçerli olur.",
     "updates_title": "Güncellemelerden önce",
     "where": "Nereye kaydedilsin",
-    "where_help": "NeoDesk veri klasörü veya kendi klasörünüz. Ağ paylaşımı önce işletim sistemi tarafından bağlanmalıdır."
+    "where_help": "NeoDesk veri klasörü veya kendi klasörünüz. Ağ paylaşımı önce işletim sistemi tarafından bağlanmalıdır.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "NeoDesk uygulamasında oturum açın",

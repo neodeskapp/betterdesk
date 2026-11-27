@@ -1714,7 +1714,8 @@
       "tools_console": "คอนโซลดาวน์โหลดมา",
       "tools_missing": "ยังไม่ได้ติดตั้ง",
       "channel_now": "ตอนนี้: {channel} {installs}",
-      "channel_applies": "มีผลกับการตรวจหาอัปเดตครั้งถัดไป จะไม่มีการติดตั้งใดๆ จนกว่าคุณจะคลิก ติดตั้ง"
+      "channel_applies": "มีผลกับการตรวจหาอัปเดตครั้งถัดไป จะไม่มีการติดตั้งใดๆ จนกว่าคุณจะคลิก ติดตั้ง",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "เลือกไฟล์เพื่อดูและแก้ไข ทุกครั้งที่บันทึกจะเก็บสำเนาของเวอร์ชันก่อนหน้าไว้",
@@ -4454,7 +4455,13 @@
     "section_alert": "การแจ้งเตือน",
     "saving": "กำลังบันทึก…",
     "rules_checked": "กฎจะถูกตรวจเมื่อค่ามาถึง: CPU และหน่วยความจำทุกครั้งที่อุปกรณ์รายงานการใช้งาน การใช้ดิสก์พร้อมรายการทรัพย์สิน เวลาว่างพร้อมรายงานกิจกรรม และเวลาออฟไลน์นาทีละครั้ง กฎแบบกำหนดเองจะไม่ถูกตรวจ",
-    "custom_not_checked": "กฎแบบกำหนดเองไม่มีค่าที่เซิร์ฟเวอร์วัดได้ จึงไม่สร้างการแจ้งเตือนเอง"
+    "custom_not_checked": "กฎแบบกำหนดเองไม่มีค่าที่เซิร์ฟเวอร์วัดได้ จึงไม่สร้างการแจ้งเตือนเอง",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "การถ่ายโอนไฟล์",
@@ -4769,7 +4776,13 @@
     "section_covers": "สิ่งที่ครอบคลุม",
     "policy_sheet_desc": "การโอนที่นโยบายครอบคลุม และอุปกรณ์จะบล็อก บันทึก หรืออนุญาต",
     "saving": "กำลังบันทึก…",
-    "older_events": "เหตุการณ์ที่เก่ากว่า"
+    "older_events": "เหตุการณ์ที่เก่ากว่า",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "รายงาน",
@@ -7704,7 +7717,18 @@
     "fact_id": "รหัสอุปกรณ์",
     "tabs_save_hint": "กฎแต่ละประเภทมีปุ่มบันทึกของตัวเองและบันทึกแยกกัน",
     "save_rules": "บันทึกกฎ",
-    "save_all_hint": "บันทึกจะเก็บกฎทุกประเภทที่คุณเปลี่ยน แต่ละประเภทจะบันทึกแยกกัน"
+    "save_all_hint": "บันทึกจะเก็บกฎทุกประเภทที่คุณเปลี่ยน แต่ละประเภทจะบันทึกแยกกัน",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "จำนวนใหม่มีผลหลังการอัปเดตครั้งถัดไป",
     "updates_title": "ก่อนการอัปเดต",
     "where": "บันทึกที่ไหน",
-    "where_help": "โฟลเดอร์ข้อมูลของ NeoDesk หรือโฟลเดอร์ของคุณเอง ต้องให้ระบบปฏิบัติการเมานต์การแชร์เครือข่ายก่อน"
+    "where_help": "โฟลเดอร์ข้อมูลของ NeoDesk หรือโฟลเดอร์ของคุณเอง ต้องให้ระบบปฏิบัติการเมานต์การแชร์เครือข่ายก่อน",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "ลงชื่อเข้าใช้แอป NeoDesk",

@@ -1708,7 +1708,8 @@
       "tools_console": "Pobrane przez konsolę",
       "tools_missing": "Nie zainstalowano",
       "channel_now": "Teraz: {channel}. {installs}.",
-      "channel_applies": "Dotyczy następnego sprawdzenia aktualizacji. Nic nie zostanie zainstalowane, dopóki nie klikniesz Zainstaluj."
+      "channel_applies": "Dotyczy następnego sprawdzenia aktualizacji. Nic nie zostanie zainstalowane, dopóki nie klikniesz Zainstaluj.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Wybierz plik, aby go wyświetlić i edytować. Każde zapisanie zachowuje kopię poprzedniej wersji.",
@@ -4466,7 +4467,13 @@
     "section_alert": "Alert",
     "saving": "Zapisywanie…",
     "rules_checked": "Reguły są sprawdzane, gdy przychodzą wartości: procesor i pamięć przy każdym raporcie użycia z urządzenia, użycie dysku przy jego inwentarzu, czas bezczynności przy raporcie aktywności, a czas offline raz na minutę. Reguły niestandardowe nie są sprawdzane.",
-    "custom_not_checked": "Reguła niestandardowa nie ma wartości, którą serwer mógłby zmierzyć, więc sama nie wywołuje alertów."
+    "custom_not_checked": "Reguła niestandardowa nie ma wartości, którą serwer mógłby zmierzyć, więc sama nie wywołuje alertów.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Przesyłanie plików",
@@ -4781,7 +4788,13 @@
     "section_covers": "Czego dotyczy",
     "policy_sheet_desc": "Których transferów dotyczy polityka i czy urządzenia je blokują, rejestrują czy zezwalają na nie.",
     "saving": "Zapisywanie…",
-    "older_events": "Starsze zdarzenia"
+    "older_events": "Starsze zdarzenia",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Raporty",
@@ -7984,7 +7997,18 @@
     "fact_id": "ID urządzenia",
     "tabs_save_hint": "Każdy rodzaj reguły ma własny przycisk Zapisz i zapisuje się osobno.",
     "save_rules": "Zapisz reguły",
-    "save_all_hint": "Zapisz zapisuje każdy rodzaj reguł, który został zmieniony. Każdy rodzaj zapisuje się osobno."
+    "save_all_hint": "Zapisz zapisuje każdy rodzaj reguł, który został zmieniony. Każdy rodzaj zapisuje się osobno.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10431,7 +10455,10 @@
     "updates_consequence": "Nowa liczba działa od następnej aktualizacji.",
     "updates_title": "Przed aktualizacjami",
     "where": "Gdzie zapisywać",
-    "where_help": "Folder danych NeoDesk lub własny folder. Udział sieciowy musi najpierw zamontować system operacyjny."
+    "where_help": "Folder danych NeoDesk lub własny folder. Udział sieciowy musi najpierw zamontować system operacyjny.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Zaloguj się w aplikacji NeoDesk",

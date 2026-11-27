@@ -1716,7 +1716,8 @@
             "tools_console": "Downloaded by the console",
             "tools_missing": "Not installed",
             "channel_now": "Now: {channel}. {installs}.",
-            "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
+            "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install.",
+            "channel_applies_short": "Applies to the next check for updates."
         },
         "advanced_tab": {
             "note": "Pick a file to see and edit it. Each save keeps a copy of the previous version.",
@@ -4528,7 +4529,13 @@
         "section_alert": "Alert",
         "saving": "Saving…",
         "rules_checked": "Rules are checked as values come in: CPU and memory with each usage report from a device, disk use with its inventory, idle time with its activity report, and offline time once a minute. Custom rules are not checked.",
-        "custom_not_checked": "A custom rule has no value the server can measure, so it raises no alerts by itself."
+        "custom_not_checked": "A custom rule has no value the server can measure, so it raises no alerts by itself.",
+        "device_required": "Enter the device ID, or choose All devices.",
+        "scope_one": "One device",
+        "checked_usage": "Checked with each usage report from a device.",
+        "checked_disk": "Checked when a device sends its inventory.",
+        "checked_idle": "Checked with each activity report from a device.",
+        "checked_offline": "Checked once a minute."
     },
     "file_transfer": {
         "title": "File Transfer",
@@ -4843,7 +4850,13 @@
         "section_covers": "What it covers",
         "policy_sheet_desc": "Which transfers the policy covers and whether devices block, record or allow them.",
         "saving": "Saving…",
-        "older_events": "Older events"
+        "older_events": "Older events",
+        "devices_required": "Add a device ID, or choose All devices.",
+        "scope_some": "Only these devices",
+        "devices": "Devices",
+        "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+        "device_n": "Device {n}",
+        "add_device": "Add a device"
     },
     "reports": {
         "title": "Reports",
@@ -8058,7 +8071,18 @@
         "fact_id": "Device ID",
         "tabs_save_hint": "Each kind of rule has its own Save button and is saved on its own.",
         "save_rules": "Save rules",
-        "save_all_hint": "Save stores every kind of rule you changed. Each kind is saved on its own."
+        "save_all_hint": "Save stores every kind of rule you changed. Each kind is saved on its own.",
+        "no_limit": "No limit",
+        "empty_no_limit": "Leave empty for no limit.",
+        "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+        "usb_device_n": "Allowed USB device {n}",
+        "add_usb_device": "Add a USB device",
+        "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+        "hidden_partition_n": "Hidden partition {n}",
+        "add_partition": "Add a partition",
+        "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+        "program_n": "Allowed program {n}",
+        "add_program": "Add a program"
     },
     "sdk_studio": {
         "title": "SDK Studio",
@@ -10431,7 +10455,10 @@
         "updates_consequence": "A new number applies after the next update.",
         "updates_title": "Before updates",
         "where": "Where to save",
-        "where_help": "The NeoDesk data folder, or a folder of your own. A network share must be mounted by the operating system first."
+        "where_help": "The NeoDesk data folder, or a folder of your own. A network share must be mounted by the operating system first.",
+        "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+        "last_run": "Last scheduled backup: {when}",
+        "last_run_none": "No scheduled backup yet"
     },
     "device_authorize": {
         "title": "Sign in to the NeoDesk app",

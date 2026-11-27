@@ -1708,7 +1708,8 @@
       "tools_console": "Scaricati dalla console",
       "tools_missing": "Non installati",
       "channel_now": "Ora: {channel}. {installs}.",
-      "channel_applies": "Si applica al prossimo controllo degli aggiornamenti. Non viene installato nulla finché non fai clic su Installa."
+      "channel_applies": "Si applica al prossimo controllo degli aggiornamenti. Non viene installato nulla finché non fai clic su Installa.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Scegliere un file per visualizzarlo e modificarlo. Ogni salvataggio conserva una copia della versione precedente.",
@@ -4448,7 +4449,13 @@
     "section_alert": "Avviso",
     "saving": "Salvataggio…",
     "rules_checked": "Le regole vengono controllate quando arrivano i valori: CPU e memoria a ogni rapporto di utilizzo di un dispositivo, uso del disco con il suo inventario, tempo di inattività con il suo rapporto di attività e tempo offline una volta al minuto. Le regole personalizzate non vengono controllate.",
-    "custom_not_checked": "Una regola personalizzata non ha un valore che il server possa misurare, quindi da sola non genera avvisi."
+    "custom_not_checked": "Una regola personalizzata non ha un valore che il server possa misurare, quindi da sola non genera avvisi.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Trasferimento file",
@@ -4763,7 +4770,13 @@
     "section_covers": "Cosa copre",
     "policy_sheet_desc": "Quali trasferimenti copre il criterio e se i dispositivi li bloccano, li registrano o li consentono.",
     "saving": "Salvataggio…",
-    "older_events": "Eventi meno recenti"
+    "older_events": "Eventi meno recenti",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Report",
@@ -7698,7 +7711,18 @@
     "fact_id": "ID dispositivo",
     "tabs_save_hint": "Ogni tipo di regola ha il suo pulsante Salva e viene salvato a parte.",
     "save_rules": "Salva regole",
-    "save_all_hint": "Salva memorizza ogni tipo di regola che hai cambiato. Ogni tipo viene salvato a parte."
+    "save_all_hint": "Salva memorizza ogni tipo di regola che hai cambiato. Ogni tipo viene salvato a parte.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10431,7 +10455,10 @@
     "updates_consequence": "Un nuovo numero si applica dopo il prossimo aggiornamento.",
     "updates_title": "Prima degli aggiornamenti",
     "where": "Dove salvare",
-    "where_help": "La cartella dati di NeoDesk, o una cartella tua. Una condivisione di rete deve prima essere montata dal sistema operativo."
+    "where_help": "La cartella dati di NeoDesk, o una cartella tua. Una condivisione di rete deve prima essere montata dal sistema operativo.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Accedi all'app NeoDesk",

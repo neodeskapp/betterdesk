@@ -1714,7 +1714,8 @@
       "tools_console": "Do bảng điều khiển tải về",
       "tools_missing": "Chưa cài",
       "channel_now": "Hiện tại: {channel}. {installs}.",
-      "channel_applies": "Áp dụng cho lần kiểm tra cập nhật tiếp theo. Không có gì được cài cho tới khi bạn bấm Cài đặt."
+      "channel_applies": "Áp dụng cho lần kiểm tra cập nhật tiếp theo. Không có gì được cài cho tới khi bạn bấm Cài đặt.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Chọn một tệp để xem và chỉnh sửa. Mỗi lần lưu sẽ giữ một bản sao của phiên bản trước.",
@@ -4454,7 +4455,13 @@
     "section_alert": "Cảnh báo",
     "saving": "Đang lưu…",
     "rules_checked": "Quy tắc được kiểm tra khi giá trị đến: CPU và bộ nhớ với mỗi báo cáo sử dụng từ thiết bị, dung lượng đĩa với bản kiểm kê, thời gian không hoạt động với báo cáo hoạt động, và thời gian ngoại tuyến mỗi phút một lần. Quy tắc tùy chỉnh không được kiểm tra.",
-    "custom_not_checked": "Quy tắc tùy chỉnh không có giá trị nào máy chủ đo được, nên tự nó không tạo cảnh báo."
+    "custom_not_checked": "Quy tắc tùy chỉnh không có giá trị nào máy chủ đo được, nên tự nó không tạo cảnh báo.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Truyền tệp",
@@ -4769,7 +4776,13 @@
     "section_covers": "Phạm vi áp dụng",
     "policy_sheet_desc": "Những lần truyền mà chính sách áp dụng và thiết bị sẽ chặn, ghi lại hay cho phép chúng.",
     "saving": "Đang lưu…",
-    "older_events": "Sự kiện cũ hơn"
+    "older_events": "Sự kiện cũ hơn",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Báo cáo",
@@ -7704,7 +7717,18 @@
     "fact_id": "ID thiết bị",
     "tabs_save_hint": "Mỗi loại quy tắc có nút Lưu riêng và được lưu riêng.",
     "save_rules": "Lưu quy tắc",
-    "save_all_hint": "Lưu sẽ lưu mọi loại quy tắc bạn đã thay đổi. Mỗi loại được lưu riêng."
+    "save_all_hint": "Lưu sẽ lưu mọi loại quy tắc bạn đã thay đổi. Mỗi loại được lưu riêng.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "Số mới áp dụng sau lần cập nhật tiếp theo.",
     "updates_title": "Trước khi cập nhật",
     "where": "Lưu ở đâu",
-    "where_help": "Thư mục dữ liệu NeoDesk, hoặc thư mục riêng của bạn. Thư mục chia sẻ mạng phải được hệ điều hành gắn trước."
+    "where_help": "Thư mục dữ liệu NeoDesk, hoặc thư mục riêng của bạn. Thư mục chia sẻ mạng phải được hệ điều hành gắn trước.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Đăng nhập vào ứng dụng NeoDesk",

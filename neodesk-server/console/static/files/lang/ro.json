@@ -1714,7 +1714,8 @@
       "tools_console": "Descărcate de consolă",
       "tools_missing": "Neinstalate",
       "channel_now": "Acum: {channel}. {installs}.",
-      "channel_applies": "Se aplică la următoarea verificare a actualizărilor. Nu se instalează nimic până nu dați clic pe Instalați."
+      "channel_applies": "Se aplică la următoarea verificare a actualizărilor. Nu se instalează nimic până nu dați clic pe Instalați.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Alegeți un fișier pentru a-l vedea și edita. Fiecare salvare păstrează o copie a versiunii anterioare.",
@@ -4454,7 +4455,13 @@
     "section_alert": "Alertă",
     "saving": "Se salvează…",
     "rules_checked": "Regulile sunt verificate pe măsură ce sosesc valorile: procesorul și memoria la fiecare raport de utilizare de la un dispozitiv, utilizarea discului cu inventarul său, timpul de inactivitate cu raportul de activitate și timpul offline o dată pe minut. Regulile personalizate nu sunt verificate.",
-    "custom_not_checked": "O regulă personalizată nu are o valoare pe care serverul să o poată măsura, deci nu declanșează singură alerte."
+    "custom_not_checked": "O regulă personalizată nu are o valoare pe care serverul să o poată măsura, deci nu declanșează singură alerte.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Transfer de fișiere",
@@ -4769,7 +4776,13 @@
     "section_covers": "Ce acoperă",
     "policy_sheet_desc": "Ce transferuri acoperă politica și dacă dispozitivele le blochează, le înregistrează sau le permit.",
     "saving": "Se salvează…",
-    "older_events": "Evenimente mai vechi"
+    "older_events": "Evenimente mai vechi",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Rapoarte",
@@ -7704,7 +7717,18 @@
     "fact_id": "ID dispozitiv",
     "tabs_save_hint": "Fiecare tip de regulă are propriul buton Salvare și se salvează separat.",
     "save_rules": "Salvează regulile",
-    "save_all_hint": "Salvarea păstrează fiecare tip de regulă pe care l-ați modificat. Fiecare tip se salvează separat."
+    "save_all_hint": "Salvarea păstrează fiecare tip de regulă pe care l-ați modificat. Fiecare tip se salvează separat.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "Un număr nou se aplică după următoarea actualizare.",
     "updates_title": "Înainte de actualizări",
     "where": "Unde se salvează",
-    "where_help": "Dosarul de date NeoDesk sau un dosar propriu. O partajare de rețea trebuie montată mai întâi de sistemul de operare."
+    "where_help": "Dosarul de date NeoDesk sau un dosar propriu. O partajare de rețea trebuie montată mai întâi de sistemul de operare.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Conectare la aplicația NeoDesk",

@@ -1708,7 +1708,8 @@
       "tools_console": "Staženo konzolí",
       "tools_missing": "Nenainstalováno",
       "channel_now": "Teď: {channel}. {installs}.",
-      "channel_applies": "Platí pro příští kontrolu aktualizací. Nic se nenainstaluje, dokud nekliknete na Instalovat."
+      "channel_applies": "Platí pro příští kontrolu aktualizací. Nic se nenainstaluje, dokud nekliknete na Instalovat.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Vyberte soubor, který chcete zobrazit a upravit. Při každém uložení se zachová kopie předchozí verze.",
@@ -4448,7 +4449,13 @@
     "section_alert": "Upozornění",
     "saving": "Ukládání…",
     "rules_checked": "Pravidla se kontrolují, jakmile dorazí hodnoty: procesor a paměť s každým hlášením o využití ze zařízení, využití disku s jeho inventářem, doba nečinnosti s hlášením o aktivitě a doba offline jednou za minutu. Vlastní pravidla se nekontrolují.",
-    "custom_not_checked": "Vlastní pravidlo nemá hodnotu, kterou by server mohl měřit, takže samo žádná upozornění nevyvolá."
+    "custom_not_checked": "Vlastní pravidlo nemá hodnotu, kterou by server mohl měřit, takže samo žádná upozornění nevyvolá.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Přenos souborů",
@@ -4763,7 +4770,13 @@
     "section_covers": "Na co se vztahuje",
     "policy_sheet_desc": "Které přenosy zásada pokrývá a zda je zařízení blokují, zaznamenávají nebo povolují.",
     "saving": "Ukládání…",
-    "older_events": "Starší události"
+    "older_events": "Starší události",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Reporty",
@@ -7698,7 +7711,18 @@
     "fact_id": "ID zařízení",
     "tabs_save_hint": "Každý druh pravidla má vlastní tlačítko Uložit a ukládá se samostatně.",
     "save_rules": "Uložit pravidla",
-    "save_all_hint": "Uložení uloží každý druh pravidel, který jste změnili. Každý druh se ukládá zvlášť."
+    "save_all_hint": "Uložení uloží každý druh pravidel, který jste změnili. Každý druh se ukládá zvlášť.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10431,7 +10455,10 @@
     "updates_consequence": "Nový počet platí po příští aktualizaci.",
     "updates_title": "Před aktualizacemi",
     "where": "Kam ukládat",
-    "where_help": "Datová složka NeoDesk, nebo vlastní složka. Síťové sdílení musí nejdřív připojit operační systém."
+    "where_help": "Datová složka NeoDesk, nebo vlastní složka. Síťové sdílení musí nejdřív připojit operační systém.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Přihlásit se do aplikace NeoDesk",

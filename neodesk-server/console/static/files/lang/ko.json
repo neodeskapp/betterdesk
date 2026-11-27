@@ -1708,7 +1708,8 @@
       "tools_console": "콘솔이 내려받음",
       "tools_missing": "설치되지 않음",
       "channel_now": "현재: {channel}. {installs}.",
-      "channel_applies": "다음 업데이트 확인부터 적용됩니다. 설치를 클릭하기 전에는 아무것도 설치되지 않습니다."
+      "channel_applies": "다음 업데이트 확인부터 적용됩니다. 설치를 클릭하기 전에는 아무것도 설치되지 않습니다.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "파일을 선택하면 보고 편집할 수 있습니다. 저장할 때마다 이전 버전의 사본이 보관됩니다.",
@@ -4448,7 +4449,13 @@
     "section_alert": "알림",
     "saving": "저장 중…",
     "rules_checked": "값이 들어올 때 규칙을 확인합니다. CPU와 메모리는 장치의 사용량 보고서마다, 디스크 사용량은 인벤토리와 함께, 유휴 시간은 활동 보고서와 함께, 오프라인 시간은 1분마다 확인합니다. 사용자 지정 규칙은 확인하지 않습니다.",
-    "custom_not_checked": "사용자 지정 규칙에는 서버가 측정할 수 있는 값이 없으므로 스스로 알림을 만들지 않습니다."
+    "custom_not_checked": "사용자 지정 규칙에는 서버가 측정할 수 있는 값이 없으므로 스스로 알림을 만들지 않습니다.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "파일 전송",
@@ -4763,7 +4770,13 @@
     "section_covers": "적용 대상",
     "policy_sheet_desc": "정책이 적용되는 전송과 장치가 이를 차단, 기록, 허용 중 무엇으로 처리할지 정합니다.",
     "saving": "저장 중…",
-    "older_events": "이전 이벤트"
+    "older_events": "이전 이벤트",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "보고서",
@@ -7698,7 +7711,18 @@
     "fact_id": "장치 ID",
     "tabs_save_hint": "규칙 종류마다 저장 버튼이 따로 있으며 각각 저장됩니다.",
     "save_rules": "규칙 저장",
-    "save_all_hint": "저장하면 변경한 모든 종류의 규칙이 저장됩니다. 종류마다 따로 저장됩니다."
+    "save_all_hint": "저장하면 변경한 모든 종류의 규칙이 저장됩니다. 종류마다 따로 저장됩니다.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10431,7 +10455,10 @@
     "updates_consequence": "새 개수는 다음 업데이트 뒤에 적용됩니다.",
     "updates_title": "업데이트 전",
     "where": "저장 위치",
-    "where_help": "NeoDesk 데이터 폴더 또는 직접 정한 폴더. 네트워크 공유는 먼저 운영 체제에서 마운트해야 합니다."
+    "where_help": "NeoDesk 데이터 폴더 또는 직접 정한 폴더. 네트워크 공유는 먼저 운영 체제에서 마운트해야 합니다.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "NeoDesk 앱에 로그인",

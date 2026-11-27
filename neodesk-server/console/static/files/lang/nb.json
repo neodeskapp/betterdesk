@@ -1714,7 +1714,8 @@
       "tools_console": "Lastet ned av konsollen",
       "tools_missing": "Ikke installert",
       "channel_now": "Nå: {channel}. {installs}.",
-      "channel_applies": "Gjelder neste søk etter oppdateringer. Ingenting installeres før du klikker på Installer."
+      "channel_applies": "Gjelder neste søk etter oppdateringer. Ingenting installeres før du klikker på Installer.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Velg en fil for å se og redigere den. Hver lagring tar vare på en kopi av forrige versjon.",
@@ -4454,7 +4455,13 @@
     "section_alert": "Varsel",
     "saving": "Lagrer…",
     "rules_checked": "Reglene kontrolleres når verdiene kommer inn: CPU og minne med hver bruksrapport fra en enhet, diskbruk med inventaret, inaktiv tid med aktivitetsrapporten og tid frakoblet én gang i minuttet. Egendefinerte regler kontrolleres ikke.",
-    "custom_not_checked": "En egendefinert regel har ingen verdi serveren kan måle, så den utløser ingen varsler selv."
+    "custom_not_checked": "En egendefinert regel har ingen verdi serveren kan måle, så den utløser ingen varsler selv.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Filoverføring",
@@ -4769,7 +4776,13 @@
     "section_covers": "Hva den gjelder",
     "policy_sheet_desc": "Hvilke overføringer retningslinjen gjelder, og om enhetene blokkerer, registrerer eller tillater dem.",
     "saving": "Lagrer…",
-    "older_events": "Eldre hendelser"
+    "older_events": "Eldre hendelser",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Rapporter",
@@ -7704,7 +7717,18 @@
     "fact_id": "Enhets-ID",
     "tabs_save_hint": "Hver type regel har sin egen Lagre-knapp og lagres for seg.",
     "save_rules": "Lagre regler",
-    "save_all_hint": "Lagre lagrer hver type regel du har endret. Hver type lagres for seg."
+    "save_all_hint": "Lagre lagrer hver type regel du har endret. Hver type lagres for seg.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "Et nytt antall gjelder etter neste oppdatering.",
     "updates_title": "Før oppdateringer",
     "where": "Hvor det skal lagres",
-    "where_help": "NeoDesk-datamappen eller en egen mappe. En nettverksressurs må først monteres av operativsystemet."
+    "where_help": "NeoDesk-datamappen eller en egen mappe. En nettverksressurs må først monteres av operativsystemet.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Logg på NeoDesk-appen",

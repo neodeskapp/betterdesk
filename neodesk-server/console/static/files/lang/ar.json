@@ -1715,7 +1715,8 @@
       "tools_console": "نزّلتها وحدة التحكم",
       "tools_missing": "غير مثبتة",
       "channel_now": "الآن: {channel}. {installs}.",
-      "channel_applies": "يسري على الفحص التالي للتحديثات. لا يُثبَّت شيء حتى تنقر على تثبيت."
+      "channel_applies": "يسري على الفحص التالي للتحديثات. لا يُثبَّت شيء حتى تنقر على تثبيت.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "اختر ملفًا لعرضه وتحريره. يحتفظ كل حفظ بنسخة من الإصدار السابق.",
@@ -4455,7 +4456,13 @@
     "section_alert": "التنبيه",
     "saving": "جارٍ الحفظ…",
     "rules_checked": "تُفحص القواعد عند وصول القيم: المعالج والذاكرة مع كل تقرير استخدام من الجهاز، واستخدام القرص مع جرده، ووقت الخمول مع تقرير نشاطه، ووقت عدم الاتصال مرة كل دقيقة. القواعد المخصصة لا تُفحص.",
-    "custom_not_checked": "القاعدة المخصصة ليس لها قيمة يستطيع الخادم قياسها، لذلك لا تُطلق تنبيهات بنفسها."
+    "custom_not_checked": "القاعدة المخصصة ليس لها قيمة يستطيع الخادم قياسها، لذلك لا تُطلق تنبيهات بنفسها.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "نقل الملفات",
@@ -4770,7 +4777,13 @@
     "section_covers": "ما الذي تشمله",
     "policy_sheet_desc": "أي عمليات النقل تشملها السياسة، وهل تحظرها الأجهزة أم تسجلها أم تسمح بها.",
     "saving": "جارٍ الحفظ…",
-    "older_events": "الأحداث الأقدم"
+    "older_events": "الأحداث الأقدم",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "التقارير",
@@ -7705,7 +7718,18 @@
     "fact_id": "معرف الجهاز",
     "tabs_save_hint": "لكل نوع من القواعد زر حفظ خاص به ويُحفظ بمفرده.",
     "save_rules": "حفظ القواعد",
-    "save_all_hint": "يحفظ زر الحفظ كل نوع من القواعد غيّرته. يُحفظ كل نوع وحده."
+    "save_all_hint": "يحفظ زر الحفظ كل نوع من القواعد غيّرته. يُحفظ كل نوع وحده.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10438,7 +10462,10 @@
     "updates_consequence": "يسري العدد الجديد بعد التحديث التالي.",
     "updates_title": "قبل التحديثات",
     "where": "مكان الحفظ",
-    "where_help": "مجلد بيانات NeoDesk، أو مجلد من اختيارك. يجب أن يركّب نظام التشغيل مشاركة الشبكة أولًا."
+    "where_help": "مجلد بيانات NeoDesk، أو مجلد من اختيارك. يجب أن يركّب نظام التشغيل مشاركة الشبكة أولًا.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "تسجيل الدخول إلى تطبيق NeoDesk",

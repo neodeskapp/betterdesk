@@ -1714,7 +1714,8 @@
       "tools_console": "Diunduh oleh konsol",
       "tools_missing": "Tidak terpasang",
       "channel_now": "Sekarang: {channel}. {installs}.",
-      "channel_applies": "Berlaku untuk pemeriksaan pembaruan berikutnya. Tidak ada yang dipasang sampai Anda mengeklik Pasang."
+      "channel_applies": "Berlaku untuk pemeriksaan pembaruan berikutnya. Tidak ada yang dipasang sampai Anda mengeklik Pasang.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Pilih file untuk melihat dan mengeditnya. Setiap penyimpanan menyimpan salinan versi sebelumnya.",
@@ -4454,7 +4455,13 @@
     "section_alert": "Peringatan",
     "saving": "Menyimpan…",
     "rules_checked": "Aturan diperiksa saat nilai masuk: CPU dan memori pada setiap laporan penggunaan dari perangkat, penggunaan disk dengan inventarisnya, waktu diam dengan laporan aktivitasnya, dan waktu offline sekali per menit. Aturan kustom tidak diperiksa.",
-    "custom_not_checked": "Aturan kustom tidak punya nilai yang bisa diukur server, jadi aturan ini tidak memicu peringatan sendiri."
+    "custom_not_checked": "Aturan kustom tidak punya nilai yang bisa diukur server, jadi aturan ini tidak memicu peringatan sendiri.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Pemindahan Berkas",
@@ -4769,7 +4776,13 @@
     "section_covers": "Yang dicakup",
     "policy_sheet_desc": "Transfer apa saja yang dicakup kebijakan dan apakah perangkat memblokir, mencatat, atau mengizinkannya.",
     "saving": "Menyimpan…",
-    "older_events": "Peristiwa lebih lama"
+    "older_events": "Peristiwa lebih lama",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Laporan",
@@ -7704,7 +7717,18 @@
     "fact_id": "ID perangkat",
     "tabs_save_hint": "Setiap jenis aturan punya tombol Simpan sendiri dan disimpan terpisah.",
     "save_rules": "Simpan aturan",
-    "save_all_hint": "Simpan menyimpan setiap jenis aturan yang Anda ubah. Setiap jenis disimpan sendiri-sendiri."
+    "save_all_hint": "Simpan menyimpan setiap jenis aturan yang Anda ubah. Setiap jenis disimpan sendiri-sendiri.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "Jumlah baru berlaku setelah pembaruan berikutnya.",
     "updates_title": "Sebelum pembaruan",
     "where": "Tempat menyimpan",
-    "where_help": "Folder data NeoDesk, atau folder Anda sendiri. Berbagi jaringan harus dipasang dulu oleh sistem operasi."
+    "where_help": "Folder data NeoDesk, atau folder Anda sendiri. Berbagi jaringan harus dipasang dulu oleh sistem operasi.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Masuk ke aplikasi NeoDesk",

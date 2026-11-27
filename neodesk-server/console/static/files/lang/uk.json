@@ -1714,7 +1714,8 @@
       "tools_console": "Завантажено консоллю",
       "tools_missing": "Не встановлено",
       "channel_now": "Зараз: {channel}. {installs}.",
-      "channel_applies": "Діє для наступної перевірки оновлень. Нічого не встановлюється, доки ви не натиснете Встановити."
+      "channel_applies": "Діє для наступної перевірки оновлень. Нічого не встановлюється, доки ви не натиснете Встановити.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Виберіть файл, щоб переглянути й відредагувати його. Кожне збереження залишає копію попередньої версії.",
@@ -4454,7 +4455,13 @@
     "section_alert": "Сповіщення",
     "saving": "Збереження…",
     "rules_checked": "Правила перевіряються, щойно надходять значення: процесор і пам'ять з кожним звітом про використання від пристрою, використання диска з його інвентаризацією, час простою з його звітом про активність, а час офлайн раз на хвилину. Власні правила не перевіряються.",
-    "custom_not_checked": "Власне правило не має значення, яке сервер може виміряти, тому саме воно сповіщень не створює."
+    "custom_not_checked": "Власне правило не має значення, яке сервер може виміряти, тому саме воно сповіщень не створює.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Передача файлів",
@@ -4769,7 +4776,13 @@
     "section_covers": "Що охоплює",
     "policy_sheet_desc": "Які передавання охоплює політика і чи пристрої блокують, записують або дозволяють їх.",
     "saving": "Збереження…",
-    "older_events": "Старіші події"
+    "older_events": "Старіші події",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Звіти",
@@ -7704,7 +7717,18 @@
     "fact_id": "ID пристрою",
     "tabs_save_hint": "Кожен вид правил має власну кнопку «Зберегти» і зберігається окремо.",
     "save_rules": "Зберегти правила",
-    "save_all_hint": "Збереження зберігає кожен змінений вами вид правил. Кожен вид зберігається окремо."
+    "save_all_hint": "Збереження зберігає кожен змінений вами вид правил. Кожен вид зберігається окремо.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "Нова кількість діє після наступного оновлення.",
     "updates_title": "Перед оновленнями",
     "where": "Куди зберігати",
-    "where_help": "Папка даних NeoDesk або власна папка. Мережеву папку спершу має змонтувати операційна система."
+    "where_help": "Папка даних NeoDesk або власна папка. Мережеву папку спершу має змонтувати операційна система.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Увійти в застосунок NeoDesk",

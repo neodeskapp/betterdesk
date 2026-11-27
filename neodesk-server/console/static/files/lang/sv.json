@@ -1714,7 +1714,8 @@
       "tools_console": "Hämtade av konsolen",
       "tools_missing": "Inte installerade",
       "channel_now": "Nu: {channel}. {installs}.",
-      "channel_applies": "Gäller nästa sökning efter uppdateringar. Inget installeras förrän du klickar på Installera."
+      "channel_applies": "Gäller nästa sökning efter uppdateringar. Inget installeras förrän du klickar på Installera.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Välj en fil för att visa och redigera den. Varje gång du sparar behålls en kopia av föregående version.",
@@ -4454,7 +4455,13 @@
     "section_alert": "Varning",
     "saving": "Sparar…",
     "rules_checked": "Reglerna kontrolleras när värdena kommer in: processor och minne vid varje användningsrapport från en enhet, diskanvändning med dess inventering, inaktiv tid med dess aktivitetsrapport och tid offline en gång i minuten. Anpassade regler kontrolleras inte.",
-    "custom_not_checked": "En anpassad regel har inget värde som servern kan mäta, så den ger inga varningar av sig själv."
+    "custom_not_checked": "En anpassad regel har inget värde som servern kan mäta, så den ger inga varningar av sig själv.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Filöverföring",
@@ -4769,7 +4776,13 @@
     "section_covers": "Vad den gäller",
     "policy_sheet_desc": "Vilka överföringar policyn gäller och om enheterna blockerar, loggar eller tillåter dem.",
     "saving": "Sparar…",
-    "older_events": "Äldre händelser"
+    "older_events": "Äldre händelser",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Rapporter",
@@ -7704,7 +7717,18 @@
     "fact_id": "Enhets-ID",
     "tabs_save_hint": "Varje typ av regel har en egen Spara-knapp och sparas för sig.",
     "save_rules": "Spara regler",
-    "save_all_hint": "Spara sparar varje typ av regel som du har ändrat. Varje typ sparas för sig."
+    "save_all_hint": "Spara sparar varje typ av regel som du har ändrat. Varje typ sparas för sig.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "Ett nytt antal gäller efter nästa uppdatering.",
     "updates_title": "Före uppdateringar",
     "where": "Var den ska sparas",
-    "where_help": "NeoDesks datamapp, eller en egen mapp. En nätverksresurs måste först monteras av operativsystemet."
+    "where_help": "NeoDesks datamapp, eller en egen mapp. En nätverksresurs måste först monteras av operativsystemet.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Logga in i NeoDesk-appen",

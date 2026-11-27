@@ -1708,7 +1708,8 @@
       "tools_console": "コンソールがダウンロード",
       "tools_missing": "未インストール",
       "channel_now": "現在: {channel}。{installs}。",
-      "channel_applies": "次回の更新確認から適用されます。「インストール」をクリックするまで何もインストールされません。"
+      "channel_applies": "次回の更新確認から適用されます。「インストール」をクリックするまで何もインストールされません。",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "ファイルを選択すると表示・編集できます。保存するたびに前のバージョンのコピーが残ります。",
@@ -4448,7 +4449,13 @@
     "section_alert": "アラート",
     "saving": "保存中…",
     "rules_checked": "ルールは値が届いた時点で確認されます。CPU とメモリはデバイスの使用状況レポートごとに、ディスク使用量はインベントリと一緒に、アイドル時間はアクティビティレポートと一緒に、オフライン時間は 1 分ごとに確認されます。カスタムルールは確認されません。",
-    "custom_not_checked": "カスタムルールにはサーバーが測れる値がないため、それ自体ではアラートを出しません。"
+    "custom_not_checked": "カスタムルールにはサーバーが測れる値がないため、それ自体ではアラートを出しません。",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "ファイル転送",
@@ -4763,7 +4770,13 @@
     "section_covers": "対象",
     "policy_sheet_desc": "ポリシーの対象となる転送と、デバイスがそれをブロック、記録、許可のどれにするかを決めます。",
     "saving": "保存中…",
-    "older_events": "古いイベント"
+    "older_events": "古いイベント",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "レポート",
@@ -7698,7 +7711,18 @@
     "fact_id": "デバイスID",
     "tabs_save_hint": "ルールの種類ごとに保存ボタンがあり、個別に保存されます。",
     "save_rules": "ルールを保存",
-    "save_all_hint": "保存すると、変更した種類のルールがすべて保存されます。種類ごとに別々に保存されます。"
+    "save_all_hint": "保存すると、変更した種類のルールがすべて保存されます。種類ごとに別々に保存されます。",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10431,7 +10455,10 @@
     "updates_consequence": "新しい数は次の更新の後に適用されます。",
     "updates_title": "更新前",
     "where": "保存先",
-    "where_help": "NeoDesk のデータフォルダー、または任意のフォルダー。ネットワーク共有は、先にオペレーティングシステムでマウントしておく必要があります。"
+    "where_help": "NeoDesk のデータフォルダー、または任意のフォルダー。ネットワーク共有は、先にオペレーティングシステムでマウントしておく必要があります。",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "NeoDesk アプリにサインイン",

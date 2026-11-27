@@ -1712,7 +1712,8 @@
       "tools_console": "Téléchargés par la console",
       "tools_missing": "Non installés",
       "channel_now": "Actuellement : {channel}. {installs}.",
-      "channel_applies": "S'applique à la prochaine recherche de mises à jour. Rien n'est installé avant que vous cliquiez sur Installer."
+      "channel_applies": "S'applique à la prochaine recherche de mises à jour. Rien n'est installé avant que vous cliquiez sur Installer.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Choisissez un fichier pour l'afficher et le modifier. Chaque enregistrement conserve une copie de la version précédente.",
@@ -4470,7 +4471,13 @@
     "section_alert": "Alerte",
     "saving": "Enregistrement…",
     "rules_checked": "Les règles sont vérifiées à l'arrivée des valeurs : processeur et mémoire à chaque rapport d'utilisation d'un appareil, disque avec son inventaire, temps d'inactivité avec son rapport d'activité et temps hors ligne une fois par minute. Les règles personnalisées ne sont pas vérifiées.",
-    "custom_not_checked": "Une règle personnalisée n'a aucune valeur que le serveur peut mesurer, elle ne déclenche donc pas d'alerte par elle-même."
+    "custom_not_checked": "Une règle personnalisée n'a aucune valeur que le serveur peut mesurer, elle ne déclenche donc pas d'alerte par elle-même.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Transfert de fichiers",
@@ -4785,7 +4792,13 @@
     "section_covers": "Ce qu’elle couvre",
     "policy_sheet_desc": "Les transferts couverts par la règle, et si les appareils les bloquent, les enregistrent ou les autorisent.",
     "saving": "Enregistrement…",
-    "older_events": "Événements plus anciens"
+    "older_events": "Événements plus anciens",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Rapports",
@@ -7988,7 +8001,18 @@
     "fact_id": "ID de l'appareil",
     "tabs_save_hint": "Chaque type de règle a son propre bouton Enregistrer et s'enregistre séparément.",
     "save_rules": "Enregistrer les règles",
-    "save_all_hint": "Enregistrer conserve chaque type de règle que vous avez modifié. Chaque type est enregistré séparément."
+    "save_all_hint": "Enregistrer conserve chaque type de règle que vous avez modifié. Chaque type est enregistré séparément.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10435,7 +10459,10 @@
     "updates_consequence": "Un nouveau nombre s'applique après la prochaine mise à jour.",
     "updates_title": "Avant les mises à jour",
     "where": "Où enregistrer",
-    "where_help": "Le dossier de données NeoDesk, ou un dossier à vous. Un partage réseau doit d'abord être monté par le système d'exploitation."
+    "where_help": "Le dossier de données NeoDesk, ou un dossier à vous. Un partage réseau doit d'abord être monté par le système d'exploitation.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Se connecter à l'application NeoDesk",

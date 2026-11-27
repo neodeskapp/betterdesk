@@ -1708,7 +1708,8 @@
       "tools_console": "Gedownload door de console",
       "tools_missing": "Niet geïnstalleerd",
       "channel_now": "Nu: {channel}. {installs}.",
-      "channel_applies": "Geldt voor de volgende controle op updates. Er wordt niets geïnstalleerd voordat u op Installeren klikt."
+      "channel_applies": "Geldt voor de volgende controle op updates. Er wordt niets geïnstalleerd voordat u op Installeren klikt.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Kies een bestand om het te bekijken en te bewerken. Bij elke keer opslaan wordt een kopie van de vorige versie bewaard.",
@@ -4448,7 +4449,13 @@
     "section_alert": "Melding",
     "saving": "Opslaan…",
     "rules_checked": "Regels worden gecontroleerd zodra waarden binnenkomen: CPU en geheugen bij elk gebruiksrapport van een apparaat, schijfgebruik bij de inventaris, inactieve tijd bij het activiteitenrapport en tijd offline één keer per minuut. Aangepaste regels worden niet gecontroleerd.",
-    "custom_not_checked": "Een aangepaste regel heeft geen waarde die de server kan meten, dus hij geeft zelf geen meldingen."
+    "custom_not_checked": "Een aangepaste regel heeft geen waarde die de server kan meten, dus hij geeft zelf geen meldingen.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Bestandsoverdracht",
@@ -4763,7 +4770,13 @@
     "section_covers": "Waar het voor geldt",
     "policy_sheet_desc": "Welke overdrachten het beleid dekt en of apparaten ze blokkeren, vastleggen of toestaan.",
     "saving": "Opslaan…",
-    "older_events": "Oudere gebeurtenissen"
+    "older_events": "Oudere gebeurtenissen",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Rapporten",
@@ -7698,7 +7711,18 @@
     "fact_id": "Apparaat-ID",
     "tabs_save_hint": "Elk soort regel heeft een eigen knop Opslaan en wordt apart opgeslagen.",
     "save_rules": "Regels opslaan",
-    "save_all_hint": "Opslaan bewaart elk soort regel dat u hebt gewijzigd. Elk soort wordt apart opgeslagen."
+    "save_all_hint": "Opslaan bewaart elk soort regel dat u hebt gewijzigd. Elk soort wordt apart opgeslagen.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10431,7 +10455,10 @@
     "updates_consequence": "Een nieuw aantal geldt na de volgende update.",
     "updates_title": "Vóór updates",
     "where": "Waar opslaan",
-    "where_help": "De NeoDesk-gegevensmap, of een eigen map. Een netwerkshare moet eerst door het besturingssysteem worden gekoppeld."
+    "where_help": "De NeoDesk-gegevensmap, of een eigen map. Een netwerkshare moet eerst door het besturingssysteem worden gekoppeld.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Aanmelden bij de NeoDesk-app",

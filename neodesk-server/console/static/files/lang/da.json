@@ -1714,7 +1714,8 @@
       "tools_console": "Hentet af konsollen",
       "tools_missing": "Ikke installeret",
       "channel_now": "Nu: {channel}. {installs}.",
-      "channel_applies": "Gælder for næste søgning efter opdateringer. Intet installeres, før du klikker på Installer."
+      "channel_applies": "Gælder for næste søgning efter opdateringer. Intet installeres, før du klikker på Installer.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Vælg en fil for at se og redigere den. Hver gang du gemmer, beholdes en kopi af den forrige version.",
@@ -4454,7 +4455,13 @@
     "section_alert": "Advarsel",
     "saving": "Gemmer…",
     "rules_checked": "Regler kontrolleres, når værdierne kommer ind: CPU og hukommelse med hver forbrugsrapport fra en enhed, diskforbrug med dens inventar, inaktiv tid med dens aktivitetsrapport og tid offline én gang i minuttet. Brugerdefinerede regler kontrolleres ikke.",
-    "custom_not_checked": "En brugerdefineret regel har ingen værdi, serveren kan måle, så den udløser ikke selv advarsler."
+    "custom_not_checked": "En brugerdefineret regel har ingen værdi, serveren kan måle, så den udløser ikke selv advarsler.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Filoverførsel",
@@ -4769,7 +4776,13 @@
     "section_covers": "Hvad den dækker",
     "policy_sheet_desc": "Hvilke overførsler politikken dækker, og om enhederne blokerer, registrerer eller tillader dem.",
     "saving": "Gemmer…",
-    "older_events": "Ældre hændelser"
+    "older_events": "Ældre hændelser",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Rapporter",
@@ -7704,7 +7717,18 @@
     "fact_id": "Enheds-id",
     "tabs_save_hint": "Hver slags regel har sin egen Gem-knap og gemmes for sig.",
     "save_rules": "Gem regler",
-    "save_all_hint": "Gem gemmer hver type regel, du har ændret. Hver type gemmes for sig."
+    "save_all_hint": "Gem gemmer hver type regel, du har ændret. Hver type gemmes for sig.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "Et nyt antal gælder efter næste opdatering.",
     "updates_title": "Før opdateringer",
     "where": "Hvor der skal gemmes",
-    "where_help": "NeoDesk-datamappen eller en mappe efter eget valg. Et netværksdrev skal først monteres af operativsystemet."
+    "where_help": "NeoDesk-datamappen eller en mappe efter eget valg. Et netværksdrev skal først monteres af operativsystemet.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Log ind i NeoDesk-appen",

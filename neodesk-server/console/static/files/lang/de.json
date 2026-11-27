@@ -1708,7 +1708,8 @@
       "tools_console": "Von der Konsole heruntergeladen",
       "tools_missing": "Nicht installiert",
       "channel_now": "Jetzt: {channel}. {installs}.",
-      "channel_applies": "Gilt ab der nächsten Suche nach Updates. Installiert wird erst, wenn du auf „Install Update“ klickst."
+      "channel_applies": "Gilt ab der nächsten Suche nach Updates. Installiert wird erst, wenn du auf „Install Update“ klickst.",
+      "channel_applies_short": "Gilt ab der nächsten Suche nach Updates."
     },
     "advanced_tab": {
       "note": "Wähle eine Datei, um sie anzusehen und zu bearbeiten. Jedes Speichern behält eine Kopie der vorherigen Version.",
@@ -4448,7 +4449,13 @@
     "section_alert": "Warnung",
     "saving": "Wird gespeichert…",
     "rules_checked": "Regeln werden geprüft, sobald Werte eintreffen: CPU und Arbeitsspeicher mit jedem Nutzungsbericht eines Geräts, Speicherplatz mit seinem Inventar, Leerlaufzeit mit seinem Aktivitätsbericht und die Zeit offline einmal pro Minute. Benutzerdefinierte Regeln werden nicht geprüft.",
-    "custom_not_checked": "Eine benutzerdefinierte Regel hat keinen Wert, den der Server messen kann. Sie löst deshalb selbst keine Warnungen aus."
+    "custom_not_checked": "Eine benutzerdefinierte Regel hat keinen Wert, den der Server messen kann. Sie löst deshalb selbst keine Warnungen aus.",
+    "device_required": "Gib die Geräte-ID ein oder wähle Alle Geräte.",
+    "scope_one": "Ein Gerät",
+    "checked_usage": "Geprüft bei jeder Auslastungsmeldung eines Geräts.",
+    "checked_disk": "Geprüft, wenn ein Gerät sein Inventar schickt.",
+    "checked_idle": "Geprüft bei jeder Aktivitätsmeldung eines Geräts.",
+    "checked_offline": "Einmal pro Minute geprüft."
   },
   "file_transfer": {
     "title": "Dashboard",
@@ -4763,7 +4770,13 @@
     "section_covers": "Was sie abdeckt",
     "policy_sheet_desc": "Welche Übertragungen die Richtlinie abdeckt und ob die Geräte sie sperren, protokollieren oder erlauben.",
     "saving": "Wird gespeichert…",
-    "older_events": "Ältere Ereignisse"
+    "older_events": "Ältere Ereignisse",
+    "devices_required": "Füge eine Geräte-ID hinzu oder wähle Alle Geräte.",
+    "scope_some": "Nur diese Geräte",
+    "devices": "Geräte",
+    "devices_hint": "Eine Geräte-ID pro Zeile, so wie das Gerät sie in seiner NeoDesk-App zeigt.",
+    "device_n": "Gerät {n}",
+    "add_device": "Gerät hinzufügen"
   },
   "reports": {
     "title": "Berichte",
@@ -7698,7 +7711,18 @@
     "fact_id": "Geräte-ID",
     "tabs_save_hint": "Jede Art von Regel hat eine eigene Schaltfläche zum Speichern und wird einzeln gespeichert.",
     "save_rules": "Regeln speichern",
-    "save_all_hint": "Speichern sichert jede Art von Regel, die du geändert hast. Jede Art wird für sich gespeichert."
+    "save_all_hint": "Speichern sichert jede Art von Regel, die du geändert hast. Jede Art wird für sich gespeichert.",
+    "no_limit": "Keine Begrenzung",
+    "empty_no_limit": "Leer lassen für keine Begrenzung.",
+    "usb_list_hint_rows": "Ein Gerät pro Zeile, als Hersteller- und Produkt-ID, zum Beispiel 0781:5583.",
+    "usb_device_n": "Erlaubtes USB-Gerät {n}",
+    "add_usb_device": "USB-Gerät hinzufügen",
+    "disks_hidden_hint_rows": "Ein Laufwerksbuchstabe oder Einhängepunkt pro Zeile, zum Beispiel D: oder /mnt/data. Wer am Gerät sitzt, sieht sie nicht.",
+    "hidden_partition_n": "Ausgeblendete Partition {n}",
+    "add_partition": "Partition hinzufügen",
+    "quotas_programs_hint_rows": "Ein Programm pro Zeile, zum Beispiel chrome.exe.",
+    "program_n": "Erlaubtes Programm {n}",
+    "add_program": "Programm hinzufügen"
   },
   "sdk_studio": {
     "title": "Dashboard",
@@ -10431,7 +10455,10 @@
     "updates_consequence": "Eine neue Anzahl gilt ab dem nächsten Update.",
     "updates_title": "Vor Updates",
     "where": "Wo speichern",
-    "where_help": "Der NeoDesk-Datenordner oder ein eigener Ordner. Eine Netzwerkfreigabe muss das Betriebssystem vorher einbinden."
+    "where_help": "Der NeoDesk-Datenordner oder ein eigener Ordner. Eine Netzwerkfreigabe muss das Betriebssystem vorher einbinden.",
+    "make_note_short": "Eine .tar.gz-Datei. Du kannst sie auf diesem oder einem neuen Server wiederherstellen.",
+    "last_run": "Letzte geplante Sicherung: {when}",
+    "last_run_none": "Noch keine geplante Sicherung"
   },
   "device_authorize": {
     "title": "Bei der NeoDesk-App anmelden",

@@ -1708,7 +1708,8 @@
       "tools_console": "Descargadas por la consola",
       "tools_missing": "No instaladas",
       "channel_now": "Ahora: {channel}. {installs}.",
-      "channel_applies": "Se aplica a la próxima búsqueda de actualizaciones. No se instala nada hasta que haga clic en Instalar."
+      "channel_applies": "Se aplica a la próxima búsqueda de actualizaciones. No se instala nada hasta que haga clic en Instalar.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Elija un archivo para verlo y editarlo. Cada vez que guarde se conserva una copia de la versión anterior.",
@@ -4448,7 +4449,13 @@
     "section_alert": "Alerta",
     "saving": "Guardando…",
     "rules_checked": "Las reglas se comprueban a medida que llegan los valores: CPU y memoria con cada informe de uso de un dispositivo, uso de disco con su inventario, tiempo inactivo con su informe de actividad y tiempo sin conexión una vez por minuto. Las reglas personalizadas no se comprueban.",
-    "custom_not_checked": "Una regla personalizada no tiene ningún valor que el servidor pueda medir, así que no genera alertas por sí sola."
+    "custom_not_checked": "Una regla personalizada no tiene ningún valor que el servidor pueda medir, así que no genera alertas por sí sola.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Panel",
@@ -4763,7 +4770,13 @@
     "section_covers": "Qué cubre",
     "policy_sheet_desc": "Qué transferencias cubre la política y si los dispositivos las bloquean, registran o permiten.",
     "saving": "Guardando…",
-    "older_events": "Eventos más antiguos"
+    "older_events": "Eventos más antiguos",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Informes",
@@ -7698,7 +7711,18 @@
     "fact_id": "ID del dispositivo",
     "tabs_save_hint": "Cada tipo de regla tiene su propio botón Guardar y se guarda por separado.",
     "save_rules": "Guardar reglas",
-    "save_all_hint": "Guardar almacena cada tipo de regla que haya cambiado. Cada tipo se guarda por separado."
+    "save_all_hint": "Guardar almacena cada tipo de regla que haya cambiado. Cada tipo se guarda por separado.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "Panel",
@@ -10431,7 +10455,10 @@
     "updates_consequence": "Un número nuevo se aplica tras la próxima actualización.",
     "updates_title": "Antes de las actualizaciones",
     "where": "Dónde guardar",
-    "where_help": "La carpeta de datos de NeoDesk, o una carpeta propia. Un recurso compartido de red debe montarlo antes el sistema operativo."
+    "where_help": "La carpeta de datos de NeoDesk, o una carpeta propia. Un recurso compartido de red debe montarlo antes el sistema operativo.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Iniciar sesión en la aplicación NeoDesk",

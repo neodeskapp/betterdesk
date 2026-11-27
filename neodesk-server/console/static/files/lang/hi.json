@@ -1714,7 +1714,8 @@
       "tools_console": "कंसोल द्वारा डाउनलोड",
       "tools_missing": "इंस्टॉल नहीं",
       "channel_now": "अभी: {channel}। {installs}।",
-      "channel_applies": "अपडेट की अगली जाँच पर लागू होता है। जब तक आप इंस्टॉल पर क्लिक न करें, कुछ इंस्टॉल नहीं होता।"
+      "channel_applies": "अपडेट की अगली जाँच पर लागू होता है। जब तक आप इंस्टॉल पर क्लिक न करें, कुछ इंस्टॉल नहीं होता।",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "देखने और संपादित करने के लिए कोई फ़ाइल चुनें। हर बार सहेजने पर पिछले संस्करण की एक कॉपी रखी जाती है।",
@@ -4454,7 +4455,13 @@
     "section_alert": "अलर्ट",
     "saving": "सहेजा जा रहा है…",
     "rules_checked": "मान आते ही नियम जाँचे जाते हैं: डिवाइस की हर उपयोग रिपोर्ट के साथ CPU और मेमोरी, उसकी इन्वेंटरी के साथ डिस्क उपयोग, उसकी गतिविधि रिपोर्ट के साथ निष्क्रिय समय, और ऑफ़लाइन समय हर मिनट एक बार। कस्टम नियम नहीं जाँचे जाते।",
-    "custom_not_checked": "कस्टम नियम का कोई ऐसा मान नहीं होता जिसे सर्वर माप सके, इसलिए वह अपने आप कोई अलर्ट नहीं बनाता।"
+    "custom_not_checked": "कस्टम नियम का कोई ऐसा मान नहीं होता जिसे सर्वर माप सके, इसलिए वह अपने आप कोई अलर्ट नहीं बनाता।",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "दस्तावेज हस्तांतरण",
@@ -4769,7 +4776,13 @@
     "section_covers": "यह किस पर लागू होती है",
     "policy_sheet_desc": "नीति किन ट्रांसफ़र पर लागू होती है और डिवाइस उन्हें रोकते, दर्ज करते या अनुमति देते हैं।",
     "saving": "सहेजा जा रहा है…",
-    "older_events": "पुराने इवेंट"
+    "older_events": "पुराने इवेंट",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "रिपोर्ट",
@@ -7704,7 +7717,18 @@
     "fact_id": "डिवाइस आईडी",
     "tabs_save_hint": "हर तरह के नियम का अपना सहेजें बटन है और वह अलग से सहेजा जाता है।",
     "save_rules": "नियम सहेजें",
-    "save_all_hint": "सहेजें आपके बदले हर प्रकार के नियम को सहेजता है। हर प्रकार अलग से सहेजा जाता है।"
+    "save_all_hint": "सहेजें आपके बदले हर प्रकार के नियम को सहेजता है। हर प्रकार अलग से सहेजा जाता है।",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "नई संख्या अगले अपडेट के बाद लागू होती है।",
     "updates_title": "अपडेट से पहले",
     "where": "कहाँ सहेजें",
-    "where_help": "NeoDesk डेटा फ़ोल्डर, या आपका अपना फ़ोल्डर। नेटवर्क शेयर पहले ऑपरेटिंग सिस्टम से माउंट होना चाहिए।"
+    "where_help": "NeoDesk डेटा फ़ोल्डर, या आपका अपना फ़ोल्डर। नेटवर्क शेयर पहले ऑपरेटिंग सिस्टम से माउंट होना चाहिए।",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "NeoDesk ऐप में साइन इन करें",

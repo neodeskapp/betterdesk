@@ -1714,7 +1714,8 @@
       "tools_console": "Konsolin lataamat",
       "tools_missing": "Ei asennettu",
       "channel_now": "Nyt: {channel}. {installs}.",
-      "channel_applies": "Koskee seuraavaa päivitysten tarkistusta. Mitään ei asenneta ennen kuin napsautat Asenna."
+      "channel_applies": "Koskee seuraavaa päivitysten tarkistusta. Mitään ei asenneta ennen kuin napsautat Asenna.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Valitse tiedosto, jota haluat tarkastella ja muokata. Jokainen tallennus säilyttää kopion edellisestä versiosta.",
@@ -4454,7 +4455,13 @@
     "section_alert": "Hälytys",
     "saving": "Tallennetaan…",
     "rules_checked": "Säännöt tarkistetaan arvojen saapuessa: suoritin ja muisti jokaisen laitteen käyttöraportin yhteydessä, levyn käyttö sen inventaarion yhteydessä, joutoaika sen aktiivisuusraportin yhteydessä ja offline-aika kerran minuutissa. Mukautettuja sääntöjä ei tarkisteta.",
-    "custom_not_checked": "Mukautetulla säännöllä ei ole arvoa, jonka palvelin voisi mitata, joten se ei itse nosta hälytyksiä."
+    "custom_not_checked": "Mukautetulla säännöllä ei ole arvoa, jonka palvelin voisi mitata, joten se ei itse nosta hälytyksiä.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Tiedoston siirto",
@@ -4769,7 +4776,13 @@
     "section_covers": "Mitä se koskee",
     "policy_sheet_desc": "Mitä siirtoja käytäntö koskee ja estävätkö laitteet ne, kirjaavatko ne vai sallivatko ne.",
     "saving": "Tallennetaan…",
-    "older_events": "Vanhemmat tapahtumat"
+    "older_events": "Vanhemmat tapahtumat",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Raportit",
@@ -7704,7 +7717,18 @@
     "fact_id": "Laitteen tunnus",
     "tabs_save_hint": "Jokaisella sääntötyypillä on oma Tallenna-painike, ja se tallennetaan erikseen.",
     "save_rules": "Tallenna säännöt",
-    "save_all_hint": "Tallenna tallentaa jokaisen muuttamasi sääntötyypin. Jokainen tyyppi tallennetaan erikseen."
+    "save_all_hint": "Tallenna tallentaa jokaisen muuttamasi sääntötyypin. Jokainen tyyppi tallennetaan erikseen.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10437,7 +10461,10 @@
     "updates_consequence": "Uusi määrä tulee voimaan seuraavan päivityksen jälkeen.",
     "updates_title": "Ennen päivityksiä",
     "where": "Mihin tallennetaan",
-    "where_help": "NeoDeskin datakansio tai oma kansio. Käyttöjärjestelmän on ensin liitettävä verkkojako."
+    "where_help": "NeoDeskin datakansio tai oma kansio. Käyttöjärjestelmän on ensin liitettävä verkkojako.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Kirjaudu NeoDesk-sovellukseen",

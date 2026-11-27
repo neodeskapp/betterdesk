@@ -1712,7 +1712,8 @@
       "tools_console": "由主控台下載",
       "tools_missing": "未安裝",
       "channel_now": "目前：{channel}。{installs}。",
-      "channel_applies": "從下次檢查更新起生效。在您點選「安裝」之前不會安裝任何內容。"
+      "channel_applies": "從下次檢查更新起生效。在您點選「安裝」之前不會安裝任何內容。",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "選擇檔案即可檢視和編輯。每次儲存都會保留上一版的副本。",
@@ -4470,7 +4471,13 @@
     "section_alert": "警示",
     "saving": "正在儲存…",
     "rules_checked": "數值一送達就會檢查規則：CPU 和記憶體在裝置每次回報使用量時檢查，磁碟使用量隨其清單檢查，閒置時間隨其活動報告檢查，離線時間每分鐘檢查一次。自訂規則不會檢查。",
-    "custom_not_checked": "自訂規則沒有伺服器能測量的數值，因此本身不會發出警示。"
+    "custom_not_checked": "自訂規則沒有伺服器能測量的數值，因此本身不會發出警示。",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "文件傳輸",
@@ -4785,7 +4792,13 @@
     "section_covers": "涵蓋範圍",
     "policy_sheet_desc": "策略涵蓋哪些傳輸，以及裝置要封鎖、記錄還是允許。",
     "saving": "正在儲存…",
-    "older_events": "較舊的事件"
+    "older_events": "較舊的事件",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "報表",
@@ -7988,7 +8001,18 @@
     "fact_id": "裝置 ID",
     "tabs_save_hint": "每種規則都有自己的儲存按鈕，會分別儲存。",
     "save_rules": "儲存規則",
-    "save_all_hint": "儲存會保存您變更的每一類規則。每一類各自儲存。"
+    "save_all_hint": "儲存會保存您變更的每一類規則。每一類各自儲存。",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -10435,7 +10459,10 @@
     "updates_consequence": "新數量在下一次更新後生效。",
     "updates_title": "更新前",
     "where": "儲存位置",
-    "where_help": "NeoDesk 資料資料夾，或您自己的資料夾。網路共用必須先由作業系統掛載。"
+    "where_help": "NeoDesk 資料資料夾，或您自己的資料夾。網路共用必須先由作業系統掛載。",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "登入 NeoDesk 應用程式",
