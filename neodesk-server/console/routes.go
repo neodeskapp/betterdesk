@@ -118,7 +118,7 @@ func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	inventory.Register(d.At("/api/nd"))
 	inventory.Register(d.At("/api/inventory"))
 	// routes/tickets.routes.js at /api/tickets
-	tickets.Register(d.At("/api/tickets"))
+	tickets.Register(d.At("/api/tickets"), chat.HubOf(d).ToDevice)
 	// routes/activity.routes.js at /api/nd (the device route activity; the read routes step aside there) and at /api/activity
 	activity.Register(d.At("/api/nd"))
 	activity.Register(d.At("/api/activity"))

@@ -57,6 +57,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/chat"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settingsbackup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/tickets"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/servermgmt"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
@@ -448,6 +449,10 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		return nil, fmt.Errorf("chat: %w", err)
 	}
 	s.deps.Chat = chatstore.New(opts.Store, nil)
+	// What the tickets of the receiver app add to the tickets tables (A277)
+	if err := tickets.Ensure(ctx, opts.Store); err != nil {
+		return nil, err
+	}
 	// The links that let a person choose a password (invites, resets)
 	if err := passwordlinks.Ensure(ctx, opts.Store); err != nil {
 		return nil, err

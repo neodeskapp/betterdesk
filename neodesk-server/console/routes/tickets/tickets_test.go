@@ -76,6 +76,9 @@ func newGroup(t *testing.T, db *store.DB) *group {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err := Ensure(ctx, db); err != nil {
+		t.Fatal(err)
+	}
 	dir := t.TempDir()
 	scopes := access.New(db, access.NewDBRoleSource(nil), access.Options{})
 	groups := devicegroups.New(devicegroups.Options{DB: db, Access: scopes})
@@ -156,7 +159,7 @@ func TestTheDeviceRoutesComeLast(t *testing.T) {
 	}
 	want := "GET /api/tickets, GET /api/tickets/stats, POST /api/tickets, GET /api/tickets/{id}, PATCH /api/tickets/{id}, DELETE /api/tickets/{id}, " +
 		"POST /api/tickets/{id}/comments, GET /api/tickets/{id}/comments, POST /api/tickets/{id}/attachments, GET /api/tickets/{id}/attachments, GET /api/tickets/attachments/{aid}, " +
-		"POST /api/tickets/nd, GET /api/tickets/nd"
+		"POST /api/tickets/nd, GET /api/tickets/nd, GET /api/tickets/nd/{id}, POST /api/tickets/nd/{id}/comments, GET /api/tickets/nd/{id}/attachments/{aid}, POST /api/tickets/nd/{id}/read"
 	if got := strings.Join(paths, ", "); got != want {
 		t.Errorf("routes: %s\nwant:   %s", got, want)
 	}

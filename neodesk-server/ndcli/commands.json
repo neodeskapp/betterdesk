@@ -9815,6 +9815,22 @@
    "reason": "Called by NeoDesk agents and clients with a device token, not by people."
   },
   {
+   "route": "GET /api/tickets/nd/{id}",
+   "reason": "Called by NeoDesk agents and clients with a device token, not by people."
+  },
+  {
+   "route": "POST /api/tickets/nd/{id}/comments",
+   "reason": "Called by NeoDesk agents and clients with a device token, not by people."
+  },
+  {
+   "route": "GET /api/tickets/nd/{id}/attachments/{aid}",
+   "reason": "Called by NeoDesk agents and clients with a device token, not by people."
+  },
+  {
+   "route": "POST /api/tickets/nd/{id}/read",
+   "reason": "Called by NeoDesk agents and clients with a device token, not by people."
+  },
+  {
    "route": "GET /api/ui-shell",
    "reason": "What the web console loads for its own pages and layout."
   },

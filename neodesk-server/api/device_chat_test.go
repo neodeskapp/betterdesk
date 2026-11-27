@@ -53,3 +53,32 @@ func TestComputersChatWhileTheConsoleStarts(t *testing.T) {
 		t.Errorf("version 1: %d, want 404", rec.Code)
 	}
 }
+
+// TestComputersTicketsGoToTheConsole: the routes of a computer's tickets
+// go to the console as its chat does (A277), and nothing else below
+// /api/tickets: the staff routes stay the API's.
+func TestComputersTicketsGoToTheConsole(t *testing.T) {
+	for path, want := range map[string]bool{
+		"/api/tickets/nd":                     true,
+		"/api/tickets/nd/12":                  true,
+		"/api/tickets/nd/12/comments":         true,
+		"/api/tickets/nd/12/read":             true,
+		"/api/tickets/nd/12/attachments/7":    true,
+		"/api/tickets":                        false,
+		"/api/tickets/12":                     false,
+		"/api/tickets/nd/":                    false,
+		"/api/tickets/nd/x":                   false,
+		"/api/tickets/nd/12/attachments":      false,
+		"/api/tickets/nd/12/attachments/x":    false,
+		"/api/tickets/nd/12/comments/3":       false,
+		"/api/tickets/nd/12/delete":           false,
+		"/api/tickets/attachments/7":          false,
+		"/api/tickets/ndx":                    false,
+		"/api/tickets/nd/12/attachments/7/xx": false,
+	} {
+		chat, socket := deviceChatRequest(httptest.NewRequest("GET", path, nil))
+		if chat != want || socket {
+			t.Errorf("%s: to the console %v (socket %v), want %v", path, chat, socket, want)
+		}
+	}
+}

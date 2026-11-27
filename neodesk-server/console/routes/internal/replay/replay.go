@@ -52,6 +52,11 @@ type World struct {
 	// a recording: "<UPLOADS>" for the folder a group writes files to.
 	Vars map[string]string
 
+	// Answers, when set, rewrites the body of every answer Do returns
+	// before it is compared: a group takes out members the Go console
+	// added to answers Node gave, so the rest still compares byte for byte.
+	Answers func(req Request, body string) string
+
 	browsers map[string]*browser
 }
 
@@ -255,7 +260,11 @@ func (w *World) Do(req Request) Answer {
 	for name, value := range req.Headers {
 		headers[name] = value
 	}
-	return w.send(b, req.Method, req.Path, body, length, headers)
+	answer := w.send(b, req.Method, req.Path, body, length, headers)
+	if w.Answers != nil {
+		answer.Body = w.Answers(req, answer.Body)
+	}
+	return answer
 }
 
 func (w *World) browser(role string) *browser {
