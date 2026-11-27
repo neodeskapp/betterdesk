@@ -94,6 +94,12 @@ type Config struct {
 	// X-Forwarded-For / X-Real-IP. Required when TrustProxy is true — empty
 	// means forwarded headers are ignored (security-first).
 	TrustedProxies []*net.IPNet
+	// APIAllowFrom are the addresses (IPs and CIDRs, API_ALLOW_FROM) that
+	// get the whole API on the API port besides this machine, for scripts
+	// and Prometheus on other hosts. While the console's client API port
+	// runs in this process, every other caller gets only what that port
+	// answers (api.Server.LimitOutside).
+	APIAllowFrom []*net.IPNet
 	// PanelSignalProxyCIDRs are the source addresses the console's bridge
 	// for the web client (/ws/rendezvous) may reach the signal server from.
 	// A TCP connection is the panel's web client only when its first frame
@@ -481,6 +487,17 @@ func (c *Config) LoadEnv() {
 			log.Printf("[config] TRUSTED_PROXIES parse error: %v — forwarded headers will not be honored", err)
 		} else {
 			c.TrustedProxies = nets
+		}
+	}
+	// Read on every load, so a reload that finds the setting gone drops
+	// the addresses
+	c.APIAllowFrom = nil
+	if v := strings.TrimSpace(os.Getenv("API_ALLOW_FROM")); v != "" {
+		nets, err := ParseTrustedProxies(v)
+		if err != nil {
+			log.Printf("[config] API_ALLOW_FROM: %v; only this machine gets the whole API", err)
+		} else {
+			c.APIAllowFrom = nets
 		}
 	}
 	// Source addresses of the console's web client bridge. Unset keeps the

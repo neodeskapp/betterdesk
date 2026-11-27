@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net"
 	"os"
 	"testing"
 )
@@ -58,6 +59,41 @@ func TestLoadEnv_APIPortLegacyFallback(t *testing.T) {
 
 	if cfg.APIPort != 21121 {
 		t.Fatalf("APIPort = %d, want 21121 (legacy API_PORT-only installs)", cfg.APIPort)
+	}
+}
+
+// API_ALLOW_FROM takes IPs and CIDRs; a reload without it, or with a
+// value that does not parse, leaves no address.
+func TestLoadEnv_APIAllowFrom(t *testing.T) {
+	t.Setenv("API_ALLOW_FROM", "192.0.2.7, 198.51.100.0/24,2001:db8::/32")
+	cfg := DefaultConfig()
+	cfg.LoadEnv()
+	if len(cfg.APIAllowFrom) != 3 {
+		t.Fatalf("APIAllowFrom = %v, want three entries", cfg.APIAllowFrom)
+	}
+	for _, ip := range []string{"192.0.2.7", "198.51.100.42", "2001:db8::1"} {
+		found := false
+		for _, n := range cfg.APIAllowFrom {
+			found = found || n.Contains(net.ParseIP(ip))
+		}
+		if !found {
+			t.Errorf("%s is not in APIAllowFrom %v", ip, cfg.APIAllowFrom)
+		}
+	}
+	if cfg.APIAllowFrom[0].Contains(net.ParseIP("192.0.2.8")) {
+		t.Errorf("the single address 192.0.2.7 took in 192.0.2.8")
+	}
+
+	t.Setenv("API_ALLOW_FROM", "")
+	cfg.LoadEnv()
+	if cfg.APIAllowFrom != nil {
+		t.Fatalf("APIAllowFrom after a reload without the setting = %v", cfg.APIAllowFrom)
+	}
+
+	t.Setenv("API_ALLOW_FROM", "192.0.2.7,not-an-address")
+	cfg.LoadEnv()
+	if cfg.APIAllowFrom != nil {
+		t.Fatalf("APIAllowFrom with an entry that does not parse = %v", cfg.APIAllowFrom)
 	}
 }
 

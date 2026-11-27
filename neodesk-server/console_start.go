@@ -43,6 +43,7 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 	defer func() {
 		if !running {
 			apiSrv.NoDeviceChat()
+			apiSrv.NoOutsideHandler()
 		}
 	}()
 	ccfg, err := consoleconfig.LoadEnv()
@@ -96,6 +97,9 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 	setFeatures(srv.Deps().Access.ClientFeaturesOff)
 	if clientAPI := srv.ClientAPI(); clientAPI != nil {
 		setAPIProxy(clientAPI.Handler())
+		// Outside callers on the API port get what the client API port
+		// answers (api/outside.go)
+		apiSrv.SetOutsideHandler(clientAPI.Handler())
 	}
 	// Computers reach their support chat at the API port, where they send
 	// everything else (L526): the API hands it to the console
@@ -109,6 +113,7 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 	return func() {
 		apiSrv.SetConsoleAddress(nil)
 		apiSrv.SetDeviceChat(nil)
+		apiSrv.SetOutsideHandler(nil)
 		setAPIProxy(apiSrv.ListenerHandler())
 		setFeatures(nil)
 		srv.Stop()
