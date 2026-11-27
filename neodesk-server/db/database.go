@@ -727,8 +727,18 @@ type Database interface {
 	QueueTelemetryCommand(command *TelemetryCommand) (int64, error)
 	GetPendingTelemetryCommands(deviceID string, limit int) ([]*TelemetryCommand, error)
 	// CompleteTelemetryCommand completes command id only when it is pending
-	// for deviceID.
+	// or running for deviceID.
 	CompleteTelemetryCommand(deviceID string, id int64, status, result string) error
+	// OpenTelemetryCommandIDs returns which of ids are commands of
+	// deviceID that still take an answer (pending or running, not expired).
+	OpenTelemetryCommandIDs(deviceID string, ids []int64) (map[int64]bool, error)
+	// MarkTelemetryCommandRunning notes that the device started command
+	// id: it is no longer handed out, takes the final answer until
+	// expiresAt.
+	MarkTelemetryCommandRunning(deviceID string, id int64, expiresAt time.Time) error
+
+	// Fleet tasks, resources, workflows and compliance (fleet.go).
+	Fleet() FleetStore
 
 	// Per-device desktop connection mode (normal <-> incoming-only).
 	IssueConnectionMode(issue *ConnectionModeIssue) (*ConnectionModeCommand, bool, error)

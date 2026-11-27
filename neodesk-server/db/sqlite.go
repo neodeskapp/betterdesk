@@ -717,6 +717,7 @@ func (s *SQLiteDB) migrateSchema() error {
 		serverEventsCreatedIndex,
 		serverEventsActionIndex,
 	}
+	statements = append(statements, fleetSchema("INTEGER PRIMARY KEY AUTOINCREMENT", "INTEGER")...)
 
 	for _, stmt := range statements {
 		if _, err := s.db.Exec(stmt); err != nil {
@@ -1929,6 +1930,11 @@ func (s *SQLiteDB) cascadePeerIDInTx(tx *sql.Tx, oldID, newID string) error {
 		{`UPDATE device_sealed_signin SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_snapshots SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_commands SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
+		{`UPDATE fleet_task_runs SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
+		{`DELETE FROM fleet_device_resources WHERE device_id = ? OR device_id = ?`, []any{oldID, newID}},
+		{`DELETE FROM fleet_compliance WHERE device_id = ? AND EXISTS
+			(SELECT 1 FROM fleet_compliance WHERE device_id = ?)`, []any{newID, oldID}},
+		{`UPDATE fleet_compliance SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_connection_policies SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_connection_mode_commands SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE server_config SET key = ? WHERE key = ?`, []any{"telemetry_seq_" + newID, "telemetry_seq_" + oldID}},
@@ -3077,8 +3083,52 @@ func (s *SQLiteDB) CompleteTelemetryCommand(deviceID string, id int64, status, r
 	_, err := s.db.Exec(`
 		UPDATE device_telemetry_commands
 		SET status = ?, result = ?, completed_at = datetime('now')
-		WHERE id = ? AND device_id = ? AND status = 'pending'`,
+		WHERE id = ? AND device_id = ? AND status IN ('pending', 'running')`,
 		status, result, id, deviceID)
+	return err
+}
+
+// OpenTelemetryCommandIDs returns which of ids are commands of deviceID
+// that still take an answer: pending or running, and not expired.
+func (s *SQLiteDB) OpenTelemetryCommandIDs(deviceID string, ids []int64) (map[int64]bool, error) {
+	open := map[int64]bool{}
+	if len(ids) == 0 {
+		return open, nil
+	}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	args := []any{deviceID}
+	for _, id := range ids {
+		args = append(args, id)
+	}
+	rows, err := s.db.Query(`
+		SELECT id FROM device_telemetry_commands
+		WHERE device_id = ? AND id IN (`+inList(len(ids))+`) AND status IN ('pending', 'running')
+		  AND (expires_at = '' OR expires_at > datetime('now'))`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		open[id] = true
+	}
+	return open, rows.Err()
+}
+
+// MarkTelemetryCommandRunning notes that the device started command id:
+// it is no longer handed out, still takes the final answer, and expires
+// at expiresAt.
+func (s *SQLiteDB) MarkTelemetryCommandRunning(deviceID string, id int64, expiresAt time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec(`
+		UPDATE device_telemetry_commands SET status = 'running', expires_at = ?
+		WHERE id = ? AND device_id = ? AND status IN ('pending', 'running')`,
+		expiresAt.UTC().Format("2006-01-02 15:04:05"), id, deviceID)
 	return err
 }
 

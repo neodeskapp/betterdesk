@@ -746,6 +746,7 @@ func (pg *PostgresDB) Migrate() error {
 		serverEventsCreatedIndex,
 		serverEventsActionIndex,
 	}
+	statements = append(statements, fleetSchema("BIGSERIAL PRIMARY KEY", "BIGINT")...)
 
 	for _, stmt := range statements {
 		if _, err := pg.pool.Exec(pg.ctx, stmt); err != nil {
@@ -1657,6 +1658,11 @@ func (pg *PostgresDB) cascadePeerIDInTx(ctx context.Context, tx pgx.Tx, oldID, n
 		{`UPDATE device_sealed_signin SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_snapshots SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_commands SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
+		{`UPDATE fleet_task_runs SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
+		{`DELETE FROM fleet_device_resources WHERE device_id = $1 OR device_id = $2`, []any{oldID, newID}},
+		{`DELETE FROM fleet_compliance WHERE device_id = $1 AND EXISTS
+			(SELECT 1 FROM fleet_compliance WHERE device_id = $2)`, []any{newID, oldID}},
+		{`UPDATE fleet_compliance SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_connection_policies SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_connection_mode_commands SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE server_config SET key = $1 WHERE key = $2`, []any{"telemetry_seq_" + newID, "telemetry_seq_" + oldID}},
@@ -2666,8 +2672,44 @@ func (pg *PostgresDB) CompleteTelemetryCommand(deviceID string, id int64, status
 	_, err := pg.pool.Exec(pg.ctx, `
 		UPDATE device_telemetry_commands
 		SET status = $1, result = $2::jsonb, completed_at = NOW()
-		WHERE id = $3 AND device_id = $4 AND status = 'pending'`,
+		WHERE id = $3 AND device_id = $4 AND status IN ('pending', 'running')`,
 		status, result, id, deviceID)
+	return err
+}
+
+// OpenTelemetryCommandIDs returns which of ids are commands of deviceID
+// that still take an answer: pending or running, and not expired.
+func (pg *PostgresDB) OpenTelemetryCommandIDs(deviceID string, ids []int64) (map[int64]bool, error) {
+	open := map[int64]bool{}
+	if len(ids) == 0 {
+		return open, nil
+	}
+	rows, err := pg.pool.Query(pg.ctx, `
+		SELECT id FROM device_telemetry_commands
+		WHERE device_id = $1 AND id = ANY($2) AND status IN ('pending', 'running') AND expires_at > NOW()`,
+		deviceID, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		open[id] = true
+	}
+	return open, rows.Err()
+}
+
+// MarkTelemetryCommandRunning notes that the device started command id:
+// it is no longer handed out, still takes the final answer, and expires
+// at expiresAt.
+func (pg *PostgresDB) MarkTelemetryCommandRunning(deviceID string, id int64, expiresAt time.Time) error {
+	_, err := pg.pool.Exec(pg.ctx, `
+		UPDATE device_telemetry_commands SET status = 'running', expires_at = $1
+		WHERE id = $2 AND device_id = $3 AND status IN ('pending', 'running')`,
+		expiresAt.UTC(), id, deviceID)
 	return err
 }
 
