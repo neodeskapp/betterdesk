@@ -111,6 +111,21 @@ describe('the sign-in rules, one save', () => {
 		expect(server.sent('PUT', SESSIONS)).toEqual([]);
 	}, 30_000);
 
+	test('the longest lifetime shows only while sessions are extended; a wrong hidden value is not sent', async () => {
+		const server = routes();
+		render(SignInTab);
+		const max = await screen.findByRole('spinbutton', { name: 'settings.client_sessions_max_days' });
+		await userEvent.clear(max);
+		const extend = screen.getByRole('checkbox', { name: /settings\.client_sessions_sliding/ });
+		expect(extend).toHaveAttribute('aria-controls', 'client-sessions-max-group');
+		await userEvent.click(extend);
+		expect(screen.queryByRole('spinbutton', { name: 'settings.client_sessions_max_days' })).toBeNull();
+		await save();
+		await vi.waitFor(() =>
+			expect(server.sent('PUT', SESSIONS)).toEqual([{ expiry_days: 9, sliding: false, max_days: 30 }])
+		);
+	});
+
 	test('the session duration says where it comes from and goes back to its default', async () => {
 		routes();
 		render(SignInTab);

@@ -106,7 +106,9 @@ export type PlaceId = TabId | PageId;
 export function tabDescKey(tab: TabId, canServerConfig: boolean): string {
 	if (tab === 'general')
 		return canServerConfig ? 'settings.page.general_desc' : 'settings.page.general_desc_viewer';
-	if (tab === 'auth') return canServerConfig ? 'settings.page.auth_desc' : 'settings.page.auth_desc_viewer';
+	// Your own password and two-factor sign-in are on Your account, not here
+	if (tab === 'auth')
+		return canServerConfig ? 'settings.page.auth_rules_desc' : 'settings.page.auth_desc_viewer';
 	return `settings.page.${tab}_desc`;
 }
 

@@ -221,6 +221,8 @@
 
 	async function save() {
 		if (draft.busy) return;
+		// The upper limit is hidden while sessions are not renewed: a wrong value there goes back to the saved one
+		if (!v.sliding && problems.max_days) draft.reset('max_days');
 		const parts = partsWithChanges(draft.changes, PARTS, ORDER);
 		const marked = [
 			...(parts.includes('sessions') && problems.expiry_days ? ['client-sessions-expiry-days'] : []),
@@ -350,35 +352,36 @@
 					help={t('settings.client_sessions_sliding_hint')}
 					checked={v.sliding}
 					onchange={(on) => draft.set('sliding', on)}
+					controls="client-sessions-max-group"
 					{...sourceRow(draft, 'sliding', src('client_sessions.sliding'))}
 				/>
-				<SettingRow
-					id="client-sessions-max-days"
-					label={t('settings.client_sessions_max_days')}
-					help={tf(
-						'settings.signin.max_days_help',
-						'Upper limit for the renewal, counted from the first sign-in.'
-					)}
-					error={problems.max_days}
-					noEffect={v.sliding
-						? undefined
-						: tf('settings.signin.max_days_off', 'Has no effect while Extend session on activity is off.')}
-					{...sourceRow(draft, 'max_days', src('client_sessions.max_days'))}
-				>
-					{#snippet control(f)}
-						<Input
-							id={f.id}
-							describedby={f.describedby}
-							invalid={f.invalid}
-							type="number"
-							min="1"
-							max="365"
-							width="short"
-							value={v.max_days}
-							oninput={(e) => draft.set('max_days', days(e))}
-						/>
-					{/snippet}
-				</SettingRow>
+				<!-- The upper limit counts only while sessions are renewed -->
+				<ShowWhen id="client-sessions-max-group" class="setting-rows-when" when={v.sliding}>
+					<SettingRow
+						id="client-sessions-max-days"
+						label={t('settings.client_sessions_max_days')}
+						help={tf(
+							'settings.signin.max_days_help',
+							'Upper limit for the renewal, counted from the first sign-in.'
+						)}
+						error={problems.max_days}
+						{...sourceRow(draft, 'max_days', src('client_sessions.max_days'))}
+					>
+						{#snippet control(f)}
+							<Input
+								id={f.id}
+								describedby={f.describedby}
+								invalid={f.invalid}
+								type="number"
+								min="1"
+								max="365"
+								width="short"
+								value={v.max_days}
+								oninput={(e) => draft.set('max_days', days(e))}
+							/>
+						{/snippet}
+					</SettingRow>
+				</ShowWhen>
 			</SettingsGroup>
 
 			<SettingsGroup
@@ -437,7 +440,7 @@
 					controls="inactive-accounts-days-group"
 					{...sourceRow(draft, 'inactive_on', NO_SOURCE)}
 				/>
-				<ShowWhen id="inactive-accounts-days-group" when={v.inactive_on}>
+				<ShowWhen id="inactive-accounts-days-group" class="setting-rows-when" when={v.inactive_on}>
 					<SettingRow
 						id="inactive-accounts-days"
 						label={t('settings.inactive_days')}
@@ -481,3 +484,11 @@
 		{/if}
 	</SettingsBody>
 {/if}
+
+<style>
+	/* Rows that show for one choice sit in the list like the others */
+	:global(.show-when.setting-rows-when) {
+		gap: 0;
+		margin-bottom: 0;
+	}
+</style>
