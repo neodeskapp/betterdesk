@@ -2,7 +2,9 @@
   "Columns" button with a popup of checkboxes, one per hideable column
   (the old console's column visibility menu). Takes the table's columns;
   `onchange(id, visible)` reports a change, the page keeps and stores the
-  choice and passes the columns back with `visible` set.
+  choice and passes the columns back with `visible` set. `options` add
+  checkboxes below the columns for how a column shows its values, reported
+  through `onoption(id, checked)`.
 
   A disclosure, not an ARIA menu: the button has aria-expanded, the popup
   is a labelled group of native checkboxes reached with Tab. Opening moves
@@ -24,16 +26,25 @@
 		visible?: boolean;
 	}
 
+	interface ChooserOption {
+		id: string;
+		label: string;
+		checked: boolean;
+	}
+
 	interface Props {
 		columns: ChooserColumn[];
 		onchange: (id: string, visible: boolean) => void;
+		/** Display options under the columns, after a divider */
+		options?: ChooserOption[];
+		onoption?: (id: string, checked: boolean) => void;
 		/** Button text; "Columns" by default */
 		label?: string;
 		/** Popup opens towards the start (default end, under a toolbar's end) */
 		align?: 'start' | 'end';
 	}
 
-	let { columns, onchange, label, align = 'end' }: Props = $props();
+	let { columns, onchange, options = [], onoption, label, align = 'end' }: Props = $props();
 
 	const popupId = $props.id();
 	const text = $derived(label ?? tf('table.columns', 'Columns'));
@@ -121,6 +132,19 @@
 				<span>{col.label}</span>
 			</label>
 		{/each}
+		{#if options.length}
+			<div class="divider" role="separator"></div>
+			{#each options as opt (opt.id)}
+				<label class="checkbox-row">
+					<input
+						type="checkbox"
+						checked={opt.checked}
+						onchange={(e) => onoption?.(opt.id, e.currentTarget.checked)}
+					/>
+					<span>{opt.label}</span>
+				</label>
+			{/each}
+		{/if}
 	</div>
 </div>
 
@@ -150,6 +174,11 @@
 	.menu.menu-end {
 		inset-inline-start: auto;
 		inset-inline-end: 0;
+	}
+	.divider {
+		height: 1px;
+		margin: var(--space-1) 0;
+		background: var(--rule);
 	}
 	.checkbox-row {
 		display: flex;

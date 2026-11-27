@@ -171,6 +171,39 @@ export function platformId(platform: string | null | undefined): OsId {
 	return rules.find(([, re]) => re.test(p))?.[0] ?? '';
 }
 
+/**
+ * The system and its main version from what the client reports:
+ * "windows / Windows 11 Pro - 11 (26200)" → "Windows 11",
+ * "windows / Windows Server 2025 Standard Evaluation - 11 (26100)" → "Windows Server 2025",
+ * "ubuntu / Linux 24.04 Ubuntu" → "Ubuntu 24.04", "cachyos / Linux rolling CachyOS Linux" →
+ * "CachyOS Linux", "macos / macOS 14.5 Sonoma" → "macOS 14". Text it can't read stays as it is.
+ */
+export function shortPlatform(platform: string | null | undefined): string {
+	const full = String(platform ?? '').trim();
+	// "<distribution id> / <long name> - <build>" (the desktop client): the long name
+	const slash = full.indexOf(' / ');
+	let s = slash >= 0 ? full.slice(slash + 3).trim() || full.slice(0, slash).trim() : full;
+	s = s.replace(/\s+-\s+.*$/, '').trim();
+	if (!s) return full;
+
+	// Linux: "Linux <VERSION_ID> <NAME>"; the version id is already the release
+	const linux = /^Linux\s+(\S+)\s+(.+)$/i.exec(s);
+	if (linux) {
+		const name = linux[2].replace(/\s+GNU\/Linux$/i, '').trim();
+		return /^\d/.test(linux[1]) ? `${name} ${linux[1]}` : name;
+	}
+
+	const win = /^(Windows(?:\s+Server)?)\s+(\d+)\b/i.exec(s);
+	if (win) return `${win[1]} ${win[2]}`;
+
+	// Name, then the first version: major only (macOS 10.x keeps its minor)
+	const m = /^(.*?[A-Za-z].*?)\s+v?(\d+)((?:\.\d+)*)\b/.exec(s);
+	if (!m) return s;
+	const minor = /^mac ?os/i.test(m[1]) && m[2] === '10' ? (m[3].match(/^\.\d+/)?.[0] ?? '') : '';
+	if (platformId(m[1]) === 'linux') return `${m[1]} ${m[2]}${m[3]}`;
+	return `${m[1]} ${m[2]}${minor}`;
+}
+
 /** "v1.4.2" → "1.4.2" */
 export function cleanVersion(v: unknown): string {
 	return String(v ?? '')
