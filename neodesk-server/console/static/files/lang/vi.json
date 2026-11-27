@@ -512,6 +512,7 @@
     "strategy_deleted": "Đã xóa quy tắc",
     "strategy_not_found": "Quy tắc này không còn tồn tại.",
     "no_strategies": "Chưa có quy tắc nào. Hãy thêm một quy tắc để bật hoặc tắt tính năng client cho người dùng và thiết bị được chọn.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Đang tải quy tắc…",
     "groups_saved": "Đã lưu nhóm thiết bị",
     "group_membership_added": "Đã thêm vào nhóm",
@@ -1088,7 +1089,8 @@
       "alert_n": "Email cảnh báo {n}",
       "alert_add": "Thêm địa chỉ",
       "err_address": "Đây không phải là địa chỉ email. Ví dụ ops@example.com.",
-      "err_host_alone": "Chỉ nhập tên máy chủ hoặc địa chỉ IP, không kèm cổng. Ví dụ smtp.example.com."
+      "err_host_alone": "Chỉ nhập tên máy chủ hoặc địa chỉ IP, không kèm cổng. Ví dụ smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Tìm kiếm cài đặt…",
@@ -1258,6 +1260,7 @@
       "branding_desc": "Giao diện của bảng điều khiển, trang đăng nhập và trang tải xuống đối với mọi người.",
       "auth_desc": "Mật khẩu và đăng nhập hai bước của riêng bạn, cùng cách mọi người đăng nhập vào máy chủ này.",
       "auth_desc_viewer": "Mật khẩu và đăng nhập hai bước của bạn.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Tải xuống bản sao của mọi thứ máy chủ này cần, tạo bản sao theo lịch hoặc khôi phục từ một bản sao.",
       "updates_desc": "Kiểm tra phiên bản NeoDesk mới hơn và cài đặt.",
       "email_desc": "Máy chủ thư mà bảng điều khiển dùng để gửi cảnh báo và thông báo.",
@@ -1395,7 +1398,11 @@
       "conn_no_effect_operator": "Đã có hiệu lực: Chỉ tài khoản được phép kết nối tới thiết bị mới bắt đầu được phiên đã bao gồm quy tắc này.",
       "conn_no_effect_signed_in": "Không có tác dụng khi chỉ ứng dụng đã đăng nhập mới bắt đầu được phiên.",
       "endpoint_auto_short": "Tìm tự động",
-      "endpoint_auto_note": "Để trống thì máy khách nhận địa chỉ tìm tự động, hiển thị trong Những gì máy khách nhận lúc này."
+      "endpoint_auto_note": "Để trống thì máy khách nhận địa chỉ tìm tự động, hiển thị trong Những gì máy khách nhận lúc này.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Giao diện mặc định cho mọi người dùng bảng điều khiển này.",
@@ -1708,7 +1715,8 @@
       "tools_console": "Do bảng điều khiển tải về",
       "tools_missing": "Chưa cài",
       "channel_now": "Hiện tại: {channel}. {installs}.",
-      "channel_applies": "Áp dụng cho lần kiểm tra cập nhật tiếp theo. Không có gì được cài cho tới khi bạn bấm Cài đặt."
+      "channel_applies": "Áp dụng cho lần kiểm tra cập nhật tiếp theo. Không có gì được cài cho tới khi bạn bấm Cài đặt.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Chọn một tệp để xem và chỉnh sửa. Mỗi lần lưu sẽ giữ một bản sao của phiên bản trước.",
@@ -1736,6 +1744,7 @@
       "local_warning": "Các địa chỉ này chỉ dùng được trên máy tính này. Máy tính và điện thoại khác không truy cập được. Hãy nhập địa chỉ máy chủ trong phần Điểm cuối client công khai.",
       "preview_title": "Xem trước",
       "preview_note": "Bảng điều khiển với các lựa chọn trên trang này. Lưu để áp dụng.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Máy tính lễ tân",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Giao diện: {theme}. Màu nhấn: {accent}.",
@@ -1815,7 +1824,8 @@
       "rdclient_bg_help": "Những gì hiện phía sau danh sách thiết bị. \"{inherit}\" dùng hình nền của bảng điều khiển.",
       "picture_kb": "Hình ảnh, {kb} KB",
       "website_help": "Địa chỉ đầy đủ, ví dụ https://example.com.",
-      "console_preview": "Xem trước bảng điều khiển"
+      "console_preview": "Xem trước bảng điều khiển",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Thiết bị mới nào được tham gia máy chủ này, và bằng cách nào.",
@@ -1859,7 +1869,8 @@
       "group_filter_help": "Cách tìm nhóm của một người, với {{dn}} cho DN của người đó. Ví dụ (member={{dn}}).",
       "group_attr_help": "Mục ánh xạ vai trò có thể gọi tên nhóm bằng thuộc tính này, ngoài DN hoặc CN. Ví dụ cn.",
       "default_role_help": "Vai trò của những người có nhóm không khớp mục nào trong ánh xạ bên dưới.",
-      "role_map_help": "Mỗi nhóm một mục: nhóm theo DN hoặc tên, và vai trò mà thành viên nhận được. Ví dụ CN=NeoDesk Admins,OU=Groups,DC=example,DC=com với Quản trị viên."
+      "role_map_help": "Mỗi nhóm một mục: nhóm theo DN hoặc tên, và vai trò mà thành viên nhận được. Ví dụ CN=NeoDesk Admins,OU=Groups,DC=example,DC=com với Quản trị viên.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Đăng nhập một lần",
@@ -1895,12 +1906,16 @@
       "roles_note": "Mọi người nhận vai trò nào, dựa trên nhóm của họ ở nhà cung cấp.",
       "roles_effect": "Một người nhận vai trò ở mỗi lần đăng nhập qua nhà cung cấp.",
       "default_role_help": "Vai trò của những người có nhóm không khớp mục nào trong ánh xạ bên dưới.",
-      "role_map_help": "Mỗi nhóm một mục: nhóm theo tên nhà cung cấp đặt, và vai trò mà thành viên nhận được. Ví dụ neodesk-admins với Quản trị viên."
+      "role_map_help": "Mỗi nhóm một mục: nhóm theo tên nhà cung cấp đặt, và vai trò mà thành viên nhận được. Ví dụ neodesk-admins với Quản trị viên.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Thêm, đổi tên và xóa nhóm được lưu ngay. Thiết bị đã cài vẫn ở trong nhóm của chúng.",
       "install_note": "Tải tệp .msh của một nhóm và cài MeshAgent bằng tệp đó trên thiết bị.",
-      "msh_name_help": "MeshAgent hiển thị tên này cho máy chủ. Tên chỉ nằm trong tệp đã tải và không được lưu. Tệp dành cho nhóm có ID default; với nhóm khác, dùng menu ở dòng của nhóm đó."
+      "msh_name_help": "MeshAgent hiển thị tên này cho máy chủ. Tên chỉ nằm trong tệp đã tải và không được lưu. Tệp dành cho nhóm có ID default; với nhóm khác, dùng menu ở dòng của nhóm đó.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4448,7 +4463,13 @@
     "section_alert": "Cảnh báo",
     "saving": "Đang lưu…",
     "rules_checked": "Quy tắc được kiểm tra khi giá trị đến: CPU và bộ nhớ với mỗi báo cáo sử dụng từ thiết bị, dung lượng đĩa với bản kiểm kê, thời gian không hoạt động với báo cáo hoạt động, và thời gian ngoại tuyến mỗi phút một lần. Quy tắc tùy chỉnh không được kiểm tra.",
-    "custom_not_checked": "Quy tắc tùy chỉnh không có giá trị nào máy chủ đo được, nên tự nó không tạo cảnh báo."
+    "custom_not_checked": "Quy tắc tùy chỉnh không có giá trị nào máy chủ đo được, nên tự nó không tạo cảnh báo.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Truyền tệp",
@@ -4763,7 +4784,13 @@
     "section_covers": "Phạm vi áp dụng",
     "policy_sheet_desc": "Những lần truyền mà chính sách áp dụng và thiết bị sẽ chặn, ghi lại hay cho phép chúng.",
     "saving": "Đang lưu…",
-    "older_events": "Sự kiện cũ hơn"
+    "older_events": "Sự kiện cũ hơn",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Báo cáo",
@@ -6017,6 +6044,7 @@
     "max_session_invalid": "Nhập số phút là số nguyên, từ 0 trở lên.",
     "policy_none": "Không có quy tắc: mỗi thiết bị giữ cài đặt riêng.",
     "settings_tab_note": "Những gì đang áp dụng cho tổ chức này. Mỗi giá trị được đổi ở nơi nó được đặt: chính sách ở trang Chính sách, sổ địa chỉ chung ở tab Sổ địa chỉ.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Cách phiên từ xa hoạt động trên thiết bị của tổ chức này.",
     "policies_group_effect": "Thiết bị nhận thay đổi vào lần tiếp theo chúng hỏi máy chủ về chính sách.",
     "open_org_policies": "Mở chính sách của tổ chức này",
@@ -6031,7 +6059,8 @@
     "danger_zone": "Vùng nguy hiểm",
     "name_hint": "Hiển thị trên trang của tổ chức này, trong danh sách và cho thành viên.",
     "slug_changed": "Các lần đăng nhập gọi tổ chức bằng tên ngắn sẽ cần tên mới sau khi bạn lưu.",
-    "policy_set": "Đặt cho tổ chức này."
+    "policy_set": "Đặt cho tổ chức này.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Mã hóa đầu cuối",
@@ -6646,7 +6675,13 @@
     "sound_today": "Để tắt âm thanh trong phiên ngay hôm nay, dùng quy tắc truy cập có Âm thanh tắt trong Thiết bị, hoặc tắt Âm thanh trong quyền truy cập bảng điều khiển của một người.",
     "open_access_rules": "Mở quy tắc truy cập",
     "remove_group": "Xóa mọi quy tắc của nhóm này",
-    "row_not_applied": "Chưa ứng dụng NeoDesk nào áp dụng mục này."
+    "row_not_applied": "Chưa ứng dụng NeoDesk nào áp dụng mục này.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Chứng thực thiết bị",
@@ -7726,7 +7761,18 @@
     "fact_id": "ID thiết bị",
     "tabs_save_hint": "Mỗi loại quy tắc có nút Lưu riêng và được lưu riêng.",
     "save_rules": "Lưu quy tắc",
-    "save_all_hint": "Lưu sẽ lưu mọi loại quy tắc bạn đã thay đổi. Mỗi loại được lưu riêng."
+    "save_all_hint": "Lưu sẽ lưu mọi loại quy tắc bạn đã thay đổi. Mỗi loại được lưu riêng.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8784,6 +8830,7 @@
       "fallback_hint": "Khi không người vận hành nào nhận thư, thư gửi tới địa chỉ cảnh báo trong Cài đặt › Email.",
       "folder_subject_hint": "Tiêu đề ghi thư mục của thiết bị, để thư có thể sắp xếp theo đó.",
       "no_smtp_effect": "Không có tác dụng cho tới khi việc gửi email được thiết lập trong Cài đặt › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Không có tác dụng: không ai nhận thư khi cả hai tùy chọn bên dưới đều tắt."
     },
     "targets": {
@@ -10459,7 +10506,10 @@
     "updates_consequence": "Số mới áp dụng sau lần cập nhật tiếp theo.",
     "updates_title": "Trước khi cập nhật",
     "where": "Lưu ở đâu",
-    "where_help": "Thư mục dữ liệu NeoDesk, hoặc thư mục riêng của bạn. Thư mục chia sẻ mạng phải được hệ điều hành gắn trước."
+    "where_help": "Thư mục dữ liệu NeoDesk, hoặc thư mục riêng của bạn. Thư mục chia sẻ mạng phải được hệ điều hành gắn trước.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Đăng nhập vào ứng dụng NeoDesk",

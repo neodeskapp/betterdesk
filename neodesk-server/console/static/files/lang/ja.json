@@ -506,6 +506,7 @@
     "strategy_deleted": "ルールを削除しました",
     "strategy_not_found": "このルールはもう存在しません。",
     "no_strategies": "ルールはまだありません。ルールを追加すると、選択したユーザーとデバイスのクライアント機能をオンまたはオフにできます。",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "ルールを読み込んでいます…",
     "groups_saved": "デバイスグループが保存されました",
     "group_membership_added": "グループに追加しました",
@@ -1082,7 +1083,8 @@
       "alert_n": "アラートメール {n}",
       "alert_add": "アドレスを追加",
       "err_address": "メールアドレスではありません。例: ops@example.com。",
-      "err_host_alone": "ホスト名または IP アドレスだけを、ポートなしで入力してください。例: smtp.example.com。"
+      "err_host_alone": "ホスト名または IP アドレスだけを、ポートなしで入力してください。例: smtp.example.com。",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "設定を検索…",
@@ -1252,6 +1254,7 @@
       "branding_desc": "コンソール、サインインページ、ダウンロードページの全員向けの見た目です。",
       "auth_desc": "ご自身のパスワードと 2 段階サインイン、およびこのサーバーへの全員のサインイン方法です。",
       "auth_desc_viewer": "パスワードと 2 段階サインインです。",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "このサーバーに必要なものすべてのコピーをダウンロードしたり、スケジュールに沿ってコピーを作成したり、コピーから復元したりできます。",
       "updates_desc": "NeoDesk の新しいバージョンを確認してインストールします。",
       "email_desc": "コンソールがアラートや通知の送信に使うメールサーバーです。",
@@ -1389,7 +1392,11 @@
       "conn_no_effect_operator": "すでに有効です: 「デバイスへの接続が許可されたアカウントだけがセッションを開始できる」がこのルールを含んでいます。",
       "conn_no_effect_signed_in": "サインイン済みのアプリだけがセッションを開始できる間は効果がありません。",
       "endpoint_auto_short": "自動検出",
-      "endpoint_auto_note": "空欄の場合、クライアントには自動検出したアドレスが渡されます。このアドレスは「クライアントに今渡している値」に表示されます。"
+      "endpoint_auto_note": "空欄の場合、クライアントには自動検出したアドレスが渡されます。このアドレスは「クライアントに今渡している値」に表示されます。",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "このコンソールを使う全員に適用される既定の見た目です。",
@@ -1702,7 +1709,8 @@
       "tools_console": "コンソールがダウンロード",
       "tools_missing": "未インストール",
       "channel_now": "現在: {channel}。{installs}。",
-      "channel_applies": "次回の更新確認から適用されます。「インストール」をクリックするまで何もインストールされません。"
+      "channel_applies": "次回の更新確認から適用されます。「インストール」をクリックするまで何もインストールされません。",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "ファイルを選択すると表示・編集できます。保存するたびに前のバージョンのコピーが残ります。",
@@ -1730,6 +1738,7 @@
       "local_warning": "これらのアドレスはこのコンピューターでしか使えません。ほかのコンピューターやスマートフォンからは届きません。「公開クライアントエンドポイント」にサーバーのアドレスを入力してください。",
       "preview_title": "プレビュー",
       "preview_note": "このページの設定を反映したコンソールです。保存すると適用されます。",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "受付の PC",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "テーマ: {theme}。アクセントカラー: {accent}。",
@@ -1809,7 +1818,8 @@
       "rdclient_bg_help": "デバイス一覧の背後に表示されるものです。「{inherit}」はコンソールの背景を使います。",
       "picture_kb": "画像、{kb} KB",
       "website_help": "完全なアドレス。例: https://example.com。",
-      "console_preview": "パネルのプレビュー"
+      "console_preview": "パネルのプレビュー",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "どの新しいデバイスがどのようにこのサーバーに参加できるか。",
@@ -1853,7 +1863,8 @@
       "group_filter_help": "ユーザーのグループを見つける方法。ユーザーの DN の位置に {{dn}} を入れます。例: (member={{dn}})。",
       "group_attr_help": "ロールのマッピングのエントリーでは、DN や CN に加えてこの属性でもグループを指定できます。例: cn。",
       "default_role_help": "どのグループも下のマッピングのエントリーに一致しないユーザーのロール。",
-      "role_map_help": "グループごとに 1 エントリー: DN または名前でのグループと、そのメンバーが受け取るロール。例: CN=NeoDesk Admins,OU=Groups,DC=example,DC=com と 管理者。"
+      "role_map_help": "グループごとに 1 エントリー: DN または名前でのグループと、そのメンバーが受け取るロール。例: CN=NeoDesk Admins,OU=Groups,DC=example,DC=com と 管理者。",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "シングルサインオン",
@@ -1889,12 +1900,16 @@
       "roles_note": "プロバイダーでのグループに応じて、ユーザーが受け取るロール。",
       "roles_effect": "プロバイダー経由でサインインするたびにロールが割り当てられます。",
       "default_role_help": "どのグループも下のマッピングのエントリーに一致しないユーザーのロール。",
-      "role_map_help": "グループごとに 1 エントリー: プロバイダーでの名前のグループと、そのメンバーが受け取るロール。例: neodesk-admins と 管理者。"
+      "role_map_help": "グループごとに 1 エントリー: プロバイダーでの名前のグループと、そのメンバーが受け取るロール。例: neodesk-admins と 管理者。",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "グループの追加、名前の変更、削除はすぐに保存されます。インストール済みのデバイスはグループに残ります。",
       "install_note": "グループの .msh ファイルをダウンロードし、それを使ってデバイスに MeshAgent をインストールします。",
-      "msh_name_help": "MeshAgent はサーバーにこの名前を表示します。ダウンロードしたファイルにだけ入り、保存はされません。このファイルは ID が default のグループ用です。他のグループでは、その行のメニューを使ってください。"
+      "msh_name_help": "MeshAgent はサーバーにこの名前を表示します。ダウンロードしたファイルにだけ入り、保存はされません。このファイルは ID が default のグループ用です。他のグループでは、その行のメニューを使ってください。",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4442,7 +4457,13 @@
     "section_alert": "アラート",
     "saving": "保存中…",
     "rules_checked": "ルールは値が届いた時点で確認されます。CPU とメモリはデバイスの使用状況レポートごとに、ディスク使用量はインベントリと一緒に、アイドル時間はアクティビティレポートと一緒に、オフライン時間は 1 分ごとに確認されます。カスタムルールは確認されません。",
-    "custom_not_checked": "カスタムルールにはサーバーが測れる値がないため、それ自体ではアラートを出しません。"
+    "custom_not_checked": "カスタムルールにはサーバーが測れる値がないため、それ自体ではアラートを出しません。",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "ファイル転送",
@@ -4757,7 +4778,13 @@
     "section_covers": "対象",
     "policy_sheet_desc": "ポリシーの対象となる転送と、デバイスがそれをブロック、記録、許可のどれにするかを決めます。",
     "saving": "保存中…",
-    "older_events": "古いイベント"
+    "older_events": "古いイベント",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "レポート",
@@ -6011,6 +6038,7 @@
     "max_session_invalid": "分を 0 以上の整数で入力してください。",
     "policy_none": "ルールなし: 各デバイスが自身の設定を保ちます。",
     "settings_tab_note": "この組織に現在適用されているもの。各値は設定されている場所で変更します: ポリシーは「ポリシー」ページ、共有アドレス帳は「アドレス帳」タブです。",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "この組織のデバイスでリモートセッションがどう動作するか。",
     "policies_group_effect": "デバイスは、次にサーバーにポリシーを問い合わせたときに変更を受け取ります。",
     "open_org_policies": "この組織のポリシーを開く",
@@ -6025,7 +6053,8 @@
     "danger_zone": "危険な操作",
     "name_hint": "この組織のページ、一覧、メンバーに表示されます。",
     "slug_changed": "短い名前で組織を指定するサインインでは、保存後に新しい名前が必要になります。",
-    "policy_set": "この組織に設定されています。"
+    "policy_set": "この組織に設定されています。",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "エンドツーエンド暗号化",
@@ -6640,7 +6669,13 @@
     "sound_today": "今すぐセッションの音をオフにするには、「デバイス」でサウンドをオフにしたアクセスルールを使うか、その人のコンソールアクセスでサウンドをオフにしてください。",
     "open_access_rules": "アクセスルールを開く",
     "remove_group": "このグループのルールをすべて削除",
-    "row_not_applied": "これを適用する NeoDesk アプリはまだありません。"
+    "row_not_applied": "これを適用する NeoDesk アプリはまだありません。",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "デバイス証明",
@@ -7720,7 +7755,18 @@
     "fact_id": "デバイスID",
     "tabs_save_hint": "ルールの種類ごとに保存ボタンがあり、個別に保存されます。",
     "save_rules": "ルールを保存",
-    "save_all_hint": "保存すると、変更した種類のルールがすべて保存されます。種類ごとに別々に保存されます。"
+    "save_all_hint": "保存すると、変更した種類のルールがすべて保存されます。種類ごとに別々に保存されます。",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8778,6 +8824,7 @@
       "fallback_hint": "どのオペレーターにもメールが届かない場合は、「設定 › Email」のアラートアドレスに送られます。",
       "folder_subject_hint": "件名にデバイスのフォルダーが入るので、メールをフォルダーで振り分けられます。",
       "no_smtp_effect": "「設定 › Email」でメール送信を設定するまで効果がありません。",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "効果がありません: 下の 2 つのオプションが両方オフの間は誰にもメールが届きません。"
     },
     "targets": {
@@ -10453,7 +10500,10 @@
     "updates_consequence": "新しい数は次の更新の後に適用されます。",
     "updates_title": "更新前",
     "where": "保存先",
-    "where_help": "NeoDesk のデータフォルダー、または任意のフォルダー。ネットワーク共有は、先にオペレーティングシステムでマウントしておく必要があります。"
+    "where_help": "NeoDesk のデータフォルダー、または任意のフォルダー。ネットワーク共有は、先にオペレーティングシステムでマウントしておく必要があります。",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "NeoDesk アプリにサインイン",

@@ -1,11 +1,11 @@
 <!--
-  The one template of a settings page (PATTERN.md rule 10):
+  The one template of a settings page (PATTERN.md rule 10, with
+  settings-pass-2.md rules G and H):
 
     title and one-line purpose
-    the save-model line ("Changes are saved when you press Save.")
-    the scope picker (role, organization), before anything it changes
+    the scope picker (role, organization) and its facts, before anything it changes
     the summary (side column from 1200 px; under the scope before that)
-    the filter and section links (pages with many settings)
+    the filter and section links in one row (pages with many settings)
     the groups
     the ChangesBar
 
@@ -21,9 +21,9 @@
         {#snippet bar()}<ChangesBar {draft} onsave={save} />{/snippet}
     </SettingsPage>
 
-  saveModel: "draft" (edit, then save), "instant" (the page's controls
-  apply at once; Your account > Preferences only) or "none" (the page has
-  only actions and facts).
+  saveModel: "draft" (edit, then save; the save bar says so once there is
+  a change), "instant" (the page's controls apply at once, said once;
+  Your account > Preferences only) or "none" (only actions and facts).
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';

@@ -512,6 +512,7 @@
     "strategy_deleted": "Szabály törölve",
     "strategy_not_found": "Ez a szabály már nem létezik.",
     "no_strategies": "Még nincsenek szabályok. Adjon hozzá egyet, hogy a kiválasztott felhasználóknál és eszközökön be- vagy kikapcsolhassa a kliens funkcióit.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Szabályok betöltése…",
     "groups_saved": "Eszközcsoportok mentve",
     "group_membership_added": "Hozzáadva a csoporthoz",
@@ -1088,7 +1089,8 @@
       "alert_n": "{n}. riasztási e-mail",
       "alert_add": "Cím hozzáadása",
       "err_address": "Ez nem e-mail-cím. Például ops@example.com.",
-      "err_host_alone": "Csak a gépnevet vagy az IP-címet adja meg, port nélkül. Például smtp.example.com."
+      "err_host_alone": "Csak a gépnevet vagy az IP-címet adja meg, port nélkül. Például smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Keresés a beállításokban…",
@@ -1258,6 +1260,7 @@
       "branding_desc": "A konzol, a bejelentkezési oldal és a letöltési oldal megjelenése mindenki számára.",
       "auth_desc": "Az Ön saját jelszava és kétlépcsős bejelentkezése, valamint az, hogy mindenki hogyan jelentkezik be erre a szerverre.",
       "auth_desc_viewer": "Az Ön jelszava és kétlépcsős bejelentkezése.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Töltsön le egy másolatot mindarról, amire ennek a szervernek szüksége van, készítsen másolatokat ütemezetten, vagy állítson vissza egy másolatból.",
       "updates_desc": "Újabb NeoDesk-verzió keresése és telepítése.",
       "email_desc": "A levelezőszerver, amelyen keresztül a konzol a riasztásokat és értesítéseket küldi.",
@@ -1395,7 +1398,11 @@
       "conn_no_effect_operator": "Már érvényben van: a Csak az eszközökhöz csatlakozni jogosult fiókok indíthatnak munkamenetet beállítás ezt a szabályt is magában foglalja.",
       "conn_no_effect_signed_in": "Nincs hatása, amíg csak bejelentkezett alkalmazások indíthatnak munkamenetet.",
       "endpoint_auto_short": "Automatikusan megtalálva",
-      "endpoint_auto_note": "Üres mező esetén a kliensek az automatikusan megtalált címet kapják, amely az Amit a kliensek most kapnak alatt látható."
+      "endpoint_auto_note": "Üres mező esetén a kliensek az automatikusan megtalált címet kapják, amely az Amit a kliensek most kapnak alatt látható.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Az alapértelmezett megjelenés mindenkinek, aki ezt a konzolt használja.",
@@ -1708,7 +1715,8 @@
       "tools_console": "A konzol töltötte le",
       "tools_missing": "Nincs telepítve",
       "channel_now": "Most: {channel}. {installs}.",
-      "channel_applies": "A frissítések következő keresésére érvényes. Semmi sem települ, amíg nem kattint a Telepítés gombra."
+      "channel_applies": "A frissítések következő keresésére érvényes. Semmi sem települ, amíg nem kattint a Telepítés gombra.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Válasszon egy fájlt a megtekintéséhez és szerkesztéséhez. Minden mentés megőrzi az előző verzió másolatát.",
@@ -1736,6 +1744,7 @@
       "local_warning": "Ezek a címek csak ezen a gépen működnek. Más gépek és telefonok nem érik el őket. Adja meg a szerver címét a Nyilvános kliens végpontok résznél.",
       "preview_title": "Előnézet",
       "preview_note": "A konzol az oldalon választott beállításokkal. Mentéssel lépnek életbe.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Recepciós gép",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Téma: {theme}. Kiemelőszín: {accent}.",
@@ -1815,7 +1824,8 @@
       "rdclient_bg_help": "Ami az eszközlista mögött látszik. A(z) „{inherit}” a konzol hátterét használja.",
       "picture_kb": "Kép, {kb} KB",
       "website_help": "Teljes cím, például https://example.com.",
-      "console_preview": "Konzol előnézete"
+      "console_preview": "Konzol előnézete",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Mely új eszközök csatlakozhatnak ehhez a szerverhez, és hogyan.",
@@ -1859,7 +1869,8 @@
       "group_filter_help": "Hogyan találhatók meg egy személy csoportjai, a személy DN-je helyén {{dn}}. Például (member={{dn}}).",
       "group_attr_help": "A szereptérképezés bejegyzései a DN-en vagy CN-en kívül ezzel az attribútummal is megnevezhetnek egy csoportot. Például cn.",
       "default_role_help": "Azoknak a személyeknek a szerepköre, akiknek csoportjai nem egyeznek az alábbi térképezés egyik bejegyzésével sem.",
-      "role_map_help": "Csoportonként egy bejegyzés: a csoport DN-je vagy neve, és a szerepkör, amelyet a tagjai kapnak. Például CN=NeoDesk Admins,OU=Groups,DC=example,DC=com és Rendszergazda."
+      "role_map_help": "Csoportonként egy bejegyzés: a csoport DN-je vagy neve, és a szerepkör, amelyet a tagjai kapnak. Például CN=NeoDesk Admins,OU=Groups,DC=example,DC=com és Rendszergazda.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Egyszeri bejelentkezés",
@@ -1895,12 +1906,16 @@
       "roles_note": "Milyen szerepkört kapnak az emberek a szolgáltatónál lévő csoportjaik alapján.",
       "roles_effect": "A személy minden szolgáltatón keresztüli bejelentkezéskor megkapja a szerepkört.",
       "default_role_help": "Azoknak a személyeknek a szerepköre, akiknek csoportjai nem egyeznek az alábbi térképezés egyik bejegyzésével sem.",
-      "role_map_help": "Csoportonként egy bejegyzés: a csoport úgy, ahogy a szolgáltató nevezi, és a szerepkör, amelyet a tagjai kapnak. Például neodesk-admins és Rendszergazda."
+      "role_map_help": "Csoportonként egy bejegyzés: a csoport úgy, ahogy a szolgáltató nevezi, és a szerepkör, amelyet a tagjai kapnak. Például neodesk-admins és Rendszergazda.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Csoport hozzáadása, átnevezése és eltávolítása azonnal mentődik. A már telepített eszközök a csoportjukban maradnak.",
       "install_note": "Töltse le egy csoport .msh fájlját, és telepítse vele a MeshAgentet az eszközre.",
-      "msh_name_help": "A MeshAgent ezt a nevet mutatja a szerverhez. Csak a letöltött fájlba kerül, nem mentődik. A fájl a default azonosítójú csoporthoz szól; más csoporthoz használja a sorában lévő menüt."
+      "msh_name_help": "A MeshAgent ezt a nevet mutatja a szerverhez. Csak a letöltött fájlba kerül, nem mentődik. A fájl a default azonosítójú csoporthoz szól; más csoporthoz használja a sorában lévő menüt.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4448,7 +4463,13 @@
     "section_alert": "Riasztás",
     "saving": "Mentés…",
     "rules_checked": "A szabályokat az értékek beérkezésekor ellenőrzi a szerver: a processzort és a memóriát az eszköz minden használati jelentésekor, a lemezhasználatot a leltárával, a tétlen időt a tevékenységi jelentésével, az offline időt pedig percenként egyszer. Az egyéni szabályokat nem ellenőrzi.",
-    "custom_not_checked": "Az egyéni szabálynak nincs olyan értéke, amelyet a szerver mérni tudna, ezért magától nem vált ki riasztást."
+    "custom_not_checked": "Az egyéni szabálynak nincs olyan értéke, amelyet a szerver mérni tudna, ezért magától nem vált ki riasztást.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Fájlátvitel",
@@ -4763,7 +4784,13 @@
     "section_covers": "Mire vonatkozik",
     "policy_sheet_desc": "Mely átvitelekre vonatkozik az irányelv, és az eszközök letiltják, naplózzák vagy engedélyezik-e őket.",
     "saving": "Mentés…",
-    "older_events": "Régebbi események"
+    "older_events": "Régebbi események",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Jelentések",
@@ -6017,6 +6044,7 @@
     "max_session_invalid": "Adjon meg egész számú percet, 0-t vagy többet.",
     "policy_none": "Nincs szabály: minden eszköz megtartja a saját beállítását.",
     "settings_tab_note": "Ami most erre a szervezetre érvényes. Minden érték ott módosítható, ahol be van állítva: az irányelvek az Irányelvek oldalon, a közös címjegyzék a Címjegyzék lapon.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Hogyan működnek a távoli munkamenetek a szervezet eszközein.",
     "policies_group_effect": "Az eszközök akkor kapják meg a módosítást, amikor legközelebb lekérik a szervertől az irányelvüket.",
     "open_org_policies": "A szervezet irányelveinek megnyitása",
@@ -6031,7 +6059,8 @@
     "danger_zone": "Veszélyzóna",
     "name_hint": "Megjelenik a szervezet oldalán, a listákban és a tagjainak.",
     "slug_changed": "Azoknak a bejelentkezéseknek, amelyek a rövid nevével nevezik meg a szervezetet, mentés után az új név kell.",
-    "policy_set": "Ehhez a szervezethez beállítva."
+    "policy_set": "Ehhez a szervezethez beállítva.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Végponttól végpontig titkosítva",
@@ -6646,7 +6675,13 @@
     "sound_today": "Ha már most ki akarja kapcsolni a hangot a munkamenetekben, használjon az Eszközök alatt egy hozzáférési szabályt kikapcsolt Hanggal, vagy kapcsolja ki a Hangot egy személy konzolhozzáférésében.",
     "open_access_rules": "Hozzáférési szabályok megnyitása",
     "remove_group": "A csoport minden szabályának eltávolítása",
-    "row_not_applied": "Még egyetlen NeoDesk-alkalmazás sem alkalmazza."
+    "row_not_applied": "Még egyetlen NeoDesk-alkalmazás sem alkalmazza.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Eszköz tanúsítvány",
@@ -7726,7 +7761,18 @@
     "fact_id": "Eszközazonosító",
     "tabs_save_hint": "Minden szabálytípusnak saját Mentés gombja van, és külön mentődik.",
     "save_rules": "Szabályok mentése",
-    "save_all_hint": "A Mentés minden módosított szabályfajtát elment. Minden fajta külön mentődik."
+    "save_all_hint": "A Mentés minden módosított szabályfajtát elment. Minden fajta külön mentődik.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8784,6 +8830,7 @@
       "fallback_hint": "Ha egyetlen operátor sem kapja meg az e-mailt, az a Beállítások › Email alatti riasztási címre megy.",
       "folder_subject_hint": "A tárgy megnevezi az eszköz mappáját, így az e-mailek eszerint rendezhetők.",
       "no_smtp_effect": "Nincs hatása, amíg az e-mail-küldés nincs beállítva a Beállítások › Email alatt.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Nincs hatása: senki sem kapja meg az e-mailt, amíg mindkét lenti lehetőség ki van kapcsolva."
     },
     "targets": {
@@ -10459,7 +10506,10 @@
     "updates_consequence": "Az új szám a következő frissítés után érvényes.",
     "updates_title": "Frissítések előtt",
     "where": "Hová mentsen",
-    "where_help": "A NeoDesk adatmappája vagy egy saját mappa. A hálózati megosztást előbb az operációs rendszernek csatolnia kell."
+    "where_help": "A NeoDesk adatmappája vagy egy saját mappa. A hálózati megosztást előbb az operációs rendszernek csatolnia kell.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Bejelentkezés a NeoDesk alkalmazásba",

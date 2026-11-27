@@ -512,6 +512,7 @@
     "strategy_deleted": "Правило видалено",
     "strategy_not_found": "Цього правила більше не існує.",
     "no_strategies": "Правил ще немає. Додайте правило, щоб вмикати або вимикати функції клієнта для вибраних користувачів і пристроїв.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Завантаження правил…",
     "groups_saved": "Групи пристроїв збережено",
     "group_membership_added": "Додано до групи",
@@ -1088,7 +1089,8 @@
       "alert_n": "Пошта для сповіщень {n}",
       "alert_add": "Додати адресу",
       "err_address": "Це не адреса електронної пошти. Наприклад ops@example.com.",
-      "err_host_alone": "Введіть лише ім'я хоста або IP-адресу, без порту. Наприклад smtp.example.com."
+      "err_host_alone": "Введіть лише ім'я хоста або IP-адресу, без порту. Наприклад smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Пошук у налаштуваннях…",
@@ -1258,6 +1260,7 @@
       "branding_desc": "Як консоль, сторінка входу і сторінка завантаження виглядають для всіх.",
       "auth_desc": "Ваш власний пароль і двоетапний вхід, а також те, як усі входять на цей сервер.",
       "auth_desc_viewer": "Ваш пароль і двоетапний вхід.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Завантажте копію всього, що потрібно цьому серверу, створюйте копії за розкладом або відновлюйте з копії.",
       "updates_desc": "Перевірте наявність новішої версії NeoDesk і встановіть її.",
       "email_desc": "Поштовий сервер, через який консоль надсилає сповіщення та повідомлення.",
@@ -1395,7 +1398,11 @@
       "conn_no_effect_operator": "Уже діє: Лише облікові записи, яким дозволено підключатися до пристроїв, можуть починати сеанси включає це правило.",
       "conn_no_effect_signed_in": "Не діє, поки сеанси можуть починати лише застосунки з виконаним входом.",
       "endpoint_auto_short": "Знайдено автоматично",
-      "endpoint_auto_note": "Порожнє поле дає клієнтам автоматично знайдену адресу, показану в розділі Що зараз отримують клієнти."
+      "endpoint_auto_note": "Порожнє поле дає клієнтам автоматично знайдену адресу, показану в розділі Що зараз отримують клієнти.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Стандартний вигляд для всіх, хто користується цією консоллю.",
@@ -1708,7 +1715,8 @@
       "tools_console": "Завантажено консоллю",
       "tools_missing": "Не встановлено",
       "channel_now": "Зараз: {channel}. {installs}.",
-      "channel_applies": "Діє для наступної перевірки оновлень. Нічого не встановлюється, доки ви не натиснете Встановити."
+      "channel_applies": "Діє для наступної перевірки оновлень. Нічого не встановлюється, доки ви не натиснете Встановити.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Виберіть файл, щоб переглянути й відредагувати його. Кожне збереження залишає копію попередньої версії.",
@@ -1736,6 +1744,7 @@
       "local_warning": "Ці адреси працюють лише на цьому комп'ютері. Інші комп'ютери й телефони до них не дістануться. Введіть адресу сервера в розділі «Публічні кінцеві точки клієнта».",
       "preview_title": "Попередній перегляд",
       "preview_note": "Консоль із вибором на цій сторінці. Збережіть, щоб застосувати.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "ПК на рецепції",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Тема: {theme}. Колір акценту: {accent}.",
@@ -1815,7 +1824,8 @@
       "rdclient_bg_help": "Що видно за списком пристроїв. «{inherit}» використовує фон консолі.",
       "picture_kb": "Зображення, {kb} КБ",
       "website_help": "Повна адреса, наприклад https://example.com.",
-      "console_preview": "Попередній перегляд панелі"
+      "console_preview": "Попередній перегляд панелі",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Які нові пристрої можуть приєднатися до цього сервера, і як.",
@@ -1859,7 +1869,8 @@
       "group_filter_help": "Як знайти групи людини, з {{dn}} на місці DN людини. Наприклад (member={{dn}}).",
       "group_attr_help": "Записи відображення ролей можуть називати групу цим атрибутом, окрім її DN або CN. Наприклад cn.",
       "default_role_help": "Роль людей, чиї групи не збігаються з жодним записом відображення нижче.",
-      "role_map_help": "Один запис на групу: група за DN або назвою і роль, яку отримують її учасники. Наприклад CN=NeoDesk Admins,OU=Groups,DC=example,DC=com з роллю Адміністратор."
+      "role_map_help": "Один запис на групу: група за DN або назвою і роль, яку отримують її учасники. Наприклад CN=NeoDesk Admins,OU=Groups,DC=example,DC=com з роллю Адміністратор.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Єдиний вхід",
@@ -1895,12 +1906,16 @@
       "roles_note": "Яку роль отримують люди залежно від своїх груп у постачальника.",
       "roles_effect": "Людина отримує роль під час кожного входу через постачальника.",
       "default_role_help": "Роль людей, чиї групи не збігаються з жодним записом відображення нижче.",
-      "role_map_help": "Один запис на групу: група так, як її називає постачальник, і роль, яку отримують її учасники. Наприклад neodesk-admins з роллю Адміністратор."
+      "role_map_help": "Один запис на групу: група так, як її називає постачальник, і роль, яку отримують її учасники. Наприклад neodesk-admins з роллю Адміністратор.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Додавання, перейменування й видалення групи зберігаються одразу. Уже встановлені пристрої залишаються у своїй групі.",
       "install_note": "Завантажте файл .msh групи й установіть з ним MeshAgent на пристрій.",
-      "msh_name_help": "MeshAgent показує цю назву для сервера. Вона потрапляє лише в завантажений файл і не зберігається. Файл для групи з ID default; для іншої групи скористайтеся меню в її рядку."
+      "msh_name_help": "MeshAgent показує цю назву для сервера. Вона потрапляє лише в завантажений файл і не зберігається. Файл для групи з ID default; для іншої групи скористайтеся меню в її рядку.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4448,7 +4463,13 @@
     "section_alert": "Сповіщення",
     "saving": "Збереження…",
     "rules_checked": "Правила перевіряються, щойно надходять значення: процесор і пам'ять з кожним звітом про використання від пристрою, використання диска з його інвентаризацією, час простою з його звітом про активність, а час офлайн раз на хвилину. Власні правила не перевіряються.",
-    "custom_not_checked": "Власне правило не має значення, яке сервер може виміряти, тому саме воно сповіщень не створює."
+    "custom_not_checked": "Власне правило не має значення, яке сервер може виміряти, тому саме воно сповіщень не створює.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Передача файлів",
@@ -4763,7 +4784,13 @@
     "section_covers": "Що охоплює",
     "policy_sheet_desc": "Які передавання охоплює політика і чи пристрої блокують, записують або дозволяють їх.",
     "saving": "Збереження…",
-    "older_events": "Старіші події"
+    "older_events": "Старіші події",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Звіти",
@@ -6017,6 +6044,7 @@
     "max_session_invalid": "Введіть ціле число хвилин, 0 або більше.",
     "policy_none": "Без правила: кожен пристрій зберігає власне налаштування.",
     "settings_tab_note": "Що зараз діє для цієї організації. Кожне значення змінюється там, де його задано: політики на сторінці Політики, спільну адресну книгу на вкладці Адресна книга.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Як працюють віддалені сеанси на пристроях цієї організації.",
     "policies_group_effect": "Пристрої отримують зміну, коли наступного разу попросять у сервера свою політику.",
     "open_org_policies": "Відкрити політики цієї організації",
@@ -6031,7 +6059,8 @@
     "danger_zone": "Небезпечна зона",
     "name_hint": "Показується на сторінці цієї організації, у списках і її учасникам.",
     "slug_changed": "Входи, що називають організацію її короткою назвою, після збереження потребуватимуть нової.",
-    "policy_set": "Задано для цієї організації."
+    "policy_set": "Задано для цієї організації.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Наскрізне шифрування",
@@ -6646,7 +6675,13 @@
     "sound_today": "Щоб уже зараз вимкнути звук у сеансах, використайте правило доступу з вимкненим Звуком у Пристрої або вимкніть Звук у доступі людини до консолі.",
     "open_access_rules": "Відкрити правила доступу",
     "remove_group": "Видалити всі правила цієї групи",
-    "row_not_applied": "Жоден застосунок NeoDesk ще не застосовує це."
+    "row_not_applied": "Жоден застосунок NeoDesk ще не застосовує це.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Атестація пристрою",
@@ -7726,7 +7761,18 @@
     "fact_id": "ID пристрою",
     "tabs_save_hint": "Кожен вид правил має власну кнопку «Зберегти» і зберігається окремо.",
     "save_rules": "Зберегти правила",
-    "save_all_hint": "Збереження зберігає кожен змінений вами вид правил. Кожен вид зберігається окремо."
+    "save_all_hint": "Збереження зберігає кожен змінений вами вид правил. Кожен вид зберігається окремо.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8784,6 +8830,7 @@
       "fallback_hint": "Коли лист не отримує жоден оператор, він іде на адресу для сповіщень у Налаштування › Email.",
       "folder_subject_hint": "Тема називає папку пристрою, щоб листи можна було за нею сортувати.",
       "no_smtp_effect": "Не діє, доки надсилання пошти не налаштовано в Налаштування › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Не діє: ніхто не отримує лист, поки обидва варіанти нижче вимкнено."
     },
     "targets": {
@@ -10459,7 +10506,10 @@
     "updates_consequence": "Нова кількість діє після наступного оновлення.",
     "updates_title": "Перед оновленнями",
     "where": "Куди зберігати",
-    "where_help": "Папка даних NeoDesk або власна папка. Мережеву папку спершу має змонтувати операційна система."
+    "where_help": "Папка даних NeoDesk або власна папка. Мережеву папку спершу має змонтувати операційна система.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Увійти в застосунок NeoDesk",

@@ -506,6 +506,7 @@
     "strategy_deleted": "Pravidlo smazáno",
     "strategy_not_found": "Toto pravidlo už neexistuje.",
     "no_strategies": "Zatím žádná pravidla. Přidejte pravidlo, chcete-li zapínat nebo vypínat funkce klienta pro vybrané uživatele a zařízení.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Načítání pravidel…",
     "groups_saved": "Skupiny zařízení uloženy",
     "group_membership_added": "Přidáno do skupiny",
@@ -1082,7 +1083,8 @@
       "alert_n": "E-mail pro upozornění {n}",
       "alert_add": "Přidat adresu",
       "err_address": "Toto není e-mailová adresa. Například ops@example.com.",
-      "err_host_alone": "Zadejte jen název hostitele nebo IP adresu, bez portu. Například smtp.example.com."
+      "err_host_alone": "Zadejte jen název hostitele nebo IP adresu, bez portu. Například smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Hledat v nastavení…",
@@ -1252,6 +1254,7 @@
       "branding_desc": "Jak konzole, přihlašovací stránka a stránka ke stažení vypadají pro všechny.",
       "auth_desc": "Vaše vlastní heslo a dvoufázové přihlášení a způsob, jakým se k tomuto serveru přihlašují všichni.",
       "auth_desc_viewer": "Vaše heslo a dvoufázové přihlášení.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Stáhněte si kopii všeho, co tento server potřebuje, vytvářejte kopie podle plánu nebo z některé obnovte data.",
       "updates_desc": "Vyhledat novější verzi NeoDesk a nainstalovat ji.",
       "email_desc": "Poštovní server, přes který konzole odesílá upozornění a oznámení.",
@@ -1389,7 +1392,11 @@
       "conn_no_effect_operator": "Už platí: Relace mohou zahájit jen účty, které se smějí připojovat k zařízením zahrnuje toto pravidlo.",
       "conn_no_effect_signed_in": "Nemá žádný účinek, dokud relace mohou zahájit jen přihlášené aplikace.",
       "endpoint_auto_short": "Zjištěno automaticky",
-      "endpoint_auto_note": "Prázdné pole dá klientům automaticky zjištěnou adresu, zobrazenou v části Co teď klienti dostávají."
+      "endpoint_auto_note": "Prázdné pole dá klientům automaticky zjištěnou adresu, zobrazenou v části Co teď klienti dostávají.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Výchozí vzhled pro všechny, kdo tuto konzoli používají.",
@@ -1702,7 +1709,8 @@
       "tools_console": "Staženo konzolí",
       "tools_missing": "Nenainstalováno",
       "channel_now": "Teď: {channel}. {installs}.",
-      "channel_applies": "Platí pro příští kontrolu aktualizací. Nic se nenainstaluje, dokud nekliknete na Instalovat."
+      "channel_applies": "Platí pro příští kontrolu aktualizací. Nic se nenainstaluje, dokud nekliknete na Instalovat.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Vyberte soubor, který chcete zobrazit a upravit. Při každém uložení se zachová kopie předchozí verze.",
@@ -1730,6 +1738,7 @@
       "local_warning": "Tyto adresy fungují jen na tomto počítači. Jiné počítače a telefony se k nim nedostanou. Zadejte adresu serveru v části Veřejné koncové body klientů.",
       "preview_title": "Náhled",
       "preview_note": "Konzole s volbami z této stránky. Uložením je použijete.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Počítač na recepci",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Motiv: {theme}. Barva zvýraznění: {accent}.",
@@ -1809,7 +1818,8 @@
       "rdclient_bg_help": "Co je vidět za seznamem zařízení. „{inherit}“ použije pozadí konzole.",
       "picture_kb": "Obrázek, {kb} KB",
       "website_help": "Celá adresa, například https://example.com.",
-      "console_preview": "Náhled konzole"
+      "console_preview": "Náhled konzole",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Která nová zařízení se smějí připojit k tomuto serveru, a jak.",
@@ -1853,7 +1863,8 @@
       "group_filter_help": "Jak se najdou skupiny osoby, s {{dn}} pro DN osoby. Například (member={{dn}}).",
       "group_attr_help": "Položky mapování rolí mohou skupinu označit tímto atributem, kromě jejího DN nebo CN. Například cn.",
       "default_role_help": "Role osob, jejichž skupiny neodpovídají žádné položce mapování níže.",
-      "role_map_help": "Jedna položka na skupinu: skupina podle DN nebo názvu a role, kterou dostanou její členové. Například CN=NeoDesk Admins,OU=Groups,DC=example,DC=com s rolí Administrátor."
+      "role_map_help": "Jedna položka na skupinu: skupina podle DN nebo názvu a role, kterou dostanou její členové. Například CN=NeoDesk Admins,OU=Groups,DC=example,DC=com s rolí Administrátor.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Jednotné přihlášení",
@@ -1889,12 +1900,16 @@
       "roles_note": "Jakou roli lidé dostanou podle svých skupin u poskytovatele.",
       "roles_effect": "Osoba dostane roli při každém přihlášení přes poskytovatele.",
       "default_role_help": "Role osob, jejichž skupiny neodpovídají žádné položce mapování níže.",
-      "role_map_help": "Jedna položka na skupinu: skupina tak, jak ji pojmenuje poskytovatel, a role, kterou dostanou její členové. Například neodesk-admins s rolí Administrátor."
+      "role_map_help": "Jedna položka na skupinu: skupina tak, jak ji pojmenuje poskytovatel, a role, kterou dostanou její členové. Například neodesk-admins s rolí Administrátor.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Přidání, přejmenování a odebrání skupiny se uloží hned. Už nainstalovaná zařízení zůstanou ve své skupině.",
       "install_note": "Stáhněte soubor .msh skupiny a nainstalujte s ním MeshAgent na zařízení.",
-      "msh_name_help": "MeshAgent zobrazuje tento název serveru. Dostane se jen do staženého souboru a neukládá se. Soubor je pro skupinu s ID default; pro jinou skupinu použijte nabídku v jejím řádku."
+      "msh_name_help": "MeshAgent zobrazuje tento název serveru. Dostane se jen do staženého souboru a neukládá se. Soubor je pro skupinu s ID default; pro jinou skupinu použijte nabídku v jejím řádku.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4442,7 +4457,13 @@
     "section_alert": "Upozornění",
     "saving": "Ukládání…",
     "rules_checked": "Pravidla se kontrolují, jakmile dorazí hodnoty: procesor a paměť s každým hlášením o využití ze zařízení, využití disku s jeho inventářem, doba nečinnosti s hlášením o aktivitě a doba offline jednou za minutu. Vlastní pravidla se nekontrolují.",
-    "custom_not_checked": "Vlastní pravidlo nemá hodnotu, kterou by server mohl měřit, takže samo žádná upozornění nevyvolá."
+    "custom_not_checked": "Vlastní pravidlo nemá hodnotu, kterou by server mohl měřit, takže samo žádná upozornění nevyvolá.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Přenos souborů",
@@ -4757,7 +4778,13 @@
     "section_covers": "Na co se vztahuje",
     "policy_sheet_desc": "Které přenosy zásada pokrývá a zda je zařízení blokují, zaznamenávají nebo povolují.",
     "saving": "Ukládání…",
-    "older_events": "Starší události"
+    "older_events": "Starší události",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Reporty",
@@ -6011,6 +6038,7 @@
     "max_session_invalid": "Zadejte celé číslo minut, 0 nebo více.",
     "policy_none": "Žádné pravidlo: každé zařízení si ponechá vlastní nastavení.",
     "settings_tab_note": "Co teď pro tuto organizaci platí. Každá hodnota se mění tam, kde je nastavena: politiky na stránce Politiky, sdílený adresář na kartě Adresář.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Jak fungují vzdálené relace na zařízeních této organizace.",
     "policies_group_effect": "Zařízení dostanou změnu, až příště požádají server o svou politiku.",
     "open_org_policies": "Otevřít politiky této organizace",
@@ -6025,7 +6053,8 @@
     "danger_zone": "Nebezpečná zóna",
     "name_hint": "Zobrazí se na stránce této organizace, v seznamech a jejím členům.",
     "slug_changed": "Přihlášení, která organizaci označují krátkým názvem, budou po uložení potřebovat nový.",
-    "policy_set": "Nastaveno pro tuto organizaci."
+    "policy_set": "Nastaveno pro tuto organizaci.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Koncové šifrování aktivní",
@@ -6640,7 +6669,13 @@
     "sound_today": "Chcete-li už teď vypnout zvuk v relacích, použijte pravidlo přístupu s vypnutým Zvukem v Zařízení, nebo vypněte Zvuk v přístupu dané osoby ke konzoli.",
     "open_access_rules": "Otevřít pravidla přístupu",
     "remove_group": "Odebrat všechna pravidla této skupiny",
-    "row_not_applied": "Žádná aplikace NeoDesk to zatím neuplatňuje."
+    "row_not_applied": "Žádná aplikace NeoDesk to zatím neuplatňuje.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Atestace zařízení",
@@ -7720,7 +7755,18 @@
     "fact_id": "ID zařízení",
     "tabs_save_hint": "Každý druh pravidla má vlastní tlačítko Uložit a ukládá se samostatně.",
     "save_rules": "Uložit pravidla",
-    "save_all_hint": "Uložení uloží každý druh pravidel, který jste změnili. Každý druh se ukládá zvlášť."
+    "save_all_hint": "Uložení uloží každý druh pravidel, který jste změnili. Každý druh se ukládá zvlášť.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8778,6 +8824,7 @@
       "fallback_hint": "Když e-mail nedostane žádný operátor, jde na adresu pro upozornění v Nastavení › Email.",
       "folder_subject_hint": "Předmět uvádí složku zařízení, aby šly e-maily podle ní třídit.",
       "no_smtp_effect": "Nemá žádný účinek, dokud není nastavené odesílání e-mailů v Nastavení › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Nemá žádný účinek: e-mail nikdo nedostane, dokud jsou obě možnosti níže vypnuté."
     },
     "targets": {
@@ -10453,7 +10500,10 @@
     "updates_consequence": "Nový počet platí po příští aktualizaci.",
     "updates_title": "Před aktualizacemi",
     "where": "Kam ukládat",
-    "where_help": "Datová složka NeoDesk, nebo vlastní složka. Síťové sdílení musí nejdřív připojit operační systém."
+    "where_help": "Datová složka NeoDesk, nebo vlastní složka. Síťové sdílení musí nejdřív připojit operační systém.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Přihlásit se do aplikace NeoDesk",

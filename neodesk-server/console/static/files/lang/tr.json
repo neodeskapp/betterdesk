@@ -512,6 +512,7 @@
     "strategy_deleted": "Kural silindi",
     "strategy_not_found": "Bu kural artık yok.",
     "no_strategies": "Henüz kural yok. Seçilen kullanıcılar ve cihazlar için istemci özelliklerini açmak veya kapatmak üzere bir kural ekleyin.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Kurallar yükleniyor…",
     "groups_saved": "Cihaz grupları kaydedildi",
     "group_membership_added": "Gruba eklendi",
@@ -1088,7 +1089,8 @@
       "alert_n": "Uyarı e-postası {n}",
       "alert_add": "Adres ekle",
       "err_address": "Bu bir e-posta adresi değil. Örneğin ops@example.com.",
-      "err_host_alone": "Yalnızca ana bilgisayar adını veya IP adresini girin, port olmadan. Örneğin smtp.example.com."
+      "err_host_alone": "Yalnızca ana bilgisayar adını veya IP adresini girin, port olmadan. Örneğin smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Ayarlarda ara…",
@@ -1258,6 +1260,7 @@
       "branding_desc": "Konsolun, oturum açma sayfasının ve indirme sayfasının herkes için görünümü.",
       "auth_desc": "Kendi parolanız ve iki adımlı oturum açma ile herkesin bu sunucuda nasıl oturum açtığı.",
       "auth_desc_viewer": "Parolanız ve iki adımlı oturum açma.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Bu sunucunun ihtiyaç duyduğu her şeyin bir kopyasını indirin, zamanlanmış kopyalar oluşturun veya bir kopyadan geri yükleyin.",
       "updates_desc": "Daha yeni bir NeoDesk sürümü olup olmadığını denetleyin ve yükleyin.",
       "email_desc": "Konsolun uyarı ve bildirim göndermek için kullandığı posta sunucusu.",
@@ -1395,7 +1398,11 @@
       "conn_no_effect_operator": "Zaten geçerli: Yalnızca cihazlara bağlanma izni olan hesaplar oturum başlatabilir bu kuralı da kapsar.",
       "conn_no_effect_signed_in": "Yalnızca oturum açmış uygulamalar oturum başlatabildiği sürece etkisi yok.",
       "endpoint_auto_short": "Otomatik bulundu",
-      "endpoint_auto_note": "Boş bir alan, istemcilere otomatik bulunan adresi verir. Bu adres İstemcilerin şu an aldıkları altında gösterilir."
+      "endpoint_auto_note": "Boş bir alan, istemcilere otomatik bulunan adresi verir. Bu adres İstemcilerin şu an aldıkları altında gösterilir.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Bu konsolu kullanan herkes için varsayılan görünüm.",
@@ -1708,7 +1715,8 @@
       "tools_console": "Konsol tarafından indirildi",
       "tools_missing": "Kurulu değil",
       "channel_now": "Şu an: {channel}. {installs}.",
-      "channel_applies": "Bir sonraki güncelleme denetiminde geçerlidir. Siz Yükle'ye tıklayana kadar hiçbir şey yüklenmez."
+      "channel_applies": "Bir sonraki güncelleme denetiminde geçerlidir. Siz Yükle'ye tıklayana kadar hiçbir şey yüklenmez.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Görüntülemek ve düzenlemek için bir dosya seçin. Her kaydetme önceki sürümün bir kopyasını saklar.",
@@ -1736,6 +1744,7 @@
       "local_warning": "Bu adresler yalnızca bu bilgisayarda çalışır. Diğer bilgisayarlar ve telefonlar onlara ulaşamaz. Sunucunun adresini Genel istemci uç noktaları bölümüne girin.",
       "preview_title": "Önizleme",
       "preview_note": "Bu sayfadaki seçimlerle konsol. Uygulamak için kaydedin.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Resepsiyon bilgisayarı",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Tema: {theme}. Vurgu rengi: {accent}.",
@@ -1815,7 +1824,8 @@
       "rdclient_bg_help": "Cihaz listesinin arkasında görünen. \"{inherit}\" konsolun arka planını kullanır.",
       "picture_kb": "Resim, {kb} KB",
       "website_help": "Tam bir adres, örneğin https://example.com.",
-      "console_preview": "Panel önizlemesi"
+      "console_preview": "Panel önizlemesi",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Bu sunucuya hangi yeni cihazların ve nasıl katılabileceği.",
@@ -1859,7 +1869,8 @@
       "group_filter_help": "Bir kişinin gruplarının nasıl bulunduğu; kişinin DN'i için {{dn}}. Örneğin (member={{dn}}).",
       "group_attr_help": "Rol eşleme kayıtları bir grubu DN'i veya CN'i dışında bu öznitelikle de belirtebilir. Örneğin cn.",
       "default_role_help": "Grupları aşağıdaki eşlemenin hiçbir kaydıyla eşleşmeyen kişilerin rolü.",
-      "role_map_help": "Grup başına bir kayıt: DN'i veya adıyla grup ve üyelerinin aldığı rol. Örneğin CN=NeoDesk Admins,OU=Groups,DC=example,DC=com ile Yönetici."
+      "role_map_help": "Grup başına bir kayıt: DN'i veya adıyla grup ve üyelerinin aldığı rol. Örneğin CN=NeoDesk Admins,OU=Groups,DC=example,DC=com ile Yönetici.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Çoklu oturum açma",
@@ -1895,12 +1906,16 @@
       "roles_note": "Kişilerin sağlayıcıdaki gruplarına göre hangi rolü aldığı.",
       "roles_effect": "Kişi, sağlayıcı üzerinden her oturum açışında rolü alır.",
       "default_role_help": "Grupları aşağıdaki eşlemenin hiçbir kaydıyla eşleşmeyen kişilerin rolü.",
-      "role_map_help": "Grup başına bir kayıt: sağlayıcının verdiği adla grup ve üyelerinin aldığı rol. Örneğin neodesk-admins ile Yönetici."
+      "role_map_help": "Grup başına bir kayıt: sağlayıcının verdiği adla grup ve üyelerinin aldığı rol. Örneğin neodesk-admins ile Yönetici.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Grup eklemek, yeniden adlandırmak ve kaldırmak hemen kaydedilir. Zaten kurulu cihazlar gruplarında kalır.",
       "install_note": "Bir grubun .msh dosyasını indirin ve MeshAgent'ı bununla cihaza kurun.",
-      "msh_name_help": "MeshAgent sunucu için bu adı gösterir. Yalnızca indirilen dosyaya girer ve kaydedilmez. Dosya default kimlikli grup içindir; başka bir grup için o grubun satırındaki menüyü kullanın."
+      "msh_name_help": "MeshAgent sunucu için bu adı gösterir. Yalnızca indirilen dosyaya girer ve kaydedilmez. Dosya default kimlikli grup içindir; başka bir grup için o grubun satırındaki menüyü kullanın.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4448,7 +4463,13 @@
     "section_alert": "Uyarı",
     "saving": "Kaydediliyor…",
     "rules_checked": "Kurallar değerler geldikçe denetlenir: CPU ve bellek bir cihazın her kullanım raporuyla, disk kullanımı envanteriyle, boşta kalma süresi etkinlik raporuyla, çevrimdışı süre ise dakikada bir. Özel kurallar denetlenmez.",
-    "custom_not_checked": "Özel bir kuralın sunucunun ölçebileceği bir değeri yoktur, bu yüzden kendi başına uyarı oluşturmaz."
+    "custom_not_checked": "Özel bir kuralın sunucunun ölçebileceği bir değeri yoktur, bu yüzden kendi başına uyarı oluşturmaz.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Dosya Aktarımı",
@@ -4763,7 +4784,13 @@
     "section_covers": "Neleri kapsar",
     "policy_sheet_desc": "Politikanın hangi aktarımları kapsadığı ve cihazların bunları engelleyip kaydedip izin verip vermediği.",
     "saving": "Kaydediliyor…",
-    "older_events": "Daha eski olaylar"
+    "older_events": "Daha eski olaylar",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Raporlar",
@@ -6017,6 +6044,7 @@
     "max_session_invalid": "0 veya daha büyük, tam sayı olarak dakika girin.",
     "policy_none": "Kural yok: her cihaz kendi ayarını korur.",
     "settings_tab_note": "Bu kuruluş için şu an geçerli olanlar. Her değer ayarlandığı yerde değiştirilir: politikalar Politikalar sayfasında, paylaşılan adres defteri Adres defteri sekmesinde.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Bu kuruluşun cihazlarında uzak oturumların nasıl çalıştığı.",
     "policies_group_effect": "Cihazlar, politikalarını sunucudan bir sonraki istediklerinde değişikliği alır.",
     "open_org_policies": "Bu kuruluşun politikalarını aç",
@@ -6031,7 +6059,8 @@
     "danger_zone": "Tehlikeli bölge",
     "name_hint": "Bu kuruluşun sayfasında, listelerde ve üyelerine gösterilir.",
     "slug_changed": "Kuruluşu kısa adıyla belirten oturum açmalar, kaydettikten sonra yeni adı gerektirir.",
-    "policy_set": "Bu kuruluş için ayarlandı."
+    "policy_set": "Bu kuruluş için ayarlandı.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Uçtan uca şifrelenmiş",
@@ -6646,7 +6675,13 @@
     "sound_today": "Oturumlarda sesi bugünden kapatmak için Cihazlar altında Ses kapalı olan bir erişim kuralı kullanın veya bir kişinin konsol erişiminde Ses'i kapatın.",
     "open_access_rules": "Erişim kurallarını aç",
     "remove_group": "Bu grubun tüm kurallarını kaldır",
-    "row_not_applied": "Henüz hiçbir NeoDesk uygulaması bunu uygulamıyor."
+    "row_not_applied": "Henüz hiçbir NeoDesk uygulaması bunu uygulamıyor.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Cihaz Onayı",
@@ -7726,7 +7761,18 @@
     "fact_id": "Cihaz kimliği",
     "tabs_save_hint": "Her kural türünün kendi Kaydet düğmesi vardır ve ayrı kaydedilir.",
     "save_rules": "Kuralları kaydet",
-    "save_all_hint": "Kaydet, değiştirdiğiniz her kural türünü kaydeder. Her tür ayrı kaydedilir."
+    "save_all_hint": "Kaydet, değiştirdiğiniz her kural türünü kaydeder. Her tür ayrı kaydedilir.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8784,6 +8830,7 @@
       "fallback_hint": "Hiçbir operatör e-postayı almazsa, e-posta Ayarlar › Email altındaki uyarı adresine gider.",
       "folder_subject_hint": "Konu, cihazın klasörünü belirtir; böylece e-postalar ona göre sıralanabilir.",
       "no_smtp_effect": "E-posta gönderme Ayarlar › Email altında ayarlanana kadar etkisi yok.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Etkisi yok: aşağıdaki iki seçenek de kapalıyken kimse e-postayı almaz."
     },
     "targets": {
@@ -10459,7 +10506,10 @@
     "updates_consequence": "Yeni sayı bir sonraki güncellemeden sonra geçerli olur.",
     "updates_title": "Güncellemelerden önce",
     "where": "Nereye kaydedilsin",
-    "where_help": "NeoDesk veri klasörü veya kendi klasörünüz. Ağ paylaşımı önce işletim sistemi tarafından bağlanmalıdır."
+    "where_help": "NeoDesk veri klasörü veya kendi klasörünüz. Ağ paylaşımı önce işletim sistemi tarafından bağlanmalıdır.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "NeoDesk uygulamasında oturum açın",

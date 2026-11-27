@@ -2,8 +2,9 @@
  * The policy form without a DOM. The Policies page edits one flat draft of
  * every setting ("connection.mode", "features.allow_audio"), each either a
  * value or null: null is "no rule here" (each device keeps its own
- * setting, or the server's value applies). Nothing is filled in that the
- * organization did not store.
+ * setting, or the server's value applies), which each control shows as
+ * its "Not set" choice. Nothing is filled in that the organization did
+ * not store.
  *
  * Saving writes only the groups that changed: PUT with the settings that
  * have a rule, DELETE when none is left. Undo writes the previous group
@@ -109,31 +110,6 @@ export function valuesFromResolved(r: ResolvedPolicies | null): PolicyDraft {
 				: null;
 	}
 	return out;
-}
-
-/**
- * Where "Set for this organization" starts when it has no value yet: the
- * value in force without a rule. The server's own value where there is
- * one; otherwise the plainest value the setting takes (off, the first
- * choice, the lowest number, no entries), which the save bar lists as an
- * unsaved change before anything is written.
- */
-export function startValue(field: string, r: ResolvedPolicies | null): unknown {
-	const kind = kindOf(field);
-	const [group, name] = split(field);
-	const server = r?.[group]?.fields[name]?.server_value;
-	switch (kind?.kind) {
-		case 'switch':
-			return typeof server === 'boolean' ? server : false;
-		case 'choice':
-			return typeof server === 'string' && kind.options.includes(server) ? server : kind.options[0];
-		case 'whole':
-			return typeof server === 'number' ? server : kind.min;
-		case 'list':
-			return Array.isArray(server) ? server.map(String) : [];
-		default:
-			return null;
-	}
 }
 
 const same = (a: unknown, b: unknown) => a === b || JSON.stringify(a) === JSON.stringify(b);

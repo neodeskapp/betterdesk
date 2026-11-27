@@ -8,14 +8,18 @@
   NeoDesk app applies them yet (GET /api/panel/policies/<org>/resolved,
   device_app_applies).
 
-  Every setting shows what applies now: a rule set for this organization,
-  the server's value (Always connect through a relay: the connection
-  strategy) or no rule. "Set for this organization" and "Remove the rule"
-  are explicit; an unset setting has no value in a control. Edit, then
+  Every setting's control is always there, with "not set" inside it
+  (settings-pass-2.md rule B): a select whose first choice is "Not set", a
+  Not set / On / Off choice for on/off settings ("Server value" first for
+  Always connect through a relay, whose server value and its page are
+  named under it), an empty number field or list with "Not set" beside
+  it. One click sets a rule; "Remove the rule" beside a set control takes
+  it away. A set row carries the accent rule. A note that holds for a
+  whole group is said once on the group, never on its rows. Edit, then
   save: Save writes only the groups that changed (PUT with the settings
   that have a rule, DELETE when none is left), the toast names the changes
-  and offers Undo. "Remove all rules of this group" clears one group at
-  once, after a question.
+  and offers Undo. "Remove all rules of this group" shows only on a group
+  that has a rule and clears it at once, after a question.
 
   URL: the organization is in the path; choosing another replaces the
   address. With a single organization it opens without one. An unknown ID
@@ -59,7 +63,6 @@
 		rowId,
 		SECTION_TITLE,
 		SECTIONS,
-		startValue,
 		undoWrites,
 		valuesFromResolved,
 		wholeOk,
@@ -95,7 +98,7 @@
 	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
 	import { SettingsDraft, saveAndConfirm } from '#lib/ui/settings/draft.svelte.ts';
 	import { SettingsFilter } from '#lib/ui/settings/filter.svelte.ts';
-	import InheritedValue from '#lib/ui/settings/InheritedValue.svelte';
+	import ChoiceSegments from '#lib/ui/settings/ChoiceSegments.svelte';
 	import ListEditor from '#lib/ui/settings/ListEditor.svelte';
 	import OrgPicker from '#lib/ui/settings/OrgPicker.svelte';
 	import { relayOptions, roleOptions } from '#lib/ui/settings/pickers.ts';
@@ -217,11 +220,16 @@
 
 	const onWord = $derived(policyOn());
 	const offWord = $derived(policyOff());
-	const noRuleWord = $derived(tf('policies.no_rule_word', 'no rule'));
+	const notSetWord = $derived(tf('policies.not_set_word', 'not set'));
+	/** The empty state inside a control: no rule, each device keeps its own setting */
+	const notSetOption = $derived(tf('policies.not_set_option', 'Not set (each device decides)'));
+	const notSetShort = $derived(tf('policies.not_set_short', 'Not set'));
+	const notSetList = $derived(tf('policies.not_set_list', 'Not set (no limit)'));
+	const serverValueShort = $derived(tf('policies.server_value_short', 'Server value'));
 
 	/** A value in words, for the list of changes and the toast */
 	function words(field: string, value: unknown): string {
-		return value === null || value === undefined ? noRuleWord : valueWords(field, value);
+		return value === null || value === undefined ? notSetWord : valueWords(field, value);
 	}
 
 	const draft = new SettingsDraft<PolicyDraft>(valuesFromResolved(null));
@@ -346,12 +354,17 @@
 		if (org?.id === id) deviceCount = n;
 	}
 
+	/** How many devices the policies reach; none is the fact that changes everything (rule G) */
 	const deviceLine = $derived(
 		deviceCount === undefined || deviceCount === null
 			? ''
-			: deviceCount === 1
-				? tf('policies.devices_in_org_one', '1 device is in this organization.')
-				: tf('policies.devices_in_org', '{count} devices are in this organization.', { count: deviceCount })
+			: deviceCount === 0
+				? tf('policies.devices_none', 'No device is in this organization yet, so these policies reach none.')
+				: deviceCount === 1
+					? tf('policies.devices_in_org_one', '1 device is in this organization.')
+					: tf('policies.devices_in_org', '{count} devices are in this organization.', {
+							count: deviceCount
+						})
 	);
 
 	/* ── Writing ── */
@@ -463,8 +476,8 @@
 		return resolved?.[field.slice(0, at)]?.fields[field.slice(at + 1)];
 	};
 
-	/** The sentence while the organization has no rule: the server's value or none */
-	function inherited(field: string): { text: string; href?: string; linkLabel?: string } {
+	/** Where the value comes from while the organization has no rule: the server's setting on its own page */
+	function fromServer(field: string): ValueSource | null {
 		const f = fieldOf(field);
 		if (f?.server_setting) {
 			const value =
@@ -474,6 +487,7 @@
 						? tf('policies.server_direct_allowed', 'Direct connections allowed')
 						: '';
 			return {
+				kind: 'inherited',
 				text: value
 					? tf('policies.from_server', 'From the server: {value}.', { value })
 					: tf('policies.from_server_unknown', 'From the server.'),
@@ -481,32 +495,27 @@
 				linkLabel: t(f.server_setting.label_key)
 			};
 		}
-		return { text: tf('policies.no_rule', 'No rule: each device keeps its own setting.') };
+		return null;
 	}
 
-	/**
-	 * The button that was pressed is gone once a rule is set or removed: the
-	 * focus goes to what took its place, the control or "Set for this
-	 * organization"
-	 */
-	async function focusIn(field: string) {
+	/** "Remove the rule" is gone once pressed: the focus goes to the control, now on "Not set" */
+	async function focusControl(field: string) {
 		await tick();
-		document
-			.getElementById(`${rowId(field)}-value`)
-			?.querySelector<HTMLElement>('input, select, button')
-			?.focus();
+		const el = document.getElementById(`${rowId(field)}-control`);
+		el?.focus();
 	}
 
 	const hasRule = (field: string) => draft.values[field] !== null && draft.values[field] !== undefined;
 
+	/** Set here: kept for screen readers and marks the row. The server's value: said under the row, with its page */
 	function sourceOf(field: string): ValueSource | null {
 		return hasRule(field)
 			? { kind: 'here', text: tf('policies.set_for_org', 'Set for this organization') }
-			: null;
+			: fromServer(field);
 	}
 
-	const groupStatus = (g: Section) =>
-		resolved?.[g]?.set ? t('policies.configured') : tf('policies.no_rule_here', 'No rule here');
+	/** An emptied list is no rule: an empty list limits nothing, like no rule */
+	const listValue = (list: string[]) => (list.length ? list : null);
 
 	const deviceOnly = (g: Section) =>
 		resolved?.[g]?.applied_by === 'device' && !resolved?.[g]?.device_app_applies;
@@ -525,10 +534,11 @@
 		const kind = kindOf(field);
 		return kind?.kind === 'choice' ? kind.options.map((o) => ({ value: o, label: choiceLabel(o) })) : [];
 	};
-	const switchOptions = $derived([
+	const switchOptions = (field: string) => [
+		{ value: '', label: fieldOf(field)?.server_setting ? serverValueShort : notSetShort },
 		{ value: 'on', label: onWord },
 		{ value: 'off', label: offWord }
-	]);
+	];
 
 	const sections = $derived([
 		...SECTIONS.map((s) => ({ id: `pol-${s}`, label: t(SECTION_TITLE[s]) })),
@@ -576,19 +586,23 @@
 	{#if orgsState === 'ready' && orgs.length}
 		<!-- The organization is the scope, not a setting: the settings list has no row for it -->
 		<div class="policy-scope" data-search-skip>
-			<OrgPicker
-				id="policy-org"
-				label={t('policies.select_org')}
-				hint={tf('policies.org_hint_only', 'Policies apply only to devices in this organization.')}
-				{orgs}
-				value={org?.id ?? ''}
-				placeholder={org ? undefined : t('policies.select_org_placeholder')}
-				onchange={(id) => void pickOrg(id)}
-			/>
+			<div class="scope-picker">
+				<OrgPicker
+					id="policy-org"
+					label={t('policies.select_org')}
+					{orgs}
+					value={org?.id ?? ''}
+					placeholder={org ? undefined : t('policies.select_org_placeholder')}
+					onchange={(id) => void pickOrg(id)}
+				/>
+			</div>
 			{#if org}
-				<p class="scope-line">
+				<p class={['scope-line', deviceCount === 0 && 'is-empty']}>
 					{#if deviceLine}{deviceLine}{/if}
-					{tf('policies.outside_orgs', 'Devices outside any organization get no policy.')}
+					{#if deviceCount !== 0}{tf(
+							'policies.outside_orgs',
+							'Devices outside any organization get no policy.'
+						)}{/if}
 					<a href={link(`/organizations/${encodeURIComponent(org.id)}#devices`)}
 						>{tf('policies.put_devices', 'Put devices into this organization')}</a
 					>
@@ -598,133 +612,128 @@
 	{/if}
 {/snippet}
 
-{#snippet editor(field: string, f: { id: string; describedby: string | undefined })}
+{#snippet editor(field: string, f: { id: string; describedby: string | undefined; labelledby: string })}
 	{@const kind = kindOf(field)}
 	{@const value = draft.values[field]}
+	{@const unset = value === null || value === undefined}
 	{#if kind?.kind === 'switch'}
-		<Select
+		<ChoiceSegments
 			id={f.id}
+			labelledby={f.labelledby}
 			describedby={f.describedby}
-			width="medium"
 			disabled={!canEdit}
-			options={switchOptions}
-			value={value ? 'on' : 'off'}
-			onchange={(e) => draft.set(field, (e.currentTarget as HTMLSelectElement).value === 'on')}
+			options={switchOptions(field)}
+			value={unset ? '' : value ? 'on' : 'off'}
+			onchange={(v) => draft.set(field, v === '' ? null : v === 'on')}
 		/>
 	{:else if kind?.kind === 'choice'}
 		<Select
 			id={f.id}
 			describedby={f.describedby}
 			disabled={!canEdit}
-			options={choiceOptions(field)}
-			value={String(value)}
-			onchange={(e) => draft.set(field, (e.currentTarget as HTMLSelectElement).value)}
-		/>
-	{:else if kind?.kind === 'whole'}
-		{@const bad = !wholeOk(field, value)}
-		<Input
-			id={f.id}
-			describedby={[f.describedby, bad && `${f.id}-error`].filter(Boolean).join(' ') || undefined}
-			type="number"
-			width="short"
-			min={kind.min}
-			max={kind.max}
-			step={1}
-			inputmode="numeric"
-			invalid={bad}
-			disabled={!canEdit}
-			value={value === '' ? '' : (value as number)}
-			oninput={(e) => {
-				const raw = (e.currentTarget as HTMLInputElement).value;
-				draft.set(field, raw === '' ? '' : Number(raw));
+			options={[{ value: '', label: notSetOption }, ...choiceOptions(field)]}
+			value={unset ? '' : String(value)}
+			onchange={(e) => {
+				const v = (e.currentTarget as HTMLSelectElement).value;
+				draft.set(field, v === '' ? null : v);
 			}}
 		/>
+	{:else if kind?.kind === 'whole'}
+		{@const bad = !unset && !wholeOk(field, value)}
+		<div class="number-line">
+			<Input
+				id={f.id}
+				describedby={[f.describedby, bad && `${f.id}-error`, unset && `${f.id}-unset`]
+					.filter(Boolean)
+					.join(' ') || undefined}
+				type="number"
+				width="short"
+				min={kind.min}
+				max={kind.max}
+				step={1}
+				inputmode="numeric"
+				invalid={bad}
+				disabled={!canEdit}
+				value={unset ? '' : (value as number)}
+				oninput={(e) => {
+					const raw = (e.currentTarget as HTMLInputElement).value;
+					draft.set(field, raw === '' ? null : Number(raw));
+				}}
+			/>
+			{#if unset}<span class="unset-hint" id={`${f.id}-unset`}>{notSetOption}</span>{/if}
+		</div>
 		{#if bad}<p class="field-error" id={`${f.id}-error`}>{problemText(field, '')}</p>{/if}
-	{:else if kind?.kind === 'list' && kind.entry === 'name' && roleOpts}
-		<RecordPicker
-			id={f.id}
-			legend={fieldLabel(field)}
-			describedby={f.describedby}
-			disabled={!canEdit}
-			options={roleOpts}
-			value={(value as string[]) ?? []}
-			unknownLabel={(name) => tf('policies.not_a_role', '{name} (not a role)', { name })}
-			onchange={(list) => draft.set(field, list)}
-		/>
 	{:else if kind?.kind === 'list'}
-		<ListEditor
-			id={f.id}
-			describedby={f.describedby}
-			disabled={!canEdit}
-			items={(value as string[]) ?? []}
-			onchange={(list) => draft.set(field, list)}
-			itemLabel={(n) =>
-				kind.entry === 'relay'
-					? tf('policies.relay_n', 'Relay server {n}', { n })
+		{#if unset}<p class="unset-hint list-hint">{notSetList}</p>{/if}
+		{#if kind.entry === 'name' && roleOpts}
+			<RecordPicker
+				id={f.id}
+				legend={fieldLabel(field)}
+				describedby={f.describedby}
+				disabled={!canEdit}
+				options={roleOpts}
+				value={(value as string[]) ?? []}
+				compact
+				unknownLabel={(name) => tf('policies.not_a_role', '{name} (not a role)', { name })}
+				onchange={(list) => draft.set(field, listValue(list))}
+			/>
+		{:else}
+			<ListEditor
+				id={f.id}
+				describedby={f.describedby}
+				disabled={!canEdit}
+				items={(value as string[]) ?? []}
+				onchange={(list) => draft.set(field, listValue(list))}
+				itemLabel={(n) =>
+					kind.entry === 'relay'
+						? tf('policies.relay_n', 'Relay server {n}', { n })
+						: kind.entry === 'range'
+							? tf('policies.range_n', 'IP range {n}', { n })
+							: tf('policies.role_n', 'Role {n}', { n })}
+				check={(entry) =>
+					entryOk(field, entry)
+						? ''
+						: kind.entry === 'relay'
+							? tf(
+									'policies.row_bad_relay',
+									'Not a server address. Use a host name or address, with a port if needed.'
+								)
+							: tf('policies.row_bad_range', 'Not an IP address or range.')}
+				addLabel={kind.entry === 'relay'
+					? tf('policies.add_relay', 'Add a relay server')
 					: kind.entry === 'range'
-						? tf('policies.range_n', 'IP range {n}', { n })
-						: tf('policies.role_n', 'Role {n}', { n })}
-			check={(entry) =>
-				entryOk(field, entry)
-					? ''
-					: kind.entry === 'relay'
-						? tf(
-								'policies.row_bad_relay',
-								'Not a server address. Use a host name or address, with a port if needed.'
-							)
-						: tf('policies.row_bad_range', 'Not an IP address or range.')}
-			addLabel={kind.entry === 'relay'
-				? tf('policies.add_relay', 'Add a relay server')
-				: kind.entry === 'range'
-					? tf('policies.add_range', 'Add an IP range')
-					: tf('policies.add_role', 'Add a role')}
-			quick={kind.entry === 'relay' ? relayOpts : []}
-		/>
+						? tf('policies.add_range', 'Add an IP range')
+						: tf('policies.add_role', 'Add a role')}
+				quick={kind.entry === 'relay' ? relayOpts : []}
+			/>
+		{/if}
 	{/if}
 {/snippet}
 
 {#snippet row(field: string)}
-	{@const label = fieldLabel(field)}
-	{@const from = inherited(field)}
 	<SettingRow
 		id={rowId(field)}
-		{label}
+		label={fieldLabel(field)}
 		help={help(field)}
 		keyName={field}
+		group={kindOf(field)?.kind === 'switch'}
 		source={sourceOf(field)}
 		changed={draft.isChanged(field)}
+		onreset={canEdit && hasRule(field)
+			? () => {
+					draft.set(field, null);
+					void focusControl(field);
+				}
+			: undefined}
+		resetLabel={tf('policies.remove_rule', 'Remove the rule')}
 		noEffect={field === 'network.ip_allowlist'
 			? tf(
 					'policies.ip_ranges_not_applied',
 					'Nothing applies this yet: the server stores the ranges but does not check connections against them.'
 				)
-			: deviceOnly(field.split('.')[0] as Section)
-				? tf('policies.row_not_applied', 'No NeoDesk app applies this yet.')
-				: undefined}
+			: undefined}
 	>
-		{#snippet control(f)}
-			<InheritedValue
-				id={`${rowId(field)}-value`}
-				name={label}
-				overridden={hasRule(field)}
-				inherited={from.text}
-				href={from.href}
-				linkLabel={from.linkLabel}
-				overrideLabel={tf('policies.set_for_org', 'Set for this organization')}
-				inheritLabel={tf('policies.remove_rule', 'Remove the rule')}
-				disabled={!canEdit}
-				onoverride={() => {
-					draft.set(field, startValue(field, resolved));
-					void focusIn(field);
-				}}
-				oninherit={() => {
-					draft.set(field, null);
-					void focusIn(field);
-				}}
-			>
-				{@render editor(field, f)}
-			</InheritedValue>
-		{/snippet}
+		{#snippet control(f)}{@render editor(field, f)}{/snippet}
 	</SettingRow>
 {/snippet}
 
@@ -777,7 +786,6 @@
 				title={t(SECTION_TITLE[g])}
 				description={t(`policies.${g}_desc`)}
 				consequence={groupTiming(g)}
-				status={groupStatus(g)}
 			>
 				{#snippet note()}
 					{#if deviceOnly(g)}
@@ -803,10 +811,9 @@
 					{/if}
 				{/snippet}
 				{#snippet actions()}
-					{#if canEdit}
+					{#if canEdit && resolved?.[g]?.set}
 						<Button
 							size="sm"
-							disabled={!resolved?.[g]?.set}
 							aria-label={`${tf('policies.remove_group', 'Remove all rules of this group')}: ${t(SECTION_TITLE[g])}`}
 							onclick={() => void removeGroup(g)}
 							>{tf('policies.remove_group', 'Remove all rules of this group')}</Button
@@ -839,16 +846,44 @@
 </SettingsPage>
 
 <style>
+	/* The picker and the fact that changes everything, on one line (rule G) */
 	.policy-scope {
 		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--space-2) var(--space-5);
 	}
-	.scope-line,
+	.scope-picker {
+		flex: 0 1 22rem;
+		min-width: min(100%, 16rem);
+	}
+	.scope-line {
+		flex: 1 1 24rem;
+		margin: 0;
+		padding-bottom: calc((var(--control-h) - 1.5em) / 2);
+		max-width: var(--measure);
+		color: var(--text-muted);
+	}
+	.scope-line.is-empty {
+		color: var(--warning);
+	}
 	.state-line {
 		margin: 0;
 		max-width: var(--measure);
 		color: var(--text-muted);
+	}
+	.number-line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-1) var(--space-3);
+	}
+	.unset-hint {
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+	}
+	.list-hint {
+		margin: 0 0 var(--space-1);
 	}
 	.scope-line a {
 		margin-inline-start: var(--space-1);
@@ -875,8 +910,9 @@
 	.policy-audit {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-3);
+		gap: var(--space-2);
 		min-width: 0;
+		max-width: var(--settings-max, 72rem);
 	}
 	.policy-audit h2 {
 		margin: 0;

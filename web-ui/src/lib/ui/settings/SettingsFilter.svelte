@@ -1,9 +1,10 @@
 <!--
   The filter field and the section links of a long settings page
-  (PATTERN.md rule 9). The field filters the rows of the page through the
-  SettingsFilter it gets; the links jump to the groups. When nothing
-  matches it says so with what was typed. The field sits in a search
-  landmark named like it.
+  (settings-pass-2.md rule H): one row, the field first, the links in
+  normal text after it; they wrap under it on a narrow screen. The field
+  filters the rows of the page through the SettingsFilter it gets; the
+  links jump to the groups. When nothing matches it says so with what was
+  typed. The field sits in a search landmark named like it.
 -->
 <script lang="ts">
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
@@ -25,7 +26,7 @@
 
 <div class="settings-filter" data-search-skip>
 	<!-- A search landmark: the field finds settings and is none itself -->
-	<div role="search" aria-label={name}>
+	<div class="filter-field" role="search" aria-label={name}>
 		<SearchField label={name} placeholder={name} bind:value={filter.query} />
 	</div>
 	{#if sections.length && !filter.active}
@@ -48,22 +49,28 @@
 <style>
 	.settings-filter {
 		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2) var(--space-5);
+		max-width: var(--settings-max, 72rem);
 	}
-	.settings-filter :global(.search-field) {
-		max-width: 420px;
+	.filter-field {
+		flex: 0 1 20rem;
+		min-width: min(100%, 14rem);
 	}
 	.section-links {
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-1) var(--space-4);
-		font-size: var(--text-sm);
 	}
 	.section-links a {
 		display: inline-flex;
 		align-items: center;
-		min-height: 28px;
+		min-height: 32px;
+		text-decoration: none;
+	}
+	.section-links a:hover {
+		text-decoration: underline;
 	}
 	@media (pointer: coarse) {
 		.section-links a {
@@ -71,6 +78,7 @@
 		}
 	}
 	.filter-result {
+		flex-basis: 100%;
 		margin: 0;
 		color: var(--text-muted);
 		font-size: var(--text-sm);

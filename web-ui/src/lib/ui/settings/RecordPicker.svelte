@@ -10,6 +10,10 @@
   its one-click records.
 
     <RecordPicker id="ops" legend={t('...')} options={[{ value, label, hint }]} value={list} onchange={...} />
+
+  `compact`: names only, side by side in columns, for a long list of
+  records whose names say enough (roles in a policy); the sentences stay
+  where the records are managed.
 -->
 <script module lang="ts">
 	export interface PickOption {
@@ -33,6 +37,8 @@
 		disabled?: boolean;
 		/** The words for a stored value that is no record; "{name} (no longer exists)" by default */
 		unknownLabel?: (value: string) => string;
+		/** Names only, in columns */
+		compact?: boolean;
 	}
 
 	let {
@@ -43,6 +49,7 @@
 		onchange,
 		describedby,
 		disabled = false,
+		compact = false,
 		unknownLabel = (name: string) => tf('settings_ui.gone_record', '{name} (no longer exists)', { name })
 	}: Props = $props();
 
@@ -66,13 +73,13 @@
 	}
 </script>
 
-<fieldset class="record-picker" {id} aria-describedby={describedby}>
+<fieldset class={['record-picker', compact && 'is-compact']} {id} aria-describedby={describedby}>
 	<legend class="sr-only">{legend}</legend>
 	{#each all as o (o.value)}
 		<Checkbox
 			id={`${id}-${o.value}`}
 			label={o.label}
-			hint={o.hint}
+			hint={compact ? undefined : o.hint}
 			checked={value.includes(o.value)}
 			{disabled}
 			onchange={(e) => toggle(o.value, (e.currentTarget as HTMLInputElement).checked)}
@@ -89,5 +96,10 @@
 		padding: 0;
 		border: 0;
 		min-width: 0;
+	}
+	.record-picker.is-compact {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+		gap: var(--space-1) var(--space-3);
 	}
 </style>

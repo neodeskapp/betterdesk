@@ -1,7 +1,7 @@
 <!--
-  The settings template without the page frame (PATTERN.md rule 10): the
-  save-model line, the scope picker, the summary column, the filter and
-  section links, the groups and the save bar. SettingsPage puts it in a
+  The settings template without the page frame (settings-pass-2.md rules G
+  and H): the scope picker, the summary column, the filter and section
+  links in one row, the groups and the save bar. SettingsPage puts it in a
   page of its own; a tab of Settings uses it directly, since the Settings
   page is the frame there (title, purpose, access, #links, leave guard).
 
@@ -11,10 +11,15 @@
         {#snippet bar()}<ChangesBar {draft} onsave={save} />{/snippet}
     </SettingsBody>
 
+  saveModel "draft" says nothing: the save bar appears with the first
+  change and says it. "instant" (Your account > Preferences) says once
+  that changes apply at once, since no bar will come.
+
   `top` holds what comes before the filter and the groups (a read-only
-  note, a warning about the current values). The summary is a side column
-  from 1200 px, sticky while the groups scroll on a window at least 1000 px tall; `summaryLabel` names it.
-  Below 1200 px it comes first, or after the groups with `summaryLast`.
+  note, a page-wide notice). The summary is a side column from 1200 px,
+  sticky while the groups scroll on a window at least 1000 px tall;
+  `summaryLabel` names it. Below 1200 px it comes first, or after the
+  groups with `summaryLast`.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -55,19 +60,13 @@
 		children
 	}: Props = $props();
 
-	// The filter is fixed for the page's life
-	// svelte-ignore state_referenced_locally
-	if (filter) provideFilter(filter);
+	// Rows read the filter through a getter: a page may pass it only once its data has loaded
+	provideFilter(() => filter);
 
 	const modeLine = $derived(
-		saveModel === 'draft'
-			? tf(
-					'settings_ui.model_draft',
-					'Changes are saved when you press Save. Leaving the page with unsaved changes asks first.'
-				)
-			: saveModel === 'instant'
-				? tf('settings_ui.model_instant', 'Changes here apply at once, only for you.')
-				: ''
+		saveModel === 'instant'
+			? tf('settings_ui.model_instant', 'Changes here apply at once, only for you.')
+			: ''
 	);
 </script>
 
@@ -118,16 +117,16 @@
 	.settings-body {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
-		gap: var(--space-6);
+		gap: var(--space-5);
 		align-items: start;
 	}
 	.settings-scope {
-		max-width: var(--measure);
+		max-width: var(--settings-max, 72rem);
 	}
 	.settings-main {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-6);
+		gap: var(--space-5);
 		min-width: 0;
 		container: settings-main / inline-size;
 	}
@@ -135,12 +134,15 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-1) var(--space-4);
-		font-size: var(--text-sm);
 	}
 	.section-links a {
 		display: inline-flex;
 		align-items: center;
-		min-height: 28px;
+		min-height: 32px;
+		text-decoration: none;
+	}
+	.section-links a:hover {
+		text-decoration: underline;
 	}
 	@media (pointer: coarse) {
 		.section-links a {

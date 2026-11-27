@@ -512,6 +512,7 @@
     "strategy_deleted": "Regel borttagen",
     "strategy_not_found": "Den här regeln finns inte längre.",
     "no_strategies": "Inga regler ännu. Lägg till en för att slå på eller av klientfunktioner för valda användare och enheter.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Läser in regler…",
     "groups_saved": "Enhetsgrupper har sparats",
     "group_membership_added": "Tillagd i grupp",
@@ -1088,7 +1089,8 @@
       "alert_n": "Larm-e-post {n}",
       "alert_add": "Lägg till en adress",
       "err_address": "Det här är ingen e-postadress. Till exempel ops@example.com.",
-      "err_host_alone": "Ange bara värdnamnet eller IP-adressen, utan port. Till exempel smtp.example.com."
+      "err_host_alone": "Ange bara värdnamnet eller IP-adressen, utan port. Till exempel smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Sök i inställningar…",
@@ -1258,6 +1260,7 @@
       "branding_desc": "Hur konsolen, inloggningssidan och nedladdningssidan ser ut för alla.",
       "auth_desc": "Ditt eget lösenord och tvåstegsinloggning, och hur alla loggar in på den här servern.",
       "auth_desc_viewer": "Ditt lösenord och tvåstegsinloggning.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Ladda ner en kopia av allt servern behöver, gör kopior enligt ett schema eller återställ från en kopia.",
       "updates_desc": "Sök efter en nyare version av NeoDesk och installera den.",
       "email_desc": "E-postservern som konsolen använder för att skicka larm och aviseringar.",
@@ -1395,7 +1398,11 @@
       "conn_no_effect_operator": "Gäller redan: Bara konton som får ansluta till enheter kan starta sessioner omfattar den här regeln.",
       "conn_no_effect_signed_in": "Har ingen effekt så länge bara inloggade appar kan starta sessioner.",
       "endpoint_auto_short": "Hittad automatiskt",
-      "endpoint_auto_note": "Ett tomt fält ger klienterna adressen som hittats automatiskt, som visas under Vad klienterna får nu."
+      "endpoint_auto_note": "Ett tomt fält ger klienterna adressen som hittats automatiskt, som visas under Vad klienterna får nu.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Standardutseendet för alla som använder den här konsolen.",
@@ -1708,7 +1715,8 @@
       "tools_console": "Hämtade av konsolen",
       "tools_missing": "Inte installerade",
       "channel_now": "Nu: {channel}. {installs}.",
-      "channel_applies": "Gäller nästa sökning efter uppdateringar. Inget installeras förrän du klickar på Installera."
+      "channel_applies": "Gäller nästa sökning efter uppdateringar. Inget installeras förrän du klickar på Installera.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Välj en fil för att visa och redigera den. Varje gång du sparar behålls en kopia av föregående version.",
@@ -1736,6 +1744,7 @@
       "local_warning": "De här adresserna fungerar bara på den här datorn. Andra datorer och telefoner når dem inte. Ange serverns adress under Offentliga klientändpunkter.",
       "preview_title": "Förhandsvisning",
       "preview_note": "Konsolen med valen på den här sidan. Spara för att använda dem.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "Receptionens dator",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Tema: {theme}. Accentfärg: {accent}.",
@@ -1815,7 +1824,8 @@
       "rdclient_bg_help": "Det som syns bakom enhetslistan. ”{inherit}” använder konsolens bakgrund.",
       "picture_kb": "Bild, {kb} kB",
       "website_help": "En fullständig adress, till exempel https://example.com.",
-      "console_preview": "Förhandsvisning av konsolen"
+      "console_preview": "Förhandsvisning av konsolen",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Vilka nya enheter som får ansluta sig till den här servern, och hur.",
@@ -1859,7 +1869,8 @@
       "group_filter_help": "Hur en persons grupper hittas, med {{dn}} för personens DN. Till exempel (member={{dn}}).",
       "group_attr_help": "Poster i rollkartläggningen kan ange en grupp med det här attributet, utöver dess DN eller CN. Till exempel cn.",
       "default_role_help": "Rollen för personer vars grupper inte matchar någon post i kartläggningen nedan.",
-      "role_map_help": "En post per grupp: gruppen med sitt DN eller namn, och rollen som dess medlemmar får. Till exempel CN=NeoDesk Admins,OU=Groups,DC=example,DC=com med Administratör."
+      "role_map_help": "En post per grupp: gruppen med sitt DN eller namn, och rollen som dess medlemmar får. Till exempel CN=NeoDesk Admins,OU=Groups,DC=example,DC=com med Administratör.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Enkel inloggning",
@@ -1895,12 +1906,16 @@
       "roles_note": "Vilken roll folk får, utifrån deras grupper hos leverantören.",
       "roles_effect": "En person får rollen vid varje inloggning via leverantören.",
       "default_role_help": "Rollen för personer vars grupper inte matchar någon post i kartläggningen nedan.",
-      "role_map_help": "En post per grupp: gruppen som leverantören kallar den, och rollen som dess medlemmar får. Till exempel neodesk-admins med Administratör."
+      "role_map_help": "En post per grupp: gruppen som leverantören kallar den, och rollen som dess medlemmar får. Till exempel neodesk-admins med Administratör.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Att lägga till, byta namn på och ta bort en grupp sparas direkt. Enheter som redan är installerade stannar i sin grupp.",
       "install_note": "Ladda ner en grupps .msh-fil och installera MeshAgent med den på enheten.",
-      "msh_name_help": "MeshAgent visar det här namnet för servern. Det hamnar bara i den nedladdade filen och sparas inte. Filen gäller gruppen med ID:t default; för en annan grupp, använd menyn i dess rad."
+      "msh_name_help": "MeshAgent visar det här namnet för servern. Det hamnar bara i den nedladdade filen och sparas inte. Filen gäller gruppen med ID:t default; för en annan grupp, använd menyn i dess rad.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4448,7 +4463,13 @@
     "section_alert": "Varning",
     "saving": "Sparar…",
     "rules_checked": "Reglerna kontrolleras när värdena kommer in: processor och minne vid varje användningsrapport från en enhet, diskanvändning med dess inventering, inaktiv tid med dess aktivitetsrapport och tid offline en gång i minuten. Anpassade regler kontrolleras inte.",
-    "custom_not_checked": "En anpassad regel har inget värde som servern kan mäta, så den ger inga varningar av sig själv."
+    "custom_not_checked": "En anpassad regel har inget värde som servern kan mäta, så den ger inga varningar av sig själv.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Filöverföring",
@@ -4763,7 +4784,13 @@
     "section_covers": "Vad den gäller",
     "policy_sheet_desc": "Vilka överföringar policyn gäller och om enheterna blockerar, loggar eller tillåter dem.",
     "saving": "Sparar…",
-    "older_events": "Äldre händelser"
+    "older_events": "Äldre händelser",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Rapporter",
@@ -6017,6 +6044,7 @@
     "max_session_invalid": "Ange ett helt antal minuter, 0 eller fler.",
     "policy_none": "Ingen regel: varje enhet behåller sin egen inställning.",
     "settings_tab_note": "Det som gäller för den här organisationen nu. Varje värde ändras där det är satt: policyer på sidan Policyer, den delade adressboken på fliken Adressbok.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Hur fjärrsessioner fungerar på den här organisationens enheter.",
     "policies_group_effect": "Enheterna får en ändring nästa gång de ber servern om sin policy.",
     "open_org_policies": "Öppna den här organisationens policyer",
@@ -6031,7 +6059,8 @@
     "danger_zone": "Farozon",
     "name_hint": "Visas på den här organisationens sida, i listor och för dess medlemmar.",
     "slug_changed": "Inloggningar som anger organisationen med dess korta namn behöver det nya när du har sparat.",
-    "policy_set": "Satt för den här organisationen."
+    "policy_set": "Satt för den här organisationen.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "End-to-end krypterad",
@@ -6646,7 +6675,13 @@
     "sound_today": "För att stänga av ljudet i sessioner redan i dag, använd en åtkomstregel med Ljud av under Enheter, eller stäng av Ljud i en persons konsolåtkomst.",
     "open_access_rules": "Öppna åtkomstregler",
     "remove_group": "Ta bort alla regler i den här gruppen",
-    "row_not_applied": "Ingen NeoDesk-app tillämpar detta ännu."
+    "row_not_applied": "Ingen NeoDesk-app tillämpar detta ännu.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Enhetsbekräftelse",
@@ -7726,7 +7761,18 @@
     "fact_id": "Enhets-ID",
     "tabs_save_hint": "Varje typ av regel har en egen Spara-knapp och sparas för sig.",
     "save_rules": "Spara regler",
-    "save_all_hint": "Spara sparar varje typ av regel som du har ändrat. Varje typ sparas för sig."
+    "save_all_hint": "Spara sparar varje typ av regel som du har ändrat. Varje typ sparas för sig.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8784,6 +8830,7 @@
       "fallback_hint": "När ingen operatör får e-posten går den till larmadressen under Inställningar › Email.",
       "folder_subject_hint": "Ämnesraden nämner enhetens mapp, så att e-post kan sorteras efter den.",
       "no_smtp_effect": "Har ingen effekt förrän e-postutskick är konfigurerat under Inställningar › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Har ingen effekt: ingen får e-posten så länge båda alternativen nedan är av."
     },
     "targets": {
@@ -10459,7 +10506,10 @@
     "updates_consequence": "Ett nytt antal gäller efter nästa uppdatering.",
     "updates_title": "Före uppdateringar",
     "where": "Var den ska sparas",
-    "where_help": "NeoDesks datamapp, eller en egen mapp. En nätverksresurs måste först monteras av operativsystemet."
+    "where_help": "NeoDesks datamapp, eller en egen mapp. En nätverksresurs måste först monteras av operativsystemet.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Logga in i NeoDesk-appen",

@@ -512,6 +512,7 @@
     "strategy_deleted": "Aturan dihapus",
     "strategy_not_found": "Aturan ini sudah tidak ada.",
     "no_strategies": "Belum ada aturan. Tambahkan aturan untuk menyalakan atau mematikan fitur klien bagi pengguna dan perangkat yang dipilih.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Memuat aturan…",
     "groups_saved": "Grup perangkat disimpan",
     "group_membership_added": "Ditambahkan ke grup",
@@ -1088,7 +1089,8 @@
       "alert_n": "Email peringatan {n}",
       "alert_add": "Tambah alamat",
       "err_address": "Ini bukan alamat email. Misalnya ops@example.com.",
-      "err_host_alone": "Masukkan hanya nama host atau alamat IP, tanpa port. Misalnya smtp.example.com."
+      "err_host_alone": "Masukkan hanya nama host atau alamat IP, tanpa port. Misalnya smtp.example.com.",
+      "empty_uses": "Empty uses {value}."
     },
     "ui": {
       "search_placeholder": "Cari pengaturan…",
@@ -1258,6 +1260,7 @@
       "branding_desc": "Tampilan konsol, halaman masuk, dan halaman unduhan untuk semua orang.",
       "auth_desc": "Kata sandi dan masuk dua langkah Anda sendiri, serta cara semua orang masuk ke server ini.",
       "auth_desc_viewer": "Kata sandi dan masuk dua langkah Anda.",
+      "auth_rules_desc": "How long RustDesk apps stay signed in, the sign-in rules for every console account, and the security mails people get.",
       "backup_desc": "Unduh salinan semua yang diperlukan server ini, buat salinan sesuai jadwal, atau pulihkan dari salinan.",
       "updates_desc": "Periksa versi NeoDesk yang lebih baru dan instal.",
       "email_desc": "Server email yang digunakan konsol untuk mengirim peringatan dan notifikasi.",
@@ -1395,7 +1398,11 @@
       "conn_no_effect_operator": "Sudah berlaku: Hanya akun yang boleh terhubung ke perangkat yang dapat memulai sesi sudah mencakup aturan ini.",
       "conn_no_effect_signed_in": "Tidak berpengaruh selama hanya aplikasi yang sudah masuk yang dapat memulai sesi.",
       "endpoint_auto_short": "Ditemukan otomatis",
-      "endpoint_auto_note": "Kolom kosong memberi klien alamat yang ditemukan otomatis, yang tampil di bawah Yang diterima klien sekarang."
+      "endpoint_auto_note": "Kolom kosong memberi klien alamat yang ditemukan otomatis, yang tampil di bawah Yang diterima klien sekarang.",
+      "endpoint_empty_auto": "Empty: clients get {value}, found automatically.",
+      "endpoint_empty_env": "Empty: clients get {value}, from {name} in the server's environment.",
+      "endpoint_empty_now": "Empty: clients get {value}.",
+      "endpoint_empty_unknown": "Empty: clients get the address found automatically."
     },
     "appearance": {
       "theme_note": "Tampilan default untuk semua orang yang menggunakan konsol ini.",
@@ -1708,7 +1715,8 @@
       "tools_console": "Diunduh oleh konsol",
       "tools_missing": "Tidak terpasang",
       "channel_now": "Sekarang: {channel}. {installs}.",
-      "channel_applies": "Berlaku untuk pemeriksaan pembaruan berikutnya. Tidak ada yang dipasang sampai Anda mengeklik Pasang."
+      "channel_applies": "Berlaku untuk pemeriksaan pembaruan berikutnya. Tidak ada yang dipasang sampai Anda mengeklik Pasang.",
+      "channel_applies_short": "Applies to the next check for updates."
     },
     "advanced_tab": {
       "note": "Pilih file untuk melihat dan mengeditnya. Setiap penyimpanan menyimpan salinan versi sebelumnya.",
@@ -1736,6 +1744,7 @@
       "local_warning": "Alamat ini hanya berfungsi di komputer ini. Komputer dan ponsel lain tidak dapat menjangkaunya. Masukkan alamat server di Endpoint klien publik.",
       "preview_title": "Pratinjau",
       "preview_note": "Konsol dengan pilihan di halaman ini. Simpan untuk menerapkannya.",
+      "preview_note_all": "The console with the choices on this page. After you save, everyone sees them the next time they load a page.",
       "preview_device": "PC resepsionis",
       "preview_muted": "Last seen 5 minutes ago",
       "preview_caption": "Tema: {theme}. Warna aksen: {accent}.",
@@ -1815,7 +1824,8 @@
       "rdclient_bg_help": "Apa yang tampil di belakang daftar perangkat. \"{inherit}\" memakai latar konsol.",
       "picture_kb": "Gambar, {kb} KB",
       "website_help": "Alamat lengkap, misalnya https://example.com.",
-      "console_preview": "Pratinjau panel"
+      "console_preview": "Pratinjau panel",
+      "client_preview": "Client app preview"
     },
     "joining": {
       "mode_note": "Perangkat baru mana yang boleh bergabung ke server ini, dan bagaimana caranya.",
@@ -1859,7 +1869,8 @@
       "group_filter_help": "Cara grup seseorang ditemukan, dengan {{dn}} untuk DN orang itu. Misalnya (member={{dn}}).",
       "group_attr_help": "Entri pemetaan peran dapat menyebut grup dengan atribut ini, selain DN atau CN-nya. Misalnya cn.",
       "default_role_help": "Peran orang yang grupnya tidak cocok dengan entri mana pun di pemetaan di bawah.",
-      "role_map_help": "Satu entri per grup: grup menurut DN atau namanya, dan peran yang didapat anggotanya. Misalnya CN=NeoDesk Admins,OU=Groups,DC=example,DC=com dengan Administrator."
+      "role_map_help": "Satu entri per grup: grup menurut DN atau namanya, dan peran yang didapat anggotanya. Misalnya CN=NeoDesk Admins,OU=Groups,DC=example,DC=com dengan Administrator.",
+      "off_note_page": "LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first."
     },
     "sso": {
       "signin_title": "Masuk tunggal",
@@ -1895,12 +1906,16 @@
       "roles_note": "Peran yang didapat orang, dari grupnya di penyedia.",
       "roles_effect": "Seseorang mendapat peran setiap kali masuk lewat penyedia.",
       "default_role_help": "Peran orang yang grupnya tidak cocok dengan entri mana pun di pemetaan di bawah.",
-      "role_map_help": "Satu entri per grup: grup sesuai nama dari penyedia, dan peran yang didapat anggotanya. Misalnya neodesk-admins dengan Administrator."
+      "role_map_help": "Satu entri per grup: grup sesuai nama dari penyedia, dan peran yang didapat anggotanya. Misalnya neodesk-admins dengan Administrator.",
+      "off_note_page": "Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first."
     },
     "mesh": {
       "groups_effect": "Menambah, mengganti nama, dan menghapus grup langsung tersimpan. Perangkat yang sudah terpasang tetap di grupnya.",
       "install_note": "Unduh file .msh sebuah grup dan pasang MeshAgent dengannya di perangkat.",
-      "msh_name_help": "MeshAgent menampilkan nama ini untuk server. Nama ini hanya masuk ke file yang diunduh dan tidak disimpan. File-nya untuk grup dengan ID default; untuk grup lain, gunakan menu di barisnya."
+      "msh_name_help": "MeshAgent menampilkan nama ini untuk server. Nama ini hanya masuk ke file yang diunduh dan tidak disimpan. File-nya untuk grup dengan ID default; untuk grup lain, gunakan menu di barisnya.",
+      "msh_name_help_short": "MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.",
+      "install_group": "Group",
+      "install_group_help": "Devices installed with the file join this group."
     }
   },
   "audit": {
@@ -4448,7 +4463,13 @@
     "section_alert": "Peringatan",
     "saving": "Menyimpan…",
     "rules_checked": "Aturan diperiksa saat nilai masuk: CPU dan memori pada setiap laporan penggunaan dari perangkat, penggunaan disk dengan inventarisnya, waktu diam dengan laporan aktivitasnya, dan waktu offline sekali per menit. Aturan kustom tidak diperiksa.",
-    "custom_not_checked": "Aturan kustom tidak punya nilai yang bisa diukur server, jadi aturan ini tidak memicu peringatan sendiri."
+    "custom_not_checked": "Aturan kustom tidak punya nilai yang bisa diukur server, jadi aturan ini tidak memicu peringatan sendiri.",
+    "device_required": "Enter the device ID, or choose All devices.",
+    "scope_one": "One device",
+    "checked_usage": "Checked with each usage report from a device.",
+    "checked_disk": "Checked when a device sends its inventory.",
+    "checked_idle": "Checked with each activity report from a device.",
+    "checked_offline": "Checked once a minute."
   },
   "file_transfer": {
     "title": "Pemindahan Berkas",
@@ -4763,7 +4784,13 @@
     "section_covers": "Yang dicakup",
     "policy_sheet_desc": "Transfer apa saja yang dicakup kebijakan dan apakah perangkat memblokir, mencatat, atau mengizinkannya.",
     "saving": "Menyimpan…",
-    "older_events": "Peristiwa lebih lama"
+    "older_events": "Peristiwa lebih lama",
+    "devices_required": "Add a device ID, or choose All devices.",
+    "scope_some": "Only these devices",
+    "devices": "Devices",
+    "devices_hint": "One device ID per row, as the device shows it in its NeoDesk app.",
+    "device_n": "Device {n}",
+    "add_device": "Add a device"
   },
   "reports": {
     "title": "Laporan",
@@ -6017,6 +6044,7 @@
     "max_session_invalid": "Masukkan jumlah menit berupa bilangan bulat, 0 atau lebih.",
     "policy_none": "Tanpa aturan: setiap perangkat mempertahankan pengaturannya sendiri.",
     "settings_tab_note": "Yang berlaku untuk organisasi ini sekarang. Setiap nilai diubah di tempat ia diatur: kebijakan di halaman Kebijakan, buku alamat bersama di tab Buku alamat.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Cara sesi jarak jauh bekerja di perangkat organisasi ini.",
     "policies_group_effect": "Perangkat mendapat perubahan saat berikutnya meminta kebijakannya ke server.",
     "open_org_policies": "Buka kebijakan organisasi ini",
@@ -6031,7 +6059,8 @@
     "danger_zone": "Zona berbahaya",
     "name_hint": "Tampil di halaman organisasi ini, di daftar, dan kepada anggotanya.",
     "slug_changed": "Proses masuk yang menyebut organisasi dengan nama pendeknya memerlukan nama baru setelah Anda menyimpan.",
-    "policy_set": "Diatur untuk organisasi ini."
+    "policy_set": "Diatur untuk organisasi ini.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Dienkripsi ujung ke ujung",
@@ -6646,7 +6675,13 @@
     "sound_today": "Untuk mematikan suara dalam sesi sekarang juga, gunakan aturan akses dengan Suara nonaktif di Perangkat, atau matikan Suara di akses konsol seseorang.",
     "open_access_rules": "Buka aturan akses",
     "remove_group": "Hapus semua aturan grup ini",
-    "row_not_applied": "Belum ada aplikasi NeoDesk yang menerapkan ini."
+    "row_not_applied": "Belum ada aplikasi NeoDesk yang menerapkan ini.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Pengesahan Perangkat",
@@ -7726,7 +7761,18 @@
     "fact_id": "ID perangkat",
     "tabs_save_hint": "Setiap jenis aturan punya tombol Simpan sendiri dan disimpan terpisah.",
     "save_rules": "Simpan aturan",
-    "save_all_hint": "Simpan menyimpan setiap jenis aturan yang Anda ubah. Setiap jenis disimpan sendiri-sendiri."
+    "save_all_hint": "Simpan menyimpan setiap jenis aturan yang Anda ubah. Setiap jenis disimpan sendiri-sendiri.",
+    "no_limit": "No limit",
+    "empty_no_limit": "Leave empty for no limit.",
+    "usb_list_hint_rows": "One device per row, as vendor and product ID, for example 0781:5583.",
+    "usb_device_n": "Allowed USB device {n}",
+    "add_usb_device": "Add a USB device",
+    "disks_hidden_hint_rows": "One drive letter or mount point per row, for example D: or /mnt/data. People on the device do not see them.",
+    "hidden_partition_n": "Hidden partition {n}",
+    "add_partition": "Add a partition",
+    "quotas_programs_hint_rows": "One program per row, for example chrome.exe.",
+    "program_n": "Allowed program {n}",
+    "add_program": "Add a program"
   },
   "sdk_studio": {
     "title": "SDK Studio",
@@ -8784,6 +8830,7 @@
       "fallback_hint": "Jika tidak ada operator yang menerima email, email dikirim ke alamat peringatan di Pengaturan › Email.",
       "folder_subject_hint": "Subjek menyebut folder perangkat, agar email dapat diurutkan menurut folder.",
       "no_smtp_effect": "Tidak berpengaruh sampai pengiriman email diatur di Pengaturan › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Tidak berpengaruh: tidak ada yang menerima email selama kedua opsi di bawah nonaktif."
     },
     "targets": {
@@ -10459,7 +10506,10 @@
     "updates_consequence": "Jumlah baru berlaku setelah pembaruan berikutnya.",
     "updates_title": "Sebelum pembaruan",
     "where": "Tempat menyimpan",
-    "where_help": "Folder data NeoDesk, atau folder Anda sendiri. Berbagi jaringan harus dipasang dulu oleh sistem operasi."
+    "where_help": "Folder data NeoDesk, atau folder Anda sendiri. Berbagi jaringan harus dipasang dulu oleh sistem operasi.",
+    "make_note_short": "One .tar.gz file. You can restore it on this server or on a new one.",
+    "last_run": "Last scheduled backup: {when}",
+    "last_run_none": "No scheduled backup yet"
   },
   "device_authorize": {
     "title": "Masuk ke aplikasi NeoDesk",
