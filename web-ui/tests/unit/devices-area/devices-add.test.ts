@@ -8,13 +8,13 @@ import { ADD_TABS, addTabs, pickAddTab } from '../../../src/lib/devices-area/add
 const can = (list: string[]) => (p: string) => list.includes(p);
 
 describe('the tabs of Add computers', () => {
-	test('in their order: invites, device tokens, pairing codes, support agents, manual setup', () => {
-		expect([...ADD_TABS]).toEqual(['invites', 'tokens', 'pairing', 'agents', 'manual']);
+	test('in their order: invites, device tokens, pairing codes, support agents, receiver app, manual setup', () => {
+		expect([...ADD_TABS]).toEqual(['invites', 'tokens', 'pairing', 'agents', 'receiver', 'manual']);
 	});
 
 	test('each tab asks what its page asked before', () => {
 		const all = addTabs({ can: () => true, role: 'super_admin' });
-		expect(all).toEqual(['invites', 'tokens', 'pairing', 'agents', 'manual']);
+		expect(all).toEqual(['invites', 'tokens', 'pairing', 'agents', 'receiver', 'manual']);
 		// An operator who approves joins: invites and pairing codes, no tokens, no agents (admin roles)
 		expect(addTabs({ can: can(['enrollment.approve']), role: 'operator' })).toEqual([
 			'invites',
@@ -24,6 +24,13 @@ describe('the tabs of Add computers', () => {
 		expect(addTabs({ can: can(['enrollment.manage']), role: 'admin' })).toEqual([
 			'tokens',
 			'agents',
+			'receiver',
+			'manual'
+		]);
+		// The receiver app's download names a device token: enrollment.manage, any role
+		expect(addTabs({ can: can(['enrollment.manage']), role: 'operator' })).toEqual([
+			'tokens',
+			'receiver',
 			'manual'
 		]);
 		// Manual setup needs a session only

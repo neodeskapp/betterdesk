@@ -43,6 +43,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/permissions"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/phase45"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/policies"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/receiverapp"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/registration"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/remote"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/reports"
@@ -169,6 +170,7 @@ func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	servermanagement.Register(d)              // routes/server-management.routes.js (beta)
 	serverattestation.Register(d)             // routes/server-attestation.routes.js, with the job that runs the capacity tests
 	phase45.Register(d)                       // routes/phase4_5.routes.js
+	receiverapp.Register(d)                   // Devices › Add › Receiver app: the silent install of the NeoDesk app
 	pairing.Register(d)                       // routes/pairing.routes.js
 	onboard.Register(d)                       // Add a computer and Quick support: invites, sessions, client packages
 	apitokens.Register(d)                     // API tokens for scripts, the command line and its MCP server
