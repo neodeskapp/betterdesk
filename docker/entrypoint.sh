@@ -24,7 +24,7 @@ server_ports() {
 
 echo "========================================"
 echo "  NeoDesk"
-echo "  Version: ${NEODESK_IMAGE_VERSION:-3.6.35}"
+echo "  Version: ${NEODESK_IMAGE_VERSION:-3.6.36}"
 echo "========================================"
 echo ""
 echo "  Server:       $(server_ports)"
