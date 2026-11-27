@@ -29,7 +29,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
-const resetUsage = "Usage: neodesk-server reset-password [username]   (the new password is the first line of standard input)"
+const resetUsage = "Usage: neodesk-server reset-password [--reset-two-factor] [--verbose] [username]   (the new password is the first line of standard input)"
 
 // resetOptions are what reset-password reads besides Env. Tests replace
 // them.
@@ -67,11 +67,18 @@ type resetOptions struct {
 // stored as the API server stores it (auth.HashPasswordFrom, PBKDF2), so
 // both sign-ins take it and neither replaces the hash.
 //
-// It prints what the script printed, with the hash's type and length, and
-// exits with 0 when the password was set and 1 otherwise. Once the
-// password is set, the credentials file with the account's first password
-// is removed as the console's password change removes it
-// (removeFirstPassword), and the output names it.
+// With --reset-two-factor it also turns the account's two-factor sign-in
+// off and deletes its secret and recovery codes, as the console's reset
+// does: the way back in for an install whose only admin lost both the
+// authenticator and the recovery codes. Where two-factor sign-in is
+// required, the account sets it up again at its next sign-in.
+//
+// It prints one line for the account (updated or created) and exits with
+// 0 when the password was set and 1 otherwise. The database it used is
+// printed when the run fails, and with --verbose also the hash's type and
+// length. Once the password is set, the credentials file with the
+// account's first password is removed as the console's password change
+// removes it (removeFirstPassword), and the output names it.
 func ResetPassword(args []string, env Env) int {
 	cwd, _ := os.Getwd()
 	return resetPassword(args, env, resetOptions{
@@ -94,8 +101,15 @@ func isTerminal(r io.Reader) bool {
 	return err == nil && info.Mode()&os.ModeCharDevice != 0
 }
 
-func resetPassword(args []string, env Env, opts resetOptions) int {
+func resetPassword(args []string, env Env, opts resetOptions) (status int) {
 	o, e := env.Stdout, env.Stderr
+	// The database's line: printed when the run fails, or with --verbose
+	dbLine := ""
+	defer func() {
+		if status != 0 && dbLine != "" {
+			fmt.Fprint(o, dbLine)
+		}
+	}()
 	usage := func(hint string) int {
 		fmt.Fprintln(e, resetUsage)
 		if hint != "" {
@@ -106,13 +120,25 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 	getenv := consoleEnv(env.Getenv)
 
 	username := "admin"
+	resetTwoFactor, verbose := false, false
+	var names []string
+	for _, a := range args {
+		switch a {
+		case "--reset-two-factor", "-reset-two-factor":
+			resetTwoFactor = true
+		case "--verbose", "-verbose", "-v":
+			verbose = true
+		default:
+			names = append(names, a)
+		}
+	}
 	switch {
-	case len(args) > 1:
+	case len(names) > 1:
 		return usage("The password is read from standard input, not from the arguments.")
-	case len(args) == 1 && strings.HasPrefix(args[0], "-"):
+	case len(names) == 1 && strings.HasPrefix(names[0], "-"):
 		return usage("")
-	case len(args) == 1 && args[0] != "":
-		username = args[0]
+	case len(names) == 1 && names[0] != "":
+		username = names[0]
 	}
 	if opts.terminal(env.Stdin) {
 		return usage(`Pipe it in, for example: printf '%s\n' "$PASSWORD" | neodesk-server reset-password admin`)
@@ -156,7 +182,7 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 		if strings.Contains(host, ":") {
 			host = "[" + host + "]"
 		}
-		fmt.Fprintf(o, "Auth database (PostgreSQL): %s\n", host)
+		dbLine = fmt.Sprintf("Auth database (PostgreSQL): %s\n", host)
 		cfg, err := pgx.ParseConfig(dsn)
 		if err != nil {
 			fmt.Fprintf(e, "Error: %v\n", err)
@@ -165,7 +191,7 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 		users = stdlib.OpenDB(*cfg)
 	} else {
 		dsn = sqlitePath(database.DSN, getenv, opts)
-		fmt.Fprintf(o, "Auth database (SQLite): %s\n", dsn)
+		dbLine = fmt.Sprintf("Auth database (SQLite): %s\n", dsn)
 		if !opts.exists(filepath.Dir(dsn)) {
 			fmt.Fprintln(e, "Error: Cannot open database because the directory does not exist")
 			return 1
@@ -177,6 +203,10 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 		}
 	}
 	defer users.Close()
+	if verbose {
+		fmt.Fprint(o, dbLine)
+		dbLine = ""
+	}
 
 	// A database without accounts is set up as a server start sets it up,
 	// so the console finds the users table it makes itself
@@ -222,7 +252,15 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 			fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
 			return 1
 		}
-		fmt.Fprintf(o, "Password updated for user: %s\n", username)
+		twoFactor := ""
+		if resetTwoFactor {
+			if err := turnOffTwoFactor(ctx, users, dialect, bind, id); err != nil {
+				fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
+				return 1
+			}
+			twoFactor = " and two-factor sign-in turned off"
+		}
+		fmt.Fprintf(o, "Password updated%s for %s; its console sessions were signed out.\n", twoFactor, username)
 	case errors.Is(err, sql.ErrNoRows):
 		if _, err := users.ExecContext(ctx, bind("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)"), username, hash, "admin"); err != nil {
 			fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
@@ -233,13 +271,14 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 		fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
 		return 1
 	}
-	fmt.Fprintf(o, "Hash type: pbkdf2-sha256, length: %d\n", len(hash))
+	if verbose {
+		fmt.Fprintf(o, "Hash type: pbkdf2-sha256, length: %d\n", len(hash))
+	}
 	if err := users.Close(); err != nil {
 		fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
 		return 1
 	}
 	removeFirstPassword(env, getenv, opts, username)
-	fmt.Fprintln(o, "Done")
 	return 0
 }
 
@@ -459,5 +498,17 @@ func endConsoleSessions(ctx context.Context, db *sql.DB, dialect string, bind fu
 	if err != nil && (strings.Contains(err.Error(), "no such table") || strings.Contains(err.Error(), "does not exist")) {
 		return nil
 	}
+	return err
+}
+
+// turnOffTwoFactor turns the account's two-factor sign-in off and deletes
+// its secret and recovery codes, as the console's reset does
+// (authn.DisableTOTP). The account's sessions end with the password reset.
+func turnOffTwoFactor(ctx context.Context, db *sql.DB, dialect string, bind func(string) string, id any) error {
+	off := "0"
+	if dialect == "postgres" {
+		off = "FALSE"
+	}
+	_, err := db.ExecContext(ctx, bind("UPDATE users SET totp_enabled = "+off+", totp_secret = '', totp_recovery_codes = NULL WHERE id = ?"), id)
 	return err
 }
