@@ -2325,7 +2325,9 @@
     "action_fleet_task_retried": "Fleet task run again",
     "action_fleet_resource_changed": "Fleet resource changed",
     "action_fleet_scan_requested": "Compliance scan requested",
-    "action_fleet_workflow_run": "Workflow run"
+    "action_fleet_workflow_run": "Workflow run",
+    "action_quick_support_receiver_offer": "Offer to install after quick support changed",
+    "action_receiver_installer_downloaded": "Receiver app installer downloaded"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6017,7 +6019,11 @@
     "mode_notice_locked": "Le mode d'inscription est Verrouillé : un nouvel appareil ne peut rejoindre le serveur qu'avec un jeton de cette liste.",
     "created_next": "Donnez-le à la personne qui configure l'appareil, avec les valeurs de connexion de {page}.",
     "status_used_up": "Épuisé",
-    "actions_for": "Actions pour {name}"
+    "actions_for": "Actions pour {name}",
+    "folder_hint": "A computer that joins with this token goes into this folder.",
+    "policies": "Policies",
+    "policies_hint": "A computer that joins with this token gets the policies of this organization.",
+    "no_policies": "None"
   },
   "api_tokens": {
     "title": "Jetons d'API",
@@ -7030,7 +7036,9 @@
     "not_set_short": "Not set",
     "not_set_list": "Not set (no limit)",
     "server_value_short": "Server value",
-    "devices_none": "No device is in this organization yet, so these policies reach none."
+    "devices_none": "No device is in this organization yet, so these policies reach none.",
+    "allow_uninstall": "People can remove the app",
+    "help_allow_uninstall": "Off: people at these computers cannot remove the NeoDesk app. Not set allows it."
   },
   "attestation": {
     "title": "Attestation des appareils",
@@ -10881,5 +10889,45 @@
     "none_for_helper": "No answers for this helper yet.",
     "show_more": "Show more",
     "shown_of": "{shown} of {count}"
+  },
+  "receiver_app": {
+    "tab": "Receiver app",
+    "page_description": "Install the NeoDesk app on a computer without anyone clicking through it. The computer joins this server with a device token.",
+    "token_title": "Token",
+    "token_note": "A token adds one computer. Paste one from Device tokens, or create one here. The token decides the folder and the policies.",
+    "token": "Device token",
+    "token_hint": "It is shown once, when the token is created.",
+    "token_invalid": "This is not a device token. A token has 16 to 128 letters and digits.",
+    "token_filled": "The new token is filled in.",
+    "folder_hint": "Used when the token has no folder of its own.",
+    "arch": "Processor",
+    "arch_x64": "64-bit (x64)",
+    "arch_arm64": "ARM64",
+    "install_title": "Install",
+    "no_release": "No Support Agent release is imported yet, so there is no installer to download. Import one under",
+    "install_note": "The download holds {msi} and install.cmd. Run install.cmd as administrator, or run the command below next to {msi}, for example from your software deployment.",
+    "download": "Download installer",
+    "downloading": "Preparing the download…",
+    "downloaded": "Downloaded.",
+    "command": "Silent install",
+    "command_needs_token": "Enter a device token to see the command.",
+    "properties_title": "MSI properties",
+    "properties_note": "The values the installer needs for this server. TOKEN is needed when new computers need a token or approval.",
+    "errors": {
+      "invalid_body": "The request could not be read.",
+      "invalid_token": "Enter a device token.",
+      "token_unknown": "This token does not exist, was revoked or has expired.",
+      "token_used": "A computer has already joined with this token. Create a new one.",
+      "invalid_group": "This folder does not exist.",
+      "no_release": "There is no installer for this processor. Import the Support Agent release under Support agents.",
+      "server_error": "Something went wrong on the server. Try again."
+    }
+  },
+  "quick_support_receiver": {
+    "title": "Keep NeoDesk on the computer",
+    "description": "After the session the quick support app can ask the person whether to keep NeoDesk on the computer. If they agree, it installs the NeoDesk app and the computer joins this server, also when new computers need a token or approval.",
+    "effect": "Applies to quick support sessions that start from now on.",
+    "offer": "Offer to install after quick support",
+    "offer_help": "The person is asked after the feedback. Installing needs administrator rights on the computer."
   }
 }
