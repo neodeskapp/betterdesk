@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
@@ -63,11 +64,14 @@ var sessionPaths = []sessionPath{
 	{"forced relay of a UDP punch hole", func(srv *Server, target, token string, initiator *net.UDPAddr) {
 		srv.handlePunchHoleRequest(&pb.PunchHoleRequest{Id: target, Token: token, ForceRelay: true}, initiator)
 	}},
+	// Each relay request gets its own UUID: the relay tickets live in one
+	// registry for the whole package, and a ticket another test left for a
+	// different pair refuses the request for 30 seconds
 	{"relay over UDP", func(srv *Server, target, token string, initiator *net.UDPAddr) {
-		srv.handleRequestRelay(&pb.RequestRelay{Id: target, Uuid: "features-relay", Token: token}, initiator)
+		srv.handleRequestRelay(&pb.RequestRelay{Id: target, Uuid: uuid.NewString(), Token: token}, initiator)
 	}},
 	{"relay over TCP", func(srv *Server, target, token string, initiator *net.UDPAddr) {
-		srv.handleRequestRelayTCP(&pb.RequestRelay{Id: target, Uuid: "features-relay", Token: token}, initiator, peer.ConnTCP)
+		srv.handleRequestRelayTCP(&pb.RequestRelay{Id: target, Uuid: uuid.NewString(), Token: token}, initiator, peer.ConnTCP)
 	}},
 }
 
