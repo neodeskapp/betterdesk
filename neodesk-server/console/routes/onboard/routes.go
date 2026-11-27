@@ -53,6 +53,8 @@ type handlers struct {
 	// callers is what the server answered the quick support apps about
 	// their callers, for the helpers' viewers (A273)
 	callers *onboard.CallerBook
+	// feedback is the answers after quick support
+	feedback *onboard.Feedback
 	// thumbs are the helpers' pictures as the vouch answer carries them,
 	// by account
 	thumbMu  sync.Mutex
@@ -100,6 +102,7 @@ func RegisterWith(d *kit.Deps, opts Options) {
 		codes:    onboard.NewCodes(d.GoAPI),
 		sessions: onboard.NewSessions(d.GoAPI, opts.Now),
 		callers:  onboard.NewCallerBook(opts.Now),
+		feedback: onboard.NewFeedback(d.GoAPI),
 		thumbs:   map[int64]thumb{},
 		releases: opts.Releases,
 		limit: limits.New(limits.Config{
@@ -124,6 +127,7 @@ func RegisterWith(d *kit.Deps, opts Options) {
 	approve := d.RequirePermission("enrollment.approve")
 	connect := d.RequirePermission("device.connect")
 	either := d.RequireAnyPermission("enrollment.approve", "device.connect")
+	config := d.RequirePermission("server.config")
 
 	r := d.Router
 	r.Get("/api/onboard/status", h.status, d.RequireAuth, either)
@@ -142,6 +146,9 @@ func RegisterWith(d *kit.Deps, opts Options) {
 	r.Post("/api/support/sessions/{id}/mail", h.mailSession, d.RequireAuth, connect)
 	r.Post("/api/support/devices/{id}/password", h.devicePassword, d.RequireAuth, connect)
 	r.Post("/api/support/devices/{id}/caller", h.deviceCaller, d.RequireAuth, connect)
+	r.Get("/api/support/feedback", h.listFeedback, d.RequireAuth, connect)
+	r.Get("/api/support/feedback/form", h.getFeedbackForm, d.RequireAuth, config)
+	r.Put("/api/support/feedback/form", h.saveFeedbackForm, d.RequireAuth, config)
 
 	r.Get("/api/onboard/public/{code}", h.publicCode, h.limit)
 	r.Get("/api/onboard/public/{code}/download", h.download, h.limit)
@@ -159,6 +166,9 @@ func RegisterWith(d *kit.Deps, opts Options) {
 	e.Post("/api/support/session/password", h.appPassword, h.requireSessionToken)
 	e.Post("/api/support/session/end", h.appEnd, h.requireSessionToken)
 	e.Post("/api/support/session/caller", h.appCaller, h.requireSessionToken)
+	// Feedback works after the end too, for a session the person allowed
+	e.Get("/api/support/session/feedback", h.appFeedbackForm, h.requireFeedbackToken)
+	e.Post("/api/support/session/feedback", h.appFeedbackGive, h.requireFeedbackToken)
 
 	if d.Jobs != nil {
 		d.Jobs.Add("onboard sweep", h.sweepLoop)

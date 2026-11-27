@@ -128,8 +128,11 @@ type Sessions struct {
 	loadMu sync.Mutex
 	loaded bool
 
-	mu        sync.Mutex
-	byID      map[string]*Session
+	mu   sync.Mutex
+	byID map[string]*Session
+	// byToken finds a session by its token's hash, also after the end:
+	// ByToken opens only open sessions, FeedbackSession ended ones for
+	// FeedbackWindow
 	byToken   map[string]string
 	passwords map[string]string
 }
@@ -176,7 +179,7 @@ func (s *Sessions) load(ctx context.Context) error {
 			continue
 		}
 		s.byID[sess.ID] = &sess
-		if sess.TokenHash != "" && sess.Open() {
+		if sess.TokenHash != "" {
 			s.byToken[sess.TokenHash] = sess.ID
 		}
 	}
@@ -212,7 +215,6 @@ func (s *Sessions) change(ctx context.Context, id string, fn func(sess *Session)
 	}
 	*cur = next
 	if !next.Open() {
-		delete(s.byToken, next.TokenHash)
 		delete(s.passwords, next.ID)
 	}
 	s.mu.Unlock()
@@ -356,6 +358,49 @@ func (s *Sessions) ByToken(ctx context.Context, token string) (Session, error) {
 		}
 	}
 	return out, nil
+}
+
+// WasAllowed reports whether the person let the supporter in: the session
+// is allowed, or ended after it was.
+func (s Session) WasAllowed() bool {
+	return s.ConsentAt != "" && (s.Status == StatusAllowed || s.Status == StatusEnded)
+}
+
+// FeedbackSession returns the session of a session token for the
+// feedback routes: an open session, or one that ended at most
+// FeedbackWindow ago. Any other token is ErrNotFound; a session the person
+// never allowed (declined, ended or still open before Allow) is ErrState
+// with the session. It does not note a call of the app.
+func (s *Sessions) FeedbackSession(ctx context.Context, token string) (Session, error) {
+	if len(token) != 64 {
+		return Session{}, ErrNotFound
+	}
+	if err := s.load(ctx); err != nil {
+		return Session{}, err
+	}
+	hash := HashToken(token)
+	s.mu.Lock()
+	var sess Session
+	found := false
+	if id, ok := s.byToken[hash]; ok {
+		if cur := s.byID[id]; cur != nil && subtle.ConstantTimeCompare([]byte(cur.TokenHash), []byte(hash)) == 1 {
+			sess, found = *cur, true
+		}
+	}
+	s.mu.Unlock()
+	if !found {
+		return Session{}, ErrNotFound
+	}
+	if !sess.Open() {
+		ended, ok := parseStamp(sess.EndedAt)
+		if !ok || s.now().Sub(ended) > FeedbackWindow {
+			return Session{}, ErrNotFound
+		}
+	}
+	if !sess.WasAllowed() {
+		return sess, ErrState
+	}
+	return sess, nil
 }
 
 // SetDevice records the device the app runs on and moves the session to
@@ -658,6 +703,9 @@ func (s *Sessions) Prune(ctx context.Context, keep time.Duration) error {
 			continue
 		}
 		s.mu.Lock()
+		if sess := s.byID[id]; sess != nil && s.byToken[sess.TokenHash] == id {
+			delete(s.byToken, sess.TokenHash)
+		}
 		delete(s.byID, id)
 		s.mu.Unlock()
 	}
