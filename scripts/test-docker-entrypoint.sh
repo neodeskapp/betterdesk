@@ -80,6 +80,19 @@ test_quick_compose_pulls_the_published_image() (
     done
 )
 
+# MIGRATE-CLIENT-1: a stock RustDesk client without an API server
+# setting calls the ID server's host on 21114; the server answers there
+# too, so the image exposes it and the compose files with host ports
+# publish it, and the manager opens it in the host firewall.
+test_rustdesk_api_port_is_published() (
+    local f
+    for f in install/docker-compose.quick.single.yml install/docker-compose.single.yml; do
+        grep -qE '^[[:space:]]+- "21114:21114"' "$SCRIPT_ROOT/$f" || fail "$f does not publish 21114"
+    done
+    grep -qE '^EXPOSE .* 21114( |$)' "$SCRIPT_ROOT/docker/Dockerfile" || fail "docker/Dockerfile does not expose 21114"
+    grep -qE '^DOCKER_PORTS_TCP=\(21114 ' "$SCRIPT_ROOT/install/neodesk-docker.sh" || fail "neodesk-docker.sh does not open 21114"
+)
+
 # L79: the CDAP gateway listens on 21122 by default (A116), so the images
 # expose it and the compose files with host ports publish it.
 test_cdap_port_is_published() (
@@ -348,6 +361,7 @@ test_image_has_dsn_helper
 test_enrollment_mode_is_not_forced
 test_quick_compose_pulls_the_published_image
 test_cdap_port_is_published
+test_rustdesk_api_port_is_published
 test_compose_reads_env_file
 test_neodesk_service_keeps_kill
 test_traefik_follows_the_domain
