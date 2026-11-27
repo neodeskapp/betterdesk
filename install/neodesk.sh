@@ -291,11 +291,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --protocol)
-            PROTOCOL_MODE="$2"
-            if [ "$PROTOCOL_MODE" != "http" ] && [ "$PROTOCOL_MODE" != "https" ]; then
-                echo "ERROR: --protocol must be 'http' or 'https'"
-                exit 1
-            fi
+            echo "NOTE: --protocol does nothing; switch HTTP and HTTPS with sudo neodesk-setup, Toggle HTTP/HTTPS"
             shift 2
             ;;
         --pg-uri)
@@ -332,7 +328,6 @@ while [[ $# -gt 0 ]]; do
             echo "  --minimal        Install the server with its web console off"
             echo "  --postgresql     Use PostgreSQL instead of SQLite"
             echo "  --pg-uri URI     PostgreSQL connection URI (implies --postgresql)"
-            echo "  --protocol MODE  Set protocol mode: 'http' or 'https'"
             echo "  --relay-mode M   Relay IP selection: 'auto' (public, default), 'local' (LAN), 'public'"
             echo "  --relay-servers IP  Force a fixed relay server address (IP or host[:port])"
             echo "  --help, -h       Show this help message"
@@ -651,16 +646,36 @@ repair_management_permissions() {
     check_management_capabilities || true
 }
 
+# apply_managed_config: the KEY=VALUE pairs of MANAGED_CONFIG_CHANGES go
+# into .env through the server's allowlist (config set). The run names the
+# keys it set and restarts the server once; when .env is the same as
+# before it keeps running. The server's report goes to the log, and on a
+# refusal to the screen.
 apply_managed_config() {
     if [ "${#MANAGED_CONFIG_CHANGES[@]}" -eq 0 ]; then
         print_error "No allowlisted configuration changes supplied"
         return 1
     fi
-    print_step "Applying allowlisted NeoDesk configuration..."
-    server_cmd --as-service config set "${MANAGED_CONFIG_CHANGES[@]}" || return 1
+    local out changed env_before
+    env_before=$(sha256sum "$CONSOLE_PATH/.env" 2>/dev/null | awk '{ print $1 }')
+    if ! out=$(server_cmd --as-service config set "${MANAGED_CONFIG_CHANGES[@]}" 2>&1); then
+        printf '%s\n' "$out"
+        print_error "The settings were not changed"
+        return 1
+    fi
+    log "neodesk-server config set: $out"
+    # The keys of the "changed" list in the report
+    changed=$(printf '%s\n' "$out" | awk '
+        /"changed": \[\]/ { exit }
+        /"changed": \[/ { inside = 1; next }
+        inside && /\]/ { exit }
+        inside { gsub(/[",[:space:]]/, ""); if ($0 != "") printf "%s%s", sep, $0; sep = ", " }')
+    if [ -z "$changed" ] || [ "$env_before" = "$(sha256sum "$CONSOLE_PATH/.env" 2>/dev/null | awk '{ print $1 }')" ]; then
+        print_success "Nothing changed: $CONSOLE_PATH/.env has these values already"
+        return 0
+    fi
+    print_success "Changed in $CONSOLE_PATH/.env: $changed"
     systemctl daemon-reload 2>/dev/null || true
-    systemctl restart "$SERVER_SERVICE" 2>/dev/null || true
-    sleep 2
     start_services_with_verification
 }
 
@@ -2835,7 +2850,7 @@ auto_detect_paths() {
     # If RUSTDESK_PATH is already set (via env var), validate it
     if [ -n "$RUSTDESK_PATH" ]; then
         if [ -d "$RUSTDESK_PATH" ] && { [ -f "$RUSTDESK_PATH/neodesk-server" ] || [ -f "$RUSTDESK_PATH/hbbs" ] || [ -f "$RUSTDESK_PATH/hbbs-v8-api" ]; }; then
-            print_info "Using configured RustDesk path: $RUSTDESK_PATH"
+            print_info "Using the configured server folder: $RUSTDESK_PATH"
         else
             print_warning "Configured RUSTDESK_PATH ($RUSTDESK_PATH) is invalid"
             RUSTDESK_PATH=""
@@ -2847,7 +2862,7 @@ auto_detect_paths() {
         for path in "${COMMON_RUSTDESK_PATHS[@]}"; do
             if [ -d "$path" ] && { [ -f "$path/neodesk-server" ] || [ -f "$path/hbbs" ] || [ -f "$path/hbbs-v8-api" ]; }; then
                 RUSTDESK_PATH="$path"
-                print_success "Detected RustDesk installation: $RUSTDESK_PATH"
+                print_success "Detected the server folder: $RUSTDESK_PATH"
                 break
             fi
         done
@@ -2911,7 +2926,7 @@ auto_detect_paths() {
 configure_paths() {
     local _menu_items=(
         $'Auto-detect paths\tScan common install locations'
-        $'Set server path\tManually set the RustDesk server path'
+        $'Set server folder\tManually set the server folder (keys, database, binary)'
         $'Set console path\tManually set the web console path'
         $'Reset to defaults\t/opt/neodesk + /opt/NeoDeskConsole'
         $'Back\tReturn to the main menu'
@@ -2931,20 +2946,20 @@ configure_paths() {
             ;;
         2)
             echo ""
-            echo -n "Enter RustDesk server path (e.g., /opt/neodesk): "
+            echo -n "Enter the server folder (e.g., /opt/neodesk): "
             read -r new_path
             if [ -n "$new_path" ]; then
                 if [ -d "$new_path" ]; then
                     RUSTDESK_PATH="$new_path"
                     DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
-                    print_success "RustDesk path set to: $RUSTDESK_PATH"
+                    print_success "Server folder set to: $RUSTDESK_PATH"
                 else
                     print_warning "Directory does not exist: $new_path"
                     if confirm "Create this directory?"; then
                         mkdir -p "$new_path"
                         RUSTDESK_PATH="$new_path"
                         DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
-                        print_success "Created and set RustDesk path: $RUSTDESK_PATH"
+                        print_success "Created and set the server folder: $RUSTDESK_PATH"
                     fi
                 fi
             fi
@@ -3004,7 +3019,7 @@ print_status() {
     
     echo -e "${WHITE}${BOLD}═══ Configured Paths ═══${NC}"
     echo ""
-    echo -e "  RustDesk:     ${CYAN}$RUSTDESK_PATH${NC}"
+    echo -e "  Server:       ${CYAN}$RUSTDESK_PATH${NC}"
     echo -e "  Console:      ${CYAN}$CONSOLE_PATH${NC}"
     
     # Show database type and path/URI
@@ -3084,15 +3099,15 @@ print_status() {
     else
         # Legacy Rust servers
         if [ "$HBBS_RUNNING" = true ]; then
-            echo -e "  HBBS (Signal): ${GREEN}● Active${NC} ${YELLOW}(Legacy Rust)${NC}"
+            echo -e "  ID server:     ${GREEN}● Active${NC} ${YELLOW}(legacy Rust server)${NC}"
         else
-            echo -e "  HBBS (Signal): ${RED}○ Inactive${NC}"
+            echo -e "  ID server:     ${RED}○ Inactive${NC}"
         fi
         
         if [ "$HBBR_RUNNING" = true ]; then
-            echo -e "  HBBR (Relay):  ${GREEN}● Active${NC} ${YELLOW}(Legacy Rust)${NC}"
+            echo -e "  Relay:         ${GREEN}● Active${NC} ${YELLOW}(legacy Rust server)${NC}"
         else
-            echo -e "  HBBR (Relay):  ${RED}○ Inactive${NC}"
+            echo -e "  Relay:         ${RED}○ Inactive${NC}"
         fi
     fi
     
@@ -3711,11 +3726,22 @@ compile_go_server() {
 # Installation Functions
 #===============================================================================
 
+# apt_quiet ARGS...: apt-get without questions, its output in the log.
+# needrestart only lists the services it would restart (they keep
+# running), and nothing that is installed already is upgraded when ARGS
+# install packages.
+apt_quiet() {
+    local -a args=("$@")
+    [ "${1:-}" = install ] && args=(install --no-upgrade "${@:2}")
+    DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=l NEEDRESTART_SUSPEND=1 \
+        apt-get "${args[@]}" >>"$LOG_FILE" 2>&1
+}
+
 # apt_update: the package lists. A source that fails (a third-party
 # repository, a mirror in sync) stops nothing: the packages come from the
 # lists that are there, and apt-get install says when one is missing.
 apt_update() {
-    apt-get update -qq || print_warning "apt-get update failed for a package source (output above); installing from the package lists there are"
+    apt_quiet update -qq || print_warning "apt-get update failed for a package source (see $LOG_FILE); installing from the package lists there are"
 }
 
 install_dependencies() {
@@ -3724,7 +3750,8 @@ install_dependencies() {
     # The server is one static binary; the installer needs only these
     if command -v apt-get &> /dev/null; then
         apt_update
-        apt-get install -y -qq sqlite3 curl wget openssl ca-certificates iproute2 lsof
+        apt_quiet install -y -qq sqlite3 curl wget openssl ca-certificates iproute2 lsof \
+            || print_warning "apt-get could not install every package (see $LOG_FILE)"
     elif command -v dnf &> /dev/null; then
         dnf install -y -q sqlite curl wget openssl ca-certificates iproute lsof
     elif command -v yum &> /dev/null; then
@@ -3753,7 +3780,8 @@ install_postgresql() {
     
     if command -v apt-get &> /dev/null; then
         apt_update
-        apt-get install -y -qq postgresql postgresql-contrib
+        apt_quiet install -y -qq postgresql postgresql-contrib \
+            || print_warning "apt-get could not install PostgreSQL (see $LOG_FILE)"
     elif command -v dnf &> /dev/null; then
         dnf install -y -q postgresql-server postgresql
         postgresql-setup --initdb 2>/dev/null || true
@@ -5837,7 +5865,7 @@ do_validate() {
     echo ""
     
     # Check directories
-    echo -n "  RustDesk directory ($RUSTDESK_PATH): "
+    echo -n "  Server folder ($RUSTDESK_PATH): "
     if [ -d "$RUSTDESK_PATH" ]; then
         echo -e "${GREEN}✓${NC}"
     else
@@ -6259,9 +6287,12 @@ do_reset_password() {
 
     # The server sets it on the console's database (SQLite or PostgreSQL);
     # the password goes in on standard input, never in the arguments
-    local success=false
-    if printf '%s\n' "$new_password" | server_cmd --as-service reset-password admin; then
+    local success=false reset_out
+    if reset_out=$(printf '%s\n' "$new_password" | server_cmd --as-service reset-password admin 2>&1); then
         success=true
+        log "neodesk-server reset-password: $reset_out"
+    else
+        printf '%s\n' "$reset_out"
     fi
 
     echo ""
@@ -7150,7 +7181,7 @@ do_configure_ssl() {
 
             if ! command -v certbot &> /dev/null; then
                 print_step "Installing certbot..."
-                if command -v apt-get &> /dev/null; then apt-get install -y certbot
+                if command -v apt-get &> /dev/null; then apt_quiet install -y certbot
                 elif command -v dnf &> /dev/null; then dnf install -y certbot
                 elif command -v yum &> /dev/null; then yum install -y certbot
                 elif command -v pacman &> /dev/null; then pacman -Sy --noconfirm certbot
@@ -7771,7 +7802,7 @@ do_toggle_protocol() {
                     if ! command -v certbot &>/dev/null; then
                         print_step "Installing certbot..."
                         if command -v dnf &>/dev/null; then dnf install -y certbot &>/dev/null
-                        elif command -v apt-get &>/dev/null; then apt-get install -y certbot &>/dev/null
+                        elif command -v apt-get &>/dev/null; then apt_quiet install -y certbot
                         elif command -v yum &>/dev/null; then yum install -y certbot &>/dev/null; fi
                     fi
                     if ! command -v certbot &>/dev/null; then
@@ -8150,7 +8181,7 @@ show_menu() {
     echo "  C. 🔒 Configure SSL certificates"
     echo "  T. 🔄 Toggle HTTP/HTTPS mode"
     echo "  M. 🔄 Database migration"
-    echo "  B. 🧰 Build toolchain (optional/dev — not needed for production)"
+    echo "  B. 🧰 Build toolchain (optional/dev; not needed for production)"
     echo "  S. ⚙️  Settings (paths)"
     echo "  P. 🛡️  Management capabilities and server settings"
     echo "  0. ❌ Exit"
@@ -8190,7 +8221,11 @@ main() {
         || [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
         local management_rc=0
         [ "$REPAIR_PERMISSIONS" = true ] && repair_management_permissions
-        check_management_capabilities || management_rc=$?
+        # --set-config alone gets no capability report: config set checks
+        # what it writes itself
+        if [ "$CHECK_CAPABILITIES" = true ] || [ "$REPAIR_PERMISSIONS" = true ]; then
+            check_management_capabilities || management_rc=$?
+        fi
         if [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
             apply_managed_config || management_rc=$?
         fi
@@ -8245,7 +8280,7 @@ main() {
         $'Configure SSL certificates\tLet'"'"'s Encrypt / custom / self-signed'
         $'Toggle HTTP/HTTPS\tSwitch protocol + run tests'
         $'Database migration\tMigrate between backends'
-        $'Build toolchain (optional/dev)\tLocal Flutter/Cargo — not needed for production'
+        $'Build toolchain (optional/dev)\tBuild support agents on this machine; not needed for production'
         $'Settings (paths)\tConfigure install paths'
         $'Management capabilities\tCheck permissions and change allowlisted server settings'
         $'Exit\tQuit the manager'

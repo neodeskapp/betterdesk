@@ -841,13 +841,91 @@ test_runs_without_term() (
 # repository, a mirror in sync) does not stop the install: the packages are
 # installed from the lists there are, and the run says so.
 test_apt_source_failure_goes_on() (
-    local out
-    out=$(bash -c 'script=$1; set --; source "$script"
-        LOG_FILE=/dev/null
-        apt-get() { if [ "$1" = update ]; then echo "E: Failed to fetch https://packages.example.org/Packages.xz" >&2; return 100; fi; echo "apt-get $*"; }
-        install_dependencies; echo "after the dependencies"' test "$SCRIPT_ROOT/install/neodesk.sh" 2>&1 < /dev/null) || true
-    case "$out" in *"apt-get install -y -qq sqlite3"*"after the dependencies"*) ;; *) fail "a failing package source stopped the install: $out" ;; esac
+    local out log
+    log=$(mktemp)
+    out=$(bash -c 'script=$1 log=$2; set --; source "$script"
+        LOG_FILE=$log
+        apt-get() { if [ "$1" = update ]; then echo "E: Failed to fetch https://packages.example.org/Packages.xz" >&2; return 100; fi; echo "apt-get $* ($DEBIAN_FRONTEND, needrestart $NEEDRESTART_MODE)"; }
+        install_dependencies; echo "after the dependencies"' test "$SCRIPT_ROOT/install/neodesk.sh" "$log" 2>&1 < /dev/null) || true
+    case "$out" in *"after the dependencies"*) ;; *) fail "a failing package source stopped the install: $out" ;; esac
     case "$out" in *"apt-get update failed for a package source"*) ;; *) fail "the failing package source is not said: $out" ;; esac
+    # LINUX-NATIVE-9: apt's output goes to the log, without questions, without
+    # upgrading what is installed and without restarting other services
+    case "$out" in *"Failed to fetch"*|*"apt-get install"*) fail "apt's output reached the screen: $out" ;; esac
+    grep -q 'apt-get install --no-upgrade -y -qq sqlite3 .* (noninteractive, needrestart l)' "$log" \
+        || fail "apt-get did not install quietly: $(cat "$log")"
+    rm -f "$log"
+)
+
+# LINUX-NATIVE-15: --set-config names the keys that changed and restarts
+# the server once; a value that is set already restarts nothing, and a
+# refusal shows the server's reason.
+test_set_config_says_what_changed() (
+    load
+    print_step() { :; }
+    print_success() { echo "$1"; }
+    print_error() { echo "$1"; }
+    systemctl() { echo "systemctl $*" >> "$TEST_DIR/calls"; }
+    start_services_with_verification() { echo "restart" >> "$TEST_DIR/calls"; }
+    server_cmd() {
+        case "$*" in
+            *LOG_LEVEL=info*) printf 'LOG_LEVEL=info\nTRUST_PROXY=Y\n' >> "$CONSOLE_PATH/.env"
+                printf '{\n  "envPath": "/x/.env",\n  "backupPath": "/x/.env.bak",\n  "changed": [\n    "LOG_LEVEL",\n    "TRUST_PROXY"\n  ],\n  "values": {}\n}\n' ;;
+            # The server lists every key it set, also one that had the value
+            *LOG_LEVEL=same*) printf '{\n  "envPath": "/x/.env",\n  "changed": [\n    "LOG_LEVEL"\n  ],\n  "values": {}\n}\n' ;;
+            *) echo "FOO is not a setting this command changes" >&2; return 1 ;;
+        esac
+    }
+    local out
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    MANAGED_CONFIG_CHANGES=(LOG_LEVEL=info TRUST_PROXY=Y)
+    out=$(apply_managed_config 2>&1) || fail "the change failed: $out"
+    case "$out" in *"Changed in $CONSOLE_PATH/.env: LOG_LEVEL, TRUST_PROXY"*) ;; *) fail "the run does not name the changed keys: $out" ;; esac
+    case "$out" in *envPath*|*backupPath*) fail "the server's report reached the screen: $out" ;; esac
+    [ "$(grep -c '^restart$' "$TEST_DIR/calls")" = 1 ] || fail "not one restart: $(cat "$TEST_DIR/calls")"
+    if grep -q 'systemctl restart' "$TEST_DIR/calls"; then fail "the server was restarted twice: $(cat "$TEST_DIR/calls")"; fi
+
+    : > "$TEST_DIR/calls"
+    MANAGED_CONFIG_CHANGES=(LOG_LEVEL=same)
+    out=$(apply_managed_config 2>&1) || fail "a change to the same value failed: $out"
+    case "$out" in *"Nothing changed"*) ;; *) fail "a change to the same value says: $out" ;; esac
+    if grep -q '^restart$' "$TEST_DIR/calls"; then fail "a change to the same value restarted the server"; fi
+
+    MANAGED_CONFIG_CHANGES=(FOO=bar)
+    out=$(apply_managed_config 2>&1) && fail "a refused change reported success"
+    case "$out" in *"FOO is not a setting"*) ;; *) fail "the refusal does not give the reason: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-10: --protocol did nothing; it is no longer in --help and
+# says so instead of being taken silently.
+test_protocol_flag_says_it_does_nothing() (
+    local out
+    out=$(bash "$SCRIPT_ROOT/install/neodesk.sh" --protocol https --help 2>&1) || fail "--protocol stopped the run: $out"
+    case "$out" in *"--protocol does nothing"*) ;; *) fail "--protocol is taken silently: $out" ;; esac
+    case "$out" in *"--protocol MODE"*) fail "--help still offers --protocol: $out" ;; esac
+)
+
+# LINUX-NATIVE-18: the installer's screens use NeoDesk's names, and the
+# password reset shows its own result, not the server's details.
+test_installer_uses_neodesk_names() (
+    local hits
+    hits=$(grep -nE 'HBBS \(Signal\)|HBBR \(Relay\)|RustDesk path|Detected RustDesk installation|RustDesk directory|Local Flutter/Cargo|Option 5 in SSL menu|^ *echo -e "  RustDesk:' \
+        "$SCRIPT_ROOT/install/neodesk.sh" || true)
+    [ -z "$hits" ] || fail "neodesk.sh still shows old names:
+$hits"
+    load
+    print_header() { :; }
+    auto_detect_paths() { CONSOLE_TYPE=go; }
+    forget_first_admin_password() { :; }
+    server_cmd() { cat >/dev/null; printf 'Auth database (SQLite): /x\nHash type: pbkdf2-sha256, length: 118\nDone\n'; }
+    AUTO_MODE=true
+    ADMIN_PASSWORD=Reset-Pass-123
+    local out
+    out=$(do_reset_password 2>&1) || fail "the reset failed: $out"
+    case "$out" in *Reset-Pass-123*) ;; *) fail "the reset does not show the new password: $out" ;; esac
+    case "$out" in *"Hash type"*|*"Auth database"*) fail "the reset shows the server's details: $out" ;; esac
+    rm -rf "$TEST_DIR"
 )
 
 # L73: the installers' backup is the server's own (a consistent database
@@ -1976,6 +2054,9 @@ test_backups_move_to_the_neodesk_folder
 test_no_settings_go_to_the_old_console_service
 test_runs_without_term
 test_apt_source_failure_goes_on
+test_set_config_says_what_changed
+test_protocol_flag_says_it_does_nothing
+test_installer_uses_neodesk_names
 test_backup_uses_the_servers_backup
 test_backups_are_for_root_only
 test_old_backups_are_pruned
