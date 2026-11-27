@@ -24,7 +24,7 @@ const msiBytes = "MSI of the generic support release"
 // tokens of the signal server's table, a folder, and, with release, an
 // imported generic Support Agent release with an x64 MSI.
 func receiverWorld(t *testing.T, release bool, test func(t *testing.T, w *routetest.World)) {
-	storetest.Each(t, func(t *testing.T, sdb *store.DB) {
+	storetest.EachMigrated(t, func(t *testing.T, sdb *store.DB) {
 		storetest.GoServer(t, sdb)
 		ctx := context.Background()
 		for _, row := range [][]any{

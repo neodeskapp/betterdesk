@@ -12,10 +12,12 @@ import (
 // the Go console; their goldens were recorded from Go. A test instance has
 // no imported Support Agent release, so the setup names none and a
 // download with a working token is 409 no_release. The switch is put back
-// on at the end of each turn; the token the turn makes is revoked.
+// on at the end of each turn; the token the turn makes is revoked. The
+// group runs after "tokens" (groups run by name), so the token it leaves
+// behind does not move the ids the tokens group's answers carry.
 func init() {
 	admins := contract.Roles("server_admin", "admin")
-	contract.Group("receiver-app",
+	contract.Group("tokens-receiver-app",
 		contract.Case{Name: "offer", Path: "/api/support/receiver-offer"},
 		contract.Case{Name: "offer-off", Method: "PUT", Path: "/api/support/receiver-offer", Body: map[string]any{"enabled": false}},
 		contract.Case{Name: "offer-after-off", Path: "/api/support/receiver-offer", Roles: admins},
