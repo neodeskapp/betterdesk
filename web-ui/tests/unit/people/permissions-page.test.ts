@@ -1,6 +1,7 @@
 /**
  * Roles and permissions on the settings pattern: the role picker first with
- * each role's sentence, a summary sentence, edit then save as one batch,
+ * the role names and what the chosen role can do beside it, no internal
+ * keys on screen, edit then save as one batch,
  * the toast that names what changed and undoes it with the server's
  * `previous`, the note for a permission whose needed one is off with its
  * button, the views (what differs, compare, who has it), and super admin
@@ -112,13 +113,17 @@ const row = (perm: string) => document.getElementById(`perm-${perm.replace(/\./g
 const box = (perm: string) => within(row(perm)).getByRole('checkbox');
 
 describe('the role comes first', () => {
-	test('a picker with every role and its sentence; the page opens on the first role that can be changed', async () => {
+	test('a picker with every role by name; the page opens on the first role that can be changed', async () => {
 		render(Page);
 		const picker = await screen.findByRole('radiogroup', { name: 'Role to change' });
 		const radios = within(picker).getAllByRole('radio');
 		expect(radios).toHaveLength(3);
 		expect(within(picker).getByRole('radio', { name: 'Remote operator' })).toBeChecked();
-		expect(within(picker).getByText(/^Connects to devices/)).toBeTruthy();
+		// Names only: what the chosen role can do is said once, beside the picker
+		expect(within(picker).queryByText(/^Connects to devices/)).toBeNull();
+		expect(document.querySelector('.perm-scope .perm-summary .perm-sentence')?.textContent).toMatch(
+			/^People with this role can/
+		);
 		// The picker comes before the permissions
 		const first = document.querySelector('#perm-role');
 		expect(first?.compareDocumentPosition(row('device.view')) ?? 0).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
@@ -132,11 +137,36 @@ describe('the role comes first', () => {
 	});
 });
 
+describe('rows', () => {
+	test('no internal key on screen; the filter still finds a permission by it', async () => {
+		render(Page);
+		await waitFor(() => expect(box('server.keys')).toBeEnabled());
+		expect(row('server.keys').textContent).not.toContain('server.keys');
+		expect(row('server.keys')).toHaveAttribute('data-setting', 'server.keys');
+		await fireEvent.input(screen.getByRole('searchbox', { name: 'Filter permissions' }), {
+			target: { value: 'server.keys' }
+		});
+		await waitFor(() => expect(row('device.view')).not.toBeVisible());
+		expect(row('server.keys')).toBeVisible();
+	});
+
+	test('Reset all changes shows only while the role has a saved change', async () => {
+		render(Page);
+		// operator has a stored override (device.delete)
+		expect(await screen.findByRole('button', { name: /Reset all/ })).toBeTruthy();
+		cleanup();
+		pageState.url = new URL('http://localhost/permissions?role=server_admin');
+		render(Page);
+		await waitFor(() => expect(box('server.keys')).toBeChecked());
+		expect(screen.queryByRole('button', { name: /Reset all/ })).toBeNull();
+	});
+});
+
 describe('edit, then save', () => {
 	test('nothing is sent until Save; Save sends one batch, the toast names the changes and Undo sends previous back', async () => {
 		render(Page);
 		await waitFor(() => expect(box('device.connect')).toBeEnabled());
-		const sentence = () => document.querySelector('.settings-summary .perm-sentence')?.textContent;
+		const sentence = () => document.querySelector('.perm-summary .perm-sentence')?.textContent;
 		// The summary names the role it describes
 		const picked = screen.getAllByRole('radio').find((r) => (r as HTMLInputElement).checked);
 		const pickedName =
