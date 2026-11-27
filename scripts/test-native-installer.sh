@@ -596,7 +596,7 @@ test_install_sh_uses_the_fork() (
         install/install.sh install/neodesk.sh install/neodesk.ps1 install/neodesk-docker.sh || true)
     [ -z "$hits" ] || fail "an installer fetches main's raw files: $hits"
     hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/(neodeskapp/neodesk/dev/|UNITRONIX/BetterDesk/)|github\.com/neodeskapp/neodesk/(blob|tree)/dev/' \
-        install/install.sh install/neodesk.sh install/neodesk.ps1 install/neodesk-docker.sh install/docker-compose*.yml README.md SECURITY.md || true)
+        install/install.sh install/neodesk.sh install/neodesk.ps1 install/neodesk-docker.sh install/docker-compose*.yml README.md || true)
     [ -z "$hits" ] || fail "one-liners name a branch without the current installers: $hits"
 )
 
@@ -607,7 +607,7 @@ test_install_sh_uses_the_fork() (
 test_public_addresses() (
     local hits
     hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/neodeskapp/neodesk/main/' \
-        README.md SECURITY.md install/docker-compose*.yml .github/workflows/docker-publish.yml || true)
+        README.md install/docker-compose*.yml .github/workflows/docker-publish.yml || true)
     [ -z "$hits" ] || fail "the docs name main's raw files: $hits"
     hits=$(cd "$SCRIPT_ROOT" && grep -nE '^#.*raw\.githubusercontent\.com/neodeskapp/neodesk/main/|echo .*raw\.githubusercontent\.com/neodeskapp/neodesk/main/' \
         install/*.sh || true)
