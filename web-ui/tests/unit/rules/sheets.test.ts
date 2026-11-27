@@ -82,6 +82,39 @@ describe('rule sheet', () => {
 		expect(writes()).toEqual([]);
 	});
 
+	test('the condition says when the server checks it', async () => {
+		const user = userEvent.setup();
+		render(RuleSheet, { rule: null, onclose: () => {}, onsaved: () => {} });
+		const condition = screen.getByLabelText('automation.condition_type');
+		expect(condition).toHaveAccessibleDescription('Checked with each usage report from a device.');
+		await user.selectOptions(condition, 'offline_duration');
+		expect(condition).toHaveAccessibleDescription('Checked once a minute.');
+		await user.selectOptions(condition, 'custom');
+		expect(condition).toHaveAccessibleDescription(/raises no alerts by itself/);
+	});
+
+	test('all devices by default: the device ID field shows only for one device, and is then needed', async () => {
+		const user = userEvent.setup();
+		const onsaved = vi.fn();
+		render(RuleSheet, { rule: null, onclose: () => {}, onsaved });
+		const scope = screen.getByRole('radiogroup', { name: 'automation.scope_device' });
+		expect(screen.getByRole('radio', { name: 'automation.scope_all' })).toBeChecked();
+		const id = screen.getByLabelText('Device ID');
+		expect(id).not.toBeVisible();
+		await user.click(screen.getByRole('radio', { name: 'One device' }));
+		expect(id).toBeVisible();
+		await user.type(screen.getByLabelText('automation.rule_name'), 'CPU');
+		await user.type(screen.getByLabelText('automation.condition_value'), '90');
+		await user.click(screen.getByRole('button', { name: 'automation.create_rule' }));
+		expect(id).toHaveAttribute('aria-invalid', 'true');
+		expect(writes()).toEqual([]);
+		await user.type(id, '900100001');
+		await user.click(screen.getByRole('button', { name: 'automation.create_rule' }));
+		await vi.waitFor(() => expect(onsaved).toHaveBeenCalled());
+		expect(writes()[0]?.body).toMatchObject({ scope_device_id: '900100001' });
+		expect(scope).toBeTruthy();
+	});
+
 	test('editing a disabled rule keeps it disabled and sends PATCH', async () => {
 		const user = userEvent.setup();
 		const rule: AlertRule = {
