@@ -264,7 +264,7 @@
     "intune_script_title": "Windows-installatiescript",
     "intune_script_hint": "Voer het als administrator uit nadat het RustDesk-installatieprogramma klaar is, bijvoorbeeld als Intune- of PSADT-stap. Het stelt dezelfde waarden in als de deploy-string.",
     "deploy_string_not_ready": "Deploy-string is niet beschikbaar totdat de publieke serversleutel is geladen.",
-    "client_server_host_env_hint": "De adressen zijn ingesteld in Instellingen, Openbare client-eindpunten. Maak ze daar leeg om weer het hier ingevulde adres te gebruiken.",
+    "client_server_host_env_hint": "De ID-server is ingesteld in Instellingen, Openbare client-eindpunten. Maak hem daar leeg om weer het hier ingevulde adres te gebruiken.",
     "client_config_qr_unreachable_host": "Deze code wijst alleen naar deze computer (localhost of een .local-naam), dus telefoons kunnen hem meestal niet bereiken. Vul eerst onder Client-serveradres het netwerkadres van de server in, of stel het blijvend in bij Instellingen.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -723,7 +723,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "Nog geen apparaten.",
+    "empty_join_requests": "Keur nieuwe computers goed onder Deelnameverzoeken"
   },
   "keys": {
     "title": "Serversleutels",
@@ -1127,8 +1129,6 @@
     "public_endpoints_relay": "Openbare relay-server",
     "public_endpoints_relay_placeholder": "bijv. remote.example.com (standaard: ID)",
     "public_endpoints_api_url": "Openbare API-URL",
-    "public_endpoints_api_url_placeholder": "bijv. https://api.example.com",
-    "public_endpoints_api_url_hint": "Volledige URL voor RustDesk-login en API (standaard poort 21114).",
     "public_endpoints_save": "Eindpunten opslaan",
     "public_endpoints_saved": "Openbare client-eindpunten opgeslagen",
     "public_endpoints_invalid_host": "Ongeldige ID- of relay-hostnaam",
@@ -1302,8 +1302,8 @@
       "rec_type": "Type",
       "rec_size": "Grootte",
       "audit_moved": "Het activiteitenlogboek van de console staat onder",
-      "audit_link": "Activiteit › Beveiliging en audit",
-      "endpoint_api_hint": "Volledig adres waarmee clients inloggen, bijvoorbeeld https://api.example.com. De server gebruikt poort 21114, tenzij u die hebt gewijzigd.",
+      "audit_link": "Activiteit › Auditlogboek",
+      "endpoint_api_hint": "Volledig adres waarmee clients inloggen, bijvoorbeeld https://api.example.com. De server gebruikt poort 21121, tenzij u die hebt gewijzigd.",
       "endpoints_when": "Vul deze in als clients de server via een ander adres bereiken dan deze console, bijvoorbeeld achter een reverse proxy. Lege velden gebruiken het automatisch gevonden adres, te zien onder Wat clients nu krijgen.",
       "conn_p2p_desc": "Computers verbinden direct als hun netwerken dat toelaten, anders via de relayserver.",
       "conn_relay_desc": "Elke sessie loopt via de relayserver.",
@@ -1379,7 +1379,7 @@
       "auto": "automatisch gevonden",
       "endpoint_id_help": "Hostnaam of IP-adres van de ID-server, zoals clients op internet hem bereiken. Vul dit in als clients deze server via een ander adres bereiken dan deze console, bijvoorbeeld achter een reverse proxy. Bijvoorbeeld remote.example.com.",
       "endpoint_relay_help": "Hostnaam of IP-adres van de relayserver. Laat leeg om het adres van de ID-server te gebruiken.",
-      "endpoint_api_help": "Volledig adres waarmee clients inloggen. De server gebruikt poort 21114, tenzij u die hebt gewijzigd. Bijvoorbeeld https://api.example.com of http://203.0.113.10:21114.",
+      "endpoint_api_help": "Volledig adres waarmee clients inloggen. De server gebruikt poort 21121, tenzij u die hebt gewijzigd. Bijvoorbeeld https://api.example.com of http://203.0.113.10:21121.",
       "conn_mode_help": "Directe verbindingen zijn sneller. De relay werkt op elk netwerk.",
       "conn_operator_only_help": "De RustDesk-app moet ingelogd zijn met een account waarvan de rol met apparaten mag verbinden (Met apparaten verbinden). Andere apparaten kunnen geen sessies starten. Sessies vanuit de browser werken nog steeds.",
       "host_extra": "Alleen de hostnaam of het IP-adres, zonder http://, poort of pad.",
@@ -9191,7 +9191,7 @@
       },
       "backup": {
         "title": "Een back-up maken",
-        "hint": "Daarin zit de serversleutel. Zonder die sleutel moet elke computer opnieuw worden ingesteld."
+        "hint": "Daarin zit de serversleutel. Zonder die sleutel moet elke computer opnieuw worden ingesteld. Een back-up onder Server, Back-ups vinkt deze stap af, met de hand of volgens schema; back-ups van het installatiescript tellen niet."
       }
     }
   },

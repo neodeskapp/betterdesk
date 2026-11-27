@@ -270,7 +270,7 @@
     "intune_script_title": "Installationsskript för Windows",
     "intune_script_hint": "Kör det som administratör när RustDesk-installationsprogrammet är klart, till exempel som ett Intune- eller PSADT-steg. Det ställer in samma värden som deploy-strängen.",
     "deploy_string_not_ready": "Deploy-strängen är inte tillgänglig förrän serverns publika nyckel har laddats.",
-    "client_server_host_env_hint": "Adresserna är inställda under Inställningar, Offentliga klientändpunkter. Töm dem där för att använda adressen som angetts här igen.",
+    "client_server_host_env_hint": "ID-servern är inställd under Inställningar, Offentliga klientändpunkter. Töm den där för att använda adressen som angetts här igen.",
     "client_config_qr_unreachable_host": "Den här koden pekar bara på den här datorn (localhost eller ett .local-namn), så telefoner når den oftast inte. Ange först serverns nätverksadress under Klientserveradress, eller ställ in den permanent i Inställningar.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -729,7 +729,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "Inga enheter än.",
+    "empty_join_requests": "Godkänn nya datorer under Anslutningsförfrågningar"
   },
   "keys": {
     "title": "Servernycklar",
@@ -1133,8 +1135,6 @@
     "public_endpoints_relay": "Offentlig relay-server",
     "public_endpoints_relay_placeholder": "t.ex. remote.example.com (standard: ID)",
     "public_endpoints_api_url": "Offentlig API-URL",
-    "public_endpoints_api_url_placeholder": "t.ex. https://api.example.com",
-    "public_endpoints_api_url_hint": "Fullständig URL för RustDesk-inloggning och API (standardport 21114).",
     "public_endpoints_save": "Spara ändpunkter",
     "public_endpoints_saved": "Offentliga klientändpunkter sparade",
     "public_endpoints_invalid_host": "Ogiltigt ID- eller relay-värdnamn",
@@ -1308,8 +1308,8 @@
       "rec_type": "Typ",
       "rec_size": "Storlek",
       "audit_moved": "Konsolens aktivitetslogg finns under",
-      "audit_link": "Aktivitet › Säkerhet och granskning",
-      "endpoint_api_hint": "Fullständig adress som klienter loggar in via, till exempel https://api.example.com. Servern använder port 21114 om du inte har ändrat den.",
+      "audit_link": "Aktivitet › Granskningslogg",
+      "endpoint_api_hint": "Fullständig adress som klienter loggar in via, till exempel https://api.example.com. Servern använder port 21121 om du inte har ändrat den.",
       "endpoints_when": "Fyll i dessa när klienter når servern på en annan adress än den här konsolen, till exempel bakom en omvänd proxy. Tomma fält använder adressen som hittades automatiskt, som visas under Det klienter får nu.",
       "conn_p2p_desc": "Datorerna ansluter direkt när näten tillåter det, annars via reläservern.",
       "conn_relay_desc": "Varje session går via reläservern.",
@@ -1385,7 +1385,7 @@
       "auto": "hittad automatiskt",
       "endpoint_id_help": "Värdnamn eller IP-adress till ID-servern, så som klienter på internet når den. Fyll i det när klienter når den här servern på en annan adress än den här konsolen, till exempel bakom en omvänd proxy. Till exempel remote.example.com.",
       "endpoint_relay_help": "Värdnamn eller IP-adress till reläservern. Lämna tomt för att använda ID-serverns adress.",
-      "endpoint_api_help": "Fullständig adress som klienterna använder för att logga in. Servern använder port 21114 om du inte har ändrat den. Till exempel https://api.example.com eller http://203.0.113.10:21114.",
+      "endpoint_api_help": "Fullständig adress som klienterna använder för att logga in. Servern använder port 21121 om du inte har ändrat den. Till exempel https://api.example.com eller http://203.0.113.10:21121.",
       "conn_mode_help": "Direkta anslutningar är snabbare. Reläet fungerar på alla nätverk.",
       "conn_operator_only_help": "RustDesk-appen måste vara inloggad på ett konto vars roll får ansluta till enheter (Anslut till enheter). Andra enheter kan inte starta sessioner. Sessioner från webbläsaren fungerar fortfarande.",
       "host_extra": "Bara värdnamnet eller IP-adressen, utan http://, port eller sökväg.",
@@ -9197,7 +9197,7 @@
       },
       "backup": {
         "title": "Skapa en säkerhetskopia",
-        "hint": "Den innehåller serverns nyckel. Utan nyckeln måste varje dator konfigureras igen."
+        "hint": "Den innehåller serverns nyckel. Utan nyckeln måste varje dator konfigureras igen. En säkerhetskopia under Server, Säkerhetskopior bockar av steget, för hand eller enligt schema; installationsskriptets säkerhetskopior räknas inte."
       }
     }
   },

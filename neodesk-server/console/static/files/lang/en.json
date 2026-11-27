@@ -267,7 +267,7 @@
         "client_server_host_label": "Client server address",
         "client_server_host_placeholder": "e.g. 203.0.113.10 or desk.example.com",
         "client_server_host_hint": "The address clients use to reach this server. Changing it here only changes the values below, so you can copy them for another address. The server's own setting is in Settings, Public client endpoints.",
-        "client_server_host_env_hint": "The addresses are set in Settings, Public client endpoints. Clear them there to use the address entered here again.",
+        "client_server_host_env_hint": "The ID server is set in Settings, Public client endpoints. Clear it there to use the address entered here again.",
         "apply_client_host": "Show values",
         "copy_deploy_string": "Copy deploy string",
         "show_intune_script": "Windows install script (Intune)",
@@ -731,7 +731,9 @@
         "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
         "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
         "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-        "unblock_not_blocked": "This computer is not blocked on this server."
+        "unblock_not_blocked": "This computer is not blocked on this server.",
+        "empty_none": "No devices yet.",
+        "empty_join_requests": "Approve new computers under Join requests"
     },
     "keys": {
         "title": "Server Keys",
@@ -870,8 +872,6 @@
         "public_endpoints_relay": "Public relay server",
         "public_endpoints_relay_placeholder": "e.g. remote.example.com (defaults to ID server)",
         "public_endpoints_api_url": "Public API URL",
-        "public_endpoints_api_url_placeholder": "e.g. https://api.example.com or http://203.0.113.10:21114",
-        "public_endpoints_api_url_hint": "Full URL RustDesk clients use for login and API calls (Go server on port 21114 by default).",
         "public_endpoints_save": "Save addresses",
         "public_endpoints_saved": "Public client endpoints saved",
         "public_endpoints_invalid_host": "Invalid ID or relay server hostname",
@@ -1310,8 +1310,8 @@
             "rec_type": "Type",
             "rec_size": "Size",
             "audit_moved": "The console activity log is under",
-            "audit_link": "Activity › Security and audit",
-            "endpoint_api_hint": "Full address clients use to sign in, for example https://api.example.com. The server uses port 21114 unless you changed it.",
+            "audit_link": "Activity › Audit log",
+            "endpoint_api_hint": "Full address clients use to sign in, for example https://api.example.com. The server uses port 21121 unless you changed it.",
             "endpoints_when": "Fill these in when clients reach this server under another address than this console, for example behind a reverse proxy. Empty fields use the address found automatically, shown under What clients get now.",
             "conn_p2p_desc": "Computers connect directly when their networks allow it, otherwise through the relay server.",
             "conn_relay_desc": "Every session goes through the relay server.",
@@ -1387,7 +1387,7 @@
             "auto": "found automatically",
             "endpoint_id_help": "Host name or IP address of the ID server, as clients on the internet reach it. Fill it in when clients reach this server under another address than this console, such as behind a reverse proxy. For example remote.example.com.",
             "endpoint_relay_help": "Host name or IP address of the relay server. Leave it empty to use the ID server address.",
-            "endpoint_api_help": "Full address clients use to sign in. The server uses port 21114 unless you changed it. For example https://api.example.com or http://203.0.113.10:21114.",
+            "endpoint_api_help": "Full address clients use to sign in. The server uses port 21121 unless you changed it. For example https://api.example.com or http://203.0.113.10:21121.",
             "conn_mode_help": "Direct connections are faster. The relay works on every network.",
             "conn_operator_only_help": "The RustDesk app must be signed in to an account whose role may connect to devices (Connect to devices). Other devices cannot start sessions. Sessions from the browser still work.",
             "host_extra": "Only the host name or IP address, without http://, a port or a path.",
@@ -9191,7 +9191,7 @@
             },
             "backup": {
                 "title": "Make a backup",
-                "hint": "It holds the server's key. Without the key every computer has to be set up again."
+                "hint": "It holds the server's key: without it every computer has to be set up again. A backup under Server, Backups ticks this step, made by hand or on a schedule; the install script's backups don't."
             }
         }
     },

@@ -270,7 +270,7 @@
     "intune_script_title": "Windowsin asennusskripti",
     "intune_script_hint": "Suorita se järjestelmänvalvojana, kun RustDesk-asennusohjelma on valmis, esimerkiksi Intune- tai PSADT-vaiheena. Se asettaa samat arvot kuin deploy-merkkijono.",
     "deploy_string_not_ready": "Deploy-merkkijono ei ole saatavilla ennen kuin palvelimen julkinen avain on ladattu.",
-    "client_server_host_env_hint": "Osoitteet on asetettu kohdassa Asetukset, Julkiset asiakaspäätepisteet. Tyhjennä ne siellä, niin tähän syötettyä osoitetta käytetään taas.",
+    "client_server_host_env_hint": "ID-palvelin on asetettu kohdassa Asetukset, Julkiset asiakaspäätepisteet. Tyhjennä se siellä, niin tähän syötettyä osoitetta käytetään taas.",
     "client_config_qr_unreachable_host": "Tämä koodi osoittaa vain tähän tietokoneeseen (localhost tai .local-nimi), joten puhelimet eivät yleensä tavoita sitä. Anna ensin palvelimen verkko-osoite kohtaan Asiakaspalvelimen osoite tai aseta se pysyvästi asetuksissa.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -729,7 +729,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "Ei vielä laitteita.",
+    "empty_join_requests": "Hyväksy uudet tietokoneet kohdassa Liittymispyynnöt"
   },
   "keys": {
     "title": "Palvelimen avaimet",
@@ -1133,8 +1135,6 @@
     "public_endpoints_relay": "Julkinen relay-palvelin",
     "public_endpoints_relay_placeholder": "esim. remote.example.com (oletus: ID-palvelin)",
     "public_endpoints_api_url": "Julkinen API-URL",
-    "public_endpoints_api_url_placeholder": "esim. https://api.example.com",
-    "public_endpoints_api_url_hint": "Täysi URL RustDesk-kirjautumiseen ja API-kutsuihin (oletusportti 21114).",
     "public_endpoints_save": "Tallenna päätepisteet",
     "public_endpoints_saved": "Julkiset asiakaspäätepisteet tallennettu",
     "public_endpoints_invalid_host": "Virheellinen ID- tai relay-isäntänimi",
@@ -1308,8 +1308,8 @@
       "rec_type": "Tyyppi",
       "rec_size": "Koko",
       "audit_moved": "Konsolin toimintaloki on kohdassa",
-      "audit_link": "Toiminta › Tietoturva ja auditointi",
-      "endpoint_api_hint": "Täysi osoite, jolla asiakkaat kirjautuvat, esimerkiksi https://api.example.com. Palvelin käyttää porttia 21114, ellet ole muuttanut sitä.",
+      "audit_link": "Toiminta › Tarkastusloki",
+      "endpoint_api_hint": "Täysi osoite, jolla asiakkaat kirjautuvat, esimerkiksi https://api.example.com. Palvelin käyttää porttia 21121, ellet ole muuttanut sitä.",
       "endpoints_when": "Täytä nämä, kun asiakkaat tavoittavat palvelimen eri osoitteesta kuin tämän konsolin, esimerkiksi käänteisen välityspalvelimen takaa. Tyhjät kentät käyttävät automaattisesti löydettyä osoitetta, joka näkyy kohdassa Mitä asiakkaat saavat nyt.",
       "conn_p2p_desc": "Tietokoneet yhdistävät suoraan, kun verkot sallivat sen, muuten välityspalvelimen kautta.",
       "conn_relay_desc": "Jokainen istunto kulkee välityspalvelimen kautta.",
@@ -1385,7 +1385,7 @@
       "auto": "löydetty automaattisesti",
       "endpoint_id_help": "ID-palvelimen isäntänimi tai IP-osoite sellaisena kuin asiakkaat tavoittavat sen internetistä. Täytä tämä, kun asiakkaat tavoittavat tämän palvelimen eri osoitteesta kuin tämän konsolin, esimerkiksi käänteisen välityspalvelimen takana. Esimerkiksi remote.example.com.",
       "endpoint_relay_help": "Välityspalvelimen isäntänimi tai IP-osoite. Jätä tyhjäksi, niin käytetään ID-palvelimen osoitetta.",
-      "endpoint_api_help": "Koko osoite, jolla asiakkaat kirjautuvat sisään. Palvelin käyttää porttia 21114, ellet ole muuttanut sitä. Esimerkiksi https://api.example.com tai http://203.0.113.10:21114.",
+      "endpoint_api_help": "Koko osoite, jolla asiakkaat kirjautuvat sisään. Palvelin käyttää porttia 21121, ellet ole muuttanut sitä. Esimerkiksi https://api.example.com tai http://203.0.113.10:21121.",
       "conn_mode_help": "Suorat yhteydet ovat nopeampia. Välitys toimii kaikissa verkoissa.",
       "conn_operator_only_help": "RustDesk-sovelluksen on oltava kirjautuneena tilille, jonka rooli saa muodostaa yhteyden laitteisiin (Yhdistä laitteisiin). Muut laitteet eivät voi aloittaa istuntoja. Istunnot selaimesta toimivat edelleen.",
       "host_extra": "Vain isäntänimi tai IP-osoite, ilman http://-alkua, porttia tai polkua.",
@@ -9197,7 +9197,7 @@
       },
       "backup": {
         "title": "Tee varmuuskopio",
-        "hint": "Se sisältää palvelimen avaimen. Ilman avainta jokainen tietokone on määritettävä uudelleen."
+        "hint": "Se sisältää palvelimen avaimen. Ilman avainta jokainen tietokone on määritettävä uudelleen. Vaihe merkitään tehdyksi varmuuskopiosta kohdassa Palvelin, Varmuuskopiot, käsin tai ajastettuna; asennusskriptin varmuuskopioita ei lasketa."
       }
     }
   },

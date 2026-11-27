@@ -268,7 +268,7 @@
     "intune_script_title": "Script d'installation Windows",
     "intune_script_hint": "Exécutez-le en tant qu'administrateur une fois le programme d'installation de RustDesk terminé, par exemple comme étape Intune ou PSADT. Il définit les mêmes valeurs que la chaîne de déploiement.",
     "deploy_string_not_ready": "La chaîne de déploiement n’est pas disponible tant que la clé publique du serveur n’est pas chargée.",
-    "client_server_host_env_hint": "Les adresses sont définies dans Paramètres, Points de terminaison clients publics. Videz-les à cet endroit pour utiliser de nouveau l'adresse saisie ici.",
+    "client_server_host_env_hint": "Le serveur ID est défini dans Paramètres, Points de terminaison clients publics. Videz-le à cet endroit pour utiliser de nouveau l'adresse saisie ici.",
     "client_config_qr_unreachable_host": "Ce code pointe uniquement vers cet ordinateur (localhost ou un nom .local), les téléphones ne peuvent donc généralement pas l'atteindre. Saisissez d'abord l'adresse réseau du serveur sous Adresse serveur pour les clients, ou définissez-la durablement dans les Paramètres.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -727,7 +727,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "Aucun appareil pour le moment.",
+    "empty_join_requests": "Approuvez les nouveaux ordinateurs dans Demandes d'adhésion"
   },
   "keys": {
     "title": "Clés du serveur",
@@ -1131,8 +1133,6 @@
     "public_endpoints_relay": "Serveur relais public",
     "public_endpoints_relay_placeholder": "ex. remote.example.com (par défaut : serveur ID)",
     "public_endpoints_api_url": "URL API publique",
-    "public_endpoints_api_url_placeholder": "ex. https://api.example.com",
-    "public_endpoints_api_url_hint": "URL complète pour connexion et API RustDesk (port 21114 par défaut).",
     "public_endpoints_save": "Enregistrer les points de terminaison",
     "public_endpoints_saved": "Points de terminaison clients publics enregistrés",
     "public_endpoints_invalid_host": "Nom d’hôte ID ou relais invalide",
@@ -1306,8 +1306,8 @@
       "rec_type": "Type",
       "rec_size": "Taille",
       "audit_moved": "Le journal d'activité de la console se trouve dans",
-      "audit_link": "Activité › Sécurité et audit",
-      "endpoint_api_hint": "Adresse complète utilisée par les clients pour se connecter, par exemple https://api.example.com. Le serveur utilise le port 21114 sauf si vous l'avez changé.",
+      "audit_link": "Activité › Journal d'audit",
+      "endpoint_api_hint": "Adresse complète utilisée par les clients pour se connecter, par exemple https://api.example.com. Le serveur utilise le port 21121 sauf si vous l'avez changé.",
       "endpoints_when": "Renseignez-les si les clients joignent ce serveur sous une autre adresse que cette console, par exemple derrière un proxy inverse. Les champs vides utilisent l'adresse trouvée automatiquement, visible sous Ce que les clients reçoivent.",
       "conn_p2p_desc": "Les ordinateurs se connectent directement quand leurs réseaux le permettent, sinon via le serveur relais.",
       "conn_relay_desc": "Chaque session passe par le serveur relais.",
@@ -1383,7 +1383,7 @@
       "auto": "trouvée automatiquement",
       "endpoint_id_help": "Nom d'hôte ou adresse IP du serveur d'ID, tel que les clients sur Internet l'atteignent. Remplissez-le quand les clients atteignent ce serveur sous une autre adresse que cette console, par exemple derrière un proxy inverse. Par exemple remote.example.com.",
       "endpoint_relay_help": "Nom d'hôte ou adresse IP du serveur relais. Laissez vide pour utiliser l'adresse du serveur d'ID.",
-      "endpoint_api_help": "Adresse complète que les clients utilisent pour se connecter. Le serveur utilise le port 21114, sauf si vous l'avez changé. Par exemple https://api.example.com ou http://203.0.113.10:21114.",
+      "endpoint_api_help": "Adresse complète que les clients utilisent pour se connecter. Le serveur utilise le port 21121, sauf si vous l'avez changé. Par exemple https://api.example.com ou http://203.0.113.10:21121.",
       "conn_mode_help": "Les connexions directes sont plus rapides. Le relais fonctionne sur tous les réseaux.",
       "conn_operator_only_help": "L'appli RustDesk doit être connectée à un compte dont le rôle peut se connecter aux appareils (Se connecter aux appareils). Les autres appareils ne peuvent pas lancer de sessions. Les sessions depuis le navigateur fonctionnent toujours.",
       "host_extra": "Seulement le nom d'hôte ou l'adresse IP, sans http://, sans port ni chemin.",
@@ -9195,7 +9195,7 @@
       },
       "backup": {
         "title": "Créer une sauvegarde",
-        "hint": "Elle contient la clé du serveur. Sans cette clé, chaque ordinateur doit être reconfiguré."
+        "hint": "Elle contient la clé du serveur. Sans cette clé, chaque ordinateur doit être reconfiguré. Une sauvegarde dans Serveur, Sauvegardes valide cette étape, manuelle ou planifiée ; celles du script d'installation ne comptent pas."
       }
     }
   },
