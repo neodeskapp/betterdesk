@@ -134,7 +134,7 @@ ENV NODE_ENV=production \
     NEODESK_UPDATE_MODE=image \
     NEODESK_SUPERVISOR=docker
 
-EXPOSE 3375 5443 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
+EXPOSE 3375 5443 21114 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
 
 # The server writes files of its own (mesh_agent_server.pem) in its folder
 WORKDIR /opt/neodesk/data

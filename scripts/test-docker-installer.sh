@@ -678,13 +678,13 @@ test_summary_names_the_console_ports_it_serves() (
     load
     local out
     out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "the install failed: $out"
-    printf '%s' "$out" | grep -q 'in front of this machine: TCP 3375, 21115-21119' || fail "a plain install's summary does not name 3375 alone: $out"
+    printf '%s' "$out" | grep -q 'in front of this machine: TCP 3375, 21114-21119' || fail "a plain install's summary does not name 3375 alone: $out"
     env_set HTTPS_ENABLED true
     out=$(mgr 'COMMAND=update; do_install' 2>&1) || fail "the update with HTTPS failed: $out"
-    printf '%s' "$out" | grep -q 'in front of this machine: TCP 3375, 5443, 21115-21119' || fail "the summary with HTTPS does not name 5443: $out"
+    printf '%s' "$out" | grep -q 'in front of this machine: TCP 3375, 5443, 21114-21119' || fail "the summary with HTTPS does not name 5443: $out"
     env_set TRUST_PROXY 1
     out=$(mgr 'COMMAND=update; do_install' 2>&1) || fail "the update with TRUST_PROXY failed: $out"
-    printf '%s' "$out" | grep -q 'in front of this machine: TCP 21115-21119' || fail "the summary behind a reverse proxy names the console's ports: $out"
+    printf '%s' "$out" | grep -q 'in front of this machine: TCP 21114-21119' || fail "the summary behind a reverse proxy names the console's ports: $out"
     rm -rf "$TEST_DIR"
 )
 
@@ -749,7 +749,7 @@ test_traefik_with_letsencrypt() (
     done
     if grep -q '^LETSENCRYPT_CA_SERVER=' "$NEODESK_DIR/.env"; then fail "a production install uses another CA server"; fi
     printf '%s' "$out" | grep -q 'Web console: *https://console.example.com' || fail "no HTTPS console address in: $out"
-    printf '%s' "$out" | grep -q 'TCP 80, 443, 21115' || fail "the firewall line does not name 80 and 443: $out"
+    printf '%s' "$out" | grep -q 'TCP 80, 443, 21114' || fail "the firewall line does not name 80 and 443: $out"
     printf '%s' "$out" | grep -q 'has its certificate' || fail "the certificate was not checked: $out"
     printf '%s' "$out" | grep -q 'does not resolve' || fail "a name that does not resolve gives no warning: $out"
 
@@ -1176,7 +1176,7 @@ fw_rules() {
 # opens nothing twice.
 test_firewall_follows_what_it_serves() (
     local fw out clients first up
-    clients="21115/tcp 21116/tcp 21116/udp 21117/tcp 21118/tcp 21119/tcp 21121/tcp 21122/tcp"
+    clients="21114/tcp 21115/tcp 21116/tcp 21116/udp 21117/tcp 21118/tcp 21119/tcp 21121/tcp 21122/tcp"
     sorted() { printf '%s\n' "$@" | sort -u | tr '\n' ' '; }
     for fw in ufw firewalld; do
         load
@@ -1291,6 +1291,31 @@ test_import_keys() (
     rm -rf "$TEST_DIR"
 )
 
+# reset-password gives the account a new password through the server's
+# reset-password; --reset-two-factor passes the option on (it also turns
+# the account's two-factor sign-in off), and without it nothing else is
+# passed. An image that refuses the option gets a hint to update.
+test_reset_password_two_factor() (
+    load
+    mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
+    local out
+    : > "$CALLS"
+    out=$(mgr 'parse_args reset-password; do_reset_password' 2>&1) || fail "reset-password failed: $out"
+    grep -q 'neodesk-server reset-password admin$' "$CALLS" || fail "reset-password did not run the server's command for admin: $(cat "$CALLS")"
+    if grep -q -- '--reset-two-factor' "$CALLS"; then fail "reset-password turned two-factor sign-in off unasked: $(cat "$CALLS")"; fi
+    if printf '%s' "$out" | grep -q 'Two-factor'; then fail "reset-password talks of two-factor sign-in unasked: $out"; fi
+    : > "$CALLS"
+    out=$(mgr 'parse_args reset-password --reset-two-factor --user ops; do_reset_password' 2>&1) || fail "reset-password --reset-two-factor failed: $out"
+    grep -q 'neodesk-server reset-password --reset-two-factor ops$' "$CALLS" || fail "--reset-two-factor was not passed on: $(cat "$CALLS")"
+    printf '%s' "$out" | grep -q 'Two-factor sign-in of ops is off' || fail "the output does not say two-factor sign-in is off: $out"
+    if out=$(mgr 'docker() { if [ "$1" = exec ] && [[ "$*" == *--reset-two-factor* ]]; then cat > /dev/null; return 2; fi; command_docker "$@"; }
+                  parse_args reset-password --reset-two-factor; do_reset_password' 2>&1); then
+        fail "a refused --reset-two-factor passed"
+    fi
+    printf '%s' "$out" | grep -q 'update first' || fail "a refused --reset-two-factor gives no hint: $out"
+    rm -rf "$TEST_DIR"
+)
+
 test_fresh_install
 test_no_release_image_runs_dev
 test_update_goes_back_when_unhealthy
@@ -1317,6 +1342,7 @@ test_firewall_follows_what_it_serves
 test_firewall_with_traefik_and_old_rules
 test_firewall_left_alone
 test_import_keys
+test_reset_password_two_factor
 test_traefik_with_letsencrypt
 test_traefik_errors_say_what_to_do
 test_install_sh_passes_the_domain

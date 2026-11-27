@@ -68,6 +68,7 @@ BUILD_LOCAL=false
 INSTALL_DOCKER=true
 ADOPT=false
 RESET_USER="admin"
+RESET_TWO_FACTOR=false
 MOVE_DATA=""
 OVERWRITE_POSTGRES=false
 MANAGED_CONFIG_CHANGES=()
@@ -82,7 +83,9 @@ TRAEFIK_VOLUME="neodesk-traefik-letsencrypt"
 OLD_CONTAINERS=(neodesk neodesk-server neodesk-console)
 HEALTH_TIMEOUT="${NEODESK_HEALTH_TIMEOUT:-180}"
 KEEP_BACKUPS=5
-DOCKER_PORTS_TCP=(21115 21116 21117 21118 21119 21121 21122)
+# 21114: the API for RustDesk clients without an API server setting,
+# which derive it from the ID server's port (21116 - 2)
+DOCKER_PORTS_TCP=(21114 21115 21116 21117 21118 21119 21121 21122)
 DOCKER_PORTS_UDP=(21116)
 
 # Colours: 24-bit where the terminal says it has them (COLORTERM), else the
@@ -242,6 +245,10 @@ Options:
   --overwrite-postgres   postgres: delete the PostgreSQL volume of an earlier
                          try before the move
   --user NAME            reset-password: the account (admin)
+  --reset-two-factor     reset-password: also turn off the account's two-factor
+                         sign-in (lost phone and recovery codes); where it is
+                         required, the account sets it up again at its next
+                         sign-in
   --purge                uninstall: also delete the volumes (all data)
   --yes                  Answer yes to every question
   --adopt                Take over a NeoDesk container of another install
@@ -301,6 +308,7 @@ parse_args() {
             --console-port=*) CONSOLE_PORT_SET="${1#*=}" ;;
             --user) [ $# -ge 2 ] || die "--user needs an account name"; RESET_USER="$2"; shift ;;
             --user=*) RESET_USER="${1#*=}" ;;
+            --reset-two-factor) RESET_TWO_FACTOR=true ;;
             --postgres) USE_POSTGRES=true ;;
             --import-keys) [ $# -ge 2 ] || die "--import-keys needs a folder"; IMPORT_KEYS="$2"; shift ;;
             --import-keys=*) IMPORT_KEYS="${1#*=}" ;;
@@ -1853,7 +1861,7 @@ print_summary() {
     say "  API server:    http://${addr}:21121"
     say "  Key:           ${key:-not made yet; later: docker exec neodesk cat /opt/neodesk/data/id_ed25519.pub}"
     say ""
-    say "Ports to open in a firewall in front of this machine: TCP $(console_firewall_ports "$domain")21115-21119, 21121, 21122 and UDP 21116"
+    say "Ports to open in a firewall in front of this machine: TCP $(console_firewall_ports "$domain")21114-21119, 21121, 21122 and UDP 21116"
     say "Logs:            cd $NEODESK_DIR && docker compose logs -f neodesk"
     say "Update:          $(manager_cmd)   (or: cd $NEODESK_DIR && docker compose pull && docker compose up -d)"
     say "Settings:        $(env_file)   (then: cd $NEODESK_DIR && docker compose up -d)"
@@ -1966,15 +1974,20 @@ do_backup() {
 do_reset_password() {
     require_install
     container_running || die "NeoDesk is not running." "Start it: cd $NEODESK_DIR && docker compose up -d"
-    local password
+    local password args=()
     password=$(new_secret 12)
+    [ "$RESET_TWO_FACTOR" != true ] || args+=(--reset-two-factor)
     # reset-password also removes the first password in the volume, which
     # signs nobody in any more
-    printf '%s\n' "$password" | docker exec -i -u neodesk "$CONTAINER" \
-        /usr/local/bin/neodesk-server reset-password "$RESET_USER" >/dev/null \
-        || die "The password of $RESET_USER was not changed (does the account exist?)."
+    if ! printf '%s\n' "$password" | docker exec -i -u neodesk "$CONTAINER" \
+        /usr/local/bin/neodesk-server reset-password "${args[@]}" "$RESET_USER" >/dev/null; then
+        [ "$RESET_TWO_FACTOR" != true ] || die "The password of $RESET_USER was not changed (does the account exist?)." \
+            "An image older than --reset-two-factor refuses the option: update first, $(manager_cmd) update"
+        die "The password of $RESET_USER was not changed (does the account exist?)."
+    fi
     say "New password of ${RESET_USER}: ${BOLD}${password}${NC}"
     say "(shown this once; sign in and change it)"
+    [ "$RESET_TWO_FACTOR" != true ] || say "Two-factor sign-in of $RESET_USER is off; it can be set up again under Your account."
 }
 
 do_uninstall() {
