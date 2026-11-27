@@ -1,12 +1,12 @@
 /**
  * Settings › Directory (LDAP) and Single sign-on on the settings pattern:
- * each loads only its own settings; what an install sets once sits behind
- * Advanced (structure plan rows 35, 36, 56, 66 to 68); a filter narrows
- * the rows and opens what it finds; groups say once that they do nothing
- * while the sign-in is off; the default role is a picker of the server's
- * roles; the group to role map and the private networks are lists with a
- * message per wrong row; wrong values are said at their field before
- * anything is sent.
+ * each loads only its own settings; every setting is on the page at once,
+ * not behind a fold; fields of the other way to find people (or the
+ * manual endpoints) show only for their choice, and while the filter
+ * looks; the page says once that it does nothing while the sign-in is
+ * off; the default role is a select of the server's roles; the group to
+ * role map and the private networks are lists with a message per wrong
+ * row; wrong values are said at their field before anything is sent.
  */
 import { cleanup, render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -58,47 +58,70 @@ afterEach(() => {
 });
 
 describe('Directory (LDAP)', () => {
-	test('its own settings only; the TLS check and the timeout behind Advanced', async () => {
+	test('its own settings only, all shown at once', async () => {
 		const server = ldapServer();
 		render(LdapTab);
 		await screen.findByRole('textbox', { name: 'settings.ldap_host' });
-		expect(closedDetails('ldap-skip-tls-verify')).not.toBeNull();
-		expect(closedDetails('ldap-conn-timeout')).not.toBeNull();
-		expect(closedDetails('ldap-host')).toBeNull();
+		for (const id of ['ldap-host', 'ldap-skip-tls-verify', 'ldap-conn-timeout', 'ldap-user-attr-id'])
+			expect(document.getElementById(id)?.closest('details'), id).toBeNull();
+		expect(screen.getByRole('spinbutton', { name: 'settings.ldap_timeout' })).toBeVisible();
 		const paths = server.calls.map((c) => c.path);
 		expect(paths).toContain(LDAP);
 		expect(paths).not.toContain(OIDC);
 		expect(document.getElementById('client-sessions-form')).toBeNull();
 	});
 
-	test('the filter narrows the rows and opens Advanced for what it finds', async () => {
+	test('direct bind shows its DN template instead of the service account fields', async () => {
+		ldapServer();
+		const user = userEvent.setup();
+		render(LdapTab);
+		await screen.findByRole('textbox', { name: 'settings.ldap_host' });
+		expect(screen.getByRole('textbox', { name: 'settings.ldap_bind_dn' })).toBeVisible();
+		expect(screen.queryByRole('textbox', { name: 'settings.ldap_direct_bind_dn' })).toBeNull();
+		await user.click(screen.getByRole('checkbox', { name: /settings\.ldap_direct_bind/ }));
+		expect(screen.getByRole('textbox', { name: 'settings.ldap_direct_bind_dn' })).toBeVisible();
+		expect(screen.queryByRole('textbox', { name: 'settings.ldap_bind_dn' })).toBeNull();
+		// Direct bind searches groups under the Base DN too
+		expect(screen.getByRole('textbox', { name: 'settings.ldap_base_dn' })).toBeVisible();
+	});
+
+	test('the filter narrows the rows and finds fields of the other bind way too', async () => {
 		ldapServer();
 		render(LdapTab);
 		await screen.findByRole('textbox', { name: 'settings.ldap_host' });
-		await userEvent.type(screen.getByRole('searchbox', { name: 'Filter directory settings' }), 'timeout');
+		const search = screen.getByRole('searchbox', { name: 'Filter directory settings' });
+		await userEvent.type(search, 'timeout');
 		expect(document.getElementById('ldap-conn-timeout')).toBeVisible();
-		expect(closedDetails('ldap-conn-timeout')).toBeNull();
 		expect(document.getElementById('ldap-host')).not.toBeVisible();
+		await userEvent.clear(search);
+		await userEvent.type(search, 'direct_bind_dn');
+		expect(document.getElementById('ldap-direct-bind-dn')).toBeVisible();
 	});
 
-	test('while it is off, each group says once that its settings do nothing', async () => {
+	test('while it is off, the page says it once, under the switch', async () => {
 		ldapServer(ldapRaw({ enabled: false }));
+		const user = userEvent.setup();
 		render(LdapTab);
 		await screen.findByRole('textbox', { name: 'settings.ldap_host' });
-		expect(screen.getAllByText(/These settings do nothing while LDAP sign-in is off/)).toHaveLength(3);
+		const notes = screen.getAllByText(/LDAP sign-in is off, so the settings on this page do nothing yet/);
+		expect(notes).toHaveLength(1);
+		expect(document.getElementById('ldap-form')).toContainElement(notes[0]!);
+		await user.click(screen.getByRole('checkbox', { name: /settings\.ldap_enabled/ }));
+		expect(screen.queryByText(/LDAP sign-in is off/)).toBeNull();
 	});
 
-	test('the default role is a picker of the roles; the map is one row per group; Save sends the stored form', async () => {
+	test('the default role is a select of the roles; the map is one row per group; Save sends the stored form', async () => {
 		const server = ldapServer();
 		const user = userEvent.setup();
 		render(LdapTab);
-		const roles = await screen.findByRole('radiogroup', { name: 'settings.ldap_default_role' });
+		const roles = await screen.findByRole('combobox', { name: 'settings.ldap_default_role' });
 		expect(
 			within(roles)
-				.getAllByRole('radio')
-				.map((r) => (r as HTMLInputElement).value)
+				.getAllByRole('option')
+				.map((r) => (r as HTMLOptionElement).value)
 		).toEqual(['viewer', 'operator', 'admin']);
-		await user.click(within(roles).getByRole('radio', { name: /users\.role_operator|operator/ }));
+		expect(roles).toHaveValue('viewer');
+		await user.selectOptions(roles, 'operator');
 		expect(screen.getByRole('textbox', { name: 'Group 1' })).toHaveValue('CN=Admins,DC=example,DC=com');
 		await user.click(screen.getByRole('button', { name: 'Add a group' }));
 		await user.type(screen.getByRole('textbox', { name: 'Group 2' }), 'Ops');
