@@ -34,6 +34,7 @@
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import Select from '#lib/ui/Select.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
 	import Steps from '#lib/ui/Steps.svelte';
@@ -97,8 +98,11 @@
 	const saveFailed = (err: unknown) =>
 		err instanceof Error && err.message ? err.message : t('mesh.groups_save_error');
 
-	// The install disclosure downloads the default group's file (or the first one's)
-	const installGroup = $derived(groups.find((g) => g.id === 'default') ?? groups[0]);
+	// The install part downloads the picked group's file: the default group's (or the first one's) at first
+	let installId = $state('');
+	const installGroup = $derived(
+		groups.find((g) => g.id === installId) ?? groups.find((g) => g.id === 'default') ?? groups[0]
+	);
 
 	// Add a group: a dialog with name and ID; saved right away
 	let adding = $state(false);
@@ -355,12 +359,28 @@
 					]}
 				/>
 			</div>
+			{#if groups.length > 1}
+				<SettingRow
+					id="mesh-msh-group"
+					label={tf('settings.mesh.install_group', 'Group')}
+					help={tf('settings.mesh.install_group_help', 'Devices installed with the file join this group.')}
+				>
+					{#snippet control(f)}
+						<Select
+							id={f.id}
+							describedby={f.describedby}
+							bind:value={() => installGroup?.id ?? '', (id) => (installId = id)}
+							options={groups.map((g) => ({ value: g.id, label: g.name ? `${g.name} (${g.id})` : g.id }))}
+						/>
+					{/snippet}
+				</SettingRow>
+			{/if}
 			<SettingRow
 				id="mesh-msh-name"
 				label={t('settings.general.mesh_msh_name')}
 				help={tf(
-					'settings.mesh.msh_name_help',
-					'MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved. The file is for the group with the ID default; for another group, use the menu in its row.'
+					'settings.mesh.msh_name_help_short',
+					'MeshAgent shows this name for the server. It only goes into the downloaded file and is not saved.'
 				)}
 			>
 				{#snippet control(f)}
