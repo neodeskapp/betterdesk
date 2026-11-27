@@ -78,3 +78,16 @@ test('it says what the statuses mean, and names the reference languages the serv
 		)
 	).toBeTruthy();
 });
+
+test('the counts come first, the status words under the table they explain', async () => {
+	render(Page);
+	const legend = await screen.findByText(/^Reference language: English and Polish/);
+	await vi.waitFor(() => expect(document.querySelector('.count-line-row')).not.toBeEmptyDOMElement());
+	const count = document.querySelector('.count-line-row')!;
+	const note = screen.getByText(/This page only shows the language files/);
+	const table = document.querySelector('.languages-table')!;
+	const before = (a: Node, b: Node) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+	expect(before(count, note)).toBe(true);
+	expect(before(note, table)).toBe(true);
+	expect(before(table, legend)).toBe(true);
+});

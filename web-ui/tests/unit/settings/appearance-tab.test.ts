@@ -124,6 +124,31 @@ describe('Settings › Appearance', () => {
 		);
 	}, 20_000);
 
+	test('the default theme is one line of choices; the picked one says what it does; Custom still opens its colours', async () => {
+		const user = userEvent.setup();
+		await loaded();
+		const group = screen.getByRole('radiogroup', { name: 'Default theme' });
+		expect(within(group).getAllByRole('radio')).toHaveLength(4);
+		expect(document.getElementById('theme-mode-what')).toHaveTextContent('settings.appearance.mode_system');
+		await user.click(screen.getByRole('radio', { name: /theme\.dark/ }));
+		expect(document.getElementById('theme-mode-what')).toHaveTextContent('settings.appearance.mode_dark');
+		expect(group).toHaveAccessibleDescription(/settings\.appearance\.mode_dark/);
+		// The settings search opens the custom colours through this
+		expect(screen.getByRole('radio', { name: /theme\.custom/ })).toHaveAttribute(
+			'aria-controls',
+			'branding-custom-colors'
+		);
+	}, 20_000);
+
+	test('when changes apply is said once, in the preview; rows use the width beside it', async () => {
+		await loaded();
+		expect(document.body).not.toHaveTextContent('settings.appearance.save_effect');
+		expect(screen.getByRole('complementary', { name: 'settings.side.preview_title' })).toHaveTextContent(
+			'After you save, everyone sees them the next time they load a page.'
+		);
+		expect(document.querySelector('.appearance-tab')).toHaveClass('side-rows', 'side-sticky');
+	}, 20_000);
+
 	test('Reset is in the danger zone and its question names what goes and what stays', async () => {
 		const user = userEvent.setup();
 		await loaded();

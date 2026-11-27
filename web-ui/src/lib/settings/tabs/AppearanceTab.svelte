@@ -41,7 +41,6 @@
 	import { can } from '#lib/state/session.svelte.ts';
 	import { theme } from '#lib/state/theme.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
-	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import ColorField from '#lib/ui/ColorField.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import DangerZone from '#lib/ui/DangerZone.svelte';
@@ -65,6 +64,7 @@
 	import { confirm, prompt } from '#lib/ui/dialogs.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
+	import ChoiceSegments from '#lib/ui/settings/ChoiceSegments.svelte';
 	import SettingRow from '#lib/ui/settings/SettingRow.svelte';
 	import SettingsBody from '#lib/ui/settings/SettingsBody.svelte';
 	import SettingsGroup from '#lib/ui/settings/SettingsGroup.svelte';
@@ -83,6 +83,7 @@
 	import RangeField from '../RangeField.svelte';
 	import ThemePreview from '../ThemePreview.svelte';
 	import { readabilityText } from '../readability.ts';
+	import '../side-rows.css';
 
 	const canEdit = can('branding.edit');
 	const form = new AppearanceForm();
@@ -132,6 +133,14 @@
 	function usePalette(palette: Record<string, string>) {
 		for (const [k, c] of Object.entries(paletteColors(palette))) setValue(`colors.${k}`, c);
 	}
+
+	/** What each default theme does, said under the choice */
+	const MODE_WHAT: Record<ThemeMode, string> = {
+		system: 'settings.appearance.mode_system',
+		light: 'settings.appearance.mode_light',
+		dark: 'settings.appearance.mode_dark',
+		custom: 'settings.appearance.mode_custom'
+	};
 
 	function onMode(mode: ThemeMode) {
 		const prev = v.themeMode;
@@ -495,7 +504,12 @@
 
 {#snippet preview()}
 	<h2 class="preview-title" id="branding-preview-title">{t('settings.side.preview_title')}</h2>
-	<p class="preview-note">{t('settings.side.preview_note')}</p>
+	<p class="preview-note">
+		{tf(
+			'settings.side.preview_note_all',
+			'The console with the choices on this page. After you save, everyone sees them the next time they load a page.'
+		)}
+	</p>
 	<ThemePreview
 		palette={previewPalette}
 		mode={v.themeMode}
@@ -518,7 +532,6 @@
 		/>
 	{/if}
 	{#if form.loadError}<States kind="error" message={form.loadError} onretry={() => void form.load()} />{/if}
-	<p class="applies">{t('settings.appearance.save_effect')}</p>
 {/snippet}
 
 {#snippet bar()}
@@ -578,7 +591,7 @@
 	summaryLast
 	{top}
 	{bar}
-	class="appearance-tab"
+	class="appearance-tab side-rows side-sticky"
 >
 	<fieldset class="branding-form" disabled={!canEdit} aria-busy={!form.loaded}>
 		<legend class="sr-only">{t('settings.tab_branding')}</legend>
@@ -599,30 +612,22 @@
 				{...edit('themeMode')}
 			>
 				{#snippet control(f)}
-					<div id={f.id}>
-						<ChoiceList
-							name="theme-mode"
-							labelledby={f.labelledby}
-							describedby={f.describedby}
-							disabled={!canEdit}
-							bind:value={() => v.themeMode, (mode) => onMode(mode)}
-							choices={[
-								{
-									value: 'system',
-									title: t('theme.auto'),
-									description: t('settings.appearance.mode_system')
-								},
-								{ value: 'light', title: t('theme.light'), description: t('settings.appearance.mode_light') },
-								{ value: 'dark', title: t('theme.dark'), description: t('settings.appearance.mode_dark') },
-								{
-									value: 'custom',
-									title: t('theme.custom'),
-									description: t('settings.appearance.mode_custom'),
-									controls: 'branding-custom-colors'
-								}
-							]}
-						/>
-					</div>
+					<!-- Four short choices in one line; what the picked one does is the line under them -->
+					<ChoiceSegments
+						id={f.id}
+						labelledby={f.labelledby}
+						describedby={[f.describedby, 'theme-mode-what'].filter(Boolean).join(' ')}
+						disabled={!canEdit}
+						value={v.themeMode}
+						onchange={(mode) => onMode(mode as ThemeMode)}
+						options={[
+							{ value: 'system', label: t('theme.auto') },
+							{ value: 'light', label: t('theme.light') },
+							{ value: 'dark', label: t('theme.dark') },
+							{ value: 'custom', label: t('theme.custom'), controls: 'branding-custom-colors' }
+						]}
+					/>
+					<p class="control-line" id="theme-mode-what">{t(MODE_WHAT[v.themeMode])}</p>
 				{/snippet}
 			</SettingRow>
 			<SettingRow
@@ -700,22 +705,26 @@
 			title={t('branding.typography_title')}
 			description={t('branding.typography_desc')}
 		>
-			{#snippet note()}
-				<div class="font-sources" data-search-skip>
-					<div class="font-source" id="font-source">
-						<span class="font-source-label" id="font-source-label"
-							>{t('settings.appearance.font_source')}</span
-						>
-						<SegmentedFilter
-							label={t('settings.appearance.font_source')}
-							bind:value={fontSource}
-							options={[
-								{ value: 'google', label: t('branding.font_google') },
-								{ value: 'local', label: t('branding.font_local') },
-								{ value: 'upload', label: t('branding.font_upload') }
-							]}
-						/>
-					</div>
+			<!-- Where the two font fields search: no setting, so it is not saved; on the
+			     grid like the rows, so its choices line up with the fields they steer -->
+			<div class="plain-row" id="font-source" data-search-skip>
+				<div class="plain-row-text">
+					<span class="font-source-label" id="font-source-label">{t('settings.appearance.font_source')}</span>
+					<CountLine class="font-local-info">
+						<strong id="font-local-count">{localFonts?.length ?? 0}</strong>
+						{t('branding.font_downloaded_count')}
+					</CountLine>
+				</div>
+				<div class="plain-row-controls">
+					<SegmentedFilter
+						label={t('settings.appearance.font_source')}
+						bind:value={fontSource}
+						options={[
+							{ value: 'google', label: t('branding.font_google') },
+							{ value: 'local', label: t('branding.font_local') },
+							{ value: 'upload', label: t('branding.font_upload') }
+						]}
+					/>
 					{#if fontSource === 'google'}
 						<div id="font-source-google">
 							<SegmentedFilter
@@ -724,57 +733,58 @@
 								options={FONT_CATEGORIES}
 							/>
 						</div>
-					{:else if fontSource === 'local'}
-						<div id="font-source-local">
-							{#if localError}
-								<p class="state is-error">{localError}</p>
-							{:else if localFonts && !localFonts.length}
-								<RowList><ListRow empty title={t('branding.font_local_empty')} /></RowList>
-							{:else if localFonts}
-								<RowList label={t('branding.font_local')}>
-									{#each localFonts as font (font.family)}
-										<ListRow title={font.family}>
-											{#snippet actions()}
-												{#if canEdit}
-													<Button
-														size="sm"
-														variant="danger-quiet"
-														onclick={() => void removeFont(font.family)}>{t('branding.font_delete')}</Button
-													>
-												{/if}
-											{/snippet}
-										</ListRow>
-									{/each}
-								</RowList>
-							{/if}
-						</div>
-					{:else}
-						<div id="font-source-upload" class="font-upload">
-							<Field id="font-upload-name" label={t('branding.font_upload_name')}>
-								{#snippet children(f)}<Input {...f} maxlength={80} bind:value={fontUploadName} />{/snippet}
-							</Field>
-							<div class="form-group">
-								<label class="form-label" for="font-upload-file">{t('branding.font_upload_choose')}</label>
-								<FilePicker
-									id="font-upload-file"
-									accept=".woff2,.ttf,font/woff2,font/ttf"
-									bind:files={fontFiles}
-									bind:element={fontPicker}
-									describedby="font-upload-file-effect"
-									onchange={() => void onFontFile()}
-								/>
-								<p class="form-hint" id="font-upload-file-effect">
-									{t('settings.appearance.font_upload_effect')}
-								</p>
-							</div>
-						</div>
 					{/if}
-					<CountLine class="font-local-info">
-						<strong id="font-local-count">{localFonts?.length ?? 0}</strong>
-						{t('branding.font_downloaded_count')}
-					</CountLine>
 				</div>
-			{/snippet}
+				{#if fontSource !== 'google'}
+					<div class="plain-row-extra">
+						{#if fontSource === 'local'}
+							<div id="font-source-local">
+								{#if localError}
+									<p class="state is-error">{localError}</p>
+								{:else if localFonts && !localFonts.length}
+									<RowList><ListRow empty title={t('branding.font_local_empty')} /></RowList>
+								{:else if localFonts}
+									<RowList label={t('branding.font_local')}>
+										{#each localFonts as font (font.family)}
+											<ListRow title={font.family}>
+												{#snippet actions()}
+													{#if canEdit}
+														<Button
+															size="sm"
+															variant="danger-quiet"
+															onclick={() => void removeFont(font.family)}>{t('branding.font_delete')}</Button
+														>
+													{/if}
+												{/snippet}
+											</ListRow>
+										{/each}
+									</RowList>
+								{/if}
+							</div>
+						{:else}
+							<div id="font-source-upload" class="font-upload">
+								<Field id="font-upload-name" label={t('branding.font_upload_name')}>
+									{#snippet children(f)}<Input {...f} maxlength={80} bind:value={fontUploadName} />{/snippet}
+								</Field>
+								<div class="form-group">
+									<label class="form-label" for="font-upload-file">{t('branding.font_upload_choose')}</label>
+									<FilePicker
+										id="font-upload-file"
+										accept=".woff2,.ttf,font/woff2,font/ttf"
+										bind:files={fontFiles}
+										bind:element={fontPicker}
+										describedby="font-upload-file-effect"
+										onchange={() => void onFontFile()}
+									/>
+									<p class="form-hint" id="font-upload-file-effect">
+										{t('settings.appearance.font_upload_effect')}
+									</p>
+								</div>
+							</div>
+						{/if}
+					</div>
+				{/if}
+			</div>
 			<SettingRow
 				id="font-heading-search"
 				label={t('branding.font_heading')}
@@ -918,26 +928,31 @@
 				description={t('settings.appearance.profiles_note')}
 				consequence={t('settings.appearance.profile_effect')}
 			>
-				<div class="action-block">
-					<label class="form-label" for="branding-profile-select">{t('branding.profiles_label')}</label>
-					<div class="inline-controls">
-						<Select id="branding-profile-select" bind:value={profileId} options={profileOptions} />
-						<Button id="branding-profile-apply-btn" busy={profileBusy} onclick={() => void applySelected()}
-							>{t('branding.profile_apply')}</Button
-						>
-						<MenuButton label={t('settings.appearance.profile_more')}>
-							<MenuItem icon="add" onselect={() => void newProfile()}>{t('branding.profile_new')}</MenuItem>
-							<MenuItem icon="save" onselect={saveIntoProfile}>{t('branding.profile_save')}</MenuItem>
-							<MenuItem icon="duplicate" onselect={duplicateSelected}
-								>{t('branding.profile_duplicate')}</MenuItem
-							>
-							<MenuDivider />
-							<MenuItem icon="delete" danger onselect={() => void deleteSelected()}
-								>{t('branding.profile_delete')}</MenuItem
-							>
-						</MenuButton>
+				<!-- On the grid of the setting rows: name left, the choice and its buttons right -->
+				<div class="plain-row">
+					<div class="plain-row-text">
+						<label class="form-label" for="branding-profile-select">{t('branding.profiles_label')}</label>
+						<FormStatus message={profileStatus.message} tone={profileStatus.tone} class="line-status" />
 					</div>
-					<FormStatus message={profileStatus.message} tone={profileStatus.tone} class="line-status" />
+					<div class="plain-row-controls">
+						<div class="inline-controls">
+							<Select id="branding-profile-select" bind:value={profileId} options={profileOptions} />
+							<Button id="branding-profile-apply-btn" busy={profileBusy} onclick={() => void applySelected()}
+								>{t('branding.profile_apply')}</Button
+							>
+							<MenuButton label={t('settings.appearance.profile_more')}>
+								<MenuItem icon="add" onselect={() => void newProfile()}>{t('branding.profile_new')}</MenuItem>
+								<MenuItem icon="save" onselect={saveIntoProfile}>{t('branding.profile_save')}</MenuItem>
+								<MenuItem icon="duplicate" onselect={duplicateSelected}
+									>{t('branding.profile_duplicate')}</MenuItem
+								>
+								<MenuDivider />
+								<MenuItem icon="delete" danger onselect={() => void deleteSelected()}
+									>{t('branding.profile_delete')}</MenuItem
+								>
+							</MenuButton>
+						</div>
+					</div>
 				</div>
 			</SettingsGroup>
 
@@ -948,19 +963,22 @@
 				consequence={t('settings.appearance.import_effect')}
 			>
 				<div class="action-block">
-					<p class="line">
+					<!-- Both on one line: export, then the file to import -->
+					<div class="ie-line">
 						<Button icon="export" id="branding-export-btn" onclick={() => void exportNow()}
 							>{t('branding.export_theme')}</Button
 						>
-					</p>
-					<label class="form-label" for="branding-import-input">{t('branding.import_theme')}</label>
-					<FilePicker
-						id="branding-import-input"
-						accept=".json"
-						bind:files={importFiles}
-						bind:element={importPicker}
-						onchange={() => void importNow()}
-					/>
+						<div class="ie-import">
+							<label class="form-label" for="branding-import-input">{t('branding.import_theme')}</label>
+							<FilePicker
+								id="branding-import-input"
+								accept=".json"
+								bind:files={importFiles}
+								bind:element={importPicker}
+								onchange={() => void importNow()}
+							/>
+						</div>
+					</div>
 					<FormStatus message={ieStatus.message} tone={ieStatus.tone} class="line-status" />
 				</div>
 			</SettingsGroup>
@@ -986,8 +1004,13 @@
 
 <style>
 	/* A changed row is tinted, and so is the picked theme: muted text would lose its contrast on both */
-	:global(.appearance-tab .setting-row.is-changed .choice-desc) {
+	:global(.appearance-tab .setting-row.is-changed) .control-line {
 		color: var(--text);
+	}
+	.control-line {
+		margin: var(--space-1) 0 0;
+		color: var(--text-muted);
+		font-size: var(--text-sm);
 	}
 	.branding-form {
 		display: flex;
@@ -998,7 +1021,6 @@
 		padding: 0;
 		border: 0;
 	}
-	.applies,
 	.preview-note,
 	.advanced-note {
 		margin: 0;
@@ -1036,16 +1058,38 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
 	}
-	.font-sources {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-		margin-bottom: var(--space-2);
+	/* Colours sit side by side: each row stays name over field in its cell */
+	.color-rows :global(.setting-row.setting-row.setting-row) {
+		grid-template-columns: minmax(0, 1fr);
 	}
-	.font-source {
+	/* Rows that are no setting (where the font fields search, a saved appearance): laid out like the setting rows around them */
+	.plain-row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-2) var(--space-5);
+		padding: var(--space-2) var(--row-pad-x);
+		border-bottom: 1px solid var(--rule);
+		border-inline-start: 3px solid transparent;
+	}
+	.plain-row-text,
+	.plain-row-controls {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-1);
+		min-width: 0;
+	}
+	.plain-row-text :global(.font-local-info) {
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+	}
+	.plain-row-extra {
+		grid-column: 1 / -1;
+		min-width: 0;
+	}
+	@container settings-rows (min-width: 640px) {
+		.plain-row {
+			grid-template-columns: minmax(0, 1fr) clamp(22rem, 40cqi, 28rem);
+		}
 	}
 	.font-source-label,
 	.form-label {
@@ -1135,8 +1179,17 @@
 		margin: 0 calc(-1 * var(--row-pad-x));
 		border-top: 1px solid var(--rule);
 	}
-	.line {
-		margin: 0 0 var(--space-2);
+	.ie-line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2) var(--space-5);
+	}
+	.ie-import {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2) var(--space-3);
 	}
 	.state {
 		margin: 0;
@@ -1145,7 +1198,7 @@
 	.state.is-error {
 		color: var(--danger);
 	}
-	.action-block :global(.line-status:empty) {
+	:is(.action-block, .plain-row-text) :global(.line-status:empty) {
 		display: none;
 	}
 </style>

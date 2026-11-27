@@ -269,6 +269,7 @@
 			>{t('languages.extra_count', { n: formatNumber(l.extra_keys) })}</span
 		>{/if}
 {/snippet}
+
 {#snippet actionsCell(l: LanguageRow)}
 	<Button
 		size="sm"
@@ -324,6 +325,17 @@
 	)}
 >
 	<div class="languages-page">
+		{#if !code}
+			<!-- Its line is kept while the list loads, so the table doesn't move down -->
+			<div class="count-line-row">
+				{#if listState === 'ready' && languages.length}
+					<CountLine
+						text={t('languages.count_line')}
+						values={{ total: languages.length, review: reviewCount, keys: refKeyCount }}
+					/>
+				{/if}
+			</div>
+		{/if}
 		<p class="page-note">
 			{tf(
 				'languages.page_only_shows',
@@ -335,16 +347,6 @@
 		</p>
 		{#if !code}
 			<section class="section" id="lang-grid" aria-label={t('nav.languages')}>
-				<!-- Its line is kept while the list loads, so the table doesn't move down -->
-				<div class="count-line-row">
-					{#if listState === 'ready' && languages.length}
-						<CountLine
-							text={t('languages.count_line')}
-							values={{ total: languages.length, review: reviewCount, keys: refKeyCount }}
-						/>
-					{/if}
-				</div>
-				<p class="status-legend">{legend}</p>
 				<Table
 					rows={languages}
 					columns={listColumns}
@@ -358,6 +360,8 @@
 					onrowclick={(l) => show(l.code)}
 					class="languages-table"
 				/>
+				<!-- What the Status column's words mean, under the table they explain -->
+				<p class="status-legend">{legend}</p>
 			</section>
 		{:else}
 			<section class="section lang-detail" aria-labelledby="lang-detail-title">
@@ -468,7 +472,7 @@
 <style>
 	.page-note,
 	.status-legend {
-		margin: 0 0 var(--space-3);
+		margin: 0 0 var(--space-4);
 		max-width: var(--measure);
 		color: var(--text-muted);
 	}
@@ -513,6 +517,10 @@
 	}
 	.count-line-row {
 		min-height: 1.5em;
+		margin-bottom: var(--space-1);
+	}
+	.status-legend {
+		margin: var(--space-3) 0 0;
 	}
 	.languages-page :global(.languages-table .col-coverage) {
 		width: 220px;

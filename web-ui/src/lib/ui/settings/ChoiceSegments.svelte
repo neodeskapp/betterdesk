@@ -22,6 +22,8 @@
 	export interface Segment {
 		value: string;
 		label: string;
+		/** The id(s) of what this choice shows (aria-controls), so the settings search can open it */
+		controls?: string;
 	}
 </script>
 
@@ -68,6 +70,7 @@
 				name={id}
 				value={o.value}
 				checked={value === o.value}
+				aria-controls={o.controls}
 				{disabled}
 				onchange={() => onchange(o.value)}
 			/>

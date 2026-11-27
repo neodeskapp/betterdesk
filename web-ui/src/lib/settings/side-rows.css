@@ -1,0 +1,49 @@
+/*
+ * Settings tabs with a side column (the Appearance and Branding preview,
+ * the state beside Email and Time), settings-pass-2.md rules A and I.
+ * Beside a side column the groups are narrower than the 900 px from which
+ * SettingRow lays a row out as name left, control right, so every row
+ * would stack and leave the width unused. A tab that passes the class
+ * side-rows to SettingsBody gets the two columns from 640 px of group
+ * width, with a control column that grows with the group (22 to 28rem).
+ *
+ *   import '../side-rows.css';
+ *   <SettingsBody class="side-rows" ...>
+ *
+ * A row that needs the whole width (a long list editor, a code field)
+ * passes class="is-wide" to SettingRow and stays stacked.
+ *
+ * side-sticky keeps a short side column (a preview) in view from 1200 px
+ * while the groups scroll, on any window height: it is never taller than
+ * the window, it scrolls inside itself instead.
+ */
+@container settings-rows (min-width: 640px) {
+	.side-rows .group-rows .setting-row {
+		grid-template-columns: minmax(0, 1fr) clamp(22rem, 40cqi, 28rem);
+	}
+	.side-rows .group-rows .setting-control {
+		max-width: none;
+	}
+	.side-rows .group-rows .setting-row.is-switch > .setting-actions {
+		margin-inline-start: auto;
+		padding-inline-start: 0;
+		min-height: 24px;
+	}
+}
+
+.side-rows .group-rows .setting-row.is-wide {
+	grid-template-columns: minmax(0, 1fr);
+}
+.side-rows .group-rows .setting-row.is-wide .setting-control {
+	max-width: none;
+}
+
+@media (min-width: 1200px) {
+	.side-sticky .settings-body.has-summary .settings-summary {
+		position: sticky;
+		/* Below the top bar, which stays over the page */
+		top: calc(var(--topbar-h) + var(--space-4));
+		max-height: calc(100vh - var(--topbar-h) - 2 * var(--space-4));
+		overflow-y: auto;
+	}
+}

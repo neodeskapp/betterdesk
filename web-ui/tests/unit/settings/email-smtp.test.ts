@@ -185,6 +185,37 @@ describe('the mail server rows', () => {
 	});
 });
 
+describe('empty fields', () => {
+	test('an empty From says which sender the server uses instead, until one is typed', async () => {
+		serve({
+			'GET /api/panel/settings/sources': {
+				'smtp.from': {
+					value_source: 'default',
+					env_var: 'SMTP_FROM',
+					locked: false,
+					default: 'neodesk@localhost'
+				}
+			}
+		});
+		vi.mocked(api.getSmtp).mockResolvedValueOnce({
+			configured: true,
+			host: 'smtp.example.com',
+			port: 587,
+			secure: false,
+			user: '',
+			pass: '',
+			from: '',
+			alert_email: ''
+		});
+		const user = await setup();
+		const from = screen.getByLabelText('settings.email.smtp_from');
+		await vi.waitFor(() => expect(from).toHaveAccessibleDescription(/Empty uses neodesk@localhost\./));
+		expect(document.querySelector('.settings-tab-body')).toHaveClass('side-rows');
+		await user.type(from, 'ops@example.com');
+		expect(screen.queryByText('Empty uses neodesk@localhost.')).toBeNull();
+	});
+});
+
 describe('a mail server that is not set up', () => {
 	test('says nothing is wrong until a change or a save', async () => {
 		vi.mocked(api.getSmtp).mockResolvedValueOnce({
