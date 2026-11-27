@@ -63,7 +63,10 @@
 #
 # NEODESK_IPV6=true gives the containers' network IPv6 (Docker Engine 27 or
 # newer), so the server sees IPv6 visitors' own addresses instead of the
-# network's gateway. Older Docker Compose versions need docker compose down
+# network's gateway, and Docker publishes the ports on IPv6 past ufw and
+# firewalld, as on IPv4. neodesk-docker.sh turns it on for a new install on
+# Engine 27 or newer (not with --no-ipv6); without the setting the network
+# is IPv4 only. Older Docker Compose versions need docker compose down
 # before it changes.
 #
 # Web console: http://<server>:3375

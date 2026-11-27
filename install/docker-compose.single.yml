@@ -213,6 +213,9 @@ volumes:
   console-data:
   postgres-data:
 
+# NEODESK_IPV6=true (Docker Engine 27 or newer): the network has IPv6, so
+# the server sees IPv6 visitors' own addresses instead of the gateway
 networks:
   default:
     name: neodesk-net
+    enable_ipv6: ${NEODESK_IPV6:-false}

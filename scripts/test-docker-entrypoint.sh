@@ -154,6 +154,8 @@ test_traefik_follows_the_domain() (
         || fail "the Traefik service does not carry the domain, so a new one is not applied"
     grep -qF 'rule: "Host(`${NEODESK_DOMAIN:-console.invalid}`)"' "$quick" || fail "the routing does not use NEODESK_DOMAIN"
     grep -qF 'enable_ipv6: ${NEODESK_IPV6:-false}' "$quick" || fail "the network does not take NEODESK_IPV6"
+    grep -qF 'enable_ipv6: ${NEODESK_IPV6:-false}' "$SCRIPT_ROOT/install/docker-compose.single.yml" \
+        || fail "the development compose file's network does not take NEODESK_IPV6"
     grep -qF -- '--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL:-}' "$quick" || fail "the contact is not optional"
 )
 
