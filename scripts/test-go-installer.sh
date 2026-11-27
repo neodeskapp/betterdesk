@@ -1233,6 +1233,156 @@ Environment=NEODESK_SUPERVISOR=systemd
         case "$out" in *"$want"*) ;; *) fail "the summary does not name $want: $out" ;; esac
     done
     case "$out" in *Summary-Pass-1*) fail "the summary shows the password" ;; esac
+    # LINUX-NATIVE-19: the relay with its port, as the console shows it
+    case "$out" in *"Relay server:  desk.example.org:21117"*) ;; *) fail "the summary gives the relay without its port: $out" ;; esac
+    # LINUX-NATIVE-8: the first sign-in says how to get a new password
+    FRESH_CONSOLE_ENV=true
+    out=$(print_install_summary 2>&1)
+    case "$out" in *"First sign-in"*"neodesk-setup --reset-password"*) ;; *) fail "the first sign-in does not say how to get a new password: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-8: the password box names the command that gives a new
+# password, its right border stays in line, and the run does not talk about
+# STORE_ADMIN_CREDENTIALS.
+test_password_box() (
+    load
+    local LC_ALL=C.UTF-8
+    FRESH_CONSOLE_ENV=true
+    ADMIN_PASSWORD=0123456789abcdef0123456789abcdef
+    local out widths
+    out=$(create_admin_user 2>&1)
+    case "$out" in *"$ADMIN_PASSWORD"*) ;; *) fail "the box does not show the password: $out" ;; esac
+    case "$out" in *"Lost it? sudo neodesk-setup --reset-password"*) ;; *) fail "the box does not say how to get a new password: $out" ;; esac
+    case "$out" in *STORE_ADMIN_CREDENTIALS*|*"not persisted"*) fail "the run talks about storing the credentials: $out" ;; esac
+    widths=$(printf '%s\n' "$out" | grep '[║╔╚╠]' | while IFS= read -r line; do printf '%s\n' "${#line}"; done | sort -u)
+    [ "$(printf '%s\n' "$widths" | wc -l)" = 1 ] || fail "the box's lines differ in width: $widths
+$out"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-3, -12: an interactive install asks every question before
+# it installs anything, the self-signed certificate is made after the relay
+# address is known, and the password and the summary come last.
+test_interactive_install_asks_first() (
+    load
+    AUTO_MODE=false
+    MINIMAL_MODE=false
+    RELAY_SERVERS=""
+    RELAY_MODE=auto
+    FRESH_CONSOLE_ENV=true
+    ADMIN_PASSWORD=Interactive-Pass-1
+    print_header() { :; }
+    print_step() { :; }
+    print_success() { echo "$1"; }
+    detect_installation() { INSTALL_STATUS=none; }
+    is_node_era_install() { false; }
+    menu_choose() { MENU_CHOICE=1; }
+    get_local_ip() { echo 192.168.1.5; }
+    graceful_stop_services() { :; }
+    install_dependencies() { echo "INSTALLING"; }
+    detect_architecture() { :; }
+    install_binaries() { :; }
+    setup_console_home() { :; }
+    generate_ssl_certificates() { echo "CERTIFICATE for ${RELAY_SERVERS:-none}"; }
+    setup_services() { :; }
+    configure_firewall_rules() { :; }
+    start_services() { :; }
+    forget_first_admin_password() { :; }
+    do_configure_reverse_proxy() { echo "PROXY STEP"; }
+    install_manager_command() { :; }
+    print_install_summary() { echo "SUMMARY"; }
+    local out
+    # Relay: a custom address; P2P first; a reverse proxy: yes
+    out=$(printf '3\nrd.example.net\n1\ny\n' | do_install 2>&1) || fail "the install failed: $out"
+    printf '%s\n' "$out" > "$TEST_DIR/out"
+    local relay_q conn_q tls_q install cert proxy box summary
+    relay_q=$(grep -n 'Select relay mode' "$TEST_DIR/out" | head -1 | cut -d: -f1)
+    conn_q=$(grep -n 'Select connection mode' "$TEST_DIR/out" | head -1 | cut -d: -f1)
+    tls_q=$(grep -n 'reverse proxy' "$TEST_DIR/out" | head -1 | cut -d: -f1)
+    install=$(grep -n '^INSTALLING$' "$TEST_DIR/out" | cut -d: -f1)
+    cert=$(grep -n '^CERTIFICATE for rd.example.net$' "$TEST_DIR/out" | cut -d: -f1)
+    proxy=$(grep -n '^PROXY STEP$' "$TEST_DIR/out" | cut -d: -f1)
+    box=$(grep -n 'Interactive-Pass-1' "$TEST_DIR/out" | cut -d: -f1)
+    summary=$(grep -n '^SUMMARY$' "$TEST_DIR/out" | cut -d: -f1)
+    [ -n "$relay_q" ] && [ -n "$conn_q" ] && [ -n "$tls_q" ] && [ -n "$install" ] && [ -n "$cert" ] \
+        && [ -n "$proxy" ] && [ -n "$box" ] && [ -n "$summary" ] || fail "a step is missing: $out"
+    [ "$relay_q" -lt "$install" ] && [ "$conn_q" -lt "$install" ] && [ "$tls_q" -lt "$install" ] \
+        || fail "a question came after the install started: $out"
+    [ "$proxy" -lt "$box" ] && [ "$box" -lt "$summary" ] || fail "the proxy step came after the password or the summary: $out"
+    [ "$(grep -v '^[[:space:]]*$' "$TEST_DIR/out" | tail -n 1)" = SUMMARY ] || fail "the summary is not the last thing: $out"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-3: a relay address given by name goes into the self-signed
+# certificate and becomes its common name.
+test_certificate_names_the_relay_address() (
+    load
+    command -v openssl >/dev/null || return 0
+    print_success() { :; }
+    get_public_ip() { echo 203.0.113.7; }
+    deploy_ssl_material_to_rustdesk_dir() { :; }
+    RELAY_SERVERS=rd.example.net:21117
+    unset SSL_DOMAIN
+    generate_ssl_certificates >/dev/null 2>&1 || fail "the certificate was not made"
+    local text subject
+    text=$(openssl x509 -in "$RUSTDESK_PATH/ssl/neodesk.crt" -noout -text)
+    case "$text" in *"DNS:rd.example.net"*) ;; *) fail "the certificate is not for the relay address: $text" ;; esac
+    case "$text" in *"IP Address:203.0.113.7"*) ;; *) fail "the certificate lost the public IP: $text" ;; esac
+    subject=$(openssl x509 -in "$RUSTDESK_PATH/ssl/neodesk.crt" -noout -subject)
+    case "$subject" in *"CN = rd.example.net"*|*"CN=rd.example.net"*) ;; *) fail "the common name: $subject" ;; esac
+    [ "$(san_entry 2001:db8::1)" = "IP:2001:db8::1" ] && [ "$(san_entry 198.51.100.4)" = "IP:198.51.100.4" ] \
+        || fail "san_entry of an address"
+    [ "$(address_host '[2001:db8::1]:21117')" = 2001:db8::1 ] && [ "$(address_host 'a.example:1,b.example')" = a.example ] \
+        || fail "address_host"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-13: a fixed relay address is reported as mode fixed.
+test_fixed_relay_mode_is_said() (
+    load
+    systemctl() { :; }
+    print_success() { :; }
+    print_info() { echo "$1"; }
+    remove_retired_units() { :; }
+    AUTO_MODE=true
+    RELAY_SERVERS=rd.example.net
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    local out
+    out=$(setup_services 2>&1)
+    case "$out" in *"Relay server IP: rd.example.net (mode: fixed)"*) ;; *) fail "the relay mode line: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-6: the PostgreSQL question offers this machine or an
+# existing database by URI; a URI skips setting PostgreSQL up here, and a
+# database host elsewhere without a URI stops instead of making the
+# database on this machine.
+test_postgresql_question() (
+    load
+    print_warning() { echo "$1"; }
+    install_postgresql() { echo install_postgresql >> "$TEST_DIR/calls"; }
+    setup_postgresql_database() { echo setup_postgresql_database >> "$TEST_DIR/calls"; }
+    AUTO_MODE=false
+    USE_POSTGRESQL=false
+    POSTGRESQL_URI=""
+    # The first menu: PostgreSQL; the second: an existing database
+    menu_choose() { MENU_CHOICE=2; }
+    printf 'db.example.org:5432\npostgresql://nd:Pass@db.example.org:5432/desk\n' > "$TEST_DIR/in"
+    choose_database_type > "$TEST_DIR/out" 2>&1 < "$TEST_DIR/in"
+    [ "$USE_POSTGRESQL" = true ] && [ "$POSTGRESQL_URI" = postgresql://nd:Pass@db.example.org:5432/desk ] \
+        || fail "the URI was not taken: ${POSTGRESQL_URI:-none} $(cat "$TEST_DIR/out")"
+    grep -q 'postgres:// or postgresql://' "$TEST_DIR/out" || fail "a line that is no URI was not refused: $(cat "$TEST_DIR/out")"
+    if grep -qi 'host \[' "$TEST_DIR/out"; then fail "the question still asks for a host: $(cat "$TEST_DIR/out")"; fi
+    prepare_postgresql >/dev/null 2>&1 || fail "the database given by URI failed"
+    [ ! -s "$TEST_DIR/calls" ] || fail "a database given by URI was set up here: $(cat "$TEST_DIR/calls")"
+
+    local out
+    POSTGRESQL_URI=""
+    POSTGRESQL_HOST=db.example.org
+    out=$(prepare_postgresql 2>&1) && fail "a database host elsewhere without a URI was set up here"
+    case "$out" in *--pg-uri*) ;; *) fail "the refusal does not name --pg-uri: $out" ;; esac
+    [ ! -s "$TEST_DIR/calls" ] || fail "PostgreSQL was installed for a host elsewhere: $(cat "$TEST_DIR/calls")"
     rm -rf "$TEST_DIR"
 )
 
@@ -1492,8 +1642,7 @@ Environment=NEODESK_SUPERVISOR=systemd
 HTTPS_ENABLED=false
 ' > "$CONSOLE_PATH/.env"
     systemctl() { return 3; }
-    iptables() { printf '%s
-' "$*" >> "$TEST_DIR/iptables"; case "$1" in -C|-D) return 1 ;; esac; }
+    iptables() { printf '%s\n' "$*" >> "$TEST_DIR/iptables"; case "$1" in -C|-D) return 1 ;; esac; }
     iptables-save() { echo saved >> "$TEST_DIR/iptables"; }
     print_success() { :; }
     ufw() { [ "$1" != status ] || echo "Status: inactive"; }
@@ -1837,6 +1986,11 @@ test_no_stable_release_installs_dev
 test_rerun_updates_and_forgets_the_password
 test_panel_public_host
 test_install_summary
+test_password_box
+test_interactive_install_asks_first
+test_certificate_names_the_relay_address
+test_fixed_relay_mode_is_said
+test_postgresql_question
 test_uninstall_says_what_stays
 test_purge_handles_backups_and_the_database
 test_update_without_a_new_release_changes_nothing
