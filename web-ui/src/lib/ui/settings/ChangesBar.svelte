@@ -40,6 +40,17 @@
 	/* The bar's height, for base.css: a control that gets focus scrolls
 	   clear of it (WCAG 2.4.11). It grows with the listed changes. */
 	let height = $state(0);
+	let bar = $state<HTMLElement | undefined>();
+	/* Measured with a guarded observer: test DOMs have none, and
+	   bind:offsetHeight would create one without asking */
+	$effect(() => {
+		if (!bar || typeof ResizeObserver === 'undefined') return;
+		const el = bar;
+		const ro = new ResizeObserver(() => (height = el.offsetHeight));
+		ro.observe(el);
+		height = el.offsetHeight;
+		return () => ro.disconnect();
+	});
 	$effect(() => {
 		if (!show || !height) return;
 		const root = document.documentElement.style;
@@ -63,7 +74,7 @@
 {#if show}
 	<div
 		class="changes-bar"
-		bind:offsetHeight={height}
+		bind:this={bar}
 		role="region"
 		aria-label={tf('settings_ui.unsaved_region', 'Unsaved changes')}
 	>
