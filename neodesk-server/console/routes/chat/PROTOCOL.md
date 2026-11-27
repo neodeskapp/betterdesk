@@ -368,6 +368,24 @@ null` means the helper has no profile picture (or there is no helper);
 otherwise fetch it with the device token (section 8) and fetch it again
 when the version changes. Older servers send no `picture`.
 
+### ticket.updated (computers only)
+
+A ticket the person opened from this computer has news: staff answered
+it in public or changed its status. Internal notes and other changes
+send nothing.
+
+```json
+{"status": "open", "ticket_id": 24, "type": "ticket.updated", "unread": true}
+```
+
+`ticket_id` is the ticket's number, `status` its status now (`open`,
+`in_progress`, `resolved`, `closed`). The frame only says that something
+changed: read the ticket with `GET /api/tickets/nd/{id}` and mark it read
+with `POST /api/tickets/nd/{id}/read` once the person saw it. While the
+socket is down the sealed heartbeat answer carries `tickets_unread`, the
+number of the computer's tickets with something unread. Older servers
+never send this frame.
+
 ### Console only
 
 | Frame | Example |

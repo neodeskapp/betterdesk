@@ -33,14 +33,31 @@ type ticket struct {
 	ClosedAt    store.Time       `json:"closed_at"`
 	CreatedAt   store.Time       `json:"created_at"`
 	UpdatedAt   store.Time       `json:"updated_at"`
+	// Source is who opened the ticket: "staff" or "device" (the app on
+	// the computer); Reporter the name of the person at the computer.
+	// They come last, after what the Node console answered (schema.go).
+	Source   string           `json:"source"`
+	Reporter store.NullString `json:"reporter"`
+	// DeviceRead is when the computer last read the ticket, NULL while it
+	// has something new to read
+	DeviceRead store.Time `json:"-"`
 }
 
-const ticketColumns = "id, title, description, status, priority, category, device_id, created_by, assigned_to, sla_due_at, resolved_at, closed_at, created_at, updated_at"
+const ticketColumns = "id, title, description, status, priority, category, device_id, created_by, assigned_to, sla_due_at, resolved_at, closed_at, created_at, updated_at, source, reporter, device_read_at"
 
 func (t *ticket) dest() []any {
 	return []any{&t.ID, &t.Title, &t.Description, &t.Status, &t.Priority, &t.Category, &t.DeviceID, &t.CreatedBy, &t.AssignedTo,
-		&t.SLADueAt, &t.ResolvedAt, &t.ClosedAt, &t.CreatedAt, &t.UpdatedAt}
+		&t.SLADueAt, &t.ResolvedAt, &t.ClosedAt, &t.CreatedAt, &t.UpdatedAt, &t.Source, &t.Reporter, &t.DeviceRead}
 }
+
+// fromDevice reports whether the app on the computer opened the ticket.
+func (t *ticket) fromDevice() bool { return t.Source == sourceDevice }
+
+// The sources of a ticket and the senders of a comment.
+const (
+	sourceStaff  = "staff"
+	sourceDevice = "device"
+)
 
 // id is the ticket's id as a statement parameter.
 func (t *ticket) id() jsbind.Value { return t.ID.Value() }
@@ -180,9 +197,12 @@ func inScope(scope *access.DeviceScope) (string, []jsbind.Value) {
 }
 
 // newTicket is what a ticket is made from. Empty values have been
-// replaced by their defaults already.
+// replaced by their defaults already. Source is "" for staff; a ticket
+// from the device counts as read by it.
 type newTicket struct {
 	Title, Description, Priority, Category, DeviceID, CreatedBy, AssignedTo, SLADueAt jsbind.Value
+	Source                                                                            string
+	Reporter                                                                          jsbind.Value
 }
 
 // insertRow runs an INSERT and returns the new row's id as the old
@@ -212,6 +232,12 @@ func insertRow(ctx context.Context, db *store.DB, doing, query string, values ..
 
 // createTicket inserts a ticket and returns its id.
 func createTicket(ctx context.Context, db *store.DB, data newTicket) (jsbind.Cell, error) {
+	if data.Source == sourceDevice {
+		return insertRow(ctx, db, "create ticket",
+			"INSERT INTO tickets (title, description, priority, category, device_id, created_by, assigned_to, sla_due_at, source, reporter, device_read_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "+store.NowSQL(db.Dialect())+")",
+			data.Title, data.Description, data.Priority, data.Category, data.DeviceID, data.CreatedBy, data.AssignedTo, data.SLADueAt,
+			jsbind.String(sourceDevice), data.Reporter.Or(jsbind.Null))
+	}
 	return insertRow(ctx, db, "create ticket",
 		"INSERT INTO tickets (title, description, priority, category, device_id, created_by, assigned_to, sla_due_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		data.Title, data.Description, data.Priority, data.Category, data.DeviceID, data.CreatedBy, data.AssignedTo, data.SLADueAt)
@@ -283,6 +309,9 @@ type comment struct {
 	Body       string      `json:"body"`
 	IsInternal store.Bool  `json:"is_internal"`
 	CreatedAt  store.Time  `json:"created_at"`
+	// From is who wrote it: "staff" or "device"; last, after what the
+	// Node console answered
+	From string `json:"from"`
 }
 
 // ticketComments lists a ticket's comments, oldest first.
@@ -292,7 +321,7 @@ func ticketComments(ctx context.Context, db *store.DB, ticketID jsbind.Value) ([
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", doing, err)
 	}
-	rows, err := store.Select(ctx, db, "SELECT id, ticket_id, author, body, is_internal, created_at FROM ticket_comments WHERE ticket_id = ? ORDER BY created_at ASC, id ASC", args...)
+	rows, err := store.Select(ctx, db, "SELECT id, ticket_id, author, body, is_internal, created_at, from_kind FROM ticket_comments WHERE ticket_id = ? ORDER BY created_at ASC, id ASC", args...)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", doing, err)
 	}
@@ -300,7 +329,7 @@ func ticketComments(ctx context.Context, db *store.DB, ticketID jsbind.Value) ([
 	comments := []comment{}
 	for rows.Next() {
 		var c comment
-		if err := rows.Scan(&c.ID, &c.TicketID, &c.Author, &c.Body, &c.IsInternal, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.TicketID, &c.Author, &c.Body, &c.IsInternal, &c.CreatedAt, &c.From); err != nil {
 			return nil, fmt.Errorf("%s: %w", doing, err)
 		}
 		comments = append(comments, c)
@@ -312,8 +341,8 @@ func ticketComments(ctx context.Context, db *store.DB, ticketID jsbind.Value) ([
 }
 
 // addComment inserts a comment, moves the ticket's time of change and
-// returns the comment's id.
-func addComment(ctx context.Context, db *store.DB, ticketID jsbind.Value, author, body string, internal bool) (jsbind.Cell, error) {
+// returns the comment's id. from is sourceStaff or sourceDevice.
+func addComment(ctx context.Context, db *store.DB, ticketID jsbind.Value, author, body string, internal bool, from string) (jsbind.Cell, error) {
 	flag := jsbind.Bool(internal)
 	if !db.IsPostgres() {
 		flag = jsbind.Number(0)
@@ -321,9 +350,13 @@ func addComment(ctx context.Context, db *store.DB, ticketID jsbind.Value, author
 			flag = jsbind.Number(1)
 		}
 	}
-	id, err := insertRow(ctx, db, "add a comment to ticket "+ticketID.ToString(),
-		"INSERT INTO ticket_comments (ticket_id, author, body, is_internal) VALUES (?, ?, ?, ?)",
-		ticketID, jsbind.String(author), jsbind.String(body), flag)
+	insert := "INSERT INTO ticket_comments (ticket_id, author, body, is_internal) VALUES (?, ?, ?, ?)"
+	values := []jsbind.Value{ticketID, jsbind.String(author), jsbind.String(body), flag}
+	if from == sourceDevice {
+		insert = "INSERT INTO ticket_comments (ticket_id, author, body, is_internal, from_kind) VALUES (?, ?, ?, ?, ?)"
+		values = append(values, jsbind.String(sourceDevice))
+	}
+	id, err := insertRow(ctx, db, "add a comment to ticket "+ticketID.ToString(), insert, values...)
 	if err != nil {
 		return id, err
 	}
@@ -349,12 +382,15 @@ type attachment struct {
 	UploadedBy  string           `json:"uploaded_by"`
 	CreatedAt   store.Time       `json:"created_at"`
 	StoragePath string           `json:"-"`
+	// CommentID is the comment the file came with, null for a file of
+	// the ticket itself
+	CommentID jsbind.Cell `json:"-"`
 }
 
-const attachmentColumns = "ticket_id, id, filename, mimetype, size_bytes, uploaded_by, created_at, storage_path"
+const attachmentColumns = "ticket_id, id, filename, mimetype, size_bytes, uploaded_by, created_at, storage_path, comment_id"
 
 func (a *attachment) dest() []any {
-	return []any{&a.TicketID, &a.ID, &a.Filename, &a.Mimetype, &a.SizeBytes, &a.UploadedBy, &a.CreatedAt, &a.StoragePath}
+	return []any{&a.TicketID, &a.ID, &a.Filename, &a.Mimetype, &a.SizeBytes, &a.UploadedBy, &a.CreatedAt, &a.StoragePath, &a.CommentID}
 }
 
 // ticketAttachments lists a ticket's attachments, oldest first.
@@ -402,7 +438,13 @@ func attachmentByID(ctx context.Context, db *store.DB, id jsbind.Value) (*attach
 }
 
 // addAttachment inserts the row of a stored file and returns its id.
-func addAttachment(ctx context.Context, db *store.DB, ticketID jsbind.Value, filename string, mimetype jsbind.Value, size int, storagePath, uploadedBy string) (jsbind.Cell, error) {
+// commentID is the comment it came with, undefined for none.
+func addAttachment(ctx context.Context, db *store.DB, ticketID jsbind.Value, filename string, mimetype jsbind.Value, size int, storagePath, uploadedBy string, commentID jsbind.Value) (jsbind.Cell, error) {
+	if !commentID.IsUndefined() {
+		return insertRow(ctx, db, "add an attachment to ticket "+ticketID.ToString(),
+			"INSERT INTO ticket_attachments (ticket_id, filename, mimetype, size_bytes, storage_path, uploaded_by, comment_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+			ticketID, jsbind.String(filename), mimetype, jsbind.Number(float64(size)), jsbind.String(storagePath), jsbind.String(uploadedBy), commentID)
+	}
 	return insertRow(ctx, db, "add an attachment to ticket "+ticketID.ToString(),
 		"INSERT INTO ticket_attachments (ticket_id, filename, mimetype, size_bytes, storage_path, uploaded_by) VALUES (?, ?, ?, ?, ?, ?)",
 		ticketID, jsbind.String(filename), mimetype, jsbind.Number(float64(size)), jsbind.String(storagePath), jsbind.String(uploadedBy))

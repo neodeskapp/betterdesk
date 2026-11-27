@@ -71,10 +71,45 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "ticket.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "ticket.sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "ticket.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
      "success": true,
+     "ticket": {
+      "assigned_to": null,
+      "category": "network",
+      "closed_at": null,
+      "created_at": "<volatile>",
+      "created_by": "agent:900100001",
+      "description": "",
+      "device_id": "900100001",
+      "id": 24,
+      "last_reply_at": null,
+      "priority": "high",
+      "replies": 0,
+      "reporter": null,
+      "resolved_at": null,
+      "sla_due_at": "<volatile>",
+      "source": "device",
+      "status": "open",
+      "title": "Priority high",
+      "unread": false,
+      "updated_at": "<volatile>"
+     },
      "ticket_id": 24
     }
    }

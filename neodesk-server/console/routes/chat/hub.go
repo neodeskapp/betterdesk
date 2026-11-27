@@ -331,6 +331,17 @@ func (h *Hub) publish(ctx context.Context, conv, text string, except *member, co
 	}
 }
 
+// ToDevice sends a frame of the type with the fields to every socket of
+// version 2 the device has open; with none open it sends nothing.
+func (h *Hub) ToDevice(device, typ string, fields map[string]any) {
+	text := frame(typ, fields)
+	for _, m := range h.all() {
+		if m.user == nil && m.device == device {
+			m.conn.SendText(text)
+		}
+	}
+}
+
 // toAccount sends a frame to every socket of an account.
 func (h *Hub) toAccount(account int64, text string) {
 	for _, m := range h.all() {

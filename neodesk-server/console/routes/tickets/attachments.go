@@ -155,29 +155,10 @@ func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
 	if err == nil && !filename.IsString() {
 		err = errors.New("filename.replace is not a function")
 	}
-	var stored, storagePath string
 	name := safeName(filename.Str())
-	if err == nil {
-		random := make([]byte, 8)
-		if _, err = h.random(random); err == nil {
-			stored = number(t.ID) + "_" + hex.EncodeToString(random) + "_" + name
-			storagePath, err = safepath.ResolveChild(h.uploads, stored)
-		}
-	}
-	if err == nil {
-		err = os.WriteFile(storagePath, file, 0o666)
-	}
 	var id jsbind.Cell
 	if err == nil {
-		mediatype := "application/octet-stream"
-		if mediaType(mimetype.Str()) {
-			mediatype = mimetype.Str()
-		}
-		id, err = addAttachment(r.Context(), h.db, t.id(), name, jsbind.String(mediatype), len(file), stored, kit.User(r).Username)
-		if err != nil {
-			// A file without a row is reached by nothing
-			_ = os.Remove(storagePath)
-		}
+		id, err = h.storeFile(r, t, name, mimetype.Str(), file, kit.User(r).Username, jsbind.Undefined)
 	}
 	if err != nil {
 		h.serverError(w, r, "Attachment upload error", err)
@@ -185,6 +166,36 @@ func (h *handlers) attach(w http.ResponseWriter, r *http.Request) {
 	}
 	h.log.Info("Attachment " + name + " uploaded to ticket #" + number(t.ID))
 	kit.JSON(w, r, http.StatusCreated, attached{Success: true, Attachment: attachedDetail{ID: id, Filename: name, SizeBytes: len(file)}})
+}
+
+// storeFile writes a file of the ticket to the attachment folder under
+// the ticket's id, 16 random hex digits and its cleaned name, and then
+// its row, which names that file. A type that is no media type is stored
+// as application/octet-stream. commentID is the comment the file came
+// with, undefined for none.
+func (h *handlers) storeFile(r *http.Request, t *ticket, name, mimetype string, file []byte, uploadedBy string, commentID jsbind.Value) (jsbind.Cell, error) {
+	random := make([]byte, 8)
+	if _, err := h.random(random); err != nil {
+		return jsbind.Cell{}, err
+	}
+	stored := number(t.ID) + "_" + hex.EncodeToString(random) + "_" + name
+	storagePath, err := safepath.ResolveChild(h.uploads, stored)
+	if err != nil {
+		return jsbind.Cell{}, err
+	}
+	if err := os.WriteFile(storagePath, file, 0o666); err != nil {
+		return jsbind.Cell{}, err
+	}
+	mediatype := "application/octet-stream"
+	if mediaType(mimetype) {
+		mediatype = mimetype
+	}
+	id, err := addAttachment(r.Context(), h.db, t.id(), name, jsbind.String(mediatype), len(file), stored, uploadedBy, commentID)
+	if err != nil {
+		// A file without a row is reached by nothing
+		_ = os.Remove(storagePath)
+	}
+	return id, err
 }
 
 type attachmentList struct {
@@ -237,10 +248,16 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusNotFound, "Attachment not found")
 		return
 	}
-	var path string
-	if err == nil {
-		path, err = h.confined(a.StoragePath)
+	if err != nil {
+		h.serverError(w, r, "Attachment download error", err)
+		return
 	}
+	h.send(w, r, a)
+}
+
+// send answers with the file of an attachment the request may read.
+func (h *handlers) send(w http.ResponseWriter, r *http.Request, a *attachment) {
+	path, err := h.confined(a.StoragePath)
 	if err != nil {
 		h.serverError(w, r, "Attachment download error", err)
 		return

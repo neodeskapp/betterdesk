@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -23,6 +24,52 @@ func uploads(w *replay.World) string {
 }
 
 var randomPart = regexp.MustCompile(`^([0-9]+)_[0-9a-f]{16}_`)
+
+// The members the receiver app's tickets added to the answers Node gave
+// (A277): a ticket's source and reporter, and in a computer's list its
+// last reply, unread and replies; a comment's sender; the new ticket in
+// the answer to a computer's ticket. All come last in their object.
+var (
+	addedTicketMembers  = regexp.MustCompile(`,"source":"(?:staff|device)","reporter":(?:null|"(?:[^"\\]|\\.)*")(?:,"last_reply_at":(?:null|"[^"]*"),"unread":(?:true|false),"replies":[0-9]+)?`)
+	addedCommentMembers = regexp.MustCompile(`,"from":"(?:staff|device)"`)
+	addedNewTicket      = regexp.MustCompile(`,"ticket":\{.*\}\}$`)
+)
+
+// withoutReceiverMembers is an answer without the members the receiver
+// app's tickets added, for the comparison with Node's.
+func withoutReceiverMembers(req replay.Request, body string) string {
+	if req.Method == http.MethodPost && strings.HasPrefix(strings.ToLower(req.Path), "/api/tickets/nd") {
+		body = addedNewTicket.ReplaceAllString(body, "}")
+	}
+	body = addedTicketMembers.ReplaceAllString(body, "")
+	return addedCommentMembers.ReplaceAllString(body, "")
+}
+
+// agentTicketsOnly is Node's answer to a computer's list with only the
+// tickets an agent made: a computer lists the tickets it opened, not those
+// staff opened about it (A277).
+func agentTicketsOnly(t *testing.T, answer string) string {
+	t.Helper()
+	var list struct {
+		Tickets []json.RawMessage `json:"tickets"`
+	}
+	if err := json.Unmarshal([]byte(answer), &list); err != nil {
+		t.Fatalf("Node's list %s: %v", answer, err)
+	}
+	kept := []string{}
+	for _, ticket := range list.Tickets {
+		var row struct {
+			CreatedBy string `json:"created_by"`
+		}
+		if err := json.Unmarshal(ticket, &row); err != nil {
+			t.Fatal(err)
+		}
+		if strings.HasPrefix(row.CreatedBy, "agent:") {
+			kept = append(kept, string(ticket))
+		}
+	}
+	return `{"tickets":[` + strings.Join(kept, ",") + `],"total":` + strconv.Itoa(len(kept)) + `}`
+}
 
 // storedFiles lists the attachment folder with the random part of each
 // name replaced.
@@ -59,6 +106,7 @@ func TestNodeAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
 		w.Vars["<UPLOADS>"] = uploads(w)
+		w.Answers = withoutReceiverMembers
 		defer ticketFixes.Unused(t, db)
 		w.Run(replay.Load(t, db, "node"), ticketFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			switch {
@@ -133,8 +181,17 @@ func download(t *testing.T, step replay.Step, got replay.Answer) {
 func TestNodeDeviceAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
+		w.Answers = withoutReceiverMembers
 		defer deviceFixes.Unused(t, db)
-		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, nil))
+		w.Run(replay.Load(t, db, "node_device"), deviceFixes.Check(w, func(t *testing.T, step replay.Step, got replay.Answer) bool {
+			if step.Method != http.MethodGet || step.Status != http.StatusOK || !strings.HasPrefix(strings.ToLower(step.Path), "/api/tickets/nd") {
+				return false
+			}
+			if want := agentTicketsOnly(t, step.Answer); got.Status != step.Status || replay.Normalize(got.Body) != replay.Normalize(want) {
+				t.Errorf("%s: Node's list of the agent's tickets %s\n     go: %d %s", step.Name, want, got.Status, got.Body)
+			}
+			return true
+		}))
 	})
 }
 
@@ -179,7 +236,7 @@ func TestADeviceWriteNeedsNoCSRFToken(t *testing.T) {
 			[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
 		device := map[string]string{"Authorization": "Bearer tok-device-a"}
 		refused := `{"success":false,"error":"Invalid CSRF token. Please refresh the page and try again. If you recently disabled SSL, clear your browser cookies for this site and reload."}`
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x"}`), Headers: device, NoCSRF: true}); got.Status != 201 || got.Body != `{"success":true,"ticket_id":1}` {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x"}`), Headers: device, NoCSRF: true}); got.Status != 201 || !strings.HasPrefix(got.Body, `{"success":true,"ticket_id":1,`) {
 			t.Errorf("without the CSRF token: %d %s", got.Status, got.Body)
 		}
 		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x"}`), Headers: map[string]string{"Authorization": "Bearer nope"}, NoCSRF: true}); got.Status != 401 {
@@ -188,7 +245,7 @@ func TestADeviceWriteNeedsNoCSRFToken(t *testing.T) {
 		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x"}`), Headers: device, NoCSRF: true}); got.Status != 403 || got.Body != refused {
 			t.Errorf("with a session and without the CSRF token: %d %s", got.Status, got.Body)
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x"}`), Headers: device}); got.Status != 201 || got.Body != `{"success":true,"ticket_id":2}` {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x"}`), Headers: device}); got.Status != 201 || !strings.HasPrefix(got.Body, `{"success":true,"ticket_id":2,`) {
 			t.Errorf("with both tokens: %d %s", got.Status, got.Body)
 		}
 		// A read needs none

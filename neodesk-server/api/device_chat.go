@@ -14,7 +14,8 @@ import (
 // to the ID server), but the chat lives in the console: the chat socket of
 // version 2 (/ws/chat/<id>?v=2) and the computer's chat files
 // (/api/chat/device/files, /api/chat/device/files/<id>) and the picture
-// of the person who helps (/api/chat/device/helper/picture). The API's
+// of the person who helps (/api/chat/device/helper/picture), and the
+// computer's tickets (/api/tickets/nd and below, A277). The API's
 // listener hands exactly these requests to the console in this process,
 // before its own credential check, which knows no device tokens and
 // refused them with 401. The console checks them as on its own port: the
@@ -61,7 +62,51 @@ const (
 	deviceChatSocket = "/ws/chat/"
 	deviceChatFiles  = "/api/chat/device/files"
 	deviceChatHelper = "/api/chat/device/helper/picture"
+	deviceTickets    = "/api/tickets/nd"
 )
+
+// deviceTicketUploadTime is how long reading a computer's new ticket or
+// reply may take: it carries up to 25 MB of files.
+const deviceTicketUploadTime = 5 * time.Minute
+
+// digits reports whether s is a non-empty run of the digits 0 to 9.
+func digits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+// deviceTicketPath reports whether path is one of a computer's ticket
+// routes: /api/tickets/nd, /api/tickets/nd/<id>, and below it comments,
+// read and attachments/<id>.
+func deviceTicketPath(path string) bool {
+	if path == deviceTickets {
+		return true
+	}
+	rest, ok := strings.CutPrefix(path, deviceTickets+"/")
+	if !ok {
+		return false
+	}
+	parts := strings.Split(rest, "/")
+	if !digits(parts[0]) {
+		return false
+	}
+	switch len(parts) {
+	case 1:
+		return true
+	case 2:
+		return parts[1] == "comments" || parts[1] == "read"
+	case 3:
+		return parts[1] == "attachments" && digits(parts[2])
+	}
+	return false
+}
 
 // oneSegment reports whether rest is one non-empty path segment.
 func oneSegment(rest string) bool {
@@ -75,7 +120,7 @@ func deviceChatRequest(r *http.Request) (chat, socket bool) {
 	if rest, ok := strings.CutPrefix(path, deviceChatSocket); ok && oneSegment(rest) {
 		return true, true
 	}
-	if path == deviceChatFiles || path == deviceChatHelper {
+	if path == deviceChatFiles || path == deviceChatHelper || deviceTicketPath(path) {
 		return true, false
 	}
 	if rest, ok := strings.CutPrefix(path, deviceChatFiles+"/"); ok && oneSegment(rest) {
@@ -109,6 +154,10 @@ func (s *Server) deviceChatGate(next http.Handler) http.Handler {
 			// The listener's ReadTimeout set a deadline for reading the
 			// request; a socket lives on after it
 			_ = http.NewResponseController(w).SetReadDeadline(time.Time{})
+		} else if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, deviceTickets) {
+			// A ticket or a reply with its files takes longer than the
+			// listener's ten seconds
+			_ = http.NewResponseController(w).SetReadDeadline(time.Now().Add(deviceTicketUploadTime))
 		}
 		(*h).ServeHTTP(w, r)
 	})

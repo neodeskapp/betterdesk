@@ -398,3 +398,42 @@ func mustJSON(value any) string {
 	raw, _ := json.Marshal(value)
 	return string(raw)
 }
+
+// unreadTickets is a database whose computer has n tickets with an answer
+// it has not read (the console's tickets, db/device_tickets.go).
+type unreadTickets struct {
+	db.Database
+	n   int
+	err error
+}
+
+func (u unreadTickets) UnreadDeviceTickets(string) (int, error) { return u.n, u.err }
+
+// TestTheSealedHeartbeatCountsUnreadTickets: the answer to a sealed
+// heartbeat carries tickets_unread inside the envelope (A277), so the app
+// learns of answers while its chat socket is down; a plain answer never
+// does, and a server without the console's tickets leaves it out.
+func TestTheSealedHeartbeatCountsUnreadTickets(t *testing.T) {
+	srv, deviceID, deviceUUID, devicePriv, responsePub, responsePriv := newConnectionModeFixture(t)
+	plain := srv.db
+	srv.db = unreadTickets{Database: plain, n: 2}
+	sealed := openSealedHeartbeat(t, srv, postHeartbeat(t, srv, deviceID, deviceUUID, sealClientHeartbeat(t, srv, deviceID, devicePriv, 1, desktopIdentity(deviceID, deviceUUID, "normal"), responsePub)), responsePriv)
+	if sealed["tickets_unread"] != float64(2) {
+		t.Errorf("tickets_unread in the sealed answer: %v", sealed["tickets_unread"])
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/heartbeat", bytes.NewReader([]byte(`{"id":"`+deviceID+`"}`)))
+	req.RemoteAddr = "198.51.100.11:9"
+	rec := httptest.NewRecorder()
+	srv.handleClientHeartbeat(rec, req)
+	if bytes.Contains(rec.Body.Bytes(), []byte("tickets_unread")) {
+		t.Errorf("the plain answer carries tickets_unread: %s", rec.Body.String())
+	}
+
+	// The API's own database has no console tickets: no count
+	srv.db = plain
+	sealed = openSealedHeartbeat(t, srv, postHeartbeat(t, srv, deviceID, deviceUUID, sealClientHeartbeat(t, srv, deviceID, devicePriv, 2, desktopIdentity(deviceID, deviceUUID, "normal"), responsePub)), responsePriv)
+	if _, ok := sealed["tickets_unread"]; ok {
+		t.Errorf("tickets_unread without the console's tickets: %v", sealed["tickets_unread"])
+	}
+}

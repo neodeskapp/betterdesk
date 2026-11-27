@@ -289,6 +289,12 @@ func (s *Server) writeHeartbeatResponse(w http.ResponseWriter, deviceID string, 
 	for key, value := range publicResp {
 		payload[key] = value
 	}
+	// The tickets of the computer with an answer it has not read, so the
+	// app shows them when its chat socket was down (A277). A server
+	// without the console's tickets leaves it out
+	if unread, err := s.db.UnreadDeviceTickets(deviceID); err == nil {
+		payload["tickets_unread"] = unread
+	}
 	var deliverID string
 	if command, err := s.db.DeliverableConnectionModeCommand(deviceID, time.Now().UTC()); err != nil {
 		log.Printf("[api] connection mode delivery for %s: %v", deviceID, err)

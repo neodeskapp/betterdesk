@@ -1,0 +1,119 @@
+{
+ "id": "tickets/device-token-read-after-reply",
+ "request": {
+  "method": "GET",
+  "path": "/api/tickets/nd/{agentTicket}",
+  "notes": [
+   "header Authorization: Bearer {secret:device_token}"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "attachments[0].size",
+     "integer": true
+    },
+    {
+     "path": "comments[*].created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "ticket.created_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "ticket.last_reply_at",
+     "format": "9999-99-99 99:99:99"
+    },
+    {
+     "path": "ticket.sla_due_at",
+     "format": "9999-99-99A99:99:99.999A"
+    },
+    {
+     "path": "ticket.updated_at",
+     "format": "9999-99-99 99:99:99"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "attachments": [
+      {
+       "comment_id": null,
+       "id": 16,
+       "name": "computer-info.json",
+       "size": 0,
+       "type": "application/json"
+      },
+      {
+       "comment_id": 30,
+       "id": 17,
+       "name": "note.txt",
+       "size": 12,
+       "type": "text/plain"
+      }
+     ],
+     "comments": [
+      {
+       "author_name": "",
+       "body": "It works again",
+       "created_at": "<volatile>",
+       "from": "device",
+       "id": 30
+      }
+     ],
+     "ticket": {
+      "assigned_to": null,
+      "category": "network",
+      "closed_at": null,
+      "created_at": "<volatile>",
+      "created_by": "agent:900100001",
+      "description": "",
+      "device_id": "900100001",
+      "id": 24,
+      "last_reply_at": "<volatile>",
+      "priority": "high",
+      "replies": 1,
+      "reporter": null,
+      "resolved_at": null,
+      "sla_due_at": "<volatile>",
+      "source": "device",
+      "status": "open",
+      "title": "Priority high",
+      "unread": false,
+      "updated_at": "<volatile>"
+     }
+    }
+   }
+  }
+ ]
+}

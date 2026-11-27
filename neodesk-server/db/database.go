@@ -746,6 +746,9 @@ type Database interface {
 	GetConnectionModePolicy(deviceID string) (*ConnectionModePolicy, error)
 	LatestConnectionModeCommand(deviceID string) (*ConnectionModeCommand, error)
 	DeliverableConnectionModeCommand(deviceID string, now time.Time) (*ConnectionModeCommand, error)
+	// UnreadDeviceTickets counts the tickets the device opened in the
+	// console that have something it has not read (device_tickets.go)
+	UnreadDeviceTickets(deviceID string) (int, error)
 	MarkConnectionModeDelivered(commandID string, now time.Time) error
 	AcknowledgeConnectionMode(ack *ConnectionModeAck) (bool, error)
 

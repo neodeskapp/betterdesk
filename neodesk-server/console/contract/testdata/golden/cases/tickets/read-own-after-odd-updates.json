@@ -134,7 +134,7 @@
       {
        "created_at": "<volatile>",
        "filename": "role.bin",
-       "id": 6,
+       "id": 7,
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
        "uploaded_by": "e2e_operator"
@@ -149,8 +149,10 @@
      "device_id": null,
      "id": 16,
      "priority": "low",
+     "reporter": null,
      "resolved_at": "<volatile>",
      "sla_due_at": "2031-05-06T07:08:09.000Z",
+     "source": "staff",
      "status": "closed",
      "title": "Role ticket, renamed",
      "updated_at": "<volatile>"
@@ -215,7 +217,7 @@
       {
        "created_at": "<volatile>",
        "filename": "role.bin",
-       "id": 8,
+       "id": 9,
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
        "uploaded_by": "e2e_global_admin"
@@ -230,8 +232,10 @@
      "device_id": null,
      "id": 18,
      "priority": "low",
+     "reporter": null,
      "resolved_at": "<volatile>",
      "sla_due_at": "2031-05-06T07:08:09.000Z",
+     "source": "staff",
      "status": "closed",
      "title": "Role ticket, renamed",
      "updated_at": "<volatile>"
@@ -296,7 +300,7 @@
       {
        "created_at": "<volatile>",
        "filename": "role.bin",
-       "id": 11,
+       "id": 12,
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
        "uploaded_by": "e2e_super_admin"
@@ -311,8 +315,10 @@
      "device_id": null,
      "id": 21,
      "priority": "low",
+     "reporter": null,
      "resolved_at": "<volatile>",
      "sla_due_at": "2031-05-06T07:08:09.000Z",
+     "source": "staff",
      "status": "closed",
      "title": "Role ticket, renamed",
      "updated_at": "<volatile>"
@@ -377,7 +383,7 @@
       {
        "created_at": "<volatile>",
        "filename": "role.bin",
-       "id": 13,
+       "id": 14,
        "mimetype": "application/octet-stream",
        "size_bytes": 4,
        "uploaded_by": "e2e_admin"
@@ -385,7 +391,7 @@
       {
        "created_at": "<volatile>",
        "filename": "three.bin",
-       "id": 14,
+       "id": 15,
        "mimetype": "application/octet-stream",
        "size_bytes": 2359296,
        "uploaded_by": "e2e_admin"
@@ -400,8 +406,10 @@
      "device_id": null,
      "id": 23,
      "priority": "low",
+     "reporter": null,
      "resolved_at": "<volatile>",
      "sla_due_at": "2031-05-06T07:08:09.000Z",
+     "source": "staff",
      "status": "closed",
      "title": "Role ticket, renamed",
      "updated_at": "<volatile>"

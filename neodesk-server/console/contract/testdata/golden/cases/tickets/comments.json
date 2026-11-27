@@ -81,6 +81,7 @@
        "author": "e2e_admin",
        "body": "A public note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 12,
        "is_internal": 0,
        "ticket_id": 13
@@ -131,6 +132,7 @@
        "author": "e2e_admin",
        "body": "A public note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 14,
        "is_internal": 0,
        "ticket_id": 14
@@ -181,6 +183,7 @@
        "author": "e2e_admin",
        "body": "A public note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 16,
        "is_internal": 0,
        "ticket_id": 15
@@ -189,6 +192,7 @@
        "author": "e2e_admin",
        "body": "An internal note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 17,
        "is_internal": 1,
        "ticket_id": 15
@@ -197,6 +201,7 @@
        "author": "e2e_operator",
        "body": "From the role",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 18,
        "is_internal": 1,
        "ticket_id": 15
@@ -247,6 +252,7 @@
        "author": "e2e_admin",
        "body": "A public note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 19,
        "is_internal": 0,
        "ticket_id": 17
@@ -255,6 +261,7 @@
        "author": "e2e_admin",
        "body": "An internal note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 20,
        "is_internal": 1,
        "ticket_id": 17
@@ -263,6 +270,7 @@
        "author": "e2e_global_admin",
        "body": "From the role",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 21,
        "is_internal": 1,
        "ticket_id": 17
@@ -313,6 +321,7 @@
        "author": "e2e_admin",
        "body": "A public note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 22,
        "is_internal": 0,
        "ticket_id": 19
@@ -363,6 +372,7 @@
        "author": "e2e_admin",
        "body": "A public note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 24,
        "is_internal": 0,
        "ticket_id": 20
@@ -371,6 +381,7 @@
        "author": "e2e_admin",
        "body": "An internal note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 25,
        "is_internal": 1,
        "ticket_id": 20
@@ -379,6 +390,7 @@
        "author": "e2e_super_admin",
        "body": "From the role",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 26,
        "is_internal": 1,
        "ticket_id": 20
@@ -429,6 +441,7 @@
        "author": "e2e_admin",
        "body": "A public note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 27,
        "is_internal": 0,
        "ticket_id": 22
@@ -437,6 +450,7 @@
        "author": "e2e_admin",
        "body": "An internal note",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 28,
        "is_internal": 1,
        "ticket_id": 22
@@ -445,6 +459,7 @@
        "author": "e2e_admin",
        "body": "From the role",
        "created_at": "<volatile>",
+       "from": "staff",
        "id": 29,
        "is_internal": 1,
        "ticket_id": 22

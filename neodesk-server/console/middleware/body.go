@@ -131,6 +131,9 @@ var ownBodyRoutes = []struct {
 	{http.MethodPost, regexp.MustCompile(`(?i)^/api/generator/preview/?$`)},
 	{http.MethodPost, regexp.MustCompile(`(?i)^/api/panel/pairing/codes/?$`)},
 	{http.MethodPost, regexp.MustCompile(`(?i)^/api/ui-shell/?$`)},
+	// A computer's ticket and its reply, with their files
+	{http.MethodPost, regexp.MustCompile(`(?i)^/api/tickets/nd/?$`)},
+	{http.MethodPost, regexp.MustCompile(`(?i)^/api/tickets/nd/[0-9]+/comments/?$`)},
 }
 
 // readsItsOwnBody reports whether r goes to a route of ownBodyRoutes.

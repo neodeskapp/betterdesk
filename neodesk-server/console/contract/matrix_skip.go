@@ -30,6 +30,10 @@ const (
 	// SkipPages: the route is the web app's pages. They get cases from the
 	// route list of the web app's build.
 	SkipPages SkipReason = "serves the web app's pages, which get their own cases"
+	// SkipDeviceToken: the route answers a device token only, which the
+	// placeholder requests don't carry, and works on the device's own
+	// rows. Cases send the test instance's device tokens.
+	SkipDeviceToken SkipReason = "takes a device token, which the cases send"
 )
 
 // Skip is a route the matrix leaves out. Each needs hand-written cases
@@ -103,6 +107,12 @@ var matrixSkips = []Skip{
 
 	// The web app's pages.
 	{"GET /*", SkipPages, "Answers every GET nothing else takes with a page of the web app, a redirect to sign-in or an error page."},
+
+	// The receiver app's tickets (console/routes/tickets/device.go).
+	{"GET /api/tickets/nd/:id(\\d+)", SkipDeviceToken, "One ticket the computer opened, with its public comments and files."},
+	{"GET /api/tickets/nd/:id(\\d+)/attachments/:aid(\\d+)", SkipDeviceToken, "A file of a ticket the computer opened."},
+	{"POST /api/tickets/nd/:id(\\d+)/comments", SkipDeviceToken, "The computer's reply to its ticket, with files."},
+	{"POST /api/tickets/nd/:id(\\d+)/read", SkipDeviceToken, "Marks the computer's ticket read by it."},
 
 	// Load.
 	{"POST /api/server-attestation/run", SkipLoad, "Starts a load test with up to 500 connections that runs for 25 seconds to 10 minutes; the next caller gets 409 while it runs."},

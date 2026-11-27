@@ -8,8 +8,10 @@
 // comments and attachments. Internal comments are for accounts with
 // device.edit.
 //
-// The two routes for devices, POST and GET /api/tickets/nd, take a device
-// token instead of a session (device.go).
+// The routes for devices under /api/tickets/nd take a device token
+// instead of a session (device.go). A ticket the computer opened has the
+// source "device"; when staff answer it in public or change its status,
+// the computer's chat socket gets the frame ticket.updated (Push).
 package tickets
 
 import (
@@ -36,10 +38,22 @@ type handlers struct {
 	now     func() time.Time
 	// random fills b with random bytes, for the names of stored files.
 	random func(b []byte) (int, error)
+	// push sends a frame to the chat sockets of a computer; nil sends
+	// nothing
+	push Push
 }
 
-// Register adds the group's routes below the mount (/api/tickets).
-func Register(d *kit.Deps) { register(d, newHandlers(d)) }
+// Push sends a frame of the chat (the type and its fields) to the chat
+// sockets of version 2 a device has open (chat.Hub.ToDevice).
+type Push func(device, typ string, fields map[string]any)
+
+// Register adds the group's routes below the mount (/api/tickets). push
+// reaches the computers' chat sockets.
+func Register(d *kit.Deps, push Push) {
+	h := newHandlers(d)
+	h.push = push
+	register(d, h)
+}
 
 func register(d *kit.Deps, h *handlers) {
 	r := d.Router
@@ -65,8 +79,15 @@ func register(d *kit.Deps, h *handlers) {
 	r.Get("/{id}/attachments", h.attachments, id, files, requireAuth, canRead)
 	r.Get("/attachments/{aid}", h.download, aid, files, requireAuth, canRead)
 
-	r.Post("/nd", h.createFromAgent, d.RequireDeviceToken)
-	r.Get("/nd", h.listForAgent, d.RequireDeviceToken)
+	// The computer's routes. Opening a ticket and replying read their body
+	// after the token check, up to 35 MB for 25 MB of files
+	device := d.RequireDeviceToken
+	r.Post("/nd", h.createFromAgent, upload, device, attachmentBody)
+	r.Get("/nd", h.listForAgent, device)
+	r.Get("/nd/{id}", h.getForAgent, id, device)
+	r.Post("/nd/{id}/comments", h.commentFromAgent, id, upload, device, attachmentBody)
+	r.Get("/nd/{id}/attachments/{aid}", h.downloadForAgent, id, aid, files, device)
+	r.Post("/nd/{id}/read", h.readForAgent, id, device)
 }
 
 // failure is the group's error answer: {"error":"..."}.
@@ -217,10 +238,11 @@ type ticketList struct {
 
 // filterKeys are the query parameters that filter the list, each on the
 // column of its name.
-var filterKeys = []string{"status", "priority", "category", "assigned_to", "device_id"}
+var filterKeys = []string{"status", "priority", "category", "assigned_to", "device_id", "source"}
 
 // list answers GET /api/tickets?status=&priority=&category=&assigned_to=
-// &device_id=&search=. A viewer gets the tickets assigned to it, whatever
+// &device_id=&source=&search=. source=device lists the tickets the
+// computers opened. A viewer gets the tickets assigned to it, whatever
 // assigned_to says, and an account whose device scope is limited those of
 // its devices and of no device. A filter is one text: given twice, in
 // brackets or as an object it is refused.
@@ -517,6 +539,10 @@ func (h *handlers) update(w http.ResponseWriter, r *http.Request) {
 	if err := updateTicket(r.Context(), h.db, t.id(), changes); err != nil {
 		h.serverError(w, r, "Update error", err)
 		return
+	}
+	// A computer hears of a new status of the ticket it opened
+	if status := jsbind.Of(body.Get("status")); body.Has("status") && t.fromDevice() && status.Str() != t.Status.String {
+		h.tellDevice(r, t, status.Str())
 	}
 	columns := make([]string, len(changes))
 	for i, c := range changes {
