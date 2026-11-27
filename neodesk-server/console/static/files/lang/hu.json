@@ -6639,7 +6639,13 @@
     "sound_today": "Ha már most ki akarja kapcsolni a hangot a munkamenetekben, használjon az Eszközök alatt egy hozzáférési szabályt kikapcsolt Hanggal, vagy kapcsolja ki a Hangot egy személy konzolhozzáférésében.",
     "open_access_rules": "Hozzáférési szabályok megnyitása",
     "remove_group": "A csoport minden szabályának eltávolítása",
-    "row_not_applied": "Még egyetlen NeoDesk-alkalmazás sem alkalmazza."
+    "row_not_applied": "Még egyetlen NeoDesk-alkalmazás sem alkalmazza.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Eszköz tanúsítvány",

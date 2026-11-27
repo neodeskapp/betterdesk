@@ -6639,7 +6639,13 @@
     "sound_today": "Pentru a opri sunetul în sesiuni de pe acum, folosiți o regulă de acces cu Sunet dezactivat în Dispozitive sau dezactivați Sunet în accesul la consolă al unei persoane.",
     "open_access_rules": "Deschideți regulile de acces",
     "remove_group": "Eliminați toate regulile acestui grup",
-    "row_not_applied": "Nicio aplicație NeoDesk nu aplică încă acest lucru."
+    "row_not_applied": "Nicio aplicație NeoDesk nu aplică încă acest lucru.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Atestarea dispozitivului",

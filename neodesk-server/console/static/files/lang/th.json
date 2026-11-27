@@ -6639,7 +6639,13 @@
     "sound_today": "หากต้องการปิดเสียงในเซสชันตั้งแต่วันนี้ ให้ใช้กฎการเข้าถึงที่ปิด เสียง ไว้ใน อุปกรณ์ หรือปิด เสียง ในสิทธิ์เข้าถึงคอนโซลของบุคคลนั้น",
     "open_access_rules": "เปิดกฎการเข้าถึง",
     "remove_group": "ลบกฎทั้งหมดของกลุ่มนี้",
-    "row_not_applied": "ยังไม่มีแอป NeoDesk ใดนำสิ่งนี้ไปใช้"
+    "row_not_applied": "ยังไม่มีแอป NeoDesk ใดนำสิ่งนี้ไปใช้",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "การรับรองอุปกรณ์",

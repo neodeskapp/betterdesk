@@ -6639,7 +6639,13 @@
     "sound_today": "Щоб уже зараз вимкнути звук у сеансах, використайте правило доступу з вимкненим Звуком у Пристрої або вимкніть Звук у доступі людини до консолі.",
     "open_access_rules": "Відкрити правила доступу",
     "remove_group": "Видалити всі правила цієї групи",
-    "row_not_applied": "Жоден застосунок NeoDesk ще не застосовує це."
+    "row_not_applied": "Жоден застосунок NeoDesk ще не застосовує це.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Атестація пристрою",

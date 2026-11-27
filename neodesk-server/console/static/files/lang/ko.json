@@ -6633,7 +6633,13 @@
     "sound_today": "지금 바로 세션 소리를 끄려면 장치에서 소리를 끈 접근 규칙을 쓰거나, 그 사람의 콘솔 접근에서 소리를 끄세요.",
     "open_access_rules": "접근 규칙 열기",
     "remove_group": "이 그룹의 규칙 모두 제거",
-    "row_not_applied": "이를 적용하는 NeoDesk 앱이 아직 없습니다."
+    "row_not_applied": "이를 적용하는 NeoDesk 앱이 아직 없습니다.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "장치 인증",

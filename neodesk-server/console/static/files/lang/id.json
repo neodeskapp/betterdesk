@@ -6639,7 +6639,13 @@
     "sound_today": "Untuk mematikan suara dalam sesi sekarang juga, gunakan aturan akses dengan Suara nonaktif di Perangkat, atau matikan Suara di akses konsol seseorang.",
     "open_access_rules": "Buka aturan akses",
     "remove_group": "Hapus semua aturan grup ini",
-    "row_not_applied": "Belum ada aplikasi NeoDesk yang menerapkan ini."
+    "row_not_applied": "Belum ada aplikasi NeoDesk yang menerapkan ini.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Pengesahan Perangkat",

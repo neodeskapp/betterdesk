@@ -6633,7 +6633,13 @@
     "sound_today": "Om het geluid in sessies nu al uit te zetten, gebruikt u een toegangsregel met Geluid uit onder Apparaten, of zet u Geluid uit in iemands consoletoegang.",
     "open_access_rules": "Toegangsregels openen",
     "remove_group": "Alle regels van deze groep verwijderen",
-    "row_not_applied": "Nog geen NeoDesk-app past dit toe."
+    "row_not_applied": "Nog geen NeoDesk-app past dit toe.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Apparaatattestatie",

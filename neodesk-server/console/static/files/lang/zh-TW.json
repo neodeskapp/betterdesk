@@ -6923,7 +6923,13 @@
     "sound_today": "若要現在就關閉工作階段中的聲音，請在「設備」下使用關閉「聲音」的存取規則，或在某人的主控台存取權中關閉「聲音」。",
     "open_access_rules": "開啟存取規則",
     "remove_group": "移除此群組的所有規則",
-    "row_not_applied": "還沒有 NeoDesk 應用程式套用此項。"
+    "row_not_applied": "還沒有 NeoDesk 應用程式套用此項。",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "設備認證",

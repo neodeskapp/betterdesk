@@ -6639,7 +6639,13 @@
     "sound_today": "Để tắt âm thanh trong phiên ngay hôm nay, dùng quy tắc truy cập có Âm thanh tắt trong Thiết bị, hoặc tắt Âm thanh trong quyền truy cập bảng điều khiển của một người.",
     "open_access_rules": "Mở quy tắc truy cập",
     "remove_group": "Xóa mọi quy tắc của nhóm này",
-    "row_not_applied": "Chưa ứng dụng NeoDesk nào áp dụng mục này."
+    "row_not_applied": "Chưa ứng dụng NeoDesk nào áp dụng mục này.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Chứng thực thiết bị",

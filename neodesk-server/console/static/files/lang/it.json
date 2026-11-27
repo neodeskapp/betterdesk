@@ -6633,7 +6633,13 @@
     "sound_today": "Per disattivare l'audio nelle sessioni oggi, usa una regola di accesso con Audio disattivato in Dispositivi, o disattiva Audio nell'accesso alla console di una persona.",
     "open_access_rules": "Apri le regole di accesso",
     "remove_group": "Rimuovi tutte le regole di questo gruppo",
-    "row_not_applied": "Nessuna app NeoDesk lo applica ancora."
+    "row_not_applied": "Nessuna app NeoDesk lo applica ancora.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Attestazione dispositivi",

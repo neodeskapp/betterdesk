@@ -6639,7 +6639,13 @@
     "sound_today": "Oturumlarda sesi bugünden kapatmak için Cihazlar altında Ses kapalı olan bir erişim kuralı kullanın veya bir kişinin konsol erişiminde Ses'i kapatın.",
     "open_access_rules": "Erişim kurallarını aç",
     "remove_group": "Bu grubun tüm kurallarını kaldır",
-    "row_not_applied": "Henüz hiçbir NeoDesk uygulaması bunu uygulamıyor."
+    "row_not_applied": "Henüz hiçbir NeoDesk uygulaması bunu uygulamıyor.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Cihaz Onayı",

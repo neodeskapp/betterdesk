@@ -6633,7 +6633,13 @@
     "sound_today": "Para quitar el sonido en las sesiones hoy, use una regla de acceso con Sonido desactivado en Dispositivos, o desactive Sonido en el acceso a la consola de una persona.",
     "open_access_rules": "Abrir reglas de acceso",
     "remove_group": "Eliminar todas las reglas de este grupo",
-    "row_not_applied": "Ninguna app de NeoDesk aplica esto todavía."
+    "row_not_applied": "Ninguna app de NeoDesk aplica esto todavía.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Panel",

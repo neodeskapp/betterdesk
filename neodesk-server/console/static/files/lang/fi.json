@@ -6639,7 +6639,13 @@
     "sound_today": "Jos haluat mykistää istunnot jo nyt, käytä käyttösääntöä, jossa Ääni on pois, kohdassa Laitteet, tai kytke Ääni pois henkilön konsolipääsystä.",
     "open_access_rules": "Avaa käyttösäännöt",
     "remove_group": "Poista kaikki tämän ryhmän säännöt",
-    "row_not_applied": "Mikään NeoDesk-sovellus ei vielä sovella tätä."
+    "row_not_applied": "Mikään NeoDesk-sovellus ei vielä sovella tätä.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Laitteen todistus",

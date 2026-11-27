@@ -6639,7 +6639,13 @@
     "sound_today": "För att stänga av ljudet i sessioner redan i dag, använd en åtkomstregel med Ljud av under Enheter, eller stäng av Ljud i en persons konsolåtkomst.",
     "open_access_rules": "Öppna åtkomstregler",
     "remove_group": "Ta bort alla regler i den här gruppen",
-    "row_not_applied": "Ingen NeoDesk-app tillämpar detta ännu."
+    "row_not_applied": "Ingen NeoDesk-app tillämpar detta ännu.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Enhetsbekräftelse",

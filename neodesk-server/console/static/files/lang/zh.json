@@ -6901,7 +6901,13 @@
     "sound_today": "如果现在就要关闭会话中的声音，请在“设备”下使用关闭了“声音”的访问规则，或在某人的控制台访问中关闭“声音”。",
     "open_access_rules": "打开访问规则",
     "remove_group": "删除此分组的所有规则",
-    "row_not_applied": "还没有 NeoDesk 应用应用此项。"
+    "row_not_applied": "还没有 NeoDesk 应用应用此项。",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "设备认证",

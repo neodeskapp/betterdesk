@@ -6633,7 +6633,13 @@
     "sound_today": "Chcete-li už teď vypnout zvuk v relacích, použijte pravidlo přístupu s vypnutým Zvukem v Zařízení, nebo vypněte Zvuk v přístupu dané osoby ke konzoli.",
     "open_access_rules": "Otevřít pravidla přístupu",
     "remove_group": "Odebrat všechna pravidla této skupiny",
-    "row_not_applied": "Žádná aplikace NeoDesk to zatím neuplatňuje."
+    "row_not_applied": "Žádná aplikace NeoDesk to zatím neuplatňuje.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Atestace zařízení",

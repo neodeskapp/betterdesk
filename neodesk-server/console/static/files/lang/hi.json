@@ -6639,7 +6639,13 @@
     "sound_today": "आज ही सत्रों में आवाज़ बंद करने के लिए, उपकरण के नीचे ध्वनि बंद वाला एक्सेस नियम इस्तेमाल करें, या किसी व्यक्ति के कंसोल एक्सेस में ध्वनि बंद करें।",
     "open_access_rules": "एक्सेस नियम खोलें",
     "remove_group": "इस समूह के सभी नियम हटाएँ",
-    "row_not_applied": "अभी कोई NeoDesk ऐप इसे लागू नहीं करता।"
+    "row_not_applied": "अभी कोई NeoDesk ऐप इसे लागू नहीं करता।",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "डिवाइस सत्यापन",

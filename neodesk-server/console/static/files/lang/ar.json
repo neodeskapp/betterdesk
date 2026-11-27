@@ -6640,7 +6640,13 @@
     "sound_today": "لإيقاف الصوت في الجلسات من الآن، استخدم قاعدة وصول مع إيقاف الصوت تحت الأجهزة، أو أوقف الصوت في وصول الشخص إلى وحدة التحكم.",
     "open_access_rules": "فتح قواعد الوصول",
     "remove_group": "إزالة كل قواعد هذه المجموعة",
-    "row_not_applied": "لا يطبّق أي تطبيق من NeoDesk هذا بعد."
+    "row_not_applied": "لا يطبّق أي تطبيق من NeoDesk هذا بعد.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "شهادة الجهاز",

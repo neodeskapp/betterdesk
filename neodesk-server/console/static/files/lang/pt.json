@@ -6633,7 +6633,13 @@
     "sound_today": "Para desligar o som nas sessões hoje, use uma regra de acesso com Som desligado em Dispositivos, ou desligue Som no acesso à consola de uma pessoa.",
     "open_access_rules": "Abrir regras de acesso",
     "remove_group": "Remover todas as regras deste grupo",
-    "row_not_applied": "Nenhuma app NeoDesk aplica isto ainda."
+    "row_not_applied": "Nenhuma app NeoDesk aplica isto ainda.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Atestação de dispositivos",

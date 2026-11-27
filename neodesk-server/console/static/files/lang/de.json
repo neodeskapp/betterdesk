@@ -6633,7 +6633,13 @@
     "sound_today": "Um den Ton in Sitzungen heute abzuschalten, nimm eine Zugriffsregel mit Ton aus unter Geräte oder schalte Ton im Konsolenzugriff einer Person aus.",
     "open_access_rules": "Zugriffsregeln öffnen",
     "remove_group": "Alle Regeln dieser Gruppe entfernen",
-    "row_not_applied": "Noch keine NeoDesk-App wendet das an."
+    "row_not_applied": "Noch keine NeoDesk-App wendet das an.",
+    "not_set_word": "nicht festgelegt",
+    "not_set_option": "Nicht festgelegt (jedes Gerät entscheidet)",
+    "not_set_short": "Nicht festgelegt",
+    "not_set_list": "Nicht festgelegt (keine Einschränkung)",
+    "server_value_short": "Wert des Servers",
+    "devices_none": "Noch ist kein Gerät in dieser Organisation, diese Richtlinien erreichen also keines."
   },
   "attestation": {
     "title": "Dashboard",

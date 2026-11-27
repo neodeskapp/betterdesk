@@ -6639,7 +6639,13 @@
     "sound_today": "For at slå lyd fra i sessioner i dag skal du bruge en adgangsregel med Lyd fra under Enheder eller slå Lyd fra i en persons konsoladgang.",
     "open_access_rules": "Åbn adgangsregler",
     "remove_group": "Fjern alle regler i denne gruppe",
-    "row_not_applied": "Ingen NeoDesk-app anvender dette endnu."
+    "row_not_applied": "Ingen NeoDesk-app anvender dette endnu.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Enhedsattest",

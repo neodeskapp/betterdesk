@@ -6919,7 +6919,13 @@
     "sound_today": "Aby już teraz wyłączyć dźwięk w sesjach, użyj reguły dostępu z wyłączonym Dźwiękiem w Urządzenia albo wyłącz Dźwięk w dostępie do konsoli danej osoby.",
     "open_access_rules": "Otwórz reguły dostępu",
     "remove_group": "Usuń wszystkie zasady tej grupy",
-    "row_not_applied": "Żadna aplikacja NeoDesk jeszcze tego nie stosuje."
+    "row_not_applied": "Żadna aplikacja NeoDesk jeszcze tego nie stosuje.",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "Atestacja urządzeń",

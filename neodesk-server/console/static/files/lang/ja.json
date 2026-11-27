@@ -6633,7 +6633,13 @@
     "sound_today": "今すぐセッションの音をオフにするには、「デバイス」でサウンドをオフにしたアクセスルールを使うか、その人のコンソールアクセスでサウンドをオフにしてください。",
     "open_access_rules": "アクセスルールを開く",
     "remove_group": "このグループのルールをすべて削除",
-    "row_not_applied": "これを適用する NeoDesk アプリはまだありません。"
+    "row_not_applied": "これを適用する NeoDesk アプリはまだありません。",
+    "not_set_word": "not set",
+    "not_set_option": "Not set (each device decides)",
+    "not_set_short": "Not set",
+    "not_set_list": "Not set (no limit)",
+    "server_value_short": "Server value",
+    "devices_none": "No device is in this organization yet, so these policies reach none."
   },
   "attestation": {
     "title": "デバイス証明",
