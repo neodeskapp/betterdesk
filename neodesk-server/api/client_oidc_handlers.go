@@ -12,6 +12,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
@@ -22,14 +23,12 @@ import (
 // uuid and three short device fields.
 const maxClientOIDCBody = 4096
 
-// handleClientOIDCAuth starts OIDC for the stock RustDesk desktop client.
+// handleClientOIDCAuth starts a browser sign-in for the stock RustDesk
+// desktop client: op "NeoDesk" through the web console
+// (console_device_login.go), any other op through the outside identity
+// provider.
 // POST /api/oidc/auth
 func (s *Server) handleClientOIDCAuth(w http.ResponseWriter, r *http.Request) {
-	if s.oidcProvider == nil || !s.oidcProvider.IsEnabled() {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "OIDC is not enabled"})
-		return
-	}
-
 	var body struct {
 		Op         string `json:"op"`
 		ID         string `json:"id"`
@@ -50,6 +49,14 @@ func (s *Server) handleClientOIDCAuth(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Field too long"})
 		return
 	}
+	if body.Op == consoleLoginOp {
+		s.startConsoleLogin(w, r, body.ID, body.UUID, body.DeviceInfo.Name, body.DeviceInfo.OS, body.DeviceInfo.Type)
+		return
+	}
+	if s.oidcProvider == nil || !s.oidcProvider.IsEnabled() {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "OIDC is not enabled"})
+		return
+	}
 
 	authURL, code, err := s.oidcProvider.BuildClientAuthURL(body.ID, body.UUID, auth.ClientDeviceInfo{
 		Name: body.DeviceInfo.Name,
@@ -68,15 +75,20 @@ func (s *Server) handleClientOIDCAuth(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleClientOIDCAuthQuery is polled by the RustDesk client after browser SSO.
+// handleClientOIDCAuthQuery is polled by the RustDesk client after browser
+// SSO; a poll code of the console sign-in goes to pollConsoleLogin.
 // GET /api/oidc/auth-query?code=&id=&uuid=
 func (s *Server) handleClientOIDCAuthQuery(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+	if strings.HasPrefix(code, consoleLoginCodePrefix) {
+		s.pollConsoleLogin(w, r, code)
+		return
+	}
 	if s.oidcProvider == nil || !s.oidcProvider.IsEnabled() {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "OIDC is not enabled"})
 		return
 	}
 
-	code := r.URL.Query().Get("code")
 	clientID := r.URL.Query().Get("id")
 	clientUUID := r.URL.Query().Get("uuid")
 	if code == "" {

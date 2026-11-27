@@ -100,8 +100,14 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 	// Computers reach their support chat at the API port, where they send
 	// everything else (L526): the API hands it to the console
 	apiSrv.SetDeviceChat(srv)
+	// The desktop sign-in through the console sends the app to the
+	// console's page (DECISIONS A276)
+	if mail := srv.Deps().Mail; mail != nil {
+		apiSrv.SetConsoleAddress(mail.PanelBaseURLFor)
+	}
 	running = true
 	return func() {
+		apiSrv.SetConsoleAddress(nil)
 		apiSrv.SetDeviceChat(nil)
 		setAPIProxy(apiSrv.ListenerHandler())
 		setFeatures(nil)
