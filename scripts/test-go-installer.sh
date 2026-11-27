@@ -841,13 +841,91 @@ test_runs_without_term() (
 # repository, a mirror in sync) does not stop the install: the packages are
 # installed from the lists there are, and the run says so.
 test_apt_source_failure_goes_on() (
-    local out
-    out=$(bash -c 'script=$1; set --; source "$script"
-        LOG_FILE=/dev/null
-        apt-get() { if [ "$1" = update ]; then echo "E: Failed to fetch https://packages.example.org/Packages.xz" >&2; return 100; fi; echo "apt-get $*"; }
-        install_dependencies; echo "after the dependencies"' test "$SCRIPT_ROOT/install/neodesk.sh" 2>&1 < /dev/null) || true
-    case "$out" in *"apt-get install -y -qq sqlite3"*"after the dependencies"*) ;; *) fail "a failing package source stopped the install: $out" ;; esac
+    local out log
+    log=$(mktemp)
+    out=$(bash -c 'script=$1 log=$2; set --; source "$script"
+        LOG_FILE=$log
+        apt-get() { if [ "$1" = update ]; then echo "E: Failed to fetch https://packages.example.org/Packages.xz" >&2; return 100; fi; echo "apt-get $* ($DEBIAN_FRONTEND, needrestart $NEEDRESTART_MODE)"; }
+        install_dependencies; echo "after the dependencies"' test "$SCRIPT_ROOT/install/neodesk.sh" "$log" 2>&1 < /dev/null) || true
+    case "$out" in *"after the dependencies"*) ;; *) fail "a failing package source stopped the install: $out" ;; esac
     case "$out" in *"apt-get update failed for a package source"*) ;; *) fail "the failing package source is not said: $out" ;; esac
+    # LINUX-NATIVE-9: apt's output goes to the log, without questions, without
+    # upgrading what is installed and without restarting other services
+    case "$out" in *"Failed to fetch"*|*"apt-get install"*) fail "apt's output reached the screen: $out" ;; esac
+    grep -q 'apt-get install --no-upgrade -y -qq sqlite3 .* (noninteractive, needrestart l)' "$log" \
+        || fail "apt-get did not install quietly: $(cat "$log")"
+    rm -f "$log"
+)
+
+# LINUX-NATIVE-15: --set-config names the keys that changed and restarts
+# the server once; a value that is set already restarts nothing, and a
+# refusal shows the server's reason.
+test_set_config_says_what_changed() (
+    load
+    print_step() { :; }
+    print_success() { echo "$1"; }
+    print_error() { echo "$1"; }
+    systemctl() { echo "systemctl $*" >> "$TEST_DIR/calls"; }
+    start_services_with_verification() { echo "restart" >> "$TEST_DIR/calls"; }
+    server_cmd() {
+        case "$*" in
+            *LOG_LEVEL=info*) printf 'LOG_LEVEL=info\nTRUST_PROXY=Y\n' >> "$CONSOLE_PATH/.env"
+                printf '{\n  "envPath": "/x/.env",\n  "backupPath": "/x/.env.bak",\n  "changed": [\n    "LOG_LEVEL",\n    "TRUST_PROXY"\n  ],\n  "values": {}\n}\n' ;;
+            # The server lists every key it set, also one that had the value
+            *LOG_LEVEL=same*) printf '{\n  "envPath": "/x/.env",\n  "changed": [\n    "LOG_LEVEL"\n  ],\n  "values": {}\n}\n' ;;
+            *) echo "FOO is not a setting this command changes" >&2; return 1 ;;
+        esac
+    }
+    local out
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    MANAGED_CONFIG_CHANGES=(LOG_LEVEL=info TRUST_PROXY=Y)
+    out=$(apply_managed_config 2>&1) || fail "the change failed: $out"
+    case "$out" in *"Changed in $CONSOLE_PATH/.env: LOG_LEVEL, TRUST_PROXY"*) ;; *) fail "the run does not name the changed keys: $out" ;; esac
+    case "$out" in *envPath*|*backupPath*) fail "the server's report reached the screen: $out" ;; esac
+    [ "$(grep -c '^restart$' "$TEST_DIR/calls")" = 1 ] || fail "not one restart: $(cat "$TEST_DIR/calls")"
+    if grep -q 'systemctl restart' "$TEST_DIR/calls"; then fail "the server was restarted twice: $(cat "$TEST_DIR/calls")"; fi
+
+    : > "$TEST_DIR/calls"
+    MANAGED_CONFIG_CHANGES=(LOG_LEVEL=same)
+    out=$(apply_managed_config 2>&1) || fail "a change to the same value failed: $out"
+    case "$out" in *"Nothing changed"*) ;; *) fail "a change to the same value says: $out" ;; esac
+    if grep -q '^restart$' "$TEST_DIR/calls"; then fail "a change to the same value restarted the server"; fi
+
+    MANAGED_CONFIG_CHANGES=(FOO=bar)
+    out=$(apply_managed_config 2>&1) && fail "a refused change reported success"
+    case "$out" in *"FOO is not a setting"*) ;; *) fail "the refusal does not give the reason: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-10: --protocol did nothing; it is no longer in --help and
+# says so instead of being taken silently.
+test_protocol_flag_says_it_does_nothing() (
+    local out
+    out=$(bash "$SCRIPT_ROOT/install/neodesk.sh" --protocol https --help 2>&1) || fail "--protocol stopped the run: $out"
+    case "$out" in *"--protocol does nothing"*) ;; *) fail "--protocol is taken silently: $out" ;; esac
+    case "$out" in *"--protocol MODE"*) fail "--help still offers --protocol: $out" ;; esac
+)
+
+# LINUX-NATIVE-18: the installer's screens use NeoDesk's names, and the
+# password reset shows its own result, not the server's details.
+test_installer_uses_neodesk_names() (
+    local hits
+    hits=$(grep -nE 'HBBS \(Signal\)|HBBR \(Relay\)|RustDesk path|Detected RustDesk installation|RustDesk directory|Local Flutter/Cargo|Option 5 in SSL menu|^ *echo -e "  RustDesk:' \
+        "$SCRIPT_ROOT/install/neodesk.sh" || true)
+    [ -z "$hits" ] || fail "neodesk.sh still shows old names:
+$hits"
+    load
+    print_header() { :; }
+    auto_detect_paths() { CONSOLE_TYPE=go; }
+    forget_first_admin_password() { :; }
+    server_cmd() { cat >/dev/null; printf 'Auth database (SQLite): /x\nHash type: pbkdf2-sha256, length: 118\nDone\n'; }
+    AUTO_MODE=true
+    ADMIN_PASSWORD=Reset-Pass-123
+    local out
+    out=$(do_reset_password 2>&1) || fail "the reset failed: $out"
+    case "$out" in *Reset-Pass-123*) ;; *) fail "the reset does not show the new password: $out" ;; esac
+    case "$out" in *"Hash type"*|*"Auth database"*) fail "the reset shows the server's details: $out" ;; esac
+    rm -rf "$TEST_DIR"
 )
 
 # L73: the installers' backup is the server's own (a consistent database
@@ -890,6 +968,82 @@ FAKE
     # pipefail tar's broken pipe would fail the check
     tar -tzf "$BACKUP_DIR"/neodesk_backup_*.tar.gz > "$TEST_DIR/backup.list" || fail "the backup can't be listed"
     grep -q 'db_v2.sqlite3$' "$TEST_DIR/backup.list" || fail "without the server's backup the database file is not in the backup"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-1: the installer's backups hold the server's private key and
+# every secret of .env, so only root reads them: the folder is 0700, each
+# backup 0600, also inside the archive, and backups an older installer left
+# readable are closed at the next run. A BACKUP_DIR given keeps its mode.
+test_backups_are_for_root_only() (
+    load
+    print_step() { :; }
+    print_success() { :; }
+    print_warning() { :; }
+    BACKUP_DIR="$TEST_DIR/backups"
+    DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
+    printf 'sqlite file\n' > "$DB_PATH"
+    printf 'private key\n' > "$RUSTDESK_PATH/id_ed25519"
+    printf 'api key\n' > "$RUSTDESK_PATH/.api_key"
+    chmod 644 "$DB_PATH" "$RUSTDESK_PATH/id_ed25519" "$RUSTDESK_PATH/.api_key"
+    mkdir -p "$BACKUP_DIR" "$BACKUP_DIR/pre-go-20260101-000000"
+    printf 'older\n' > "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
+    chmod 755 "$BACKUP_DIR" "$BACKUP_DIR/pre-go-20260101-000000"
+    chmod 644 "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
+    umask 022
+    do_backup_silent >/dev/null 2>&1 || fail "the backup failed"
+    [ "$(umask)" = 0022 ] || fail "the backup left the umask at $(umask)"
+    [ "$(stat -c %a "$BACKUP_DIR")" = 700 ] || fail "the backup folder has mode $(stat -c %a "$BACKUP_DIR")"
+    local f
+    for f in "$BACKUP_DIR"/neodesk_backup_*.tar.gz; do
+        [ "$(stat -c %a "$f")" = 600 ] || fail "$(basename "$f") has mode $(stat -c %a "$f")"
+    done
+    [ "$(stat -c %a "$BACKUP_DIR/pre-go-20260101-000000")" = 700 ] || fail "the upgrade's backup folder has mode $(stat -c %a "$BACKUP_DIR/pre-go-20260101-000000")"
+    f=$(ls "$BACKUP_DIR"/neodesk_backup_2*.tar.gz | tail -n 1)
+    tar -tvzf "$f" > "$TEST_DIR/list" || fail "the backup can't be listed"
+    grep -q 'id_ed25519$' "$TEST_DIR/list" || fail "the backup has no key: $(cat "$TEST_DIR/list")"
+    if awk '{ print $1 }' "$TEST_DIR/list" | grep -v -- '------$'; then
+        fail "an entry in the backup is readable by others: $(cat "$TEST_DIR/list")"
+    fi
+    [ ! -e "$BACKUP_DIR/$(basename "$f" .tar.gz)" ] || fail "the backup's folder stayed beside its archive"
+
+    # A BACKUP_DIR given to the installer keeps its mode; its backups don't
+    local given="$TEST_DIR/given"
+    mkdir -p "$given" && chmod 755 "$given"
+    printf 'older\n' > "$given/neodesk_backup_20260101_000000.tar.gz" && chmod 644 "$given/neodesk_backup_20260101_000000.tar.gz"
+    BACKUP_DIR_GIVEN="$given" BACKUP_DIR="$given" secure_backup_folder
+    [ "$(stat -c %a "$given")" = 755 ] || fail "a given BACKUP_DIR got mode $(stat -c %a "$given")"
+    [ "$(stat -c %a "$given/neodesk_backup_20260101_000000.tar.gz")" = 600 ] || fail "a backup in a given BACKUP_DIR stayed readable"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-16: the newest BACKUP_KEEP (5) of the installer's backups
+# stay, older ones go; BACKUP_KEEP=0 keeps every one, and other files in the
+# folder stay.
+test_old_backups_are_pruned() (
+    load
+    print_step() { :; }
+    print_success() { :; }
+    print_warning() { :; }
+    BACKUP_DIR="$TEST_DIR/backups"
+    DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
+    mkdir -p "$BACKUP_DIR"
+    local day
+    for day in 01 02 03 04 05 06; do
+        printf 'old\n' > "$BACKUP_DIR/neodesk_backup_202601${day}_000000.tar.gz"
+    done
+    printf 'mine\n' > "$BACKUP_DIR/notes.txt"
+    do_backup_silent >/dev/null 2>&1 || fail "the backup failed"
+    [ "$(ls "$BACKUP_DIR"/neodesk_backup_*.tar.gz | wc -l)" = 5 ] || fail "not five backups stay: $(ls "$BACKUP_DIR")"
+    [ ! -e "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz" ] && [ ! -e "$BACKUP_DIR/neodesk_backup_20260102_000000.tar.gz" ] \
+        || fail "the oldest backups stayed: $(ls "$BACKUP_DIR")"
+    [ -e "$BACKUP_DIR/neodesk_backup_20260106_000000.tar.gz" ] || fail "a newer backup was removed: $(ls "$BACKUP_DIR")"
+    [ -e "$BACKUP_DIR/notes.txt" ] || fail "a file that is no backup was removed"
+    sleep 1
+    BACKUP_KEEP=0 do_backup_silent >/dev/null 2>&1 || fail "the backup with BACKUP_KEEP=0 failed"
+    sleep 1
+    BACKUP_KEEP=0 do_backup_silent >/dev/null 2>&1 || fail "the backup with BACKUP_KEEP=0 failed"
+    [ "$(ls "$BACKUP_DIR"/neodesk_backup_*.tar.gz | wc -l)" = 7 ] || fail "BACKUP_KEEP=0 removed backups: $(ls "$BACKUP_DIR")"
     rm -rf "$TEST_DIR"
 )
 
@@ -1157,6 +1311,156 @@ Environment=NEODESK_SUPERVISOR=systemd
         case "$out" in *"$want"*) ;; *) fail "the summary does not name $want: $out" ;; esac
     done
     case "$out" in *Summary-Pass-1*) fail "the summary shows the password" ;; esac
+    # LINUX-NATIVE-19: the relay with its port, as the console shows it
+    case "$out" in *"Relay server:  desk.example.org:21117"*) ;; *) fail "the summary gives the relay without its port: $out" ;; esac
+    # LINUX-NATIVE-8: the first sign-in says how to get a new password
+    FRESH_CONSOLE_ENV=true
+    out=$(print_install_summary 2>&1)
+    case "$out" in *"First sign-in"*"neodesk-setup --reset-password"*) ;; *) fail "the first sign-in does not say how to get a new password: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-8: the password box names the command that gives a new
+# password, its right border stays in line, and the run does not talk about
+# STORE_ADMIN_CREDENTIALS.
+test_password_box() (
+    load
+    local LC_ALL=C.UTF-8
+    FRESH_CONSOLE_ENV=true
+    ADMIN_PASSWORD=0123456789abcdef0123456789abcdef
+    local out widths
+    out=$(create_admin_user 2>&1)
+    case "$out" in *"$ADMIN_PASSWORD"*) ;; *) fail "the box does not show the password: $out" ;; esac
+    case "$out" in *"Lost it? sudo neodesk-setup --reset-password"*) ;; *) fail "the box does not say how to get a new password: $out" ;; esac
+    case "$out" in *STORE_ADMIN_CREDENTIALS*|*"not persisted"*) fail "the run talks about storing the credentials: $out" ;; esac
+    widths=$(printf '%s\n' "$out" | grep '[║╔╚╠]' | while IFS= read -r line; do printf '%s\n' "${#line}"; done | sort -u)
+    [ "$(printf '%s\n' "$widths" | wc -l)" = 1 ] || fail "the box's lines differ in width: $widths
+$out"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-3, -12: an interactive install asks every question before
+# it installs anything, the self-signed certificate is made after the relay
+# address is known, and the password and the summary come last.
+test_interactive_install_asks_first() (
+    load
+    AUTO_MODE=false
+    MINIMAL_MODE=false
+    RELAY_SERVERS=""
+    RELAY_MODE=auto
+    FRESH_CONSOLE_ENV=true
+    ADMIN_PASSWORD=Interactive-Pass-1
+    print_header() { :; }
+    print_step() { :; }
+    print_success() { echo "$1"; }
+    detect_installation() { INSTALL_STATUS=none; }
+    is_node_era_install() { false; }
+    menu_choose() { MENU_CHOICE=1; }
+    get_local_ip() { echo 192.168.1.5; }
+    graceful_stop_services() { :; }
+    install_dependencies() { echo "INSTALLING"; }
+    detect_architecture() { :; }
+    install_binaries() { :; }
+    setup_console_home() { :; }
+    generate_ssl_certificates() { echo "CERTIFICATE for ${RELAY_SERVERS:-none}"; }
+    setup_services() { :; }
+    configure_firewall_rules() { :; }
+    start_services() { :; }
+    forget_first_admin_password() { :; }
+    do_configure_reverse_proxy() { echo "PROXY STEP"; }
+    install_manager_command() { :; }
+    print_install_summary() { echo "SUMMARY"; }
+    local out
+    # Relay: a custom address; P2P first; a reverse proxy: yes
+    out=$(printf '3\nrd.example.net\n1\ny\n' | do_install 2>&1) || fail "the install failed: $out"
+    printf '%s\n' "$out" > "$TEST_DIR/out"
+    local relay_q conn_q tls_q install cert proxy box summary
+    relay_q=$(grep -n 'Select relay mode' "$TEST_DIR/out" | head -1 | cut -d: -f1)
+    conn_q=$(grep -n 'Select connection mode' "$TEST_DIR/out" | head -1 | cut -d: -f1)
+    tls_q=$(grep -n 'reverse proxy' "$TEST_DIR/out" | head -1 | cut -d: -f1)
+    install=$(grep -n '^INSTALLING$' "$TEST_DIR/out" | cut -d: -f1)
+    cert=$(grep -n '^CERTIFICATE for rd.example.net$' "$TEST_DIR/out" | cut -d: -f1)
+    proxy=$(grep -n '^PROXY STEP$' "$TEST_DIR/out" | cut -d: -f1)
+    box=$(grep -n 'Interactive-Pass-1' "$TEST_DIR/out" | cut -d: -f1)
+    summary=$(grep -n '^SUMMARY$' "$TEST_DIR/out" | cut -d: -f1)
+    [ -n "$relay_q" ] && [ -n "$conn_q" ] && [ -n "$tls_q" ] && [ -n "$install" ] && [ -n "$cert" ] \
+        && [ -n "$proxy" ] && [ -n "$box" ] && [ -n "$summary" ] || fail "a step is missing: $out"
+    [ "$relay_q" -lt "$install" ] && [ "$conn_q" -lt "$install" ] && [ "$tls_q" -lt "$install" ] \
+        || fail "a question came after the install started: $out"
+    [ "$proxy" -lt "$box" ] && [ "$box" -lt "$summary" ] || fail "the proxy step came after the password or the summary: $out"
+    [ "$(grep -v '^[[:space:]]*$' "$TEST_DIR/out" | tail -n 1)" = SUMMARY ] || fail "the summary is not the last thing: $out"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-3: a relay address given by name goes into the self-signed
+# certificate and becomes its common name.
+test_certificate_names_the_relay_address() (
+    load
+    command -v openssl >/dev/null || return 0
+    print_success() { :; }
+    get_public_ip() { echo 203.0.113.7; }
+    deploy_ssl_material_to_rustdesk_dir() { :; }
+    RELAY_SERVERS=rd.example.net:21117
+    unset SSL_DOMAIN
+    generate_ssl_certificates >/dev/null 2>&1 || fail "the certificate was not made"
+    local text subject
+    text=$(openssl x509 -in "$RUSTDESK_PATH/ssl/neodesk.crt" -noout -text)
+    case "$text" in *"DNS:rd.example.net"*) ;; *) fail "the certificate is not for the relay address: $text" ;; esac
+    case "$text" in *"IP Address:203.0.113.7"*) ;; *) fail "the certificate lost the public IP: $text" ;; esac
+    subject=$(openssl x509 -in "$RUSTDESK_PATH/ssl/neodesk.crt" -noout -subject)
+    case "$subject" in *"CN = rd.example.net"*|*"CN=rd.example.net"*) ;; *) fail "the common name: $subject" ;; esac
+    [ "$(san_entry 2001:db8::1)" = "IP:2001:db8::1" ] && [ "$(san_entry 198.51.100.4)" = "IP:198.51.100.4" ] \
+        || fail "san_entry of an address"
+    [ "$(address_host '[2001:db8::1]:21117')" = 2001:db8::1 ] && [ "$(address_host 'a.example:1,b.example')" = a.example ] \
+        || fail "address_host"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-13: a fixed relay address is reported as mode fixed.
+test_fixed_relay_mode_is_said() (
+    load
+    systemctl() { :; }
+    print_success() { :; }
+    print_info() { echo "$1"; }
+    remove_retired_units() { :; }
+    AUTO_MODE=true
+    RELAY_SERVERS=rd.example.net
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    local out
+    out=$(setup_services 2>&1)
+    case "$out" in *"Relay server IP: rd.example.net (mode: fixed)"*) ;; *) fail "the relay mode line: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-6: the PostgreSQL question offers this machine or an
+# existing database by URI; a URI skips setting PostgreSQL up here, and a
+# database host elsewhere without a URI stops instead of making the
+# database on this machine.
+test_postgresql_question() (
+    load
+    print_warning() { echo "$1"; }
+    install_postgresql() { echo install_postgresql >> "$TEST_DIR/calls"; }
+    setup_postgresql_database() { echo setup_postgresql_database >> "$TEST_DIR/calls"; }
+    AUTO_MODE=false
+    USE_POSTGRESQL=false
+    POSTGRESQL_URI=""
+    # The first menu: PostgreSQL; the second: an existing database
+    menu_choose() { MENU_CHOICE=2; }
+    printf 'db.example.org:5432\npostgresql://nd:Pass@db.example.org:5432/desk\n' > "$TEST_DIR/in"
+    choose_database_type > "$TEST_DIR/out" 2>&1 < "$TEST_DIR/in"
+    [ "$USE_POSTGRESQL" = true ] && [ "$POSTGRESQL_URI" = postgresql://nd:Pass@db.example.org:5432/desk ] \
+        || fail "the URI was not taken: ${POSTGRESQL_URI:-none} $(cat "$TEST_DIR/out")"
+    grep -q 'postgres:// or postgresql://' "$TEST_DIR/out" || fail "a line that is no URI was not refused: $(cat "$TEST_DIR/out")"
+    if grep -qi 'host \[' "$TEST_DIR/out"; then fail "the question still asks for a host: $(cat "$TEST_DIR/out")"; fi
+    prepare_postgresql >/dev/null 2>&1 || fail "the database given by URI failed"
+    [ ! -s "$TEST_DIR/calls" ] || fail "a database given by URI was set up here: $(cat "$TEST_DIR/calls")"
+
+    local out
+    POSTGRESQL_URI=""
+    POSTGRESQL_HOST=db.example.org
+    out=$(prepare_postgresql 2>&1) && fail "a database host elsewhere without a URI was set up here"
+    case "$out" in *--pg-uri*) ;; *) fail "the refusal does not name --pg-uri: $out" ;; esac
+    [ ! -s "$TEST_DIR/calls" ] || fail "PostgreSQL was installed for a host elsewhere: $(cat "$TEST_DIR/calls")"
     rm -rf "$TEST_DIR"
 )
 
@@ -1191,6 +1495,115 @@ test_uninstall_says_what_stays() (
     printf '#!/bin/sh\necho mine\n' > "$CLI_COMMAND"
     do_uninstall >/dev/null 2>&1
     grep -qx 'echo mine' "$CLI_COMMAND" || fail "--purge removed a neodesk of someone else"
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-1, LINUX-NATIVE-7: --uninstall --purge on a terminal offers
+# to remove the backups and then makes none; without a terminal it keeps
+# them and says so. The list names the PostgreSQL database the settings
+# named, with the commands that remove it.
+test_purge_handles_backups_and_the_database() (
+    load
+    systemctl() { :; }
+    print_header() { :; }
+    AUTO_MODE=true
+    UNINSTALL_MODE=true
+    PURGE_MODE=true
+    commands_in_test_dir
+    BACKUP_DIR="$TEST_DIR/backups"
+    mkdir -p "$BACKUP_DIR"
+    printf 'old\n' > "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
+    printf 'DATABASE_URL=postgres://neodesk:secret@localhost:5432/neodesk?sslmode=disable\n' > "$CONSOLE_PATH/.env"
+    do_backup_silent() { echo "a backup was made" >> "$TEST_DIR/calls"; }
+    has_terminal() { true; }
+    local out
+    out=$(printf 'y\n' | do_uninstall 2>&1)
+    [ ! -e "$BACKUP_DIR" ] || fail "purge with yes to the backups left $(ls -A "$BACKUP_DIR")"
+    if grep -q 'a backup was made' "$TEST_DIR/calls" 2>/dev/null; then fail "a purge that removes the backups made one"; fi
+    case "$out" in *"sudo -u postgres dropdb neodesk && sudo -u postgres dropuser neodesk"*) ;; *) fail "the purge does not name the PostgreSQL database: $out" ;; esac
+    case "$out" in *secret*) fail "the uninstall shows the database password: $out" ;; esac
+
+    # No terminal: the backups stay, a new one is made, the list says where
+    mkdir -p "$RUSTDESK_PATH" "$CONSOLE_PATH" "$BACKUP_DIR"
+    printf 'old\n' > "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
+    printf 'DATABASE_URL=postgres://nd:secret@db.example.org/desk\n' > "$CONSOLE_PATH/.env"
+    has_terminal() { false; }
+    out=$(do_uninstall 2>&1 < /dev/null)
+    [ -e "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz" ] || fail "a purge without a terminal removed the backups"
+    grep -q 'a backup was made' "$TEST_DIR/calls" || fail "a purge without a terminal made no backup"
+    case "$out" in *"$BACKUP_DIR: the backups, readable by root only"*) ;; *) fail "the list does not name the backups: $out" ;; esac
+    case "$out" in *"the PostgreSQL database desk on db.example.org"*) ;; *) fail "the list does not name the remote database: $out" ;; esac
+    rm -rf "$TEST_DIR"
+)
+
+# LINUX-NATIVE-16, LINUX-NATIVE-17: an update that finds the release
+# installed already makes no backup, and when the unit and .env stay as
+# they were the running server is not restarted. A new release gets the
+# backup first, the restart, and --no-restart-hint when the binary has it.
+# The unit's description names no version.
+test_update_without_a_new_release_changes_nothing() (
+    load
+    print_step() { :; }
+    print_success() { :; }
+    print_warning() { :; }
+    print_error() { echo "$1"; }
+    SERVER_BINARY_FILE=""
+    FROM_SOURCE=false
+    unset RELEASE_BASE_URL
+    printf '#!/bin/sh\n# upgrade-env --from FILE; verify-release --manifest FILE; update [--no-restart-hint] (its commands)\necho neodesk-server 3.6.0\n' > "$RUSTDESK_PATH/neodesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
+    write_server_unit "-mode all -api-port 21114" ""
+    grep -qx 'Description=NeoDesk server and web console' "$SERVER_UNIT" || fail "the unit's description: $(grep '^Description=' "$SERVER_UNIT")"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    do_backup_silent() { echo "backup" >> "$TEST_DIR/calls"; }
+    merge_console_env() { :; }
+    set_server_folder_permissions() { :; }
+    install_manager_command() { :; }
+    verify_go_install() { :; }
+    systemctl() {
+        case "$1" in
+            is-active) return 0 ;;
+            *) echo "systemctl $*" >> "$TEST_DIR/calls" ;;
+        esac
+    }
+    server_cmd() {
+        echo "server $*" >> "$TEST_DIR/calls"
+        case "$*" in *"--check"*) echo "Already up to date (2222222)." ;; esac
+    }
+    update_go_install >/dev/null 2>&1 || fail "an update without a new release failed"
+    if grep -q '^backup' "$TEST_DIR/calls"; then fail "an update without a new release made a backup: $(cat "$TEST_DIR/calls")"; fi
+    if grep -q 'systemctl restart' "$TEST_DIR/calls"; then fail "an update that changed nothing restarted the server: $(cat "$TEST_DIR/calls")"; fi
+    if grep -q -- '--yes' "$TEST_DIR/calls"; then fail "an update without a new release ran the install: $(cat "$TEST_DIR/calls")"; fi
+
+    # A change to .env restarts it, still without a backup
+    : > "$TEST_DIR/calls"
+    merge_console_env() { printf 'NEW_KEY=1\n' >> "$CONSOLE_PATH/.env"; }
+    update_go_install >/dev/null 2>&1 || fail "an update that changed .env failed"
+    grep -q 'systemctl restart neodesk-server' "$TEST_DIR/calls" || fail "a changed .env did not restart the server: $(cat "$TEST_DIR/calls")"
+    if grep -q '^backup' "$TEST_DIR/calls"; then fail "an update with the same binary made a backup"; fi
+
+    # A new release: the backup first, then the install with --no-restart-hint
+    : > "$TEST_DIR/calls"
+    merge_console_env() { :; }
+    server_cmd() {
+        echo "server $*" >> "$TEST_DIR/calls"
+        case "$*" in
+            *"--check"*) echo "Release: neodesk-server 3.6.1" ;;
+            *"--yes"*) printf '#!/bin/sh\n# upgrade-env --from FILE; verify-release --manifest FILE\necho neodesk-server 3.6.1\n' > "$RUSTDESK_PATH/neodesk-server" ;;
+        esac
+    }
+    update_go_install >/dev/null 2>&1 || fail "the update to a new release failed"
+    [ "$(grep -n '' "$TEST_DIR/calls" | grep -m1 -E 'backup|--yes' | cut -d: -f2-)" = backup ] || fail "the backup did not come before the install: $(cat "$TEST_DIR/calls")"
+    grep -q -- 'update --yes --no-restart-hint' "$TEST_DIR/calls" || fail "the install did not get --no-restart-hint: $(cat "$TEST_DIR/calls")"
+    grep -q 'systemctl restart neodesk-server' "$TEST_DIR/calls" || fail "a new release did not restart the server"
+
+    # A failed check stops before the backup
+    : > "$TEST_DIR/calls"
+    server_cmd() { echo "server $*" >> "$TEST_DIR/calls"; echo "Update failed: GitHub API 404"; return 1; }
+    local out
+    out=$(update_go_install 2>&1) && fail "an update whose check failed reported success"
+    case "$out" in *"GitHub API 404"*) ;; *) fail "the failed check is not shown: $out" ;; esac
+    if grep -q '^backup' "$TEST_DIR/calls"; then fail "an update whose check failed made a backup"; fi
     rm -rf "$TEST_DIR"
 )
 
@@ -1307,8 +1720,7 @@ Environment=NEODESK_SUPERVISOR=systemd
 HTTPS_ENABLED=false
 ' > "$CONSOLE_PATH/.env"
     systemctl() { return 3; }
-    iptables() { printf '%s
-' "$*" >> "$TEST_DIR/iptables"; case "$1" in -C|-D) return 1 ;; esac; }
+    iptables() { printf '%s\n' "$*" >> "$TEST_DIR/iptables"; case "$1" in -C|-D) return 1 ;; esac; }
     iptables-save() { echo saved >> "$TEST_DIR/iptables"; }
     print_success() { :; }
     ufw() { [ "$1" != status ] || echo "Status: inactive"; }
@@ -1642,7 +2054,12 @@ test_backups_move_to_the_neodesk_folder
 test_no_settings_go_to_the_old_console_service
 test_runs_without_term
 test_apt_source_failure_goes_on
+test_set_config_says_what_changed
+test_protocol_flag_says_it_does_nothing
+test_installer_uses_neodesk_names
 test_backup_uses_the_servers_backup
+test_backups_are_for_root_only
+test_old_backups_are_pruned
 test_release_workflow_publishes_candidates_as_prereleases
 test_release_workflow_takes_the_notes_file
 test_no_stable_release_installs_the_newest_prerelease
@@ -1650,7 +2067,14 @@ test_no_stable_release_installs_dev
 test_rerun_updates_and_forgets_the_password
 test_panel_public_host
 test_install_summary
+test_password_box
+test_interactive_install_asks_first
+test_certificate_names_the_relay_address
+test_fixed_relay_mode_is_said
+test_postgresql_question
 test_uninstall_says_what_stays
+test_purge_handles_backups_and_the_database
+test_update_without_a_new_release_changes_nothing
 test_update_asks_the_fork
 test_firewall_ports
 test_reverse_proxy_closes_the_console_ports

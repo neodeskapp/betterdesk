@@ -10446,5 +10446,37 @@
     "updates_title": "Avant les mises à jour",
     "where": "Où enregistrer",
     "where_help": "Le dossier de données NeoDesk, ou un dossier à vous. Un partage réseau doit d'abord être monté par le système d'exploitation."
+  },
+  "device_authorize": {
+    "title": "Se connecter à l'application NeoDesk",
+    "description": "Un ordinateur demande à se connecter à l'application NeoDesk avec votre compte, {account}.",
+    "facts_label": "L'ordinateur qui demande",
+    "device_name": "Ordinateur",
+    "device_os": "Système",
+    "device_id": "ID NeoDesk",
+    "ip": "Adresse IP",
+    "asked": "Demandé",
+    "check": "N'autorisez que si vous venez de lancer cette connexion sur cet ordinateur. Sinon, cliquez sur Refuser : la personne qui vous a envoyé ce lien accéderait à votre compte.",
+    "allow": "Autoriser",
+    "deny": "Refuser",
+    "unnamed": "Ordinateur sans nom",
+    "allowed_title": "L'application est connectée",
+    "allowed_text": "{device} est maintenant connecté en tant que {account}. Revenez à l'application NeoDesk ; vous pouvez fermer cet onglet.",
+    "declined_title": "Connexion refusée",
+    "declined_text": "L'ordinateur n'a pas été connecté. Vous pouvez fermer cet onglet.",
+    "ended_title": "Cette connexion est terminée",
+    "ended_text": "Elle a expiré au bout de cinq minutes ou a déjà reçu une réponse. Relancez la connexion dans l'application NeoDesk.",
+    "load_failed": "La demande de connexion n'a pas pu être chargée.",
+    "errors": {
+      "already_decided": "Cette connexion a déjà reçu une réponse.",
+      "not_found": "Cette connexion est terminée. Relancez-la dans l'application NeoDesk.",
+      "account_disabled": "Votre compte est désactivé et ne peut pas se connecter à l'application.",
+      "totp_setup_required": "Votre compte doit d'abord configurer la connexion à deux facteurs. Configurez-la dans Votre compte, puis cliquez de nouveau sur Autoriser.",
+      "password_change_required": "Votre compte doit d'abord choisir un nouveau mot de passe. Changez-le dans Votre compte, puis cliquez de nouveau sur Autoriser.",
+      "account_refused": "Votre compte ne peut pas se connecter à l'application.",
+      "impersonating": "Vous consultez NeoDesk en tant qu'un autre compte. Arrêtez d'abord, puis autorisez la connexion avec votre propre compte.",
+      "browser_only": "Seule une personne connectée à la console dans un navigateur peut autoriser une connexion.",
+      "server_error": "Cela n'a pas fonctionné. Réessayez."
+    }
   }
 }

@@ -10442,5 +10442,37 @@
     "updates_title": "Před aktualizacemi",
     "where": "Kam ukládat",
     "where_help": "Datová složka NeoDesk, nebo vlastní složka. Síťové sdílení musí nejdřív připojit operační systém."
+  },
+  "device_authorize": {
+    "title": "Přihlásit se do aplikace NeoDesk",
+    "description": "Počítač žádá o přihlášení do aplikace NeoDesk vaším účtem {account}.",
+    "facts_label": "Počítač, který žádá",
+    "device_name": "Počítač",
+    "device_os": "Systém",
+    "device_id": "NeoDesk ID",
+    "ip": "IP adresa",
+    "asked": "Žádost",
+    "check": "Povolte to jen tehdy, pokud jste toto přihlášení právě spustili na tom počítači. Pokud ne, klikněte na Odmítnout: ten, kdo vám poslal tento odkaz, by se dostal do vašeho účtu.",
+    "allow": "Povolit",
+    "deny": "Odmítnout",
+    "unnamed": "Nepojmenovaný počítač",
+    "allowed_title": "Aplikace je přihlášená",
+    "allowed_text": "{device} je teď přihlášený jako {account}. Vraťte se do aplikace NeoDesk; tuto kartu můžete zavřít.",
+    "declined_title": "Přihlášení odmítnuto",
+    "declined_text": "Počítač nebyl přihlášen. Tuto kartu můžete zavřít.",
+    "ended_title": "Toto přihlášení skončilo",
+    "ended_text": "Vypršelo po pěti minutách nebo už bylo zodpovězeno. Spusťte přihlášení v aplikaci NeoDesk znovu.",
+    "load_failed": "Žádost o přihlášení se nepodařilo načíst.",
+    "errors": {
+      "already_decided": "Toto přihlášení už bylo zodpovězeno.",
+      "not_found": "Toto přihlášení skončilo. Spusťte ho v aplikaci NeoDesk znovu.",
+      "account_disabled": "Váš účet je zakázaný a nemůže se do aplikace přihlásit.",
+      "totp_setup_required": "Váš účet musí nejdřív nastavit dvoufázové přihlášení. Nastavte ho v sekci Váš účet a pak znovu klikněte na Povolit.",
+      "password_change_required": "Váš účet si musí nejdřív zvolit nové heslo. Změňte ho v sekci Váš účet a pak znovu klikněte na Povolit.",
+      "account_refused": "Váš účet se do aplikace nemůže přihlásit.",
+      "impersonating": "Prohlížíte NeoDesk jako jiný účet. Nejdřív to ukončete a pak přihlášení povolte svým vlastním účtem.",
+      "browser_only": "Přihlášení může povolit jen ten, kdo je v prohlížeči přihlášený ke konzoli.",
+      "server_error": "To nevyšlo. Zkuste to znovu."
+    }
   }
 }

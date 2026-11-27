@@ -10442,5 +10442,37 @@
     "updates_title": "Antes das atualizações",
     "where": "Onde guardar",
     "where_help": "A pasta de dados do NeoDesk, ou uma pasta sua. Uma partilha de rede tem de ser montada primeiro pelo sistema operativo."
+  },
+  "device_authorize": {
+    "title": "Iniciar sessão na aplicação NeoDesk",
+    "description": "Um computador pede para iniciar sessão na aplicação NeoDesk com a sua conta, {account}.",
+    "facts_label": "O computador que pede",
+    "device_name": "Computador",
+    "device_os": "Sistema",
+    "device_id": "ID NeoDesk",
+    "ip": "Endereço IP",
+    "asked": "Pedido",
+    "check": "Permita apenas se acabou de iniciar esta sessão nesse computador. Caso contrário, clique em Recusar: quem lhe enviou esta ligação entraria na sua conta.",
+    "allow": "Permitir",
+    "deny": "Recusar",
+    "unnamed": "Computador sem nome",
+    "allowed_title": "A aplicação tem sessão iniciada",
+    "allowed_text": "{device} tem agora sessão iniciada como {account}. Volte à aplicação NeoDesk; pode fechar este separador.",
+    "declined_title": "Início de sessão recusado",
+    "declined_text": "O computador não iniciou sessão. Pode fechar este separador.",
+    "ended_title": "Este início de sessão terminou",
+    "ended_text": "Expirou ao fim de cinco minutos ou já foi respondido. Inicie a sessão de novo na aplicação NeoDesk.",
+    "load_failed": "Não foi possível carregar o pedido de início de sessão.",
+    "errors": {
+      "already_decided": "Este início de sessão já foi respondido.",
+      "not_found": "Este início de sessão terminou. Inicie-o de novo na aplicação NeoDesk.",
+      "account_disabled": "A sua conta está desativada e não pode iniciar sessão na aplicação.",
+      "totp_setup_required": "A sua conta tem de configurar primeiro o início de sessão de dois fatores. Configure-o em A sua conta e clique de novo em Permitir.",
+      "password_change_required": "A sua conta tem de escolher primeiro uma nova palavra-passe. Altere-a em A sua conta e clique de novo em Permitir.",
+      "account_refused": "A sua conta não pode iniciar sessão na aplicação.",
+      "impersonating": "Está a ver o NeoDesk como outra conta. Pare isso primeiro e depois permita o início de sessão com a sua própria conta.",
+      "browser_only": "Só uma pessoa com sessão iniciada na consola num navegador pode permitir um início de sessão.",
+      "server_error": "Não funcionou. Tente de novo."
+    }
   }
 }

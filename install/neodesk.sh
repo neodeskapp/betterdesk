@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
 #
-#   NeoDesk Console Manager v3.6.20
+#   NeoDesk Console Manager v3.6.24
 #   All-in-One Interactive Tool for Linux
 #
 #   Features:
@@ -39,7 +39,7 @@
 set -e
 
 # Version
-VERSION="3.6.20"
+VERSION="3.6.24"
 # Bump when installer control-flow changes must apply mid-session after Update.
 NEODESK_SH_REVISION="20261125-console-port-3375-309"
 # Where people ask for help: the NeoDesk Discord
@@ -291,11 +291,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --protocol)
-            PROTOCOL_MODE="$2"
-            if [ "$PROTOCOL_MODE" != "http" ] && [ "$PROTOCOL_MODE" != "https" ]; then
-                echo "ERROR: --protocol must be 'http' or 'https'"
-                exit 1
-            fi
+            echo "NOTE: --protocol does nothing; switch HTTP and HTTPS with sudo neodesk-setup, Toggle HTTP/HTTPS"
             shift 2
             ;;
         --pg-uri)
@@ -323,7 +319,8 @@ while [[ $# -gt 0 ]]; do
             echo "  --uninstall      Stop and remove the service, after a backup; the data stays,"
             echo "                   and the end lists what is left on the machine"
             echo "  --purge          With --uninstall, also remove the data, keys and the commands"
-            echo "                   neodesk-setup and neodesk"
+            echo "                   neodesk-setup and neodesk; on a terminal it offers to remove"
+            echo "                   the backups too"
             echo "  --check-permissions  Report panel/update/config/restart capabilities"
             echo "  --repair-permissions Repair NeoDesk ownership and service access"
             echo "  --set-config K=V Apply an allowlisted .env setting (repeatable)"
@@ -331,7 +328,6 @@ while [[ $# -gt 0 ]]; do
             echo "  --minimal        Install the server with its web console off"
             echo "  --postgresql     Use PostgreSQL instead of SQLite"
             echo "  --pg-uri URI     PostgreSQL connection URI (implies --postgresql)"
-            echo "  --protocol MODE  Set protocol mode: 'http' or 'https'"
             echo "  --relay-mode M   Relay IP selection: 'auto' (public, default), 'local' (LAN), 'public'"
             echo "  --relay-servers IP  Force a fixed relay server address (IP or host[:port])"
             echo "  --help, -h       Show this help message"
@@ -355,6 +351,7 @@ while [[ $# -gt 0 ]]; do
             echo "  SSL_DOMAIN=...          Host name for the self-signed certificate and the console's address"
             echo "  RUSTDESK_PATH=... / CONSOLE_PATH=... / BACKUP_DIR=...  Install folders"
             echo "                          (default /opt/neodesk, /opt/NeoDeskConsole, /opt/neodesk-backups)"
+            echo "  BACKUP_KEEP=5           How many of the installer's backups stay (0: all of them)"
             echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
             echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
             echo ""
@@ -649,16 +646,36 @@ repair_management_permissions() {
     check_management_capabilities || true
 }
 
+# apply_managed_config: the KEY=VALUE pairs of MANAGED_CONFIG_CHANGES go
+# into .env through the server's allowlist (config set). The run names the
+# keys it set and restarts the server once; when .env is the same as
+# before it keeps running. The server's report goes to the log, and on a
+# refusal to the screen.
 apply_managed_config() {
     if [ "${#MANAGED_CONFIG_CHANGES[@]}" -eq 0 ]; then
         print_error "No allowlisted configuration changes supplied"
         return 1
     fi
-    print_step "Applying allowlisted NeoDesk configuration..."
-    server_cmd --as-service config set "${MANAGED_CONFIG_CHANGES[@]}" || return 1
+    local out changed env_before
+    env_before=$(sha256sum "$CONSOLE_PATH/.env" 2>/dev/null | awk '{ print $1 }')
+    if ! out=$(server_cmd --as-service config set "${MANAGED_CONFIG_CHANGES[@]}" 2>&1); then
+        printf '%s\n' "$out"
+        print_error "The settings were not changed"
+        return 1
+    fi
+    log "neodesk-server config set: $out"
+    # The keys of the "changed" list in the report
+    changed=$(printf '%s\n' "$out" | awk '
+        /"changed": \[\]/ { exit }
+        /"changed": \[/ { inside = 1; next }
+        inside && /\]/ { exit }
+        inside { gsub(/[",[:space:]]/, ""); if ($0 != "") printf "%s%s", sep, $0; sep = ", " }')
+    if [ -z "$changed" ] || [ "$env_before" = "$(sha256sum "$CONSOLE_PATH/.env" 2>/dev/null | awk '{ print $1 }')" ]; then
+        print_success "Nothing changed: $CONSOLE_PATH/.env has these values already"
+        return 0
+    fi
+    print_success "Changed in $CONSOLE_PATH/.env: $changed"
     systemctl daemon-reload 2>/dev/null || true
-    systemctl restart "$SERVER_SERVICE" 2>/dev/null || true
-    sleep 2
     start_services_with_verification
 }
 
@@ -704,6 +721,9 @@ configure_management() {
         *) return ;;
     esac
 }
+
+# has_terminal: standard input is a terminal, so a question gets an answer.
+has_terminal() { [ -t 0 ]; }
 
 # Without a terminal (piped from curl, cron, CI) nothing waits for a key,
 # and a question without an answer (end of input) takes its default.
@@ -1045,22 +1065,28 @@ get_local_ip() {
     echo "127.0.0.1"
 }
 
+# ask_connection_mode: in an interactive run, asks once whether sessions
+# try a direct connection first or always go through the relay.
+ask_connection_mode() {
+    CONNECTION_MODE="${CONNECTION_MODE:-p2p_first}"
+    [ "$AUTO_MODE" = false ] && [ -z "${CONNECTION_MODE_SET:-}" ] || return 0
+    echo ""
+    print_info "Connection strategy: P2P hole punch vs relay-only routing."
+    echo -e "  ${CYAN}1)${NC} P2P first (recommended) — try direct connection, fall back to relay"
+    echo -e "  ${CYAN}2)${NC} Relay only — route all sessions through the relay server"
+    echo -ne "  ${CYAN}Select connection mode [1]:${NC} "
+    read -r _conn_choice
+    case "$_conn_choice" in
+        2) CONNECTION_MODE="relay_only" ;;
+        *) CONNECTION_MODE="p2p_first" ;;
+    esac
+    CONNECTION_MODE_SET=1
+    echo ""
+}
+
 # Resolve P2P/relay connection strategy env vars for systemd/NSSM.
 resolve_connection_mode_env() {
-    CONNECTION_MODE="${CONNECTION_MODE:-p2p_first}"
-    if [ "$AUTO_MODE" = false ] && [ -z "$CONNECTION_MODE_SET" ]; then
-        echo ""
-        print_info "Connection strategy: P2P hole punch vs relay-only routing."
-        echo -e "  ${CYAN}1)${NC} P2P first (recommended) — try direct connection, fall back to relay"
-        echo -e "  ${CYAN}2)${NC} Relay only — route all sessions through the relay server"
-        echo -ne "  ${CYAN}Select connection mode [1]:${NC} "
-        read -r _conn_choice
-        case "$_conn_choice" in
-            2) CONNECTION_MODE="relay_only" ;;
-            *) CONNECTION_MODE="p2p_first" ;;
-        esac
-        echo ""
-    fi
+    ask_connection_mode
 
     P2P_FALLBACK_MS="${P2P_FALLBACK_MS:-2000}"
     SAME_NAT_RELAY="${SAME_NAT_RELAY:-Y}"
@@ -2120,6 +2146,12 @@ apply_console_reverse_proxy_mode() {
     if [ -n "$panel_host" ]; then
         _upsert_env_line "$env_file" PANEL_PUBLIC_HOST "$panel_host"
         _upsert_env_line "$env_file" PANEL_PUBLIC_URL "https://${panel_host}"
+        # The console's port carries the client API under /client-api, so
+        # clients reach it through the same host name. An address set
+        # before stays.
+        if ! grep -q '^PUBLIC_API_URL=.' "$env_file" 2>/dev/null; then
+            _upsert_env_line "$env_file" PUBLIC_API_URL "https://${panel_host}/client-api"
+        fi
     fi
     if [ -n "$server_id" ]; then
         _upsert_env_line "$env_file" PUBLIC_SERVER_ID "$server_id"
@@ -2220,6 +2252,7 @@ PORT=$(resolve_panel_http_port)
 PANEL_PUBLIC_HOST=${panel_host}
 PANEL_PUBLIC_URL=https://${panel_host}
 PUBLIC_SERVER_ID=${server_id}
+PUBLIC_API_URL=https://${panel_host}/client-api
 WS_ALLOWED_ORIGINS=${ws_origins}
 EOF
 
@@ -2352,11 +2385,11 @@ WAN (clients reach these directly — cannot be HTTP-proxied):
   - 21117/tcp              Relay data
 
 Client API (needed for branding, enrollment, short-code pairing):
-  - 21114/tcp              Go Client API — expose only over TLS, or via the proxy on 443
-  - 21121/tcp              Legacy compat proxy (existing fleets only)
+  - Through the proxy: https://${panel_host}/client-api (the console's port carries it)
+  - 21121/tcp              Client API port, for clients set up with http://<host>:21121
 
 Through your reverse proxy (HTTPS :443):
-  - Panel + console WebSockets -> http://${upstream_addr}:$(resolve_panel_http_port)
+  - Panel, console WebSockets and the client API under /client-api -> http://${upstream_addr}:$(resolve_panel_http_port)
 $( [ "$route_wss" = "yes" ] && echo "  - RustDesk WSS /ws/id -> ${upstream_addr}:21118, /ws/relay -> ${upstream_addr}:21119" )
 $( [ "$panel_bind" = "0.0.0.0" ] && echo "  - Panel bind: 0.0.0.0:$(resolve_panel_http_port) (remote proxy) — restrict :$(resolve_panel_http_port) to proxy IP in firewall" )
 
@@ -2817,7 +2850,7 @@ auto_detect_paths() {
     # If RUSTDESK_PATH is already set (via env var), validate it
     if [ -n "$RUSTDESK_PATH" ]; then
         if [ -d "$RUSTDESK_PATH" ] && { [ -f "$RUSTDESK_PATH/neodesk-server" ] || [ -f "$RUSTDESK_PATH/hbbs" ] || [ -f "$RUSTDESK_PATH/hbbs-v8-api" ]; }; then
-            print_info "Using configured RustDesk path: $RUSTDESK_PATH"
+            print_info "Using the configured server folder: $RUSTDESK_PATH"
         else
             print_warning "Configured RUSTDESK_PATH ($RUSTDESK_PATH) is invalid"
             RUSTDESK_PATH=""
@@ -2829,7 +2862,7 @@ auto_detect_paths() {
         for path in "${COMMON_RUSTDESK_PATHS[@]}"; do
             if [ -d "$path" ] && { [ -f "$path/neodesk-server" ] || [ -f "$path/hbbs" ] || [ -f "$path/hbbs-v8-api" ]; }; then
                 RUSTDESK_PATH="$path"
-                print_success "Detected RustDesk installation: $RUSTDESK_PATH"
+                print_success "Detected the server folder: $RUSTDESK_PATH"
                 break
             fi
         done
@@ -2893,7 +2926,7 @@ auto_detect_paths() {
 configure_paths() {
     local _menu_items=(
         $'Auto-detect paths\tScan common install locations'
-        $'Set server path\tManually set the RustDesk server path'
+        $'Set server folder\tManually set the server folder (keys, database, binary)'
         $'Set console path\tManually set the web console path'
         $'Reset to defaults\t/opt/neodesk + /opt/NeoDeskConsole'
         $'Back\tReturn to the main menu'
@@ -2913,20 +2946,20 @@ configure_paths() {
             ;;
         2)
             echo ""
-            echo -n "Enter RustDesk server path (e.g., /opt/neodesk): "
+            echo -n "Enter the server folder (e.g., /opt/neodesk): "
             read -r new_path
             if [ -n "$new_path" ]; then
                 if [ -d "$new_path" ]; then
                     RUSTDESK_PATH="$new_path"
                     DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
-                    print_success "RustDesk path set to: $RUSTDESK_PATH"
+                    print_success "Server folder set to: $RUSTDESK_PATH"
                 else
                     print_warning "Directory does not exist: $new_path"
                     if confirm "Create this directory?"; then
                         mkdir -p "$new_path"
                         RUSTDESK_PATH="$new_path"
                         DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
-                        print_success "Created and set RustDesk path: $RUSTDESK_PATH"
+                        print_success "Created and set the server folder: $RUSTDESK_PATH"
                     fi
                 fi
             fi
@@ -2986,7 +3019,7 @@ print_status() {
     
     echo -e "${WHITE}${BOLD}═══ Configured Paths ═══${NC}"
     echo ""
-    echo -e "  RustDesk:     ${CYAN}$RUSTDESK_PATH${NC}"
+    echo -e "  Server:       ${CYAN}$RUSTDESK_PATH${NC}"
     echo -e "  Console:      ${CYAN}$CONSOLE_PATH${NC}"
     
     # Show database type and path/URI
@@ -3066,15 +3099,15 @@ print_status() {
     else
         # Legacy Rust servers
         if [ "$HBBS_RUNNING" = true ]; then
-            echo -e "  HBBS (Signal): ${GREEN}● Active${NC} ${YELLOW}(Legacy Rust)${NC}"
+            echo -e "  ID server:     ${GREEN}● Active${NC} ${YELLOW}(legacy Rust server)${NC}"
         else
-            echo -e "  HBBS (Signal): ${RED}○ Inactive${NC}"
+            echo -e "  ID server:     ${RED}○ Inactive${NC}"
         fi
         
         if [ "$HBBR_RUNNING" = true ]; then
-            echo -e "  HBBR (Relay):  ${GREEN}● Active${NC} ${YELLOW}(Legacy Rust)${NC}"
+            echo -e "  Relay:         ${GREEN}● Active${NC} ${YELLOW}(legacy Rust server)${NC}"
         else
-            echo -e "  HBBR (Relay):  ${RED}○ Inactive${NC}"
+            echo -e "  Relay:         ${RED}○ Inactive${NC}"
         fi
     fi
     
@@ -3693,11 +3726,22 @@ compile_go_server() {
 # Installation Functions
 #===============================================================================
 
+# apt_quiet ARGS...: apt-get without questions, its output in the log.
+# needrestart only lists the services it would restart (they keep
+# running), and nothing that is installed already is upgraded when ARGS
+# install packages.
+apt_quiet() {
+    local -a args=("$@")
+    [ "${1:-}" = install ] && args=(install --no-upgrade "${@:2}")
+    DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=l NEEDRESTART_SUSPEND=1 \
+        apt-get "${args[@]}" >>"$LOG_FILE" 2>&1
+}
+
 # apt_update: the package lists. A source that fails (a third-party
 # repository, a mirror in sync) stops nothing: the packages come from the
 # lists that are there, and apt-get install says when one is missing.
 apt_update() {
-    apt-get update -qq || print_warning "apt-get update failed for a package source (output above); installing from the package lists there are"
+    apt_quiet update -qq || print_warning "apt-get update failed for a package source (see $LOG_FILE); installing from the package lists there are"
 }
 
 install_dependencies() {
@@ -3706,7 +3750,8 @@ install_dependencies() {
     # The server is one static binary; the installer needs only these
     if command -v apt-get &> /dev/null; then
         apt_update
-        apt-get install -y -qq sqlite3 curl wget openssl ca-certificates iproute2 lsof
+        apt_quiet install -y -qq sqlite3 curl wget openssl ca-certificates iproute2 lsof \
+            || print_warning "apt-get could not install every package (see $LOG_FILE)"
     elif command -v dnf &> /dev/null; then
         dnf install -y -q sqlite curl wget openssl ca-certificates iproute lsof
     elif command -v yum &> /dev/null; then
@@ -3735,7 +3780,8 @@ install_postgresql() {
     
     if command -v apt-get &> /dev/null; then
         apt_update
-        apt-get install -y -qq postgresql postgresql-contrib
+        apt_quiet install -y -qq postgresql postgresql-contrib \
+            || print_warning "apt-get could not install PostgreSQL (see $LOG_FILE)"
     elif command -v dnf &> /dev/null; then
         dnf install -y -q postgresql-server postgresql
         postgresql-setup --initdb 2>/dev/null || true
@@ -3842,6 +3888,12 @@ prepare_postgresql() {
         print_info "PostgreSQL: the database given with --pg-uri; nothing is set up on this machine"
         return 0
     fi
+    # The database is made on this machine, so a host elsewhere could not
+    # have it
+    if ! is_local_postgresql_host; then
+        print_error "PostgreSQL on $POSTGRESQL_HOST: give a database on another machine with --pg-uri (POSTGRESQL_URI)"
+        return 1
+    fi
     install_postgresql || { print_error "PostgreSQL installation failed"; return 1; }
     setup_postgresql_database || { print_error "PostgreSQL setup failed"; return 1; }
 }
@@ -3877,22 +3929,34 @@ choose_database_type() {
         2)
             USE_POSTGRESQL="true"
             print_info "Selected: PostgreSQL"
-            
-            # Ask for PostgreSQL details or use defaults
             echo ""
-            read -p "PostgreSQL host [$POSTGRESQL_HOST]: " pg_host
-            POSTGRESQL_HOST="${pg_host:-$POSTGRESQL_HOST}"
-            
-            read -p "PostgreSQL port [$POSTGRESQL_PORT]: " pg_port
-            POSTGRESQL_PORT="${pg_port:-$POSTGRESQL_PORT}"
-            
-            read -p "PostgreSQL database [$POSTGRESQL_DB]: " pg_db
+            local _menu_items=(
+                $'On this machine\tInstalls PostgreSQL here and creates the database and its user'
+                $'An existing database\tOn this or another machine, given as a connection URI'
+            )
+            local _menu_returns=( 1 2 )
+            menu_choose "PostgreSQL" "Where the database is"
+            if [ "${MENU_CHOICE:-1}" = 2 ]; then
+                local pg_uri=""
+                while [ -z "$pg_uri" ]; do
+                    read -rp "Connection URI (postgres://user:password@host:5432/database): " pg_uri || return 1
+                    if ! is_postgres_url "$pg_uri"; then
+                        print_warning "The URI starts with postgres:// or postgresql://"
+                        pg_uri=""
+                    fi
+                done
+                POSTGRESQL_URI="$pg_uri"
+                return 0
+            fi
+
+            # The database on this machine: its name, user and password
+            read -rp "Database name [$POSTGRESQL_DB]: " pg_db
             POSTGRESQL_DB="${pg_db:-$POSTGRESQL_DB}"
-            
-            read -p "PostgreSQL user [$POSTGRESQL_USER]: " pg_user
+
+            read -rp "Database user [$POSTGRESQL_USER]: " pg_user
             POSTGRESQL_USER="${pg_user:-$POSTGRESQL_USER}"
-            
-            read -sp "PostgreSQL password (leave empty to generate): " pg_pass
+
+            read -rsp "Password of that user (leave empty to generate): " pg_pass
             echo ""
             POSTGRESQL_PASS="${pg_pass:-}"
             ;;
@@ -4416,7 +4480,7 @@ setup_console_home() {
     fi
 
     if [ "$STORE_ADMIN_CREDENTIALS" = "true" ] && [ "$is_fresh" = true ] && [ -n "$ADMIN_PASSWORD" ]; then
-        cat > "$CONSOLE_PATH/data/.admin_credentials" << CREDEOF
+        (umask 077 && cat > "$CONSOLE_PATH/data/.admin_credentials") << CREDEOF
 Admin Username: admin
 Admin Password: $ADMIN_PASSWORD
 Generated by: NeoDesk installer
@@ -4434,6 +4498,28 @@ CREDEOF
     fi
     CONSOLE_TYPE="go"
     print_success "Web console folder ready"
+}
+
+# address_host ADDRESS: the host of an address clients get (host,
+# host:port, [v6]:port, a list of them): its first host without the port.
+address_host() {
+    local host="${1%%,*}"
+    case "$host" in
+        \[*) host="${host#[}"; host="${host%%]*}" ;;
+        *:*:*) ;;
+        *:*) host="${host%%:*}" ;;
+    esac
+    printf '%s\n' "$host"
+}
+
+# san_entry HOST: HOST as a subjectAltName entry, IP: for an address and
+# DNS: for a name.
+san_entry() {
+    if [[ "$1" =~ ^[0-9.]+$ ]] || [[ "$1" == *:* ]]; then
+        printf 'IP:%s\n' "$1"
+    else
+        printf 'DNS:%s\n' "$1"
+    fi
 }
 
 generate_ssl_certificates() {
@@ -4467,14 +4553,28 @@ generate_ssl_certificates() {
         san_list="$san_list,IP:$lan_ip"
     fi
     
+    # The address clients get when it was given (--relay-servers, the
+    # custom address of the relay question): the console's redirects lead
+    # there (PANEL_PUBLIC_HOST), so the certificate is for it too
+    local relay_host
+    relay_host=$(address_host "${RELAY_SERVERS:-}")
+    if [ -n "$relay_host" ] && [ "$relay_host" != "$server_ip" ] && [ "$relay_host" != "$lan_ip" ] \
+        && [ "$relay_host" != "${SSL_DOMAIN:-}" ]; then
+        san_list="$(san_entry "$relay_host"),$san_list"
+        print_info "Adding the relay address to the certificate: $relay_host"
+    else
+        relay_host=""
+    fi
+
     # Add custom domain if provided via environment variable
     if [ -n "${SSL_DOMAIN:-}" ]; then
         san_list="DNS:$SSL_DOMAIN,$san_list"
         print_info "Adding domain to certificate: $SSL_DOMAIN"
     fi
     
-    # Determine CN (Common Name) — prefer domain, fallback to public IP
-    local cn="${SSL_DOMAIN:-$server_ip}"
+    # The common name: the domain, else the relay address given, else the
+    # public IP
+    local cn="${SSL_DOMAIN:-${relay_host:-$server_ip}}"
     
     # The binary makes the pair (no OpenSSL needed); an older binary
     # without the cert command leaves it to openssl
@@ -4483,6 +4583,7 @@ generate_ssl_certificates() {
     if [ -x "$bin" ] && grep -q 'cert --out DIR' "$bin" 2>/dev/null; then
         local -a cert_args=(cert --out "$ssl_dir" --force)
         [ -n "${SSL_DOMAIN:-}" ] && cert_args+=(--host "$SSL_DOMAIN")
+        [ -n "$relay_host" ] && cert_args+=(--host "$relay_host")
         cert_args+=(--host "$server_ip")
         [ -n "$lan_ip" ] && [ "$lan_ip" != "$server_ip" ] && cert_args+=(--host "$lan_ip")
         if ! "$bin" "${cert_args[@]}" >/dev/null; then
@@ -4717,7 +4818,8 @@ console_uses_privileged_port() {
 # Environment= lines. The server reads the console's .env itself
 # (NEODESK_ENV_FILE) and fills only what the unit leaves unset. Exit
 # status 3 is the server's request to be started again (a restart, an
-# update or a restore from the panel).
+# update or a restore from the panel). The description names no version:
+# the console's updater replaces the binary without writing the unit.
 write_server_unit() {
     local args="$1" extra_env="${2:-}" bind_cap=""
     if console_uses_privileged_port; then
@@ -4726,7 +4828,7 @@ write_server_unit() {
     # Lines of the template that stay empty are left out
     cat << EOF | grep -v '^__EMPTY__$' > "$SERVER_UNIT"
 [Unit]
-Description=NeoDesk server and web console v$VERSION
+Description=NeoDesk server and web console
 Documentation=https://github.com/neodeskapp/neodesk
 After=network-online.target postgresql.service
 Wants=network-online.target
@@ -4770,6 +4872,33 @@ remove_retired_units() {
     done
 }
 
+# ask_relay_address: in an interactive run without RELAY_SERVERS or a
+# --relay-mode, asks once for the address clients get: the public IP, the
+# LAN IP or one typed in.
+ask_relay_address() {
+    [ "$AUTO_MODE" = false ] && [ -z "${RELAY_SERVERS:-}" ] && [ "${RELAY_MODE:-auto}" = "auto" ] \
+        && [ "${RELAY_ASKED:-false}" != true ] || return 0
+    local _local_ip _relay_choice
+    _local_ip=$(get_local_ip)
+    echo ""
+    print_info "Relay server address controls how clients connect for remote sessions."
+    echo -e "  ${CYAN}1)${NC} Internet / public  ${DIM}(auto-detect public IP — default)${NC}"
+    echo -e "  ${CYAN}2)${NC} LAN only           ${DIM}(use this server's local IP: $_local_ip)${NC}"
+    echo -e "  ${CYAN}3)${NC} Custom address     ${DIM}(enter a specific IP or host)${NC}"
+    echo -ne "  ${CYAN}Select relay mode [1]:${NC} "
+    read -r _relay_choice
+    case "$_relay_choice" in
+        2) RELAY_MODE="local" ;;
+        3)
+            echo -ne "  ${CYAN}Enter relay address (IP or host[:port]):${NC} "
+            read -r RELAY_SERVERS
+            ;;
+        *) RELAY_MODE="auto" ;;
+    esac
+    RELAY_ASKED=true
+    echo ""
+}
+
 setup_services() {
     print_step "Configuring the systemd service..."
 
@@ -4783,31 +4912,13 @@ setup_services() {
 
     # Relay address: RELAY_SERVERS, else the mode (auto = public IP, local =
     # LAN IP), asked for in an interactive run
-    if [ "$AUTO_MODE" = false ] && [ -z "$RELAY_SERVERS" ] && [ "${RELAY_MODE:-auto}" = "auto" ]; then
-        local _local_ip
-        _local_ip=$(get_local_ip)
-        echo ""
-        print_info "Relay server address controls how clients connect for remote sessions."
-        echo -e "  ${CYAN}1)${NC} Internet / public  ${DIM}(auto-detect public IP — default)${NC}"
-        echo -e "  ${CYAN}2)${NC} LAN only           ${DIM}(use this server's local IP: $_local_ip)${NC}"
-        echo -e "  ${CYAN}3)${NC} Custom address     ${DIM}(enter a specific IP or host)${NC}"
-        echo -ne "  ${CYAN}Select relay mode [1]:${NC} "
-        read -r _relay_choice
-        case "$_relay_choice" in
-            2) RELAY_MODE="local" ;;
-            3)
-                echo -ne "  ${CYAN}Enter relay address (IP or host[:port]):${NC} "
-                read -r RELAY_SERVERS
-                ;;
-            *) RELAY_MODE="auto" ;;
-        esac
-        echo ""
-    fi
+    ask_relay_address
 
-    local server_ip
+    local server_ip relay_mode="$RELAY_MODE"
     server_ip=$(resolve_relay_ip)
     resolve_connection_mode_env
-    print_info "Relay server IP: $server_ip (mode: ${RELAY_SERVERS:+fixed}${RELAY_SERVERS:-$RELAY_MODE})"
+    [ -n "${RELAY_SERVERS:-}" ] && relay_mode=fixed
+    print_info "Relay server IP: $server_ip (mode: $relay_mode)"
     set_panel_public_host "${SSL_DOMAIN:-$server_ip}"
 
     local signal_rate_limit="${SIGNAL_RATE_LIMIT_PER_IP:-20}"
@@ -4826,7 +4937,7 @@ setup_services() {
     fi
 
     if [ ! -s "$RUSTDESK_PATH/.api_key" ]; then
-        openssl rand -hex 32 > "$RUSTDESK_PATH/.api_key"
+        (umask 077 && openssl rand -hex 32 > "$RUSTDESK_PATH/.api_key")
         chmod 600 "$RUSTDESK_PATH/.api_key"
     fi
 
@@ -4990,15 +5101,31 @@ note_console_port_move() {
     print_warning "The console now answers on port $CONSOLE_DEFAULT_PORT; it was $CONSOLE_OLD_DEFAULT_PORT. To keep $CONSOLE_OLD_DEFAULT_PORT set CONSOLE_PORT=$CONSOLE_OLD_DEFAULT_PORT in $CONSOLE_PATH/.env, then: sudo systemctl restart $SERVER_SERVICE"
 }
 
+# file_sum FILE: the SHA-256 of FILE, empty when there is none.
+file_sum() {
+    sha256sum "$1" 2>/dev/null | awk '{ print $1 }'
+}
+
+# server_update_args: what update_go_install passes to neodesk-server
+# update: --yes, and --no-restart-hint when the installed binary has it
+# (the installer restarts the service and puts the previous binary back
+# itself).
+server_update_args() {
+    printf '%s\n' --yes
+    grep -a -q -F -- '--no-restart-hint' "$(server_binary_path)" 2>/dev/null && printf '%s\n' --no-restart-hint
+    return 0
+}
+
+# The backup comes only before a new binary: an update that finds the
+# release installed already makes none, and when the unit and .env stay as
+# they were too, the running server is not restarted.
 update_go_install() {
-    local bin before after port_named=true
+    local bin before after port_named=true env_before unit_before
     bin=$(server_binary_path)
-    before=$(sha256sum "$bin" 2>/dev/null | awk '{ print $1 }')
+    before=$(file_sum "$bin")
     # Before .env is merged: an install that names no port moves to the
     # new default port (note_console_port_move)
     console_port_named || port_named=false
-    print_info "Creating backup before update..."
-    do_backup_silent
     # The server's updater reads the channel from .env
     save_given_update_channel
 
@@ -5008,31 +5135,63 @@ update_go_install() {
     if [ -n "$SERVER_BINARY_FILE" ] || [ "$FROM_SOURCE" = true ] || [ -n "${RELEASE_BASE_URL:-}" ] \
         || ! binary_verifies_releases "$bin"; then
         obtain_server_binary || { rm -rf "${STAGED_SERVER_DIR:-}"; return 1; }
-        systemctl stop "$SERVER_SERVICE" 2>/dev/null || true
-        wait_for_service_stop "$SERVER_SERVICE" 15 || true
-        install_staged_binary .prev || { rm -rf "$STAGED_SERVER_DIR"; systemctl start "$SERVER_SERVICE" || true; return 1; }
+        if [ "$(file_sum "$STAGED_SERVER_BINARY")" != "$before" ]; then
+            print_info "Creating backup before update..."
+            do_backup_silent
+            systemctl stop "$SERVER_SERVICE" 2>/dev/null || true
+            wait_for_service_stop "$SERVER_SERVICE" 15 || true
+            install_staged_binary .prev || { rm -rf "$STAGED_SERVER_DIR"; systemctl start "$SERVER_SERVICE" || true; return 1; }
+        fi
         rm -rf "$STAGED_SERVER_DIR"
     else
         # The server's own updater: the release of the channel, its manifest
         # signature (with the release key the installed binary carries) and
         # SHA-256 checked, the old binary kept as .prev
-        print_step "Installing the newest release with neodesk-server update (it checks the release signature)..."
+        print_step "Checking the newest release with neodesk-server update (it checks the release signature)..."
         # The repository goes to the updater: an installed binary may have
         # an older default
-        local owner repo
+        local owner repo check_out="" check_rc=0
         owner="${UPDATE_GITHUB_OWNER_GIVEN:-$(env_file_value "$CONSOLE_PATH/.env" UPDATE_GITHUB_OWNER)}"
         repo="${UPDATE_GITHUB_REPO_GIVEN:-$(env_file_value "$CONSOLE_PATH/.env" UPDATE_GITHUB_REPO)}"
-        if ! UPDATE_GITHUB_OWNER="${owner:-$UPDATE_GITHUB_OWNER}" UPDATE_GITHUB_REPO="${repo:-$UPDATE_GITHUB_REPO}" \
-            server_cmd --as-service update --yes; then
+        owner="${owner:-$UPDATE_GITHUB_OWNER}"
+        repo="${repo:-$UPDATE_GITHUB_REPO}"
+        check_out=$(UPDATE_GITHUB_OWNER="$owner" UPDATE_GITHUB_REPO="$repo" server_cmd --as-service update --check 2>&1) || check_rc=$?
+        log "neodesk-server update --check: $check_out"
+        if [ "$check_rc" -ne 0 ]; then
+            [ -n "$check_out" ] && printf '%s\n' "$check_out"
             print_error "neodesk-server update failed"
             return 1
         fi
+        case "$check_out" in
+            *"Already up to date"*) ;;
+            *)
+                print_info "Creating backup before update..."
+                do_backup_silent
+                local -a update_args
+                mapfile -t update_args < <(server_update_args)
+                if ! UPDATE_GITHUB_OWNER="$owner" UPDATE_GITHUB_REPO="$repo" \
+                    server_cmd --as-service update "${update_args[@]}"; then
+                    print_error "neodesk-server update failed"
+                    return 1
+                fi
+                ;;
+        esac
     fi
-    after=$(sha256sum "$bin" 2>/dev/null | awk '{ print $1 }')
+    after=$(file_sum "$bin")
 
+    env_before=$(file_sum "$CONSOLE_PATH/.env")
+    unit_before=$(file_sum "$SERVER_UNIT")
     merge_console_env false || print_warning ".env merge reported a problem"
     maybe_update_services
     set_server_folder_permissions
+    if [ "$before" = "$after" ] && [ "$env_before" = "$(file_sum "$CONSOLE_PATH/.env")" ] \
+        && [ "$unit_before" = "$(file_sum "$SERVER_UNIT")" ] && systemctl is-active --quiet "$SERVER_SERVICE" 2>/dev/null; then
+        forget_first_admin_password
+        print_success "neodesk-server is up to date: $(timeout 10 "$bin" -version 2>/dev/null); nothing changed, so it keeps running"
+        install_manager_command
+        note_console_port_move "$port_named"
+        return 0
+    fi
     systemctl reset-failed "$SERVER_SERVICE" 2>/dev/null || true
     systemctl restart "$SERVER_SERVICE" || true
     if verify_go_install 90; then
@@ -5060,15 +5219,28 @@ update_go_install() {
     note_console_port_move "$port_named"
 }
 
+# credentials_box TITLE PASSWORD: the admin's sign-in in a box, with the
+# command that gives a new password. The right border stays in line for a
+# password of up to 42 characters.
+credentials_box() {
+    local width=56 line
+    local -a rows=("  Login:    admin" "  Password: $2" "" "  Lost it? sudo $(basename "$MANAGER_COMMAND") --reset-password")
+    local bar
+    bar=$(printf '═%.0s' $(seq 1 "$width"))
+    echo -e "${GREEN}╔${bar}╗${NC}"
+    printf "${GREEN}║${NC}${BOLD}%-${width}s${NC}${GREEN}║${NC}\n" "  $1"
+    echo -e "${GREEN}╠${bar}╣${NC}"
+    for line in "${rows[@]}"; do
+        printf "${GREEN}║${NC}%-${width}s${GREEN}║${NC}\n" "$line"
+    done
+    echo -e "${GREEN}╚${bar}╝${NC}"
+}
+
 # Shows the admin's first password, once: only when this run made the
 # console's .env. The server makes the admin at its first start from
 # DEFAULT_ADMIN_PASSWORD.
 create_admin_user() {
-    print_step "Admin account..."
-
     if [ "${FRESH_CONSOLE_ENV:-false}" != true ]; then
-        print_info "The admin account and its password stay as they are."
-        print_info "Forgot it? sudo $(basename "$MANAGER_COMMAND") --reset-password"
         return 0
     fi
     local admin_password="${ADMIN_PASSWORD:-}"
@@ -5078,16 +5250,11 @@ create_admin_user() {
 
     if [ -n "$admin_password" ]; then
         echo ""
-        echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${GREEN}║            PANEL LOGIN CREDENTIALS                    ║${NC}"
-        echo -e "${GREEN}╠════════════════════════════════════════════════════════╣${NC}"
-        echo -e "${GREEN}║  Login:    ${WHITE}admin${GREEN}                                     ║${NC}"
-        echo -e "${GREEN}║  Password: ${WHITE}${admin_password}${GREEN}                         ║${NC}"
-        echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
+        credentials_box "Web console sign-in (shown only now)" "$admin_password"
         echo ""
 
         if [ "$STORE_ADMIN_CREDENTIALS" = "true" ]; then
-            cat > "$RUSTDESK_PATH/.admin_credentials" << CREDEOF
+            (umask 077 && cat > "$RUSTDESK_PATH/.admin_credentials") << CREDEOF
 Admin Username: admin
 Admin Password: $admin_password
 Generated by: NeoDesk installer
@@ -5096,13 +5263,9 @@ CREDEOF
             chown root:root "$RUSTDESK_PATH/.admin_credentials" 2>/dev/null || true
             chmod 600 "$RUSTDESK_PATH/.admin_credentials"
             print_info "Credentials saved in: $RUSTDESK_PATH/.admin_credentials (root-only, 0600)"
-        else
-            print_warning "Credentials are not persisted by default (security hardening)."
-            print_info "Set STORE_ADMIN_CREDENTIALS=true to restore legacy behavior."
         fi
     else
-        print_warning "No admin password available for display"
-        print_info "Use option 6 (Password reset) if needed"
+        print_warning "No admin password to show; set one with: sudo $(basename "$MANAGER_COMMAND") --reset-password"
     fi
 }
 
@@ -5134,8 +5297,8 @@ print_install_summary() {
     relay=$(relay_port)
     id_server="$host"
     [ "$signal" = 21116 ] || id_server="$host:$signal"
-    relay_server="$host"
-    [ "$relay" = 21117 ] || relay_server="$host:$relay"
+    # The relay with its port, as the console's Client setup shows it
+    relay_server="$host:$relay"
 
     echo ""
     echo -e "${GREEN}${BOLD}NeoDesk is installed${NC}"
@@ -5150,7 +5313,8 @@ print_install_summary() {
         echo "                 The certificate is self-signed, so the browser warns once."
     fi
     if [ "${FRESH_CONSOLE_ENV:-false}" = true ]; then
-        echo "  First sign-in: user admin, with the password shown above (it is not shown again)"
+        echo "  First sign-in: user admin, with the password shown above (it is not shown again;"
+        echo "                 lost it? sudo $cmd --reset-password)"
     else
         echo "  Sign in:       user admin; forgot the password? sudo $cmd --reset-password"
     fi
@@ -5191,6 +5355,27 @@ forget_first_admin_password() {
 # Installation
 #===============================================================================
 
+# ask_install_questions: the questions of an interactive install that are
+# left after the database: the address clients get, the connection
+# strategy, and whether HTTPS ends at a reverse proxy or gets another
+# certificate than the self-signed one (INSTALL_TLS_STEP proxy or
+# certificate, done after the install).
+ask_install_questions() {
+    INSTALL_TLS_STEP=""
+    [ "$AUTO_MODE" = false ] || return 0
+    ask_relay_address
+    ask_connection_mode
+    [ "$MINIMAL_MODE" != true ] || return 0
+    echo ""
+    print_info "The console gets HTTPS with a self-signed certificate on port 5443."
+    if confirm "Will a reverse proxy (Caddy, nginx) handle HTTPS for the console instead?"; then
+        INSTALL_TLS_STEP=proxy
+    elif confirm "Replace the self-signed certificate with Let's Encrypt or your own after the install?"; then
+        INSTALL_TLS_STEP=certificate
+    fi
+    echo ""
+}
+
 # Minimal installation: the same server with its web console off
 # (CONSOLE_PORT=0 in .env); setting a port there turns it on.
 do_install_minimal() {
@@ -5229,8 +5414,10 @@ do_install() {
     print_info "Starting NeoDesk v$VERSION installation..."
     echo ""
 
-    # Choose database type (SQLite or PostgreSQL)
-    choose_database_type
+    # Every question comes before the install: the database, the address
+    # clients get, the connection strategy and the HTTPS set-up
+    choose_database_type || return 1
+    ask_install_questions
 
     # Stop services if running (prevents "Text file busy" error)
     graceful_stop_services
@@ -5259,7 +5446,6 @@ do_install() {
     fi
 
     setup_services
-    create_admin_user
 
     # Configure firewall rules
     print_step "Configuring firewall rules..."
@@ -5271,32 +5457,28 @@ do_install() {
     fi
     [ "$install_ok" = true ] && forget_first_admin_password
 
+    # The HTTPS set-up chosen at the start, before the summary, which it
+    # changes (a reverse proxy closes the console's ports)
+    if [ "$install_ok" = true ]; then
+        case "${INSTALL_TLS_STEP:-}" in
+            proxy) do_configure_reverse_proxy || true ;;
+            certificate) do_configure_ssl || true ;;
+        esac
+    fi
+    [ "$install_ok" = true ] && install_manager_command
+
     echo ""
     if [ "$install_ok" = true ]; then
         print_success "Installation completed successfully!"
     else
         print_warning "Installation finished but neodesk-server does not answer."
-        print_info "Run option 8 (Diagnostics) to investigate."
+        print_info "Look into it with: sudo $(basename "$MANAGER_COMMAND"), then Diagnostics"
     fi
-    echo ""
 
+    # The password and the summary come last, so nothing pushes them off
+    # the screen
+    create_admin_user
     print_install_summary
-
-    # Offer TLS configuration for fresh installs
-    if [ "$install_ok" = true ] && [ "$AUTO_MODE" = false ] && [ "$MINIMAL_MODE" != true ]; then
-        echo ""
-        print_info "Production TLS options:"
-        print_info "  • External reverse proxy (Caddy/Nginx on :443) — recommended when a proxy already handles certificates"
-        print_info "  • Enterprise TLS (Option 5 in SSL menu) — NeoDesk-native HTTPS on panel + signal/relay"
-        echo ""
-        if confirm "Will TLS terminate at an external reverse proxy (Caddy/Nginx)?"; then
-            do_configure_reverse_proxy || true
-        elif confirm "Would you like to configure HTTPS Enterprise now? (Option 5 in SSL menu)"; then
-            do_configure_ssl
-        fi
-    fi
-
-    [ "$install_ok" = true ] && install_manager_command
 
     if [ "$AUTO_MODE" = false ]; then
         press_enter
@@ -5683,7 +5865,7 @@ do_validate() {
     echo ""
     
     # Check directories
-    echo -n "  RustDesk directory ($RUSTDESK_PATH): "
+    echo -n "  Server folder ($RUSTDESK_PATH): "
     if [ -d "$RUSTDESK_PATH" ]; then
         echo -e "${GREEN}✓${NC}"
     else
@@ -5919,12 +6101,77 @@ do_backup() {
     press_enter
 }
 
+# secure_backup_folder: the installer's backups hold the server's private
+# key, the API key and every secret of .env, so only root may read them:
+# each backup is 0600 (a folder in it 0700), and so is the backup folder,
+# unless it is a BACKUP_DIR given to the installer, whose mode stays.
+secure_backup_folder() {
+    [ -d "$BACKUP_DIR" ] || return 0
+    [ -n "${BACKUP_DIR_GIVEN:-}" ] || chmod 700 "$BACKUP_DIR" 2>/dev/null || true
+    find "$BACKUP_DIR" -mindepth 1 -maxdepth 1 \( -name 'neodesk_backup_*' -o -name 'pre-go-*' \) \
+        -exec chmod -R go-rwx {} + 2>/dev/null || true
+    return 0
+}
+
+# installer_backups: the backups this installer made in BACKUP_DIR, one
+# path per line.
+installer_backups() {
+    [ -d "$BACKUP_DIR" ] || return 0
+    find "$BACKUP_DIR" -mindepth 1 -maxdepth 1 \( -name 'neodesk_backup_*' -o -name 'pre-go-*' \) 2>/dev/null | sort
+}
+
+# postgresql_left_behind URL: what the uninstall leaves of the PostgreSQL
+# database at URL, with the commands that remove it when it is on this
+# machine.
+postgresql_left_behind() {
+    local rest authority userinfo="" hostport host db user
+    rest="${1#*://}"
+    authority="${rest%%/*}"
+    db=""
+    [ "$authority" != "$rest" ] && db="${rest#*/}"
+    db="${db%%\?*}"
+    case "$authority" in *@*) userinfo="${authority%@*}" ;; esac
+    hostport="${authority##*@}"
+    user="${userinfo%%:*}"
+    case "$hostport" in
+        \[*) host="${hostport%%]*}"; host="${host#[}" ;;
+        *) host="${hostport%%:*}" ;;
+    esac
+    case "${host,,}" in
+        ""|localhost|127.0.0.1|::1)
+            if [ -n "$db" ] && [ -n "$user" ]; then
+                printf 'the PostgreSQL database %s and its user %s (sudo -u postgres dropdb %s && sudo -u postgres dropuser %s), and PostgreSQL itself\n' "$db" "$user" "$db" "$user"
+            else
+                printf 'the PostgreSQL database %s, and PostgreSQL itself (remove it: sudo -u postgres dropdb %s)\n' "${db:-neodesk}" "${db:-neodesk}"
+            fi
+            ;;
+        *) printf 'the PostgreSQL database %s on %s\n' "${db:-neodesk}" "$host" ;;
+    esac
+}
+
+# prune_backups: the newest BACKUP_KEEP (5) of the installer's backups stay,
+# older ones are removed; BACKUP_KEEP=0 keeps them all. The names carry the
+# time, so they sort by age.
+prune_backups() {
+    local keep="${BACKUP_KEEP:-5}" old
+    [[ "$keep" =~ ^[0-9]+$ ]] && [ "$keep" -gt 0 ] && [ -d "$BACKUP_DIR" ] || return 0
+    while IFS= read -r old; do
+        [ -n "$old" ] || continue
+        rm -f -- "$old" && print_info "Removed the old backup $(basename "$old")"
+    done < <(find "$BACKUP_DIR" -maxdepth 1 -type f -name 'neodesk_backup_*.tar.gz' | sort | head -n -"$keep")
+}
+
 do_backup_silent() {
     local backup_name="neodesk_backup_$(date +%Y%m%d_%H%M%S)"
     local backup_path="$BACKUP_DIR/$backup_name"
-    
+    local old_umask
+    old_umask=$(umask)
+
+    # What this makes is for root only (secure_backup_folder)
+    umask 077
     mkdir -p "$backup_path"
-    
+    secure_backup_folder
+
     print_step "Creating backup: $backup_name"
 
     # The server's own backup: a consistent copy of the database (SQLite or
@@ -5963,11 +6210,13 @@ do_backup_silent() {
     fi
     
     # Create archive
-    cd "$BACKUP_DIR"
-    tar -czf "$backup_name.tar.gz" "$backup_name"
-    rm -rf "$backup_name"
-    
-    print_success "Backup saved: $BACKUP_DIR/$backup_name.tar.gz"
+    tar -C "$BACKUP_DIR" -czf "$BACKUP_DIR/$backup_name.tar.gz" "$backup_name"
+    chmod 600 "$BACKUP_DIR/$backup_name.tar.gz" 2>/dev/null || true
+    rm -rf "$backup_path"
+    umask "$old_umask"
+
+    print_success "Backup saved: $BACKUP_DIR/$backup_name.tar.gz (readable by root only)"
+    prune_backups
 }
 
 #===============================================================================
@@ -6038,9 +6287,12 @@ do_reset_password() {
 
     # The server sets it on the console's database (SQLite or PostgreSQL);
     # the password goes in on standard input, never in the arguments
-    local success=false
-    if printf '%s\n' "$new_password" | server_cmd --as-service reset-password admin; then
+    local success=false reset_out
+    if reset_out=$(printf '%s\n' "$new_password" | server_cmd --as-service reset-password admin 2>&1); then
         success=true
+        log "neodesk-server reset-password: $reset_out"
+    else
+        printf '%s\n' "$reset_out"
     fi
 
     echo ""
@@ -6049,16 +6301,11 @@ do_reset_password() {
         # start with a forced password update
         forget_first_admin_password
 
-        echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${GREEN}║              NEW LOGIN CREDENTIALS                       ║${NC}"
-        echo -e "${GREEN}╠════════════════════════════════════════════════════════╣${NC}"
-        echo -e "${GREEN}║  Login:    ${WHITE}admin${GREEN}                                     ║${NC}"
-        echo -e "${GREEN}║  Password: ${WHITE}${new_password}${GREEN}                         ║${NC}"
-        echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
+        credentials_box "New web console sign-in (shown only now)" "$new_password"
 
         # Persist credentials only when explicitly requested.
         if [ "$STORE_ADMIN_CREDENTIALS" = "true" ]; then
-            cat > "$RUSTDESK_PATH/.admin_credentials" << CREDEOF
+            (umask 077 && cat > "$RUSTDESK_PATH/.admin_credentials") << CREDEOF
 Admin Username: admin
 Admin Password: $new_password
 Generated by: NeoDesk password reset
@@ -6799,10 +7046,21 @@ do_uninstall() {
         fi
     fi
     
-    if [ "$AUTO_MODE" = true ] || confirm "Create backup before uninstall?"; then
+    # The installer's backups: removed only when asked, on a terminal
+    local remove_backups=false
+    if [ -d "$BACKUP_DIR" ] && [ -n "$(installer_backups)" ] \
+        && { [ "$AUTO_MODE" != true ] || { [ "$PURGE_MODE" = true ] && has_terminal; }; } \
+        && confirm "Remove the backups in $BACKUP_DIR too? They hold the server's keys and settings."; then
+        remove_backups=true
+    fi
+
+    if [ "$remove_backups" != true ] && { [ "$AUTO_MODE" = true ] || confirm "Create backup before uninstall?"; }; then
         do_backup_silent
     fi
-    
+    # The database, read before the settings that name it go
+    local database_url
+    database_url=$(env_database_url "$CONSOLE_PATH/.env")
+
     print_step "Stopping services..."
     # Stop Go server (primary)
     systemctl stop neodesk-server neodesk-console 2>/dev/null || true
@@ -6845,13 +7103,26 @@ do_uninstall() {
         if is_old_manager "$OLD_MANAGER_COMMAND"; then rm -f "$OLD_MANAGER_COMMAND"; fi
     fi
 
+    if [ "$remove_backups" = true ]; then
+        local backup
+        while IFS= read -r backup; do
+            rm -rf -- "$backup"
+        done < <(installer_backups)
+        rmdir "$BACKUP_DIR" 2>/dev/null || true
+        print_info "Removed the backups in $BACKUP_DIR"
+    fi
+
     print_success "NeoDesk has been uninstalled"
     local left=()
     [ -d "$RUSTDESK_PATH" ] && left+=("$RUSTDESK_PATH: the database, the server's keys and certificates")
     [ -d "$CONSOLE_PATH" ] && left+=("$CONSOLE_PATH: the settings (.env) and the console's data")
-    [ -d "$BACKUP_DIR" ] && left+=("$BACKUP_DIR: the backups")
+    if [ -n "$(installer_backups)" ]; then
+        left+=("$BACKUP_DIR: the backups, readable by root only (they hold the keys and settings; sudo rm -rf $BACKUP_DIR removes them)")
+    fi
     id "$SERVICE_USER" &>/dev/null && left+=("the system user $SERVICE_USER (sudo userdel $SERVICE_USER)")
-    [ "$USE_POSTGRESQL" = true ] && left+=("the PostgreSQL database and PostgreSQL itself")
+    if is_postgres_url "$database_url"; then
+        left+=("$(postgresql_left_behind "$database_url")")
+    fi
     left+=("the firewall rules for the NeoDesk ports")
     [ -x "$MANAGER_COMMAND" ] && left+=("the command $MANAGER_COMMAND, to install again")
     is_our_cli "$CLI_COMMAND" && left+=("the command line $CLI_COMMAND")
@@ -6910,7 +7181,7 @@ do_configure_ssl() {
 
             if ! command -v certbot &> /dev/null; then
                 print_step "Installing certbot..."
-                if command -v apt-get &> /dev/null; then apt-get install -y certbot
+                if command -v apt-get &> /dev/null; then apt_quiet install -y certbot
                 elif command -v dnf &> /dev/null; then dnf install -y certbot
                 elif command -v yum &> /dev/null; then yum install -y certbot
                 elif command -v pacman &> /dev/null; then pacman -Sy --noconfirm certbot
@@ -7531,7 +7802,7 @@ do_toggle_protocol() {
                     if ! command -v certbot &>/dev/null; then
                         print_step "Installing certbot..."
                         if command -v dnf &>/dev/null; then dnf install -y certbot &>/dev/null
-                        elif command -v apt-get &>/dev/null; then apt-get install -y certbot &>/dev/null
+                        elif command -v apt-get &>/dev/null; then apt_quiet install -y certbot
                         elif command -v yum &>/dev/null; then yum install -y certbot &>/dev/null; fi
                     fi
                     if ! command -v certbot &>/dev/null; then
@@ -7910,7 +8181,7 @@ show_menu() {
     echo "  C. 🔒 Configure SSL certificates"
     echo "  T. 🔄 Toggle HTTP/HTTPS mode"
     echo "  M. 🔄 Database migration"
-    echo "  B. 🧰 Build toolchain (optional/dev — not needed for production)"
+    echo "  B. 🧰 Build toolchain (optional/dev; not needed for production)"
     echo "  S. ⚙️  Settings (paths)"
     echo "  P. 🛡️  Management capabilities and server settings"
     echo "  0. ❌ Exit"
@@ -7927,12 +8198,17 @@ main() {
         if [ "${NEODESK_SETUP_CALLED_AS:-}" = neodesk ]; then
             echo "Run: sudo neodesk ${NEODESK_ORIG_ARGV[*]}"
         else
-            echo "Run: sudo $0"
+            case "$0" in
+                bash|-bash|*/bash) echo "Run: curl -fsSL https://neode.sk/neodesk.sh | sudo bash" ;;
+                *) echo "Run: sudo $0" ;;
+            esac
         fi
         exit 1
     fi
     move_backup_folder || print_warning "The backups in $OLD_BACKUP_DIR could not move to $BACKUP_DIR"
-    
+    # Backups an older installer left readable for every account
+    secure_backup_folder
+
     # Auto-detect paths on startup
     echo -e "${CYAN}Detecting installation...${NC}"
     auto_detect_paths
@@ -7945,7 +8221,11 @@ main() {
         || [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
         local management_rc=0
         [ "$REPAIR_PERMISSIONS" = true ] && repair_management_permissions
-        check_management_capabilities || management_rc=$?
+        # --set-config alone gets no capability report: config set checks
+        # what it writes itself
+        if [ "$CHECK_CAPABILITIES" = true ] || [ "$REPAIR_PERMISSIONS" = true ]; then
+            check_management_capabilities || management_rc=$?
+        fi
         if [ "${#MANAGED_CONFIG_CHANGES[@]}" -gt 0 ]; then
             apply_managed_config || management_rc=$?
         fi
@@ -8000,7 +8280,7 @@ main() {
         $'Configure SSL certificates\tLet'"'"'s Encrypt / custom / self-signed'
         $'Toggle HTTP/HTTPS\tSwitch protocol + run tests'
         $'Database migration\tMigrate between backends'
-        $'Build toolchain (optional/dev)\tLocal Flutter/Cargo — not needed for production'
+        $'Build toolchain (optional/dev)\tBuild support agents on this machine; not needed for production'
         $'Settings (paths)\tConfigure install paths'
         $'Management capabilities\tCheck permissions and change allowlisted server settings'
         $'Exit\tQuit the manager'

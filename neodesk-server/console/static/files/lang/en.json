@@ -10442,5 +10442,37 @@
         "updates_title": "Before updates",
         "where": "Where to save",
         "where_help": "The NeoDesk data folder, or a folder of your own. A network share must be mounted by the operating system first."
+    },
+    "device_authorize": {
+        "title": "Sign in to the NeoDesk app",
+        "description": "A computer asks to sign in to the NeoDesk app with your account, {account}.",
+        "facts_label": "The computer that asks",
+        "device_name": "Computer",
+        "device_os": "System",
+        "device_id": "NeoDesk ID",
+        "ip": "IP address",
+        "asked": "Asked",
+        "check": "Allow only if you just started this sign-in on that computer. If you didn't, click Deny: whoever sent you this link would get into your account.",
+        "allow": "Allow",
+        "deny": "Deny",
+        "unnamed": "Unnamed computer",
+        "allowed_title": "The app is signed in",
+        "allowed_text": "{device} is now signed in as {account}. Go back to the NeoDesk app; you can close this tab.",
+        "declined_title": "Sign-in denied",
+        "declined_text": "The computer was not signed in. You can close this tab.",
+        "ended_title": "This sign-in has ended",
+        "ended_text": "It ran out after five minutes or was already answered. Start the sign-in again in the NeoDesk app.",
+        "load_failed": "The sign-in request could not be loaded.",
+        "errors": {
+            "already_decided": "This sign-in was already answered.",
+            "not_found": "This sign-in has ended. Start it again in the NeoDesk app.",
+            "account_disabled": "Your account is disabled, so it can't sign in to the app.",
+            "totp_setup_required": "Your account must set up two-factor sign-in first. Set it up under Your account, then click Allow again.",
+            "password_change_required": "Your account must choose a new password first. Change it under Your account, then click Allow again.",
+            "account_refused": "Your account can't sign in to the app.",
+            "impersonating": "You are viewing NeoDesk as another account. Stop that first, then allow the sign-in with your own account.",
+            "browser_only": "Only a person signed in to the console in a browser can allow a sign-in.",
+            "server_error": "That didn't work. Try again."
+        }
     }
 }

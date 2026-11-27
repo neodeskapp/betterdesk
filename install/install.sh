@@ -1,57 +1,16 @@
 #!/usr/bin/env bash
 # =============================================================================
-# NeoDesk — one-line installer (Linux)
+# NeoDesk: the one-line installer (Linux)
 #
-# Docker (default: the published image in one container, neodesk-docker.sh):
 #   curl -fsSL https://neode.sk/install.sh | sudo bash
+#   curl -fsSL https://neode.sk/install.sh | sudo bash -s -- --help
 #
-# Docker, move a two-container (split) install to the one container:
-#   curl -fsSL .../install.sh | sudo bash -s -- --migrate-split
-#
-# Native (neodesk.sh --auto of the release): the newest stable release,
-# or the development build while the repository has none:
-#   curl -fsSL https://neode.sk/install.sh | sudo bash -s -- --native
-# Native, the development build: add --channel dev
-#
-# Options (pass after "bash -s --"):
-#   --docker | --native          Installation mode (default: docker)
-#   --migrate-split              Replace a split install (server + console containers)
-#                                with the one container, which takes its data over
-#   --install-dir PATH             Install directory (default: /opt/neodesk)
-#   --version TAG                  Docker image tag to pin (default: latest, the newest release)
-#   --branch BRANCH                Take the installer files of a git branch instead of the
-#                                  release's (development; native installs clone it)
-#   --skip-verify                  Native: install a release signed with another key (a fork's)
-#   --channel stable|dev           Native: release channel (default: stable)
-#   --relay-mode auto|local|public Relay auto-detection strategy
-#   --relay-servers IP[:port]      Fixed relay address (overrides --relay-mode)
-#   --admin-password PASS          Set admin password (Docker: ADMIN_PASSWORD env)
-#   --domain NAME                  Docker: HTTPS for the console at this DNS name with a
-#                                  Let's Encrypt certificate that Traefik renews by itself
-#                                  (the name must point at this server; ports 80 and 443)
-#   --letsencrypt-email ADDRESS    Docker: Let's Encrypt's contact (needed with --domain)
-#   --letsencrypt-staging          Docker: certificates from Let's Encrypt's staging server
-#   --skip-docker-install          Do not install Docker when missing
-#   --skip-firewall                Skip UFW/firewalld/iptables configuration
-#   --rescue                       Safe repair: permissions, restart, health checks
-#   --diagnose                     Read-only diagnostics for Docker deployments
-#   --repair-permissions           Only repair Docker data/volume permissions
-#   --check-permissions            Check update/config/restart capabilities
-#   --set-config KEY=VALUE         Apply an allowlisted runtime setting
-#   --purge                        With --uninstall: also remove Docker volumes
-#   --uninstall                    Remove NeoDesk Docker installation
-#   --help                         Show usage
-#
-# Environment overrides (same names as flags where applicable):
-#   NEODESK_REPO, NEODESK_BRANCH, NEODESK_VERSION, INSTALL_DIR,
-#   RELAY_MODE, RELAY_SERVERS, ADMIN_PASSWORD, NEODESK_RAW_BASE,
-#   NEODESK_DOMAIN, LETSENCRYPT_EMAIL, RELEASE_BASE_URL (a release folder
-#   with the files: SHA256SUMS, neodesk.sh, neodesk-docker.sh, ...)
+# Docker (the default) runs neodesk-docker.sh of the release, native
+# (--native) its neodesk.sh --auto. usage() below lists every option.
 # =============================================================================
 
 set -euo pipefail
 
-VERSION="1.0.0"
 NEODESK_REPO="${NEODESK_REPO:-neodeskapp/neodesk}"
 # Where the managers this installer runs come from (neodesk.sh for a
 # native install, neodesk-docker.sh for Docker), the first that applies:
@@ -70,7 +29,7 @@ RELEASE_CHANNEL=""
 # An image tag given (--version, NEODESK_VERSION) pins it; without one
 # the install runs latest, the newest release (DECISIONS A163)
 NEODESK_VERSION_GIVEN="${NEODESK_VERSION:-}"
-NEODESK_VERSION="${NEODESK_VERSION:-3.6.20}"
+NEODESK_VERSION="${NEODESK_VERSION:-3.6.24}"
 NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-${NEODESK_BRANCH:+https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}/install}}"
 # The folder this installer runs from, when it is a file (not piped)
 INSTALLER_FOLDER=""
@@ -88,19 +47,13 @@ LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
 LETSENCRYPT_STAGING=false
 SKIP_DOCKER_INSTALL=false
 SKIP_FIREWALL=false
+IMPORT_KEYS=""
 DO_UNINSTALL=false
 DO_PURGE=false
 DO_RESCUE=false
 RESCUE_ACTION="rescue"
 CHECK_CAPABILITIES=false
 MANAGED_CONFIG_CHANGES=()
-
-# Docker ports for the clients: signal and relay, API 21121, CDAP 21122.
-# The console's own ports follow the install's .env (docker_console_ports).
-DOCKER_PORTS="21115 21116 21117 21118 21119 21121 21122"
-# With --domain: Traefik's HTTP (certificate, redirect) and HTTPS as well;
-# the console's own ports then answer on this host only
-DOCKER_PORTS_TRAEFIK="21115 21116 21117 21118 21119 21121 21122 80 443"
 
 # ── Output helpers ────────────────────────────────────────────────────────────
 
@@ -207,8 +160,73 @@ print_header() {
     printf '\n'
 }
 
+# usage: the options. A heredoc, since piped into bash (curl ... | sudo
+# bash -s -- --help) this script has no file to read them from.
 usage() {
-    sed -n '4,/^#   --help/p' "$0" | sed 's/^# \?//'
+    cat <<'EOF'
+NeoDesk installer (Linux)
+
+Docker (the default: the published image in one container, neodesk-docker.sh):
+  curl -fsSL https://neode.sk/install.sh | sudo bash
+
+Docker, move a two-container (split) install to the one container:
+  curl -fsSL https://neode.sk/install.sh | sudo bash -s -- --migrate-split
+
+Native (neodesk.sh --auto of the release): the newest stable release, or the
+development build while the repository has none:
+  curl -fsSL https://neode.sk/install.sh | sudo bash -s -- --native
+Native, the development build: add --channel dev
+
+Options (pass them after "bash -s --"):
+  --docker | --native            Installation mode (default: docker)
+  --migrate-split                Replace a split install (server and console
+                                 containers) with the one container, which takes
+                                 its data over
+  --install-dir PATH             Install folder (default: /opt/neodesk)
+  --version TAG                  Docker image tag to pin (default: latest, the
+                                 newest release)
+  --branch BRANCH                Take the installer files of a git branch instead
+                                 of the release's (development; native installs
+                                 clone it)
+  --skip-verify                  Native: install a release signed with another
+                                 key (a fork's)
+  --channel stable|dev           Native: release channel (default: stable)
+  --relay-mode auto|local|public How to find the address clients reach this
+                                 server at
+  --relay-servers ADDRESS        That address, public IP or DNS name (overrides
+                                 --relay-mode)
+  --admin-password PASS          The admin's first password (Docker: ADMIN_PASSWORD)
+  --domain NAME                  Docker: HTTPS for the console at this DNS name
+                                 with a Let's Encrypt certificate that Traefik
+                                 renews by itself (the name must point at this
+                                 server; ports 80 and 443)
+  --letsencrypt-email ADDRESS    Docker: Let's Encrypt's contact (needed with
+                                 --domain)
+  --letsencrypt-staging          Docker: certificates from Let's Encrypt's
+                                 staging server
+  --import-keys FOLDER           Docker: the key pair of a RustDesk server
+                                 (id_ed25519 and id_ed25519.pub in FOLDER), so
+                                 its clients keep working
+  --skip-docker-install          Do not install Docker when it is missing
+  --skip-firewall                Docker: leave ufw and firewalld as they are
+  --rescue                       Repair: permissions, restart, health checks
+  --diagnose                     Read-only diagnostics of a Docker install
+  --repair-permissions           Only repair the Docker volumes' permissions
+  --check-permissions            Check update, settings and restart capabilities
+  --set-config KEY=VALUE         Apply an allowed server setting
+  --uninstall                    Remove the NeoDesk Docker install
+  --purge                        With --uninstall: also delete the Docker volumes
+  --help                         This text
+
+Environment variables (the same as the options where there is one):
+  NEODESK_REPO, NEODESK_BRANCH, NEODESK_VERSION, INSTALL_DIR, RELAY_MODE,
+  RELAY_SERVERS, ADMIN_PASSWORD, NEODESK_RAW_BASE, NEODESK_DOMAIN,
+  LETSENCRYPT_EMAIL, RELEASE_BASE_URL (a release folder with the files:
+  SHA256SUMS, neodesk.sh, neodesk-docker.sh, ...)
+
+Docker installs are managed later with
+  sudo bash /opt/neodesk/docker/neodesk-docker.sh --help
+EOF
     exit 0
 }
 
@@ -238,6 +256,7 @@ while [ $# -gt 0 ]; do
         --letsencrypt-staging) LETSENCRYPT_STAGING=true; shift ;;
         --skip-docker-install) SKIP_DOCKER_INSTALL=true; shift ;;
         --skip-firewall) SKIP_FIREWALL=true; shift ;;
+        --import-keys) [ $# -ge 2 ] || die "--import-keys needs a folder"; IMPORT_KEYS="$2"; shift 2 ;;
         --rescue) DO_RESCUE=true; RESCUE_ACTION="rescue"; shift ;;
         --diagnose|--diagnostics) DO_RESCUE=true; RESCUE_ACTION="diagnose"; shift ;;
         --repair-permissions) DO_RESCUE=true; RESCUE_ACTION="repair-permissions"; shift ;;
@@ -363,117 +382,6 @@ check_docker_compose() {
     return 1
 }
 
-# ufw_active: ufw is installed and on. "ufw status" prints "Status:
-# active" or "Status: inactive" (in English with LC_ALL=C); rules added to
-# an inactive ufw go live with the next "ufw enable".
-ufw_active() {
-    command -v ufw >/dev/null 2>&1 && LC_ALL=C ufw status 2>/dev/null | grep -q '^Status: active'
-}
-
-# docker_env_get KEY: KEY's value in the Docker install's .env, without
-# quotes around it; empty when .env or the key is missing
-docker_env_get() {
-    local value
-    value=$(grep -E "^${1}=" "${INSTALL_DIR}/docker/.env" 2>/dev/null | tail -n 1 | cut -d= -f2- | tr -d '\r') || true
-    case "$value" in
-        \"*\"|\'*\') value="${value:1:${#value}-2}" ;;
-    esac
-    printf '%s\n' "$value"
-}
-
-# docker_console_ports: the console's ports for the host firewall, by the
-# rule of neodesk.sh and neodesk.ps1, read from the .env the manager wrote
-# (it runs before the firewall step). Sets CONSOLE_PORTS_OPEN, the ports
-# to open, and CONSOLE_PORTS_CLOSED with CONSOLE_CLOSED_WHY, the ports left
-# closed and why:
-#   - no .env: nothing is opened, the step cannot tell how the console is served
-#   - NEODESK_CONSOLE_BIND on loopback (--domain sets 127.0.0.1): the ports
-#     answer on this host only, nothing to open
-#   - TRUST_PROXY on (any value but an off one, as the console reads it):
-#     a reverse proxy is in front, nothing is opened
-#   - else the HTTP port (NEODESK_CONSOLE_PORT, 3375), and the HTTPS port
-#     (NEODESK_CONSOLE_HTTPS_PORT, 5443) only with HTTPS_ENABLED on
-docker_console_ports() {
-    local env_file="${INSTALL_DIR}/docker/.env" http https
-    CONSOLE_PORTS_OPEN="" CONSOLE_PORTS_CLOSED="" CONSOLE_CLOSED_WHY=""
-    http=$(docker_env_get NEODESK_CONSOLE_PORT)
-    https=$(docker_env_get NEODESK_CONSOLE_HTTPS_PORT)
-    CONSOLE_PORTS_OPEN="${http:-3375}"
-    case "$(docker_env_get HTTPS_ENABLED | tr '[:upper:]' '[:lower:]')" in
-        1|y|yes|true|on) CONSOLE_PORTS_OPEN="$CONSOLE_PORTS_OPEN ${https:-5443}" ;;
-    esac
-    if [ ! -f "$env_file" ]; then
-        CONSOLE_CLOSED_WHY="there is no ${env_file} that says how the console is served"
-    else
-        case "$(docker_env_get NEODESK_CONSOLE_BIND)" in
-            127.*|::1|"[::1]"|localhost)
-                CONSOLE_CLOSED_WHY="local"
-                ;;
-        esac
-        if [ -z "$CONSOLE_CLOSED_WHY" ]; then
-            case "$(docker_env_get TRUST_PROXY | tr '[:upper:]' '[:lower:]')" in
-                ""|n|no|0|false|off) return 0 ;;
-            esac
-            CONSOLE_CLOSED_WHY="a reverse proxy is in front of it (TRUST_PROXY in ${env_file})"
-        fi
-    fi
-    CONSOLE_PORTS_CLOSED="$CONSOLE_PORTS_OPEN"
-    CONSOLE_PORTS_OPEN=""
-}
-
-# configure_firewall: opens the client ports (DOCKER_PORTS) and the
-# console's (docker_console_ports) in ufw or firewalld when one of them is
-# active, names the ports it opened, and says how to open the console's
-# ports by hand when it left them closed.
-configure_firewall() {
-    [ "$SKIP_FIREWALL" = true ] && { log "Skipping firewall configuration"; return 0; }
-
-    local port firewall opened=() hint=()
-
-    log "Configuring firewall (if active)..."
-    docker_console_ports
-
-    if ufw_active; then
-        firewall=ufw
-        for port in $DOCKER_PORTS $CONSOLE_PORTS_OPEN; do
-            if [ "$port" = "21116" ]; then
-                ufw allow 21116/tcp comment "NeoDesk signal TCP" >/dev/null 2>&1 && opened+=(21116/tcp) || true
-                ufw allow 21116/udp comment "NeoDesk signal UDP" >/dev/null 2>&1 && opened+=(21116/udp) || true
-            elif ufw status 2>/dev/null | grep -qE "^${port}[/ ]"; then
-                opened+=("${port}/tcp")
-            else
-                ufw allow "${port}/tcp" comment "NeoDesk port ${port}" >/dev/null 2>&1 && opened+=("${port}/tcp") || true
-            fi
-        done
-        ufw reload >/dev/null 2>&1 || true
-        for port in $CONSOLE_PORTS_CLOSED; do hint+=("sudo ufw allow ${port}/tcp"); done
-    elif command -v firewall-cmd >/dev/null 2>&1 && systemctl is-active --quiet firewalld 2>/dev/null; then
-        firewall=firewalld
-        for port in $DOCKER_PORTS $CONSOLE_PORTS_OPEN; do
-            if [ "$port" = "21116" ]; then
-                firewall-cmd --permanent --add-port=21116/tcp >/dev/null 2>&1 && opened+=(21116/tcp) || true
-                firewall-cmd --permanent --add-port=21116/udp >/dev/null 2>&1 && opened+=(21116/udp) || true
-            else
-                firewall-cmd --permanent --add-port="${port}/tcp" >/dev/null 2>&1 && opened+=("${port}/tcp") || true
-            fi
-        done
-        firewall-cmd --reload >/dev/null 2>&1 || true
-        for port in $CONSOLE_PORTS_CLOSED; do hint+=("sudo firewall-cmd --permanent --add-port=${port}/tcp"); done
-        [ "${#hint[@]}" -eq 0 ] || hint+=("sudo firewall-cmd --reload")
-    else
-        log "No active UFW/firewalld detected — skipping firewall rules"
-        return 0
-    fi
-
-    ok "Opened in ${firewall}: ${opened[*]:-none}"
-    if [ "$CONSOLE_CLOSED_WHY" = local ]; then
-        log "The console (TCP ${CONSOLE_PORTS_CLOSED// /, }) answers on this machine only (NEODESK_CONSOLE_BIND), so ${firewall} keeps it closed"
-    elif [ -n "$CONSOLE_PORTS_CLOSED" ]; then
-        log "${firewall} keeps the console (TCP ${CONSOLE_PORTS_CLOSED// /, }) closed: ${CONSOLE_CLOSED_WHY}"
-        log "To reach the console directly, open it by hand: $(printf '%s; ' "${hint[@]}" | sed 's/; $//')"
-    fi
-}
-
 # A two-container (split) install in the compose folder: its .env says so,
 # or its compose file runs a console service.
 is_split_install() {
@@ -577,7 +485,7 @@ install_docker_mode() {
     local manager="${compose_dir}/neodesk-docker.sh"
     local args=(install --dir "$compose_dir" --yes)
 
-    log "NeoDesk Docker installer v${VERSION}: neodesk-docker.sh installs the one container in ${compose_dir}"
+    log "neodesk-docker.sh installs the one container in ${compose_dir}"
     if is_split_install "$compose_dir"; then
         if [ "$MIGRATE_SPLIT" != true ]; then
             warn "This is a split install (server and console containers). NeoDesk now runs as one container."
@@ -594,12 +502,14 @@ install_docker_mode() {
     fi
     [ -z "$NEODESK_VERSION_GIVEN" ] || args+=(--tag "$NEODESK_VERSION_GIVEN")
     [ "$SKIP_DOCKER_INSTALL" != true ] || args+=(--no-install-docker)
-    if [ -n "$NEODESK_DOMAIN" ]; then
-        args+=(--domain "$NEODESK_DOMAIN")
-        DOCKER_PORTS="$DOCKER_PORTS_TRAEFIK"
-    fi
+    [ -z "$NEODESK_DOMAIN" ] || args+=(--domain "$NEODESK_DOMAIN")
     [ -z "$LETSENCRYPT_EMAIL" ] || args+=(--email "$LETSENCRYPT_EMAIL")
     [ "$LETSENCRYPT_STAGING" != true ] || args+=(--letsencrypt-staging)
+    [ -z "$IMPORT_KEYS" ] || args+=(--import-keys "$IMPORT_KEYS")
+    # The manager opens the ports in ufw or firewalld, before the container
+    # starts (Let's Encrypt's challenge comes in on 80), and closes them at
+    # uninstall
+    [ "$SKIP_FIREWALL" != true ] || args+=(--skip-firewall)
 
     fetch_docker_manager "$manager"
     ok "Docker manager: $manager"
@@ -609,7 +519,6 @@ install_docker_mode() {
     [ -z "${RELEASE_BASE_URL:-}" ] || export RELEASE_BASE_URL
     [ -z "$NEODESK_RAW_BASE" ] || export NEODESK_RAW_BASE
     "$manager" "${args[@]}"
-    configure_firewall
     log "Later: sudo bash $manager (update), status, logs, backup, uninstall (see --help)"
 }
 
@@ -755,7 +664,6 @@ install_native_mode() {
     fi
     local relay work
     local args=(--auto)
-    log "NeoDesk native installer v${VERSION}"
     relay=$(resolve_relay_address)
     args+=(--relay-servers "$relay")
     [ "$SKIP_VERIFY" != true ] || args+=(--skip-verify)
@@ -778,7 +686,6 @@ install_native_from_branch() {
     local source_backup=""
     local checkout_error=""
 
-    log "NeoDesk native installer v${VERSION}"
     log "Native install branch: ${NEODESK_BRANCH}"
 
     require_command git
@@ -913,7 +820,7 @@ run_native_management_action() {
     [ -x "$native_installer" ] || die "Native NeoDesk manager not found at ${native_installer}"
     local args=()
     [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)
-    [ "$REPAIR_PERMISSIONS" = true ] && args+=(--repair-permissions)
+    [ "${REPAIR_PERMISSIONS:-false}" = true ] && args+=(--repair-permissions)
     local change
     for change in "${MANAGED_CONFIG_CHANGES[@]}"; do
         args+=(--set-config "$change")
@@ -926,7 +833,7 @@ run_docker_management_action() {
     [ -x "$manager" ] || die "Docker NeoDesk manager not found at ${manager}"
     local args=(--dir "${INSTALL_DIR}/docker")
     [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)
-    [ "$REPAIR_PERMISSIONS" = true ] && args+=(--repair-permissions)
+    [ "${REPAIR_PERMISSIONS:-false}" = true ] && args+=(--repair-permissions)
     local change
     for change in "${MANAGED_CONFIG_CHANGES[@]}"; do
         args+=(--set-config "$change")

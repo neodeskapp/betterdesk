@@ -4,7 +4,7 @@
  * the session in the console's main area, sessions stay connected while
  * the person moves to other pages (the same screen comes back, no new
  * connection), several sessions are tabs (a middle click closes one), the
- * sidebar folds away, the console's shortcuts leave the remote screen
+ * sidebar is a drawer behind the top bar's menu, the console's shortcuts leave the remote screen
  * alone and F8 gives the keyboard back, Open in new tab moves a session
  * to the standalone viewer, and ?standalone=1 keeps that layout. The
  * mock device behaves like the desktop client 1.5 for the failures and
@@ -36,6 +36,12 @@ async function addSession(page: Page, id: string): Promise<void> {
 	await expect(page.locator(`#rd-panel-${id}.streaming`)).toBeVisible({ timeout: 60_000 });
 }
 
+/** Opens the console's sidebar: on a session's page it is a drawer behind the top bar's menu */
+async function openMenu(page: Page): Promise<void> {
+	await page.locator('.shell-topbar button[aria-controls]').first().click();
+	await expect(page.locator('.shell-sidebar.is-open')).toBeVisible();
+}
+
 async function openSession(page: Page, id: string): Promise<void> {
 	await page.goto(`${UI}/remote/${id}?mock=1`);
 	await expect(page).toHaveURL(new RegExp(`/remote/session/${id}`));
@@ -53,9 +59,9 @@ test.beforeEach(async ({ page }) => {
 	await page.waitForLoadState('networkidle');
 });
 
-test('a deep link opens the session inside the console, with its sidebar and top bar', async ({ page }) => {
+test('a deep link opens the session inside the console, with its top bar and menu', async ({ page }) => {
 	await openSession(page, A);
-	await expect(page.locator('.shell .shell-sidebar, .shell nav').first()).toBeVisible();
+	await expect(page.locator('.shell-topbar button[aria-controls]').first()).toBeVisible();
 	await expect(page.locator('.shell-topbar')).toBeVisible();
 	await expect(viewer(page)).toBeVisible();
 	await expect(page.getByRole('tab', { selected: true })).toHaveAccessibleName(/Connected/);
@@ -66,6 +72,7 @@ test('sessions stay connected on other pages and come back as they were', async 
 	await openSession(page, A);
 	// Mark the screen: the same element must come back, not a new connection
 	await screen(page).evaluate((el) => el.setAttribute('data-probe', 'kept'));
+	await openMenu(page);
 	await page.locator('.shell').getByRole('link', { name: 'All devices' }).click();
 	await expect(page).toHaveURL(/\/devices/);
 	await expect(viewer(page)).toBeHidden();
@@ -95,22 +102,20 @@ test('two sessions are tabs; a middle click closes one, the last close goes back
 	await expect(page).not.toHaveURL(/\/remote\/session\//);
 });
 
-test('the sidebar folds away and comes back, and is remembered', async ({ page }) => {
+test('one menu opens the sidebar over the session, and the screen keeps its size', async ({ page }) => {
 	await openSession(page, A);
-	const hide = page.getByRole('button', { name: 'Hide the sidebar' });
-	await hide.click();
-	await expect(page.getByRole('button', { name: 'Show the sidebar' })).toHaveAttribute(
-		'aria-pressed',
-		'false'
-	);
-	// Folded: the top bar offers the menu that opens the sidebar as a drawer
+	// The viewer's bar has no sidebar switch of its own: the top bar's menu is the only one
+	await expect(page.locator('.session-bar').getByRole('button', { name: /sidebar/i })).toHaveCount(0);
 	const menu = page.locator('.shell-topbar button[aria-controls]').first();
 	await expect(menu).toBeVisible();
-	// The drawer lies over the whole viewer: no part of the viewer covers it.
-	// Hit testing skips the inert page behind the drawer, so the check lifts that for a moment
+	const before = await screen(page).boundingBox();
 	await menu.click();
 	const drawer = page.locator('.shell-sidebar.is-open');
 	await expect(drawer).toBeVisible();
+	// The drawer lies over the screen: nothing is laid out again, so the picture never goes blank
+	expect(await screen(page).boundingBox()).toEqual(before);
+	// The drawer lies over the whole viewer: no part of the viewer covers it.
+	// Hit testing skips the inert page behind the drawer, so the check lifts that for a moment
 	await expect
 		.poll(() =>
 			drawer.evaluate((el) => {
@@ -129,11 +134,7 @@ test('the sidebar folds away and comes back, and is remembered', async ({ page }
 		.toEqual([]);
 	await page.keyboard.press('Escape');
 	await expect(drawer).toHaveCount(0);
-	await page.reload();
-	await expect(page.locator('.session-panel.streaming')).toBeVisible({ timeout: 60_000 });
-	await expect(page.getByRole('button', { name: 'Show the sidebar' })).toBeVisible();
-	await page.getByRole('button', { name: 'Show the sidebar' }).click();
-	await expect(page.getByRole('button', { name: 'Hide the sidebar' })).toBeVisible();
+	expect(await screen(page).boundingBox()).toEqual(before);
 });
 
 test('the remote screen keeps the console shortcuts, and F8 gives the keyboard back', async ({ page }) => {
@@ -195,6 +196,7 @@ test('Remote sessions in the sidebar opens inside the console: the open sessions
 	page
 }) => {
 	await openSession(page, A);
+	await openMenu(page);
 	await page.locator('.shell nav a[href$="/remote/sessions"]').click();
 	await expect(page).toHaveURL(/\/remote\/sessions$/);
 	await expect(page.locator('.shell-topbar')).toBeVisible();
@@ -205,7 +207,8 @@ test('Remote sessions in the sidebar opens inside the console: the open sessions
 	const list = page.locator('.session-list');
 	await expect(list.getByRole('link')).toHaveCount(1);
 	await expect(list).toContainText('Connected');
-	await expect(page.getByRole('navigation', { name: 'Open sessions' })).toHaveCount(0);
+	// The strip of open sessions stays on top, as on every other console page
+	await expect(page.getByRole('navigation', { name: 'Open sessions' }).getByRole('link')).toHaveCount(1);
 	await page.getByLabel('Device ID', { exact: true }).fill(B);
 	await page.locator('.quick').getByRole('button', { name: 'Connect', exact: true }).click();
 	await expect(page).toHaveURL(new RegExp(`/remote/session/${B}`));

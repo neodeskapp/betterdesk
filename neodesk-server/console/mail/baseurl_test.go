@@ -51,6 +51,29 @@ func TestTheHelpLinkUsesThePublicAddress(t *testing.T) {
 		}
 	}
 
+	// The desktop sign-in through the console takes the host the app
+	// reached the server at when nothing names the console's address, and
+	// only a host name or an IP address
+	for _, c := range []struct {
+		name, env, panelHost, host, want string
+	}{
+		{name: "nothing set", host: "desk.example", want: "http://desk.example:5000"},
+		{name: "an IPv4 address", host: "192.0.2.7", want: "http://192.0.2.7:5000"},
+		{name: "an IPv6 address", host: "2001:db8::1", want: "http://[2001:db8::1]:5000"},
+		{name: "upper case", host: "Desk.Example", want: "http://desk.example:5000"},
+		{name: "no host", host: "", want: ""},
+		{name: "not a host name", host: "desk.example/evil", want: ""},
+		{name: "a user part", host: "me@evil.example", want: ""},
+		{name: "a public URL wins", env: "https://panel.example.com/", host: "desk.example", want: "https://panel.example.com"},
+		{name: "a public host wins", panelHost: "panel.example.com", host: "desk.example", want: "http://panel.example.com:5000"},
+	} {
+		env := map[string]string{"PANEL_PUBLIC_URL": c.env}
+		s := New(Options{Getenv: func(name string) string { return env[name] }, Port: 5000, HTTPSPort: 5443, PanelHost: func() string { return c.panelHost }})
+		if got := s.PanelBaseURLFor(c.host); got != c.want {
+			t.Errorf("for a host, %s: %q, want %q", c.name, got, c.want)
+		}
+	}
+
 	// Without an address the help request mail has no link
 	db := storetest.Migrated(t)
 	storeConfig(t, db, fullConfig)

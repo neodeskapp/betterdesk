@@ -10442,5 +10442,37 @@
     "updates_title": "Vor Updates",
     "where": "Wo speichern",
     "where_help": "Der NeoDesk-Datenordner oder ein eigener Ordner. Eine Netzwerkfreigabe muss das Betriebssystem vorher einbinden."
+  },
+  "device_authorize": {
+    "title": "Bei der NeoDesk-App anmelden",
+    "description": "Ein Computer möchte sich mit deinem Konto {account} bei der NeoDesk-App anmelden.",
+    "facts_label": "Der anfragende Computer",
+    "device_name": "Computer",
+    "device_os": "System",
+    "device_id": "NeoDesk-ID",
+    "ip": "IP-Adresse",
+    "asked": "Angefragt",
+    "check": "Erlaube das nur, wenn du diese Anmeldung gerade an diesem Computer gestartet hast. Sonst klicke auf Ablehnen: Wer dir diesen Link geschickt hat, käme sonst in dein Konto.",
+    "allow": "Erlauben",
+    "deny": "Ablehnen",
+    "unnamed": "Unbenannter Computer",
+    "allowed_title": "Die App ist angemeldet",
+    "allowed_text": "{device} ist jetzt als {account} angemeldet. Geh zurück zur NeoDesk-App; diesen Tab kannst du schließen.",
+    "declined_title": "Anmeldung abgelehnt",
+    "declined_text": "Der Computer wurde nicht angemeldet. Diesen Tab kannst du schließen.",
+    "ended_title": "Diese Anmeldung ist beendet",
+    "ended_text": "Die Anmeldung ist nach fünf Minuten abgelaufen oder wurde schon beantwortet. Starte sie in der NeoDesk-App neu.",
+    "load_failed": "Die Anmeldeanfrage konnte nicht geladen werden.",
+    "errors": {
+      "already_decided": "Diese Anmeldung wurde schon beantwortet.",
+      "not_found": "Diese Anmeldung ist beendet. Starte sie in der NeoDesk-App neu.",
+      "account_disabled": "Dein Konto ist deaktiviert und kann sich nicht bei der App anmelden.",
+      "totp_setup_required": "Dein Konto muss zuerst die Zwei-Faktor-Anmeldung einrichten. Richte sie unter Dein Konto ein und klicke dann noch einmal auf Erlauben.",
+      "password_change_required": "Dein Konto muss zuerst ein neues Passwort wählen. Ändere es unter Dein Konto und klicke dann noch einmal auf Erlauben.",
+      "account_refused": "Dein Konto kann sich nicht bei der App anmelden.",
+      "impersonating": "Du siehst NeoDesk gerade als anderes Konto. Beende das zuerst und erlaube die Anmeldung dann mit deinem eigenen Konto.",
+      "browser_only": "Nur wer im Browser an der Konsole angemeldet ist, kann eine Anmeldung erlauben.",
+      "server_error": "Das hat nicht geklappt. Versuch es noch einmal."
+    }
   }
 }

@@ -616,7 +616,7 @@ test_public_addresses() (
     for want in 'curl -fsSL https://neode.sk/install.sh | sudo bash' \
         'curl -fsSL https://neode.sk/install/docker-compose.quick.single.yml -o docker-compose.yml' \
         'curl -fsSL https://neode.sk/neodesk.sh | sudo bash' \
-        'Invoke-WebRequest https://neode.sk/neodesk.ps1 -OutFile neodesk.ps1'; do
+        'Invoke-WebRequest https://neode.sk/neodesk.ps1 -OutFile $env:TEMP\neodesk.ps1'; do
         grep -qF -- "$want" "$SCRIPT_ROOT/README.md" || fail "README.md does not show: $want"
     done
     grep -qF 'curl -fsSL https://neode.sk/neodesk.sh | sudo bash' "$SCRIPT_ROOT/install/neodesk.sh" \

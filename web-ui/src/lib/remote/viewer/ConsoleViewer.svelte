@@ -49,8 +49,6 @@
 			viewer={cs.viewer}
 			embedded
 			shown={cs.shown}
-			sidebarCollapsed={cs.collapsed}
-			ontogglesidebar={() => cs.setCollapsed(!cs.collapsed)}
 			onopen={openSession}
 			onopennewtab={(id) => cs.openInNewTab(id)}
 			onfullscreen={(on) => (cs.immersive = on)}

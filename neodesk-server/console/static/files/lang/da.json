@@ -10448,5 +10448,37 @@
     "updates_title": "Før opdateringer",
     "where": "Hvor der skal gemmes",
     "where_help": "NeoDesk-datamappen eller en mappe efter eget valg. Et netværksdrev skal først monteres af operativsystemet."
+  },
+  "device_authorize": {
+    "title": "Log ind i NeoDesk-appen",
+    "description": "En computer beder om at logge ind i NeoDesk-appen med din konto, {account}.",
+    "facts_label": "Computeren, der spørger",
+    "device_name": "Computer",
+    "device_os": "System",
+    "device_id": "NeoDesk-ID",
+    "ip": "IP-adresse",
+    "asked": "Spurgt",
+    "check": "Tillad kun, hvis du lige har startet dette login på den computer. Hvis ikke, så klik på Afvis: den, der sendte dig dette link, ville komme ind på din konto.",
+    "allow": "Tillad",
+    "deny": "Afvis",
+    "unnamed": "Unavngivet computer",
+    "allowed_title": "Appen er logget ind",
+    "allowed_text": "{device} er nu logget ind som {account}. Gå tilbage til NeoDesk-appen; du kan lukke denne fane.",
+    "declined_title": "Login afvist",
+    "declined_text": "Computeren blev ikke logget ind. Du kan lukke denne fane.",
+    "ended_title": "Dette login er afsluttet",
+    "ended_text": "Det udløb efter fem minutter eller er allerede besvaret. Start login igen i NeoDesk-appen.",
+    "load_failed": "Loginanmodningen kunne ikke indlæses.",
+    "errors": {
+      "already_decided": "Dette login er allerede besvaret.",
+      "not_found": "Dette login er afsluttet. Start det igen i NeoDesk-appen.",
+      "account_disabled": "Din konto er deaktiveret og kan ikke logge ind i appen.",
+      "totp_setup_required": "Din konto skal først konfigurere totrinslogin. Konfigurer det under Din konto, og klik så på Tillad igen.",
+      "password_change_required": "Din konto skal først vælge en ny adgangskode. Skift den under Din konto, og klik så på Tillad igen.",
+      "account_refused": "Din konto kan ikke logge ind i appen.",
+      "impersonating": "Du ser NeoDesk som en anden konto. Stop det først, og tillad så login med din egen konto.",
+      "browser_only": "Kun en person, der er logget ind i konsollen i en browser, kan tillade et login.",
+      "server_error": "Det lykkedes ikke. Prøv igen."
+    }
   }
 }

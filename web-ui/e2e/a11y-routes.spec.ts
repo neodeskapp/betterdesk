@@ -22,6 +22,7 @@ const CONSOLE: Record<string, string> = {
 	'/(console)/account': '/account',
 	'/(console)/activity': '/activity',
 	'/(console)/attestation': '/attestation',
+	'/(console)/authorize-device/[id]': '/authorize-device/no-such-request',
 	'/(console)/automation': '/automation',
 	'/(console)/billing': '/billing',
 	'/(console)/cdap': '/cdap',

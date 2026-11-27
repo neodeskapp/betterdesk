@@ -10448,5 +10448,37 @@
     "updates_title": "Frissítések előtt",
     "where": "Hová mentsen",
     "where_help": "A NeoDesk adatmappája vagy egy saját mappa. A hálózati megosztást előbb az operációs rendszernek csatolnia kell."
+  },
+  "device_authorize": {
+    "title": "Bejelentkezés a NeoDesk alkalmazásba",
+    "description": "Egy számítógép be szeretne jelentkezni a NeoDesk alkalmazásba az Ön fiókjával ({account}).",
+    "facts_label": "A kérő számítógép",
+    "device_name": "Számítógép",
+    "device_os": "Rendszer",
+    "device_id": "NeoDesk-azonosító",
+    "ip": "IP-cím",
+    "asked": "Kérés ideje",
+    "check": "Csak akkor engedélyezze, ha éppen most indította el ezt a bejelentkezést azon a számítógépen. Ha nem, kattintson az Elutasítás gombra: aki ezt a hivatkozást küldte, bejutna a fiókjába.",
+    "allow": "Engedélyezés",
+    "deny": "Elutasítás",
+    "unnamed": "Névtelen számítógép",
+    "allowed_title": "Az alkalmazás bejelentkezett",
+    "allowed_text": "{device} most {account} néven van bejelentkezve. Térjen vissza a NeoDesk alkalmazásba; ezt a lapot bezárhatja.",
+    "declined_title": "Bejelentkezés elutasítva",
+    "declined_text": "A számítógép nem jelentkezett be. Ezt a lapot bezárhatja.",
+    "ended_title": "Ez a bejelentkezés véget ért",
+    "ended_text": "Öt perc után lejárt, vagy már válaszoltak rá. Indítsa újra a bejelentkezést a NeoDesk alkalmazásban.",
+    "load_failed": "A bejelentkezési kérést nem sikerült betölteni.",
+    "errors": {
+      "already_decided": "Erre a bejelentkezésre már válaszoltak.",
+      "not_found": "Ez a bejelentkezés véget ért. Indítsa újra a NeoDesk alkalmazásban.",
+      "account_disabled": "A fiókja le van tiltva, ezért nem jelentkezhet be az alkalmazásba.",
+      "totp_setup_required": "A fiókjának előbb be kell állítania a kétlépcsős bejelentkezést. Állítsa be itt: Fiókja, majd kattintson újra az Engedélyezés gombra.",
+      "password_change_required": "A fiókjának előbb új jelszót kell választania. Módosítsa itt: Fiókja, majd kattintson újra az Engedélyezés gombra.",
+      "account_refused": "A fiókja nem jelentkezhet be az alkalmazásba.",
+      "impersonating": "Most egy másik fiókként nézi a NeoDesket. Előbb fejezze be, majd engedélyezze a bejelentkezést a saját fiókjával.",
+      "browser_only": "Bejelentkezést csak az engedélyezhet, aki böngészőben be van jelentkezve a konzolba.",
+      "server_error": "Ez nem sikerült. Próbálja újra."
+    }
   }
 }

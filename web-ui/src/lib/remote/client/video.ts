@@ -129,6 +129,8 @@ export class RDVideo {
 	_av1DescriptionApplied: boolean;
 	/** Last decoder error timestamp (ms) for throttled recovery */
 	_lastDecodeErrorTime: number;
+	/** When the decoder last asked for a keyframe (ms), to throttle repeats */
+	_keyframeAskedAt: number;
 	/** Buffer for frames that arrive before JMuxer is ready (set by _initJMuxer) */
 	_pendingFeeds?: Uint8Array[];
 	_pendingFeedsMax?: number;
@@ -172,6 +174,7 @@ export class RDVideo {
 		this._decodeErrorsSinceFrame = 0;
 		this._av1DescriptionApplied = false;
 		this._lastDecodeErrorTime = 0;
+		this._keyframeAskedAt = -Infinity;
 	}
 
 	/**
@@ -432,9 +435,7 @@ export class RDVideo {
 		this._decodeInputCount = 0;
 		this._decodeErrorsSinceFrame = 0;
 		this._av1DescriptionApplied = false;
-		if (this.onNeedKeyframe) {
-			this.onNeedKeyframe();
-		}
+		this._askForKeyframe(true);
 	}
 
 	/**
@@ -823,7 +824,10 @@ export class RDVideo {
 		}
 
 		if (this._backgroundMode) {
+			// A skipped frame breaks the chain of delta frames: resume only
+			// from a keyframe, or the picture smears until the next one.
 			this.droppedFrames++;
+			this._needKeyframe = true;
 			return;
 		}
 
@@ -879,15 +883,22 @@ export class RDVideo {
 		if (this._needKeyframe) {
 			if (!key) {
 				this.droppedFrames++;
+				// Ask again while waiting, in case a request got lost.
+				this._askForKeyframe();
 				return;
 			}
 			this._needKeyframe = false;
 		}
 
-		// If the decode queue is backing up (slow/overloaded decoder), drop
-		// delta frames to catch up. Keyframes are always decoded.
+		// If the decode queue is backing up (slow/overloaded decoder), skip
+		// ahead to the next keyframe. Every delta frame builds on the one
+		// before it, so dropping a single one would leave the picture
+		// corrupted until a keyframe arrives, and the peer only sends one
+		// on request.
 		if (!key && this.decoder.decodeQueueSize > 30) {
 			this.droppedFrames++;
+			this._needKeyframe = true;
+			this._askForKeyframe(true);
 			return;
 		}
 
@@ -909,6 +920,19 @@ export class RDVideo {
 			// The next frame must be a keyframe to resynchronise the decoder.
 			this._needKeyframe = true;
 			this._handleError(err);
+		}
+	}
+
+	/**
+	 * Ask the peer for a keyframe through onNeedKeyframe, at most once a
+	 * second unless `now` is set.
+	 */
+	_askForKeyframe(now = false): void {
+		const t = performance.now();
+		if (!now && t - this._keyframeAskedAt < 1000) return;
+		this._keyframeAskedAt = t;
+		if (this.onNeedKeyframe) {
+			this.onNeedKeyframe();
 		}
 	}
 

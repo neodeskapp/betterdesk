@@ -358,14 +358,43 @@ func (s *Server) handleClientTFAVerify(w http.ResponseWriter, clientIP, totpCode
 
 // handleClientLoginOptions returns available authentication methods.
 // GET /api/login-options
-// Stock RustDesk expects [""] for password plus "oidc/<name>" entries when SSO is enabled.
+// [""] is the password sign-in; the "common-oidc/<JSON list>" entry lists
+// the browser sign-ins, which the stock client shows as buttons.
 func (s *Server) handleClientLoginOptions(w http.ResponseWriter, r *http.Request) {
-	opts := []string{""}
-	if s.oidcProvider != nil && s.oidcProvider.IsEnabled() {
-		opts = append(opts, s.oidcProvider.ClientLoginOptionToken())
-	}
-	writeJSON(w, http.StatusOK, opts)
+	writeJSON(w, http.StatusOK, []string{"", "common-oidc/" + s.clientBrowserSignIns()})
 }
+
+// clientBrowserSignIns is the list of browser sign-ins in the common-oidc
+// entry of GET /api/login-options: the console sign-in "NeoDesk" with the
+// NeoDesk mark, then the outside identity provider when it is enabled.
+// The stock client reads only the first common-oidc entry, so the
+// provider is in this list, not in an "oidc/<name>" entry of its own. A
+// provider named NeoDesk is listed as "NeoDesk SSO", since the op
+// "NeoDesk" is the console sign-in.
+func (s *Server) clientBrowserSignIns() string {
+	type option struct {
+		Name string `json:"name"`
+		Icon string `json:"icon,omitempty"`
+	}
+	list := []option{{Name: consoleLoginOp, Icon: neodeskMarkSVG}}
+	if s.oidcProvider != nil && s.oidcProvider.IsEnabled() {
+		name := strings.TrimPrefix(s.oidcProvider.ClientLoginOptionToken(), "oidc/")
+		if name == consoleLoginOp {
+			name += " SSO"
+		}
+		list = append(list, option{Name: name})
+	}
+	var b strings.Builder
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	_ = enc.Encode(list)
+	return strings.TrimSuffix(b.String(), "\n")
+}
+
+// neodeskMarkSVG is the NeoDesk mark for dark backgrounds
+// (lead/brand/mark-on-dark.svg), the icon of the console sign-in's button
+// in the desktop app.
+const neodeskMarkSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 10 44 44" role="img" aria-label="NeoDesk"><title>NeoDesk</title><defs><clipPath id="ndk"><circle cx="38" cy="26" r="16"/></clipPath></defs><g><rect x="10" y="22" width="32" height="32" rx="10" fill="#58a6ff"/><circle cx="38" cy="26" r="16" fill="#a3e635"/><rect x="10" y="22" width="32" height="32" rx="10" fill="#3fd0c4" clip-path="url(#ndk)"/></g></svg>`
 
 // handleClientLogout handles logout for RustDesk clients.
 // POST /api/logout

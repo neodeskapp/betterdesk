@@ -4,8 +4,9 @@
  * origin): the Displays menu and its map, the three layouts, clicks that
  * reach the device as points of its desktop, a display in a window of its
  * own, the per-display numbers, the layout kept per device, a narrow
- * window, and an older device that switches one display at a time. axe
- * checks the menu, the tiles and the display's own window.
+ * window, and an older device that switches one display at a time in a
+ * Displays menu without layouts. axe checks the menu, the tiles and the
+ * display's own window.
  *
  * Needs the console with ND_DEV_MOCK_REMOTE=1, like the viewer tests in
  * remote.spec.ts; skipped without it.
@@ -218,19 +219,25 @@ test.describe('several displays of one device', () => {
 test.describe('an older device', () => {
 	test.use({ role: 'admin' });
 
-	test('switches its displays one at a time, without the Displays menu', async ({ page }) => {
+	test('switches its displays one at a time in a Displays menu without layouts', async ({ page }) => {
 		test.skip(!(await mockOn(page)), 'the console runs without ND_DEV_MOCK_REMOTE=1');
 		test.slow();
 		await streaming(page, 'one-at-a-time');
-		await page.getByRole('button', { name: /^Controls/ }).click();
-		const controls = page.getByRole('group', { name: 'Session controls' });
-		await expect(controls.getByRole('button', { name: 'Displays', exact: true })).toHaveCount(0);
-		const strip = controls.getByRole('group', { name: 'Choose a monitor' });
-		await expect(strip.getByRole('button')).toHaveCount(3);
-		await strip.getByRole('button', { name: /^Screen 3/ }).click();
-		await expect(strip.getByRole('button', { name: /^Screen 3/ })).toHaveAttribute('aria-pressed', 'true');
+		const menu = await displaysMenu(page);
+		// The device can't stream several displays: no layouts, windows or background streams
+		await expect(menu.getByRole('menuitemradio', { name: 'One at a time', exact: true })).toHaveCount(0);
+		await expect(menu.getByRole('menuitem', { name: /window of its own/ })).toHaveCount(0);
+		await expect(menu.getByRole('menuitemradio', { name: 'Live', exact: true })).toHaveCount(0);
+		await expect(menu.getByRole('menuitem', { name: 'Plug out all' })).toBeDisabled();
+		const map = menu.getByRole('group', { name: 'Show' });
+		await expect(map.getByRole('menuitemradio')).toHaveCount(3);
+		await expectNoAxeViolations(page, '[role="menu"]');
+		await map.getByRole('menuitemradio', { name: /^Display 3/ }).click();
 		await expect.poll(async () => (await device(page)).streaming).toEqual([2]);
+		await expect(map.getByRole('menuitemradio', { name: /^Display 3/ })).toHaveAttribute(
+			'aria-checked',
+			'true'
+		);
 		await expect(page.locator('.tile-canvas')).toHaveCount(0);
-		await expectNoAxeViolations(page, '.controls');
 	});
 });
