@@ -132,8 +132,10 @@
      "device_id": null,
      "id": 16,
      "priority": "medium",
+     "reporter": null,
      "resolved_at": null,
      "sla_due_at": "<volatile>",
+     "source": "staff",
      "status": "open",
      "title": "Role ticket",
      "updated_at": "<volatile>"
@@ -196,8 +198,10 @@
      "device_id": null,
      "id": 18,
      "priority": "medium",
+     "reporter": null,
      "resolved_at": null,
      "sla_due_at": "<volatile>",
+     "source": "staff",
      "status": "open",
      "title": "Role ticket",
      "updated_at": "<volatile>"
@@ -260,8 +264,10 @@
      "device_id": null,
      "id": 21,
      "priority": "medium",
+     "reporter": null,
      "resolved_at": null,
      "sla_due_at": "<volatile>",
+     "source": "staff",
      "status": "open",
      "title": "Role ticket",
      "updated_at": "<volatile>"
@@ -324,8 +330,10 @@
      "device_id": null,
      "id": 23,
      "priority": "medium",
+     "reporter": null,
      "resolved_at": null,
      "sla_due_at": "<volatile>",
+     "source": "staff",
      "status": "open",
      "title": "Role ticket",
      "updated_at": "<volatile>"

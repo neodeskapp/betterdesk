@@ -62,31 +62,20 @@
        "description": "",
        "device_id": "900100001",
        "id": 11,
+       "last_reply_at": null,
        "priority": "high",
+       "replies": 0,
+       "reporter": null,
        "resolved_at": null,
        "sla_due_at": "<volatile>",
+       "source": "device",
        "status": "open",
        "title": "From the agent",
-       "updated_at": "<volatile>"
-      },
-      {
-       "assigned_to": null,
-       "category": "hardware",
-       "closed_at": null,
-       "created_at": "<volatile>",
-       "created_by": "admin",
-       "description": "Since this morning every job from demo-reception-01 comes out blank. The test page from the printer menu is fine.",
-       "device_id": "900100001",
-       "id": 8,
-       "priority": "medium",
-       "resolved_at": null,
-       "sla_due_at": "<volatile>",
-       "status": "open",
-       "title": "Reception printer prints blank pages",
+       "unread": false,
        "updated_at": "<volatile>"
       }
      ],
-     "total": 2
+     "total": 1
     }
    }
   },
@@ -150,31 +139,20 @@
        "description": "",
        "device_id": "900100001",
        "id": 11,
+       "last_reply_at": null,
        "priority": "high",
+       "replies": 0,
+       "reporter": null,
        "resolved_at": null,
        "sla_due_at": "<volatile>",
+       "source": "device",
        "status": "open",
        "title": "From the agent",
-       "updated_at": "<volatile>"
-      },
-      {
-       "assigned_to": null,
-       "category": "hardware",
-       "closed_at": null,
-       "created_at": "<volatile>",
-       "created_by": "admin",
-       "description": "Since this morning every job from demo-reception-01 comes out blank. The test page from the printer menu is fine.",
-       "device_id": "900100001",
-       "id": 8,
-       "priority": "medium",
-       "resolved_at": null,
-       "sla_due_at": "<volatile>",
-       "status": "open",
-       "title": "Reception printer prints blank pages",
+       "unread": false,
        "updated_at": "<volatile>"
       }
      ],
-     "total": 2
+     "total": 1
     }
    }
   },
@@ -185,7 +163,6 @@
    "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-encoding": "gzip",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -200,7 +177,6 @@
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
      "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
-    "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -235,11 +211,16 @@
        "description": "",
        "device_id": "900100001",
        "id": 24,
+       "last_reply_at": null,
        "priority": "high",
+       "replies": 0,
+       "reporter": null,
        "resolved_at": null,
        "sla_due_at": "<volatile>",
+       "source": "device",
        "status": "open",
        "title": "Priority high",
+       "unread": false,
        "updated_at": "<volatile>"
       },
       {
@@ -251,31 +232,20 @@
        "description": "",
        "device_id": "900100001",
        "id": 11,
+       "last_reply_at": null,
        "priority": "high",
+       "replies": 0,
+       "reporter": null,
        "resolved_at": null,
        "sla_due_at": "<volatile>",
+       "source": "device",
        "status": "open",
        "title": "From the agent",
-       "updated_at": "<volatile>"
-      },
-      {
-       "assigned_to": null,
-       "category": "hardware",
-       "closed_at": null,
-       "created_at": "<volatile>",
-       "created_by": "admin",
-       "description": "Since this morning every job from demo-reception-01 comes out blank. The test page from the printer menu is fine.",
-       "device_id": "900100001",
-       "id": 8,
-       "priority": "medium",
-       "resolved_at": null,
-       "sla_due_at": "<volatile>",
-       "status": "open",
-       "title": "Reception printer prints blank pages",
+       "unread": false,
        "updated_at": "<volatile>"
       }
      ],
-     "total": 3
+     "total": 2
     }
    }
   }
