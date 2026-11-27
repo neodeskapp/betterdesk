@@ -453,6 +453,9 @@ type EnrollmentRequest struct {
 	Tags       string `json:"tags,omitempty"` // comma-separated enrollment metadata
 	PublicKey  string `json:"public_key,omitempty"`
 	Token      string `json:"token,omitempty"` // Optional enrollment credential, POST body only
+	// RendezvousPK is the key the peer row binds for the signal server, set
+	// only by a deploy (device_deploy.go), never from a request body.
+	RendezvousPK []byte `json:"-"`
 }
 
 // EnrollmentResponse is returned to the desktop client.
@@ -1680,6 +1683,7 @@ func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP strin
 	if err := s.db.UpsertPeer(&db.Peer{
 		ID:         req.DeviceID,
 		UUID:       req.UUID,
+		PK:         req.RendezvousPK,
 		IP:         clientIP,
 		Hostname:   req.Hostname,
 		OS:         req.Platform,

@@ -1647,6 +1647,7 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			path == "/api/auth/oidc/session" || path == "/api/auth/oidc/exchange" || path == "/api/auth/sso/status" ||
 			strings.HasPrefix(path, "/ws/nd-mgmt/") ||
 			path == "/api/devices/register" || path == "/api/devices/register/status" ||
+			path == "/api/devices/deploy" ||
 			path == "/api/devices/self/access-policy" || path == "/api/devices/self/help-request" ||
 			path == "/api/devices/self/totp" ||
 			path == "/api/guest/access-links/validate" ||
