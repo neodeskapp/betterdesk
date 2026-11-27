@@ -46,3 +46,41 @@ describe('frames per second', () => {
 		expect(fpsOf([proxy(true), proxy(false), proxy(true), proxy(false)])).toBe(2);
 	});
 });
+
+describe('a display in a window of its own', () => {
+	/** A canvas in a box of the given size */
+	function boxed(size: { w: number; h: number }) {
+		const box = document.createElement('div');
+		box.getBoundingClientRect = () => ({ width: size.w, height: size.h }) as DOMRect;
+		const canvas = document.createElement('canvas');
+		box.append(canvas);
+		document.body.append(box);
+		return canvas;
+	}
+
+	test('the canvas follows the window when it is resized', () => {
+		const size = { w: 800, h: 600 };
+		const canvas = boxed(size);
+		const r = new RDRenderer(canvas, { win: window });
+		r.resize();
+		expect([canvas.width, canvas.height]).toEqual([800, 600]);
+
+		size.w = 1400;
+		size.h = 900;
+		window.dispatchEvent(new Event('resize'));
+		expect([canvas.width, canvas.height]).toEqual([1400, 900]);
+		expect(canvas.style.width).toBe('1400px');
+	});
+
+	test('a closed screen stops following the window', () => {
+		const size = { w: 800, h: 600 };
+		const canvas = boxed(size);
+		const r = new RDRenderer(canvas, { win: window });
+		r.resize();
+		r.close();
+
+		size.w = 400;
+		window.dispatchEvent(new Event('resize'));
+		expect(canvas.width).toBe(800);
+	});
+});
