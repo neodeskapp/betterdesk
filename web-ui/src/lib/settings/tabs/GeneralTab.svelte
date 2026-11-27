@@ -590,7 +590,7 @@
 					t('settings.public_endpoints_api_url'),
 					tf(
 						'settings.general.endpoint_api_help',
-						'Full address clients use to sign in. The server uses port 21114 unless you changed it. For example https://api.example.com or http://203.0.113.10:21114.'
+						'Full address clients use to sign in. The server uses port 21121 unless you changed it. For example https://api.example.com or http://203.0.113.10:21121.'
 					)
 				)}
 			</SettingsGroup>
@@ -771,6 +771,15 @@
 		align-items: flex-start;
 		gap: 2px;
 		min-width: 0;
+	}
+	/* A source names a variable ("From RELAY_SERVERS in the server's
+	   environment"): it wraps inside the column instead of widening it */
+	.side-value > span {
+		max-width: 100%;
+	}
+	.side-value :global(.tag) {
+		padding-block: 2px;
+		white-space: normal;
 	}
 	.side-line {
 		margin: 0;

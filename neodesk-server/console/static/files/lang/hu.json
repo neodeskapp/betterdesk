@@ -270,7 +270,7 @@
     "intune_script_title": "Windows telepítőszkript",
     "intune_script_hint": "Futtassa rendszergazdaként, miután a RustDesk telepítője befejeződött, például Intune- vagy PSADT-lépésként. Ugyanazokat az értékeket állítja be, mint a telepítési string.",
     "deploy_string_not_ready": "A telepítési string csak a szerver nyilvános kulcsa betöltése után érhető el.",
-    "client_server_host_env_hint": "A címek a Beállítások, Nyilvános kliens végpontok részben vannak megadva. Ha ismét az itt megadott címet szeretné használni, ürítse ki ott a mezőket.",
+    "client_server_host_env_hint": "Az ID szerver a Beállítások, Nyilvános kliens végpontok részben van megadva. Ha ismét az itt megadott címet szeretné használni, ürítse ki ott a mezőt.",
     "client_config_qr_unreachable_host": "Ez a kód csak erre a számítógépre mutat (localhost vagy .local név), ezért a telefonok általában nem érik el. Először adja meg a szerver hálózati címét a Kliens szerver címe mezőben, vagy állítsa be véglegesen a Beállításokban.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -729,7 +729,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "Még nincs eszköz.",
+    "empty_join_requests": "Új számítógépek jóváhagyása a Csatlakozási kérelmek alatt"
   },
   "keys": {
     "title": "Szerverkulcsok",
@@ -1133,8 +1135,6 @@
     "public_endpoints_relay": "Nyilvános relay szerver",
     "public_endpoints_relay_placeholder": "pl. remote.example.com (alapértelmezett: ID)",
     "public_endpoints_api_url": "Nyilvános API URL",
-    "public_endpoints_api_url_placeholder": "pl. https://api.example.com",
-    "public_endpoints_api_url_hint": "Teljes URL RustDesk bejelentkezéshez és API-hoz (alap port 21114).",
     "public_endpoints_save": "Végpontok mentése",
     "public_endpoints_saved": "Nyilvános kliens végpontok mentve",
     "public_endpoints_invalid_host": "Érvénytelen ID vagy relay hostname",
@@ -1308,8 +1308,8 @@
       "rec_type": "Típus",
       "rec_size": "Méret",
       "audit_moved": "A konzol tevékenységnaplója itt található:",
-      "audit_link": "Tevékenység › Biztonság és naplózás",
-      "endpoint_api_hint": "A teljes cím, amelyen a kliensek bejelentkeznek, például https://api.example.com. A szerver a 21114-es portot használja, hacsak nem módosította.",
+      "audit_link": "Tevékenység › Auditnapló",
+      "endpoint_api_hint": "A teljes cím, amelyen a kliensek bejelentkeznek, például https://api.example.com. A szerver a 21121-es portot használja, hacsak nem módosította.",
       "endpoints_when": "Akkor töltse ki, ha a kliensek más címen érik el a szervert, mint ezt a konzolt, például fordított proxy mögött. Az üres mezők az automatikusan talált címet használják, amely a Mit kapnak most a kliensek alatt látható.",
       "conn_p2p_desc": "A számítógépek közvetlenül kapcsolódnak, ha a hálózatuk engedi, különben a továbbító szerveren át.",
       "conn_relay_desc": "Minden munkamenet a továbbító szerveren át megy.",
@@ -1385,7 +1385,7 @@
       "auto": "automatikusan megtalálva",
       "endpoint_id_help": "Az ID-szerver gépneve vagy IP-címe, ahogy az interneten lévő kliensek elérik. Akkor töltse ki, ha a kliensek más címen érik el ezt a szervert, mint ezt a konzolt, például fordított proxy mögött. Például remote.example.com.",
       "endpoint_relay_help": "A továbbító szerver gépneve vagy IP-címe. Hagyja üresen az ID-szerver címének használatához.",
-      "endpoint_api_help": "A teljes cím, amellyel a kliensek bejelentkeznek. A szerver a 21114-es portot használja, hacsak meg nem változtatta. Például https://api.example.com vagy http://203.0.113.10:21114.",
+      "endpoint_api_help": "A teljes cím, amellyel a kliensek bejelentkeznek. A szerver a 21121-es portot használja, hacsak meg nem változtatta. Például https://api.example.com vagy http://203.0.113.10:21121.",
       "conn_mode_help": "A közvetlen kapcsolatok gyorsabbak. A továbbítás minden hálózaton működik.",
       "conn_operator_only_help": "A RustDesk-alkalmazásnak olyan fiókkal kell bejelentkezve lennie, amelynek szerepköre csatlakozhat eszközökhöz (Csatlakozás eszközökhöz). Más eszközök nem indíthatnak munkamenetet. A böngészőből indított munkamenetek továbbra is működnek.",
       "host_extra": "Csak a gépnév vagy IP-cím, http://, port és útvonal nélkül.",
@@ -9238,7 +9238,7 @@
       },
       "backup": {
         "title": "Biztonsági mentés készítése",
-        "hint": "Ez tartalmazza a szerver kulcsát. A kulcs nélkül minden számítógépet újra be kell állítani."
+        "hint": "Ez tartalmazza a szerver kulcsát. A kulcs nélkül minden számítógépet újra be kell állítani. Ezt a lépést a Szerver, Biztonsági mentések alatt készült mentés teljesíti, kézzel vagy ütemezve; a telepítőszkript mentései nem számítanak."
       }
     }
   },

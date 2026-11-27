@@ -31,6 +31,7 @@
 		type Folder
 	} from '#lib/api/devices.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { link } from '#lib/nav.ts';
 	import * as act from '#lib/devices/actions.svelte.ts';
 	import { deviceChanges, deviceMenu, devicesChanged } from '#lib/devices/actions.svelte.ts';
 	import { preloadDialogs } from '#lib/devices/ask.svelte.ts';
@@ -650,6 +651,13 @@
 			class="row-note">{t('devices.deleted_badge')}</span
 		>{/if}{/snippet}
 
+<!-- An empty server: where the first computers come from (Managed mode holds new ones under Join requests) -->
+{#snippet firstSteps()}
+	<Button size="sm" icon={ICONS.add} onclick={() => (addComputer = true)}>{t('onboard.invite.button')}</Button
+	>
+	<a href={link('/registrations')}>{t('devices.empty_join_requests')}</a>
+{/snippet}
+
 {#snippet typeCell(d: Device)}{#if d.device_type}<Tag label={typeLabel(d.device_type, t)} />{:else}<Empty
 		/>{/if}{#if d.linked_peer_id}<span class="row-note" title={tf('mesh.linked_peer', 'Linked device')}
 			><span aria-hidden="true">↔</span>
@@ -854,7 +862,8 @@
 					loading={!loaded}
 					error={loadError && !devices.length ? loadError : null}
 					onretry={() => void quiet(loadDevices())}
-					emptyText={devices.length ? t('devices.empty_text') : t('devices.empty_title')}
+					emptyText={devices.length ? t('devices.empty_text') : t('devices.empty_none')}
+					emptyActions={devices.length || !can('enrollment.approve') ? undefined : firstSteps}
 					virtualThreshold={LONG}
 					height={long ? 'max(24rem, calc(100dvh - var(--topbar-h, 56px) - 12rem))' : undefined}
 				/>

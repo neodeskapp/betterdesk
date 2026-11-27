@@ -126,8 +126,10 @@ export const ClientConfig = v.looseObject({
 	config_uri: Str,
 	/** The address the values were built for (the field shows it) */
 	client_server_host: Str,
-	/** Settings › Public client endpoints decides; the field can't change it */
+	/** At least one of Settings › Public client endpoints has a value */
 	env_override_active: Flag,
+	/** Where each value came from: "saved" or "env" for a public endpoint setting */
+	endpoint_sources: v.optional(v.nullable(v.looseObject({ host: Str, relay: Str, api: Str })), null),
 	/** localhost or a .local name: other machines and phones can't reach it */
 	phone_unreachable_host: Flag
 });

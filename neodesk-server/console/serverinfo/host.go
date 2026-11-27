@@ -226,23 +226,29 @@ func IsPhoneUnreachableHost(host string) bool {
 
 // The values of EndpointSources.
 const (
-	SourceSaved     = "saved"
-	SourceEnv       = "env"
-	SourceQuery     = "query"
-	SourcePanelHost = "panel_host"
-	SourceConfig    = "config"
-	SourceRequest   = "request"
-	SourceDefault   = "default"
-	SourceDerived   = "derived"
+	SourceSaved        = "saved"
+	SourceEnv          = "env"
+	SourceQuery        = "query"
+	SourcePanelHost    = "panel_host"
+	SourceRelayServers = "relay_servers"
+	SourceConfig       = "config"
+	SourceRequest      = "request"
+	SourceDefault      = "default"
+	SourceDerived      = "derived"
 )
+
+// EnvRelayServers is the variable that names the relays the signal server
+// gives devices; the Docker installer writes the server's address there.
+const EnvRelayServers = "RELAY_SERVERS"
 
 // EndpointSources says where each address came from: "saved" for a public
 // endpoint setting saved in the console, "env" for one the environment or
 // the console's env file sets, "query" for the host a caller asked for,
-// "panel_host" for PANEL_PUBLIC_HOST, "config" for the host of the
-// configured API address, "request" for the request's own host, "default"
-// for localhost. The API address is "derived" when it was built from a
-// host that is a public endpoint setting.
+// "panel_host" for PANEL_PUBLIC_HOST, "relay_servers" for the first
+// address in RELAY_SERVERS, "config" for the host of the configured API
+// address, "request" for the request's own host, "default" for
+// localhost. The API address is "derived" when it was built from a host
+// that is a public endpoint setting.
 type EndpointSources struct {
 	Host  string `json:"host"`
 	Relay string `json:"relay"`
@@ -282,10 +288,23 @@ func isMachineLocalHost(host string) bool {
 	return !strings.Contains(h, ".")
 }
 
+// relayServersEntry is the first address in RELAY_SERVERS that names a
+// host, as written (with its port if it has one), and its host. Both are
+// "" when there is none.
+func (s *Service) relayServersEntry() (entry, host string) {
+	for _, part := range strings.Split(s.getenv(EnvRelayServers), ",") {
+		part = jsTrim(part)
+		if normalized := NormalizeServerHost(part); part != "" && normalized.Valid {
+			return part, normalized.Host
+		}
+	}
+	return "", ""
+}
+
 // clientFacingHost picks the host and names its source. idSource is where
-// the public server ID setting comes from. The host of the console's own
-// API address gives way to the request's host when no client elsewhere can
-// reach it (isMachineLocalHost).
+// the public server ID setting comes from. The host of RELAY_SERVERS and
+// the host of the console's own API address give way to the request's
+// host when no client elsewhere can reach them (isMachineLocalHost).
 func (s *Service) clientFacingHost(req *RequestHost, queryHost string, public PublicEndpoints, idSource, panelHost string) (host, source string) {
 	if public.PublicServerID != "" {
 		return public.PublicServerID, idSource
@@ -299,6 +318,11 @@ func (s *Service) clientFacingHost(req *RequestHost, queryHost string, public Pu
 		if normalized := NormalizeServerHost(panelHost); normalized.Valid {
 			return normalized.Host, SourcePanelHost
 		}
+	}
+	// The address devices already get their relay at, which the Docker
+	// installer found and printed as the ID server
+	if _, relayHost := s.relayServersEntry(); relayHost != "" && (req == nil || !isMachineLocalHost(relayHost)) {
+		return relayHost, SourceRelayServers
 	}
 	if fromAPI := s.DefaultServerHost(); fromAPI != "" && (req == nil || !isMachineLocalHost(fromAPI)) {
 		return fromAPI, SourceConfig
@@ -315,9 +339,10 @@ func (s *Service) clientFacingHost(req *RequestHost, queryHost string, public Pu
 
 // ResolveClientFacingHost returns the host a client should use, the first
 // of: the public server ID setting, queryHost when it is a valid host,
-// PANEL_PUBLIC_HOST when it is one, the host of the configured API
-// address unless a request came and that host is one only this machine
-// reaches, the host of the request, "localhost". req may be nil.
+// PANEL_PUBLIC_HOST when it is one, the host of the first address in
+// RELAY_SERVERS and then the host of the configured API address, each
+// unless a request came and that host is one only this machine reaches,
+// the host of the request, "localhost". req may be nil.
 func (s *Service) ResolveClientFacingHost(req *RequestHost, queryHost string) string {
 	settings := s.readPublicEnv()
 	public, from := settings.endpoints()
@@ -327,14 +352,18 @@ func (s *Service) ResolveClientFacingHost(req *RequestHost, queryHost string) st
 
 // ResolveRustDeskEndpoints returns the ID server, relay and API address to
 // give a client. The relay and the API address follow the host unless
-// their own public endpoint setting has a value. The relay always carries
-// a port (RelayEndpointForHost).
+// their own public endpoint setting has a value; a host from
+// RELAY_SERVERS gives the relay that address with its port. The relay
+// always carries a port (RelayEndpointForHost).
 func (s *Service) ResolveRustDeskEndpoints(req *RequestHost, queryHost string) ResolvedEndpoints {
 	settings := s.readPublicEnv()
 	public, from := settings.endpoints()
 	host, hostSource := s.clientFacingHost(req, queryHost, public, from.id, settings.panelHost())
 
 	relay := host
+	if hostSource == SourceRelayServers {
+		relay, _ = s.relayServersEntry()
+	}
 	out := ResolvedEndpoints{
 		Host:              host,
 		Sources:           EndpointSources{Host: hostSource, Relay: hostSource, API: hostSource},

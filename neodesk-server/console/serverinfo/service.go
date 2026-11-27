@@ -73,8 +73,8 @@ type Options struct {
 	// file /.dockerenv exists or DOCKER is "true".
 	IsDocker bool
 	// Getenv reads the process environment: PUBLIC_SERVER_ID,
-	// PUBLIC_RELAY_SERVER, PUBLIC_API_URL, PANEL_PUBLIC_HOST, DOCKER and
-	// NEODESK_DOCKER_LAYOUT. The Node console has the values of its
+	// PUBLIC_RELAY_SERVER, PUBLIC_API_URL, PANEL_PUBLIC_HOST, RELAY_SERVERS,
+	// DOCKER and NEODESK_DOCKER_LAYOUT. The Node console has the values of its
 	// ".env" file in its environment for variables that are not set, so
 	// Getenv should give those too. Nil means os.Getenv.
 	Getenv func(string) string

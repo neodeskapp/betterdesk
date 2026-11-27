@@ -264,7 +264,7 @@
     "intune_script_title": "Windows インストールスクリプト",
     "intune_script_hint": "RustDesk インストーラーの完了後に、管理者として実行してください。たとえば Intune や PSADT のステップとして実行できます。デプロイ文字列と同じ値を設定します。",
     "deploy_string_not_ready": "サーバー公開鍵が読み込まれるまでデプロイ文字列は利用できません。",
-    "client_server_host_env_hint": "アドレスは [設定] > [公開クライアントエンドポイント] で設定されています。ここで入力したアドレスを再び使うには、そちらの値を消去してください。",
+    "client_server_host_env_hint": "ID サーバーは [設定] > [公開クライアントエンドポイント] で設定されています。ここで入力したアドレスを再び使うには、そちらの値を消去してください。",
     "client_config_qr_unreachable_host": "このコードはこのコンピューターだけを指しています (localhost または .local 名)。そのため、スマートフォンからは通常アクセスできません。先に [クライアント用サーバーアドレス] にサーバーのネットワークアドレスを入力するか、[設定] で恒久的に設定してください。",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -723,7 +723,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "デバイスはまだありません。",
+    "empty_join_requests": "新しいコンピューターを [参加リクエスト] で承認"
   },
   "keys": {
     "title": "サーバーキー",
@@ -1127,8 +1129,6 @@
     "public_endpoints_relay": "公開リレーサーバー",
     "public_endpoints_relay_placeholder": "例 remote.example.com（既定: ID サーバー）",
     "public_endpoints_api_url": "公開 API URL",
-    "public_endpoints_api_url_placeholder": "例 https://api.example.com",
-    "public_endpoints_api_url_hint": "RustDesk ログイン/API 用の完全 URL（既定ポート 21114）。",
     "public_endpoints_save": "エンドポイントを保存",
     "public_endpoints_saved": "公開クライアントエンドポイントを保存しました",
     "public_endpoints_invalid_host": "ID またはリレーのホスト名が無効です",
@@ -1302,8 +1302,8 @@
       "rec_type": "種類",
       "rec_size": "サイズ",
       "audit_moved": "コンソールのアクティビティログの場所:",
-      "audit_link": "アクティビティ › セキュリティと監査",
-      "endpoint_api_hint": "クライアントがサインインに使う完全なアドレスです (例: https://api.example.com)。変更していなければ、サーバーはポート 21114 を使います。",
+      "audit_link": "アクティビティ › 監査ログ",
+      "endpoint_api_hint": "クライアントがサインインに使う完全なアドレスです (例: https://api.example.com)。変更していなければ、サーバーはポート 21121 を使います。",
       "endpoints_when": "クライアントがこのコンソールとは別のアドレスでサーバーに接続する場合 (リバースプロキシの後ろなど) に入力します。空欄の場合は自動で見つかったアドレスを使います。「クライアントが今受け取る内容」に表示されます。",
       "conn_p2p_desc": "ネットワークが許せばコンピューター同士が直接つながり、無理ならリレーサーバー経由になります。",
       "conn_relay_desc": "すべてのセッションがリレーサーバーを経由します。",
@@ -1379,7 +1379,7 @@
       "auto": "自動検出",
       "endpoint_id_help": "インターネット上のクライアントから見た ID サーバーのホスト名または IP アドレスです。クライアントがこのコンソールとは別のアドレスでこのサーバーにアクセスする場合 (リバースプロキシの背後など) に入力します。例: remote.example.com。",
       "endpoint_relay_help": "リレーサーバーのホスト名または IP アドレスです。空欄にすると ID サーバーのアドレスを使います。",
-      "endpoint_api_help": "クライアントがサインインに使う完全なアドレスです。変更していなければ、サーバーはポート 21114 を使います。例: https://api.example.com または http://203.0.113.10:21114。",
+      "endpoint_api_help": "クライアントがサインインに使う完全なアドレスです。変更していなければ、サーバーはポート 21121 を使います。例: https://api.example.com または http://203.0.113.10:21121。",
       "conn_mode_help": "直接接続のほうが高速です。リレーはどのネットワークでも動作します。",
       "conn_operator_only_help": "RustDesk アプリは、デバイスへの接続が許可されたロール (デバイスに接続する) のアカウントでサインインしている必要があります。他のデバイスはセッションを開始できません。ブラウザーからのセッションは引き続き使えます。",
       "host_extra": "ホスト名または IP アドレスのみ。http://、ポート、パスは付けません。",
@@ -9232,7 +9232,7 @@
       },
       "backup": {
         "title": "バックアップを作成",
-        "hint": "バックアップにはサーバーの鍵が含まれます。鍵がないと、すべてのコンピューターをセットアップし直す必要があります。"
+        "hint": "バックアップにはサーバーの鍵が含まれます。鍵がないと、すべてのコンピューターをセットアップし直す必要があります。この手順は [サーバー] > [バックアップ] で手動またはスケジュールで作成したバックアップで完了します。インストールスクリプトのバックアップは数えません。"
       }
     }
   },

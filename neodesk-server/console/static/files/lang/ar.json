@@ -271,7 +271,7 @@
     "intune_script_title": "سكربت تثبيت Windows",
     "intune_script_hint": "شغّله كمسؤول بعد انتهاء مثبّت RustDesk، مثلًا كخطوة في Intune أو PSADT. يضبط القيم نفسها التي تضبطها سلسلة النشر.",
     "deploy_string_not_ready": "سلسلة النشر غير متاحة حتى يتم تحميل المفتاح العام للخادم.",
-    "client_server_host_env_hint": "العناوين مضبوطة في الإعدادات، نقاط نهاية العملاء العامة. امسحها هناك لاستخدام العنوان المُدخل هنا من جديد.",
+    "client_server_host_env_hint": "خادم ID مضبوط في الإعدادات، نقاط نهاية العملاء العامة. امسحه هناك لاستخدام العنوان المُدخل هنا من جديد.",
     "client_config_qr_unreachable_host": "يشير هذا الرمز إلى هذا الكمبيوتر فقط (localhost أو اسم .local)، لذا لا تستطيع الهواتف الوصول إليه عادةً. أدخل أولًا عنوان الخادم على الشبكة في حقل عنوان خادم العميل، أو اضبطه بشكل دائم في الإعدادات.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -730,7 +730,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "لا توجد أجهزة بعد.",
+    "empty_join_requests": "وافق على أجهزة الكمبيوتر الجديدة في طلبات الانضمام"
   },
   "keys": {
     "title": "مفاتيح الخادم",
@@ -1134,8 +1136,6 @@
     "public_endpoints_relay": "خادم الترحيل العام",
     "public_endpoints_relay_placeholder": "مثال remote.example.com (افتراضي: خادم ID)",
     "public_endpoints_api_url": "URL API العام",
-    "public_endpoints_api_url_placeholder": "مثال https://api.example.com",
-    "public_endpoints_api_url_hint": "URL كامل لعملاء RustDesk لتسجيل الدخول واستدعاءات API (المنفذ 21114 افتراضياً).",
     "public_endpoints_save": "حفظ نقاط النهاية",
     "public_endpoints_saved": "تم حفظ نقاط نهاية العملاء العامة",
     "public_endpoints_invalid_host": "اسم مضيف ID أو relay غير صالح",
@@ -1309,8 +1309,8 @@
       "rec_type": "النوع",
       "rec_size": "الحجم",
       "audit_moved": "سجل نشاط وحدة التحكم موجود ضمن",
-      "audit_link": "النشاط › الأمان والتدقيق",
-      "endpoint_api_hint": "العنوان الكامل الذي تستخدمه الأجهزة لتسجيل الدخول، مثل https://api.example.com. يستخدم الخادم المنفذ 21114 ما لم تغيّره.",
+      "audit_link": "النشاط › سجل التدقيق",
+      "endpoint_api_hint": "العنوان الكامل الذي تستخدمه الأجهزة لتسجيل الدخول، مثل https://api.example.com. يستخدم الخادم المنفذ 21121 ما لم تغيّره.",
       "endpoints_when": "املأ هذه الحقول عندما تصل الأجهزة إلى الخادم بعنوان مختلف عن عنوان هذه اللوحة، مثلًا خلف وكيل عكسي. الحقول الفارغة تستخدم العنوان المكتشف تلقائيًا، الظاهر تحت «ما تحصل عليه الأجهزة الآن».",
       "conn_p2p_desc": "تتصل الأجهزة مباشرة عندما تسمح شبكاتها بذلك، وإلا فعبر خادم الترحيل.",
       "conn_relay_desc": "كل جلسة تمر عبر خادم الترحيل.",
@@ -1386,7 +1386,7 @@
       "auto": "تم العثور عليه تلقائيًا",
       "endpoint_id_help": "اسم المضيف أو عنوان IP لخادم المعرّفات كما يصل إليه العملاء على الإنترنت. املأه عندما يصل العملاء إلى هذا الخادم بعنوان غير عنوان هذه الوحدة، مثلًا خلف وكيل عكسي. مثلًا remote.example.com.",
       "endpoint_relay_help": "اسم المضيف أو عنوان IP لخادم الترحيل. اتركه فارغًا لاستخدام عنوان خادم المعرّفات.",
-      "endpoint_api_help": "العنوان الكامل الذي يستخدمه العملاء لتسجيل الدخول. يستخدم الخادم المنفذ 21114 ما لم تغيّره. مثلًا https://api.example.com أو http://203.0.113.10:21114.",
+      "endpoint_api_help": "العنوان الكامل الذي يستخدمه العملاء لتسجيل الدخول. يستخدم الخادم المنفذ 21121 ما لم تغيّره. مثلًا https://api.example.com أو http://203.0.113.10:21121.",
       "conn_mode_help": "الاتصالات المباشرة أسرع. الترحيل يعمل على كل الشبكات.",
       "conn_operator_only_help": "يجب أن يكون تطبيق RustDesk مسجّل الدخول بحساب يسمح دوره بالاتصال بالأجهزة (الاتصال بالأجهزة). لا يمكن للأجهزة الأخرى بدء جلسات. الجلسات من المتصفح تظل تعمل.",
       "host_extra": "اسم المضيف أو عنوان IP فقط، بدون http:// أو منفذ أو مسار.",
@@ -9239,7 +9239,7 @@
       },
       "backup": {
         "title": "إنشاء نسخة احتياطية",
-        "hint": "تحتوي على مفتاح الخادم. بدون المفتاح يجب إعداد كل كمبيوتر من جديد."
+        "hint": "تحتوي على مفتاح الخادم. بدون المفتاح يجب إعداد كل كمبيوتر من جديد. تكتمل هذه الخطوة بنسخة احتياطية من الخادم، النسخ الاحتياطية، يدويًا أو وفق جدول؛ أما نسخ سكربت التثبيت فلا تُحتسب."
       }
     }
   },

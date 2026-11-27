@@ -27,6 +27,10 @@ describe('endpointSourceLabel', () => {
 		expect(endpointSourceLabel('panel_host', ENDPOINT_VARIABLES.relay, t)).toBe(
 			'settings.side.src_env(PANEL_PUBLIC_HOST)'
 		);
+		// Setup audit DOCKER-QUICK-1: the address the Docker installer wrote
+		expect(endpointSourceLabel('relay_servers', ENDPOINT_VARIABLES.host, t)).toBe(
+			'settings.side.src_env(RELAY_SERVERS)'
+		);
 	});
 
 	it('calls everything else found automatically', () => {

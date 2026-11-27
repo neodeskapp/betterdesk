@@ -270,7 +270,7 @@
     "intune_script_title": "Windows kurulum betiği",
     "intune_script_hint": "RustDesk yükleyicisi bittikten sonra yönetici olarak çalıştırın, örneğin bir Intune veya PSADT adımı olarak. Dağıtım dizesiyle aynı değerleri ayarlar.",
     "deploy_string_not_ready": "Sunucu genel anahtarı yüklenene kadar dağıtım dizesi kullanılamaz.",
-    "client_server_host_env_hint": "Adresler Ayarlar, Genel istemci uç noktaları bölümünde belirlenmiş. Burada girilen adresi yeniden kullanmak için oradaki alanları temizleyin.",
+    "client_server_host_env_hint": "ID sunucusu Ayarlar, Genel istemci uç noktaları bölümünde belirlenmiş. Burada girilen adresi yeniden kullanmak için oradaki alanı temizleyin.",
     "client_config_qr_unreachable_host": "Bu kod yalnızca bu bilgisayarı gösteriyor (localhost veya .local adı), bu yüzden telefonlar genellikle ona ulaşamaz. Önce İstemci sunucu adresi alanına sunucunun ağ adresini girin veya adresi Ayarlar'da kalıcı olarak belirleyin.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -729,7 +729,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "Henüz cihaz yok.",
+    "empty_join_requests": "Yeni bilgisayarları Katılma istekleri altında onaylayın"
   },
   "keys": {
     "title": "Sunucu Anahtarları",
@@ -1133,8 +1135,6 @@
     "public_endpoints_relay": "Genel relay sunucusu",
     "public_endpoints_relay_placeholder": "örn. remote.example.com (varsayılan: ID)",
     "public_endpoints_api_url": "Genel API URL",
-    "public_endpoints_api_url_placeholder": "örn. https://api.example.com",
-    "public_endpoints_api_url_hint": "RustDesk giriş/API için tam URL (varsayılan port 21114).",
     "public_endpoints_save": "Uç noktaları kaydet",
     "public_endpoints_saved": "Genel istemci uç noktaları kaydedildi",
     "public_endpoints_invalid_host": "Geçersiz ID veya relay hostname",
@@ -1308,8 +1308,8 @@
       "rec_type": "Tür",
       "rec_size": "Boyut",
       "audit_moved": "Konsol etkinlik günlüğü şurada:",
-      "audit_link": "Etkinlik › Güvenlik ve denetim",
-      "endpoint_api_hint": "İstemcilerin oturum açmak için kullandığı tam adres, örneğin https://api.example.com. Değiştirmediyseniz sunucu 21114 numaralı bağlantı noktasını kullanır.",
+      "audit_link": "Etkinlik › Denetim günlüğü",
+      "endpoint_api_hint": "İstemcilerin oturum açmak için kullandığı tam adres, örneğin https://api.example.com. Değiştirmediyseniz sunucu 21121 numaralı bağlantı noktasını kullanır.",
       "endpoints_when": "İstemciler sunucuya bu konsoldan farklı bir adresle ulaşıyorsa doldurun, örneğin bir ters proxy arkasında. Boş alanlar otomatik bulunan adresi kullanır; bu adres İstemcilerin şu an aldığı bölümünde görünür.",
       "conn_p2p_desc": "Ağlar izin verdiğinde bilgisayarlar doğrudan bağlanır, aksi halde aktarma sunucusu üzerinden.",
       "conn_relay_desc": "Her oturum aktarma sunucusundan geçer.",
@@ -1385,7 +1385,7 @@
       "auto": "otomatik bulundu",
       "endpoint_id_help": "İnternetteki istemcilerin ulaştığı şekliyle ID sunucusunun ana bilgisayar adı veya IP adresi. İstemciler bu sunucuya bu konsoldan farklı bir adresle ulaşıyorsa doldurun, örneğin ters proxy arkasında. Örneğin remote.example.com.",
       "endpoint_relay_help": "Aktarma sunucusunun ana bilgisayar adı veya IP adresi. ID sunucusunun adresini kullanmak için boş bırakın.",
-      "endpoint_api_help": "İstemcilerin oturum açmak için kullandığı tam adres. Değiştirmediyseniz sunucu 21114 portunu kullanır. Örneğin https://api.example.com veya http://203.0.113.10:21114.",
+      "endpoint_api_help": "İstemcilerin oturum açmak için kullandığı tam adres. Değiştirmediyseniz sunucu 21121 portunu kullanır. Örneğin https://api.example.com veya http://203.0.113.10:21121.",
       "conn_mode_help": "Doğrudan bağlantılar daha hızlıdır. Aktarma her ağda çalışır.",
       "conn_operator_only_help": "RustDesk uygulamasında, rolü cihazlara bağlanabilen bir hesapla oturum açılmış olmalıdır (Cihazlara bağlanın). Diğer cihazlar oturum başlatamaz. Tarayıcıdan oturumlar çalışmaya devam eder.",
       "host_extra": "Yalnızca ana bilgisayar adı veya IP adresi; http://, port veya yol olmadan.",
@@ -9238,7 +9238,7 @@
       },
       "backup": {
         "title": "Yedek oluştur",
-        "hint": "Sunucunun anahtarını içerir. Anahtar olmadan her bilgisayarın yeniden kurulması gerekir."
+        "hint": "Sunucunun anahtarını içerir. Anahtar olmadan her bilgisayarın yeniden kurulması gerekir. Bu adımı Sunucu, Yedekler altında elle ya da zamanlanmış olarak alınan bir yedek tamamlar; kurulum betiğinin yedekleri sayılmaz."
       }
     }
   },

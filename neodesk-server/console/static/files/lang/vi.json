@@ -270,7 +270,7 @@
     "intune_script_title": "Tập lệnh cài đặt Windows",
     "intune_script_hint": "Chạy tập lệnh với quyền quản trị viên sau khi trình cài đặt RustDesk hoàn tất, ví dụ như một bước của Intune hoặc PSADT. Tập lệnh đặt cùng các giá trị như chuỗi triển khai.",
     "deploy_string_not_ready": "Chuỗi triển khai chưa sẵn sàng cho đến khi tải khóa công khai của máy chủ.",
-    "client_server_host_env_hint": "Các địa chỉ được đặt trong Cài đặt, Điểm cuối client công khai. Hãy xóa chúng ở đó để dùng lại địa chỉ đã nhập ở đây.",
+    "client_server_host_env_hint": "Máy chủ ID được đặt trong Cài đặt, Điểm cuối client công khai. Hãy xóa nó ở đó để dùng lại địa chỉ đã nhập ở đây.",
     "client_config_qr_unreachable_host": "Mã này chỉ trỏ đến chính máy tính này (localhost hoặc một tên .local), nên điện thoại thường không truy cập được. Trước tiên, hãy nhập địa chỉ mạng của máy chủ vào Địa chỉ máy chủ cho client, hoặc đặt cố định trong Cài đặt.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -729,7 +729,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "Chưa có thiết bị nào.",
+    "empty_join_requests": "Duyệt máy tính mới trong Yêu cầu tham gia"
   },
   "keys": {
     "title": "Khóa máy chủ",
@@ -1133,8 +1135,6 @@
     "public_endpoints_relay": "Máy chủ relay công khai",
     "public_endpoints_relay_placeholder": "vd. remote.example.com (mặc định: ID)",
     "public_endpoints_api_url": "URL API công khai",
-    "public_endpoints_api_url_placeholder": "vd. https://api.example.com",
-    "public_endpoints_api_url_hint": "URL đầy đủ cho đăng nhập và API RustDesk (cổng mặc định 21114).",
     "public_endpoints_save": "Lưu điểm cuối",
     "public_endpoints_saved": "Đã lưu điểm cuối client công khai",
     "public_endpoints_invalid_host": "Hostname ID hoặc relay không hợp lệ",
@@ -1308,8 +1308,8 @@
       "rec_type": "Loại",
       "rec_size": "Kích thước",
       "audit_moved": "Nhật ký hoạt động của bảng điều khiển nằm tại",
-      "audit_link": "Hoạt động › Bảo mật và kiểm tra",
-      "endpoint_api_hint": "Địa chỉ đầy đủ mà máy khách dùng để đăng nhập, ví dụ https://api.example.com. Máy chủ dùng cổng 21114 trừ khi bạn đã đổi.",
+      "audit_link": "Hoạt động › Nhật ký kiểm tra",
+      "endpoint_api_hint": "Địa chỉ đầy đủ mà máy khách dùng để đăng nhập, ví dụ https://api.example.com. Máy chủ dùng cổng 21121 trừ khi bạn đã đổi.",
       "endpoints_when": "Điền các ô này khi máy khách kết nối tới máy chủ bằng địa chỉ khác với bảng điều khiển này, ví dụ qua reverse proxy. Ô trống sẽ dùng địa chỉ tự tìm thấy, hiển thị ở mục Máy khách đang nhận gì.",
       "conn_p2p_desc": "Các máy tính kết nối trực tiếp khi mạng cho phép, nếu không thì qua máy chủ chuyển tiếp.",
       "conn_relay_desc": "Mọi phiên đều đi qua máy chủ chuyển tiếp.",
@@ -1385,7 +1385,7 @@
       "auto": "tìm tự động",
       "endpoint_id_help": "Tên máy chủ hoặc địa chỉ IP của máy chủ ID, theo cách máy khách trên internet truy cập. Điền khi máy khách truy cập máy chủ này bằng địa chỉ khác với bảng điều khiển này, ví dụ sau reverse proxy. Ví dụ remote.example.com.",
       "endpoint_relay_help": "Tên máy chủ hoặc địa chỉ IP của máy chủ chuyển tiếp. Để trống để dùng địa chỉ máy chủ ID.",
-      "endpoint_api_help": "Địa chỉ đầy đủ mà máy khách dùng để đăng nhập. Máy chủ dùng cổng 21114 trừ khi bạn đã đổi. Ví dụ https://api.example.com hoặc http://203.0.113.10:21114.",
+      "endpoint_api_help": "Địa chỉ đầy đủ mà máy khách dùng để đăng nhập. Máy chủ dùng cổng 21121 trừ khi bạn đã đổi. Ví dụ https://api.example.com hoặc http://203.0.113.10:21121.",
       "conn_mode_help": "Kết nối trực tiếp nhanh hơn. Chuyển tiếp hoạt động trên mọi mạng.",
       "conn_operator_only_help": "Ứng dụng RustDesk phải đăng nhập bằng tài khoản có vai trò được kết nối tới thiết bị (Kết nối với các thiết bị). Thiết bị khác không thể bắt đầu phiên. Phiên từ trình duyệt vẫn hoạt động.",
       "host_extra": "Chỉ tên máy chủ hoặc địa chỉ IP, không có http://, cổng hay đường dẫn.",
@@ -9238,7 +9238,7 @@
       },
       "backup": {
         "title": "Tạo bản sao lưu",
-        "hint": "Bản sao lưu chứa khóa của máy chủ. Không có khóa này, mọi máy tính đều phải thiết lập lại."
+        "hint": "Bản sao lưu chứa khóa của máy chủ. Không có khóa này, mọi máy tính đều phải thiết lập lại. Bước này được đánh dấu khi có bản sao lưu trong Máy chủ, Bản sao lưu, làm thủ công hoặc theo lịch; bản sao lưu của script cài đặt không được tính."
       }
     }
   },

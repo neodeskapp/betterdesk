@@ -390,3 +390,54 @@ func TestClientFacingHostSkipsLoopbackAPIHost(t *testing.T) {
 		}
 	}
 }
+
+// TestClientFacingHostFromRelayServers gives clients the address the
+// Docker installer wrote to RELAY_SERVERS, which devices get their relay
+// at, before the browser's host (setup audit DOCKER-QUICK-1, HTTPS-5,
+// MIGRATE-CLIENT-7). A public endpoint setting, PANEL_PUBLIC_HOST and an
+// address typed for the tab still come first, and a RELAY_SERVERS host
+// only this machine reaches gives way to the request's host.
+func TestClientFacingHostFromRelayServers(t *testing.T) {
+	req := &RequestHost{Host: "127.0.0.1:3375"}
+	cases := []struct {
+		name, query string
+		env         map[string]string
+		host, relay string
+		source      string
+		api         string
+	}{
+		{"installer address", "", map[string]string{"RELAY_SERVERS": "203.0.113.10"},
+			"203.0.113.10", "203.0.113.10:21117", SourceRelayServers, "http://203.0.113.10:21114"},
+		{"with a port and a second relay", "", map[string]string{"RELAY_SERVERS": " 203.0.113.10:31117 , 198.51.100.7"},
+			"203.0.113.10", "203.0.113.10:31117", SourceRelayServers, "http://203.0.113.10:21114"},
+		{"first entry names no host", "", map[string]string{"RELAY_SERVERS": ",bad host!,198.51.100.7"},
+			"198.51.100.7", "198.51.100.7:21117", SourceRelayServers, "http://198.51.100.7:21114"},
+		{"loopback relay", "", map[string]string{"RELAY_SERVERS": "127.0.0.1"},
+			"127.0.0.1", "127.0.0.1:21117", SourceRequest, "http://127.0.0.1:21114"},
+		{"typed for this tab", "192.168.1.20", map[string]string{"RELAY_SERVERS": "203.0.113.10"},
+			"192.168.1.20", "192.168.1.20:21117", SourceQuery, "http://192.168.1.20:21114"},
+		{"panel host first", "", map[string]string{"RELAY_SERVERS": "203.0.113.10", "PANEL_PUBLIC_HOST": "desk.example.com"},
+			"desk.example.com", "desk.example.com:21117", SourcePanelHost, "http://desk.example.com:21114"},
+		{"public ID server first", "", map[string]string{"RELAY_SERVERS": "203.0.113.10", "PUBLIC_SERVER_ID": "id.example.com"},
+			"id.example.com", "id.example.com:21117", SourceEnv, "http://id.example.com:21114"},
+		{"public relay keeps its own", "", map[string]string{"RELAY_SERVERS": "203.0.113.10", "PUBLIC_RELAY_SERVER": "relay.example.com"},
+			"203.0.113.10", "relay.example.com:21117", SourceRelayServers, "http://203.0.113.10:21114"},
+		{"not set", "", map[string]string{"RELAY_SERVERS": ""},
+			"127.0.0.1", "127.0.0.1:21117", SourceRequest, "http://127.0.0.1:21114"},
+	}
+	for _, c := range cases {
+		s := New(Options{APIURL: "http://127.0.0.1:21114/api", GoAPIPort: 21114, DataDir: t.TempDir(), EnvPath: filepath.Join(t.TempDir(), ".env"), Getenv: envMap(c.env)})
+		got := s.ResolveRustDeskEndpoints(req, c.query)
+		if got.Host != c.host || got.Relay != c.relay || got.Sources.Host != c.source || got.API != c.api {
+			t.Errorf("%s: %+v, want host %s, relay %s, API %s from %s", c.name, got, c.host, c.relay, c.api, c.source)
+		}
+	}
+
+	// Without a request (the setup guide, the client generator) the
+	// installer's address is the answer too, where the API address's host
+	// 127.0.0.1 was before
+	s := New(Options{APIURL: "http://127.0.0.1:21114/api", GoAPIPort: 21114, DataDir: t.TempDir(), EnvPath: filepath.Join(t.TempDir(), ".env"), Getenv: envMap(map[string]string{"RELAY_SERVERS": "203.0.113.10"})})
+	if got := s.ResolveClientFacingHost(nil, ""); got != "203.0.113.10" {
+		t.Errorf("without a request: %q, want the RELAY_SERVERS host", got)
+	}
+}

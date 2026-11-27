@@ -270,7 +270,7 @@
     "intune_script_title": "Skrip instalasi Windows",
     "intune_script_hint": "Jalankan sebagai administrator setelah penginstal RustDesk selesai, misalnya sebagai langkah Intune atau PSADT. Skrip ini mengatur nilai yang sama dengan string deploy.",
     "deploy_string_not_ready": "String deploy tidak tersedia sampai kunci publik server dimuat.",
-    "client_server_host_env_hint": "Alamat diatur di Pengaturan, Endpoint klien publik. Kosongkan di sana untuk kembali menggunakan alamat yang dimasukkan di sini.",
+    "client_server_host_env_hint": "Server ID diatur di Pengaturan, Endpoint klien publik. Kosongkan di sana untuk kembali menggunakan alamat yang dimasukkan di sini.",
     "client_config_qr_unreachable_host": "Kode ini hanya mengarah ke komputer ini (localhost atau nama .local), sehingga ponsel biasanya tidak dapat menjangkaunya. Masukkan dulu alamat jaringan server di Alamat server klien, atau atur secara permanen di Pengaturan.",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -729,7 +729,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "Belum ada perangkat.",
+    "empty_join_requests": "Setujui komputer baru di Permintaan bergabung"
   },
   "keys": {
     "title": "Kunci Server",
@@ -1133,8 +1135,6 @@
     "public_endpoints_relay": "Server relay publik",
     "public_endpoints_relay_placeholder": "mis. remote.example.com (default: ID)",
     "public_endpoints_api_url": "URL API publik",
-    "public_endpoints_api_url_placeholder": "mis. https://api.example.com",
-    "public_endpoints_api_url_hint": "URL lengkap untuk login dan API RustDesk (port default 21114).",
     "public_endpoints_save": "Simpan endpoint",
     "public_endpoints_saved": "Endpoint klien publik disimpan",
     "public_endpoints_invalid_host": "Hostname ID atau relay tidak valid",
@@ -1308,8 +1308,8 @@
       "rec_type": "Jenis",
       "rec_size": "Ukuran",
       "audit_moved": "Log aktivitas konsol ada di",
-      "audit_link": "Aktivitas › Keamanan dan audit",
-      "endpoint_api_hint": "Alamat lengkap yang dipakai klien untuk masuk, misalnya https://api.example.com. Server memakai port 21114 kecuali Anda mengubahnya.",
+      "audit_link": "Aktivitas › Log audit",
+      "endpoint_api_hint": "Alamat lengkap yang dipakai klien untuk masuk, misalnya https://api.example.com. Server memakai port 21121 kecuali Anda mengubahnya.",
       "endpoints_when": "Isi ini jika klien menjangkau server dengan alamat lain daripada konsol ini, misalnya di balik reverse proxy. Kolom kosong memakai alamat yang ditemukan otomatis, terlihat di Yang didapat klien sekarang.",
       "conn_p2p_desc": "Komputer terhubung langsung jika jaringannya mengizinkan, jika tidak melalui server relay.",
       "conn_relay_desc": "Setiap sesi melewati server relay.",
@@ -1385,7 +1385,7 @@
       "auto": "ditemukan otomatis",
       "endpoint_id_help": "Nama host atau alamat IP server ID, seperti yang dijangkau klien di internet. Isi jika klien menjangkau server ini lewat alamat lain dari konsol ini, misalnya di balik reverse proxy. Misalnya remote.example.com.",
       "endpoint_relay_help": "Nama host atau alamat IP server relai. Biarkan kosong untuk memakai alamat server ID.",
-      "endpoint_api_help": "Alamat lengkap yang dipakai klien untuk masuk. Server memakai port 21114 kecuali Anda mengubahnya. Misalnya https://api.example.com atau http://203.0.113.10:21114.",
+      "endpoint_api_help": "Alamat lengkap yang dipakai klien untuk masuk. Server memakai port 21121 kecuali Anda mengubahnya. Misalnya https://api.example.com atau http://203.0.113.10:21121.",
       "conn_mode_help": "Koneksi langsung lebih cepat. Relai berfungsi di semua jaringan.",
       "conn_operator_only_help": "Aplikasi RustDesk harus masuk ke akun yang perannya boleh terhubung ke perangkat (Hubungkan ke perangkat). Perangkat lain tidak dapat memulai sesi. Sesi dari browser tetap berfungsi.",
       "host_extra": "Hanya nama host atau alamat IP, tanpa http://, port, atau path.",
@@ -9238,7 +9238,7 @@
       },
       "backup": {
         "title": "Buat cadangan",
-        "hint": "Cadangan menyimpan kunci server. Tanpa kunci itu, setiap komputer harus disiapkan ulang."
+        "hint": "Cadangan menyimpan kunci server. Tanpa kunci itu, setiap komputer harus disiapkan ulang. Langkah ini tercentang oleh cadangan di Server, Cadangan, manual atau terjadwal; cadangan dari skrip instalasi tidak dihitung."
       }
     }
   },

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
@@ -119,5 +120,40 @@ func TestStartOpensNoSetupGuideAfterAnUpdate(t *testing.T) {
 	}
 	if readGuide(t, w.agent().signIn("admin").get("/api/setup-guide")).Data.Visible {
 		t.Error("an update opened the guide")
+	}
+}
+
+// The address step ticks when the Docker installer wrote the server's
+// address to RELAY_SERVERS, the address devices get their relay at, and
+// stays open while the address clients get is only this machine's
+// (setup audit DOCKER-QUICK-2). The status says whether the console runs
+// in a container, where the HTTPS step leads to the install script's way.
+func TestSetupGuideAddressStepTakesTheInstallersAddress(t *testing.T) {
+	for _, c := range []struct {
+		name   string
+		env    map[string]string
+		docker bool
+		done   bool
+	}{
+		{"RELAY_SERVERS", map[string]string{"RELAY_SERVERS": "203.0.113.10"}, true, true},
+		{"RELAY_SERVERS with a port", map[string]string{"RELAY_SERVERS": "desk.example.com:21117"}, false, true},
+		{"loopback RELAY_SERVERS", map[string]string{"RELAY_SERVERS": "127.0.0.1"}, true, false},
+		{"nothing set", nil, false, false},
+	} {
+		w := newWorld(t, setup{env: c.env, configure: func(cfg *config.Config) {
+			cfg.APIURL = "http://127.0.0.1:21114/api"
+			cfg.Docker = c.docker
+		}})
+		if err := w.s.Start(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+		answer := w.agent().signIn("admin").get("/api/setup-guide")
+		g := readGuide(t, answer)
+		if done := guideStep(t, g, "address"); done != c.done {
+			t.Errorf("%s: address step done %v, want %v", c.name, done, c.done)
+		}
+		if docker := strings.Contains(answer.body, `"docker":true`); docker != c.docker {
+			t.Errorf("%s: docker %v in %s", c.name, docker, answer.body)
+		}
 	}
 }

@@ -12,13 +12,14 @@ import (
 
 // newSetupGuide builds the first-install guide on the server's own view
 // of itself: the address clients get without a request, whether the
-// console listens with TLS, the device count of the overview and whether
+// console listens with TLS or runs in a container, the device count of the overview and whether
 // single sign-on or LDAP is on.
 func (s *Server) newSetupGuide(db *store.DB, api *goapi.Client) *setupguide.Service {
 	return setupguide.New(setupguide.Options{
 		DB:          db,
 		Address:     func() string { return s.deps.ServerInfo.ResolveClientFacingHost(nil, "") },
 		ServesHTTPS: func() bool { return s.net.cert != nil },
+		Docker:      s.cfg.Docker,
 		Devices: func(ctx context.Context) (int, error) {
 			stats, err := s.deps.Backend.GetStats(ctx)
 			if err != nil {

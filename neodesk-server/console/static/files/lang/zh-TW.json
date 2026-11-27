@@ -268,7 +268,7 @@
     "intune_script_title": "Windows 安裝指令碼",
     "intune_script_hint": "請在 RustDesk 安裝程式完成後以系統管理員身分執行，例如作為 Intune 或 PSADT 步驟。它設定的值與部署字串相同。",
     "deploy_string_not_ready": "在載入伺服器公開金鑰之前，部署字串不可用。",
-    "client_server_host_env_hint": "位址已在「設定」>「公共用戶端端點」中設定。在那裡清除後，即可重新使用這裡輸入的位址。",
+    "client_server_host_env_hint": "ID 伺服器已在「設定」>「公共用戶端端點」中設定。在那裡清除後，即可重新使用這裡輸入的位址。",
     "client_config_qr_unreachable_host": "此代碼只指向這台電腦（localhost 或 .local 名稱），手機通常無法連上。請先在「用戶端伺服器位址」中輸入伺服器的網路位址，或在「設定」中永久設定。",
     "view_audit_log": "View audit log",
     "activity_load_error": "Could not load recent activity",
@@ -727,7 +727,9 @@
     "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
     "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
     "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details.",
-    "unblock_not_blocked": "This computer is not blocked on this server."
+    "unblock_not_blocked": "This computer is not blocked on this server.",
+    "empty_none": "尚無設備。",
+    "empty_join_requests": "在「加入請求」中核准新電腦"
   },
   "keys": {
     "title": "服務器密鑰",
@@ -1131,8 +1133,6 @@
     "public_endpoints_relay": "公共中繼伺服器",
     "public_endpoints_relay_placeholder": "例如 remote.example.com（預設：ID 伺服器）",
     "public_endpoints_api_url": "公共 API URL",
-    "public_endpoints_api_url_placeholder": "例如 https://api.example.com",
-    "public_endpoints_api_url_hint": "RustDesk 登入/API 的完整 URL（預設連接埠 21114）。",
     "public_endpoints_save": "儲存端點",
     "public_endpoints_saved": "已儲存公共用戶端端點",
     "public_endpoints_invalid_host": "ID 或中繼伺服器 hostname 無效",
@@ -1306,8 +1306,8 @@
       "rec_type": "類型",
       "rec_size": "大小",
       "audit_moved": "主控台活動記錄位於",
-      "audit_link": "活動 › 安全性與稽核",
-      "endpoint_api_hint": "用戶端登入時使用的完整位址，例如 https://api.example.com。除非您已變更，伺服器使用連接埠 21114。",
+      "audit_link": "活動 › 稽核記錄",
+      "endpoint_api_hint": "用戶端登入時使用的完整位址，例如 https://api.example.com。除非您已變更，伺服器使用連接埠 21121。",
       "endpoints_when": "當用戶端透過與此主控台不同的位址連到伺服器時 (例如在反向代理後方) 請填寫。空白欄位會使用自動找到的位址，顯示於「用戶端目前取得的內容」。",
       "conn_p2p_desc": "網路允許時電腦直接連線，否則透過中繼伺服器。",
       "conn_relay_desc": "每個工作階段都經過中繼伺服器。",
@@ -1383,7 +1383,7 @@
       "auto": "自動偵測",
       "endpoint_id_help": "網際網路上的用戶端連到 ID 伺服器時使用的主機名稱或 IP 位址。如果用戶端透過與此主控台不同的位址連到這台伺服器（例如在反向代理後方），請填寫。例如 remote.example.com。",
       "endpoint_relay_help": "中繼伺服器的主機名稱或 IP 位址。留空則使用 ID 伺服器位址。",
-      "endpoint_api_help": "用戶端登入時使用的完整位址。除非您改過，伺服器使用連接埠 21114。例如 https://api.example.com 或 http://203.0.113.10:21114。",
+      "endpoint_api_help": "用戶端登入時使用的完整位址。除非您改過，伺服器使用連接埠 21121。例如 https://api.example.com 或 http://203.0.113.10:21121。",
       "conn_mode_help": "直接連線比較快。中繼在任何網路都能運作。",
       "conn_operator_only_help": "RustDesk 應用程式必須登入一個角色可連線到裝置（連接設備）的帳戶。其他裝置無法開始工作階段。從瀏覽器開始的工作階段仍可使用。",
       "host_extra": "只填主機名稱或 IP 位址，不含 http://、連接埠或路徑。",
@@ -9236,7 +9236,7 @@
       },
       "backup": {
         "title": "建立備份",
-        "hint": "備份包含伺服器金鑰。沒有此金鑰，每台電腦都必須重新設定。"
+        "hint": "備份包含伺服器金鑰。沒有此金鑰，每台電腦都必須重新設定。在「伺服器」>「備份」中手動或依排程建立的備份會完成此步驟；安裝指令碼的備份不算。"
       }
     }
   },
