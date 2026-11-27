@@ -29,10 +29,10 @@
 	const s = $derived(viewer.active);
 	const monitors = $derived(s?.monitors ?? []);
 	const vd = $derived(s?.virtualDisplays ?? { supported: false });
-	// A device that streams several displays at once gets the Displays menu; older ones switch here
-	const together = $derived(!!s?.together);
-	const useStrip = $derived(!together && monitors.length >= 2 && monitors.length <= 4);
-	const screensMenu = $derived(!together && ((monitors.length > 1 && !useStrip) || !!vd.supported));
+	// One Displays menu for every device; it leaves out what the device can't do
+	const displaysMenu = $derived(
+		!!s?.together || monitors.length > 1 || (s?.displays.length ?? 0) > 1 || !!vd.supported
+	);
 	const winSessions = $derived(s?.windowsSessions ?? { sessions: [], currentSid: 0 });
 	const check = $derived(viewer.billingCheck);
 	const hasPackage = $derived(
@@ -339,85 +339,8 @@
 				</div>
 			</ToolMenu>
 
-			{#if together && s}
+			{#if displaysMenu && s}
 				<DisplayMenu {viewer} session={s} />
-			{/if}
-
-			{#if useStrip}
-				<div class="monitor-strip" role="group" aria-label={tf('remote.select_monitor', 'Select monitor')}>
-					{#each monitors as m, i (m.idx)}
-						{@const label =
-							tf('remote_viewer.screen_n', 'Screen {n}', { n: i + 1 }) +
-							(m.name ? ` (${m.name}${m.width ? `, ${m.width} × ${m.height}` : ''})` : '')}
-						<button
-							type="button"
-							class={['monitor-btn', m.current && 'active']}
-							title={label}
-							aria-label={label}
-							aria-pressed={m.current}
-							onclick={() => viewer.switchMonitor(m.idx)}>{i + 1}</button
-						>
-					{/each}
-				</div>
-			{/if}
-
-			{#if screensMenu}
-				<ToolMenu
-					label={tf('remote.monitors', 'Screens')}
-					icon="screenshot_monitor"
-					onopen={() => s && viewer.refreshMonitors(s)}
-				>
-					<div role="group" aria-labelledby="{uid}-mon">
-						<div class="menu-label" id="{uid}-mon">{tf('remote.select_monitor', 'Select monitor')}</div>
-						{#each monitors as m (m.idx)}
-							<MenuChoice
-								checked={m.current}
-								icon={m.primary ? 'desktop_windows' : 'monitor'}
-								onselect={() => viewer.switchMonitor(m.idx)}
-								>{m.name}{#if m.width && m.height}<span class="monitor-meta">{m.width}×{m.height}</span
-									>{/if}</MenuChoice
-							>
-						{/each}
-					</div>
-					{#if vd.supported}
-						<MenuDivider />
-						<div role="group" aria-labelledby="{uid}-vd">
-							<div class="menu-label" id="{uid}-vd">{tf('remote.virtual_displays', 'Virtual displays')}</div>
-							{#if vd.impl === 'rustdesk_idd'}
-								{#each [1, 2, 3, 4] as idx (idx)}
-									{@const on = (vd.rustdeskDisplays ?? []).includes(idx)}
-									<MenuChoice
-										kind="checkbox"
-										icon="monitor"
-										checked={on}
-										onselect={() => viewer.toggleVirtualDisplay(idx, !on)}
-										>{tf('remote.virtual_display', 'Virtual display')} {idx}</MenuChoice
-									>
-								{/each}
-							{:else if vd.impl === 'amyuni_idd'}
-								{@const count = vd.amyuniCount ?? 0}
-								<p class="vd-count" aria-live="polite">{count}</p>
-								<MenuChoice
-									kind="action"
-									icon="remove"
-									disabled={count <= 0}
-									onselect={() => viewer.toggleVirtualDisplay(0, false)}
-									>{tf('remote_viewer.fewer_displays', 'Remove a virtual display')}</MenuChoice
-								>
-								<MenuChoice
-									kind="action"
-									icon="add"
-									disabled={count >= 4}
-									onselect={() => viewer.toggleVirtualDisplay(0, true)}
-									>{tf('remote_viewer.more_displays', 'Add a virtual display')}</MenuChoice
-								>
-							{/if}
-							<MenuItem icon="power_off" onselect={() => viewer.toggleVirtualDisplay(-1, false)}
-								>{tf('remote.plug_out_all', 'Plug out all')}</MenuItem
-							>
-						</div>
-					{/if}
-				</ToolMenu>
 			{/if}
 		</div>
 
@@ -673,51 +596,6 @@
 		.display-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
-	}
-	.monitor-meta {
-		display: block;
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-		font-weight: 400;
-	}
-	.vd-count {
-		margin: 0;
-		padding: var(--space-1) var(--space-3);
-		font-weight: 600;
-		font-variant-numeric: tabular-nums;
-	}
-	/* Screen picker for 2-4 screens: a segmented control of numbers */
-	.monitor-strip {
-		display: inline-flex;
-		border: 1px solid var(--border);
-		border-radius: var(--control-radius);
-		overflow: hidden;
-	}
-	.monitor-btn {
-		min-width: var(--control-h-sm);
-		min-height: var(--control-h-sm);
-		padding: 0 var(--space-2);
-		border: 0;
-		background: var(--bg);
-		color: var(--text);
-		font: inherit;
-		font-size: var(--text-sm);
-		font-variant-numeric: tabular-nums;
-		cursor: pointer;
-	}
-	.monitor-btn + .monitor-btn {
-		border-inline-start: 1px solid var(--border);
-	}
-	.monitor-btn:hover {
-		background: var(--hover);
-	}
-	.monitor-btn.active {
-		background: var(--accent-tint);
-		font-weight: 600;
-	}
-	.monitor-btn:focus-visible {
-		outline: var(--focus-ring);
-		outline-offset: -2px;
 	}
 	/* Narrower windows: the row keeps its icons, the words move into the
 	   tooltip and the accessible name (visually hidden, not removed) */
