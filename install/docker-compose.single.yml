@@ -52,6 +52,7 @@ services:
       # names one (127.0.0.1 behind a reverse proxy, [::1] for IPv6)
       - "${NEODESK_CONSOLE_BIND:+${NEODESK_CONSOLE_BIND}:}${NEODESK_CONSOLE_PORT:-3375}:3375"  # Web console
       - "${NEODESK_CONSOLE_BIND:+${NEODESK_CONSOLE_BIND}:}${NEODESK_CONSOLE_HTTPS_PORT:-5443}:5443"  # Web console with HTTPS_ENABLED=true
+      - "21114:21114"           # API for RustDesk clients without an API server setting
       - "21115:21115"           # NAT type test
       - "21116:21116/tcp"       # Signal TCP
       - "21116:21116/udp"       # Signal UDP

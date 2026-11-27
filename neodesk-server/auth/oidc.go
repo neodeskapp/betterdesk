@@ -817,8 +817,8 @@ func (p *OIDCProvider) resolveRoleWithSource(groups []string) (string, bool) {
 	cfg := *p.config
 	p.mu.RUnlock()
 
-	roleMap := parseGroupRoleMap(cfg.GroupRoleMap)
-	if len(roleMap) == 0 {
+	entries := parseGroupRoleEntries(cfg.GroupRoleMap)
+	if len(entries) == 0 {
 		return cfg.DefaultRole, false
 	}
 
@@ -827,12 +827,16 @@ func (p *OIDCProvider) resolveRoleWithSource(groups []string) (string, bool) {
 		bestRole = RoleViewer
 	}
 	bestLevel := roleLevel(bestRole)
+	member := make(map[string]bool, len(groups))
 	for _, group := range groups {
-		if role, ok := roleMap[group]; ok {
-			if lvl := roleLevel(role); lvl > bestLevel {
-				bestRole = role
-				bestLevel = lvl
-			}
+		member[group] = true
+	}
+	// In the map's order: of two roles on one level the first entry's
+	// wins, whatever order the provider lists the groups in
+	for _, e := range entries {
+		if lvl := roleLevel(e.role); member[e.group] && lvl > bestLevel {
+			bestRole = e.role
+			bestLevel = lvl
 		}
 	}
 	return bestRole, true

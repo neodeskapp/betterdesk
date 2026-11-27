@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/internal/clientaddr"
@@ -130,12 +131,20 @@ func (c *Config) ShouldHonorForwardedHeaders(remoteAddr string) bool {
 	return c != nil && c.TrustProxy && c.RemoteAddrIsTrustedProxy(remoteAddr)
 }
 
-// WarnProxyTrustMisconfig logs when TRUST_PROXY is enabled without an allowlist.
+// WarnProxyTrustMisconfig says once at the start what TRUST_PROXY without
+// TRUSTED_PROXIES means: the console trusts its proxy by TRUST_PROXY alone,
+// while the server's own HTTP ports (the API and the WebSocket ports of
+// the ID server and the relay) take forwarded headers only from the
+// addresses in TRUSTED_PROXIES. That is right for a proxy in front of the
+// console only, as the installer sets up.
 func (c *Config) WarnProxyTrustMisconfig() {
-	if c == nil || !c.TrustProxy {
+	if c == nil || !c.TrustProxy || len(c.TrustedProxies) != 0 {
 		return
 	}
-	if len(c.TrustedProxies) == 0 {
-		log.Printf("[config] TRUST_PROXY=Y but TRUSTED_PROXIES is empty — X-Forwarded-For/X-Real-IP headers will be IGNORED. Set TRUSTED_PROXIES to your reverse proxy CIDR(s), e.g. 127.0.0.1/32,10.0.0.0/8")
+	setting := "-trust-proxy"
+	if v := strings.TrimSpace(os.Getenv("TRUST_PROXY")); v != "" {
+		setting = "TRUST_PROXY=" + v
 	}
+	log.Printf("[config] %s without TRUSTED_PROXIES: the console trusts its proxy; the server's API and WebSocket ports (%d, %d, %d) ignore forwarded headers. Set TRUSTED_PROXIES only when a proxy sits in front of those ports",
+		setting, c.APIPort, c.WSSignalPort(), c.WSRelayPort())
 }

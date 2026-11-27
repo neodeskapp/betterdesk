@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
 #
-#   NeoDesk Console Manager v3.6.25
+#   NeoDesk Console Manager v3.6.26
 #   All-in-One Interactive Tool for Linux
 #
 #   Features:
@@ -39,7 +39,7 @@
 set -e
 
 # Version
-VERSION="3.6.25"
+VERSION="3.6.26"
 # Bump when installer control-flow changes must apply mid-session after Update.
 NEODESK_SH_REVISION="20261125-console-port-3375-309"
 # Where people ask for help: the NeoDesk Discord
@@ -181,6 +181,7 @@ REPAIR_PERMISSIONS=false
 MANAGED_CONFIG_CHANGES=()
 UPDATE_MODE=false
 RESET_PASSWORD_MODE=false
+RESET_TWO_FACTOR=false
 # Where the server binary comes from: a file (--binary), a build of this
 # checkout (--from-source), else the release of the update channel.
 SERVER_BINARY_FILE="${SERVER_BINARY_FILE:-}"
@@ -250,6 +251,12 @@ while [[ $# -gt 0 ]]; do
             RESET_PASSWORD_MODE=true
             shift
             ;;
+        --reset-two-factor)
+            # Part of the password reset: alone it is one too
+            RESET_TWO_FACTOR=true
+            RESET_PASSWORD_MODE=true
+            shift
+            ;;
         --binary)
             if [ $# -lt 2 ] || [ ! -f "$2" ]; then
                 echo "ERROR: --binary needs the path of a neodesk-server binary"
@@ -310,6 +317,8 @@ while [[ $# -gt 0 ]]; do
             echo "  --update         Update without questions"
             echo "  --reset-password Give the admin account a new password (ADMIN_PASSWORD, else"
             echo "                   a random one) and show it once"
+            echo "  --reset-two-factor  With --reset-password, also turn off the admin's two-factor"
+            echo "                   sign-in (lost authenticator and recovery codes)"
             echo "  --binary FILE    Install this neodesk-server binary instead of the release"
             echo "  --channel C      Release channel: 'stable' (default, the newest release) or"
             echo "                   'dev' (the development build); kept for later updates. Without"
@@ -5317,6 +5326,7 @@ print_install_summary() {
         echo "                 lost it? sudo $cmd --reset-password)"
     else
         echo "  Sign in:       user admin; forgot the password? sudo $cmd --reset-password"
+        echo "                 (add --reset-two-factor when the authenticator is lost too)"
     fi
     echo "  RustDesk clients (Settings > Network > ID/Relay server):"
     echo -e "    ID server:     ${WHITE}$id_server${NC}"
@@ -6287,8 +6297,19 @@ do_reset_password() {
 
     # The server sets it on the console's database (SQLite or PostgreSQL);
     # the password goes in on standard input, never in the arguments
+    local -a reset_args=(reset-password)
+    if [ "$RESET_TWO_FACTOR" = true ]; then
+        if ! grep -a -q -F -- '--reset-two-factor' "$(server_binary_path)" 2>/dev/null; then
+            print_error "This neodesk-server can't turn off two-factor sign-in; update it first: sudo $(basename "$MANAGER_COMMAND") --update"
+            press_enter
+            return 1
+        fi
+        reset_args+=(--reset-two-factor)
+    fi
+    reset_args+=(admin)
+
     local success=false reset_out
-    if reset_out=$(printf '%s\n' "$new_password" | server_cmd --as-service reset-password admin 2>&1); then
+    if reset_out=$(printf '%s\n' "$new_password" | server_cmd --as-service "${reset_args[@]}" 2>&1); then
         success=true
         log "neodesk-server reset-password: $reset_out"
     else
@@ -6302,6 +6323,11 @@ do_reset_password() {
         forget_first_admin_password
 
         credentials_box "New web console sign-in (shown only now)" "$new_password"
+        if [ "$RESET_TWO_FACTOR" = true ]; then
+            print_info "Two-factor sign-in is off for admin; where it is required, the console sets it up again at the next sign-in."
+        else
+            print_info "Two-factor sign-in stays as it was. Lost the authenticator and the recovery codes too? sudo $(basename "$MANAGER_COMMAND") --reset-password --reset-two-factor"
+        fi
 
         # Persist credentials only when explicitly requested.
         if [ "$STORE_ADMIN_CREDENTIALS" = "true" ]; then

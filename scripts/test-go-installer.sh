@@ -897,6 +897,50 @@ test_set_config_says_what_changed() (
     rm -rf "$TEST_DIR"
 )
 
+# --reset-two-factor: --reset-password passes it to the server's
+# reset-password when the binary has it, says that two-factor sign-in is
+# off, and refuses with an update hint when the binary is older. Without it
+# the reset says how to turn two-factor sign-in off too. --help names it,
+# and alone it is a password reset too.
+test_reset_password_can_reset_two_factor() (
+    load
+    print_header() { :; }
+    print_error() { echo "$1"; }
+    print_info() { echo "$1"; }
+    auto_detect_paths() { CONSOLE_TYPE=go; }
+    forget_first_admin_password() { :; }
+    server_cmd() { cat >/dev/null; echo "$*" > "$TEST_DIR/args"; echo "Password updated for admin"; }
+    AUTO_MODE=true
+    ADMIN_PASSWORD=Reset-Pass-123
+    printf '#!/bin/sh\n# reset-password [--reset-two-factor] [--verbose] [username]\n' > "$RUSTDESK_PATH/neodesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
+    local out
+    RESET_TWO_FACTOR=true
+    out=$(do_reset_password 2>&1) || fail "the reset with --reset-two-factor failed: $out"
+    [ "$(cat "$TEST_DIR/args")" = "--as-service reset-password --reset-two-factor admin" ] \
+        || fail "the server's reset ran as: $(cat "$TEST_DIR/args")"
+    case "$out" in *"Two-factor sign-in is off for admin"*) ;; *) fail "the reset does not say two-factor sign-in is off: $out" ;; esac
+
+    RESET_TWO_FACTOR=false
+    out=$(do_reset_password 2>&1) || fail "the reset failed: $out"
+    [ "$(cat "$TEST_DIR/args")" = "--as-service reset-password admin" ] || fail "a plain reset ran as: $(cat "$TEST_DIR/args")"
+    case "$out" in *"--reset-password --reset-two-factor"*) ;; *) fail "a plain reset does not name --reset-two-factor: $out" ;; esac
+
+    # An older binary does not have it
+    printf '#!/bin/sh\n# reset-password [username]\n' > "$RUSTDESK_PATH/neodesk-server"
+    rm -f "$TEST_DIR/args"
+    RESET_TWO_FACTOR=true
+    out=$(do_reset_password 2>&1) && fail "an older binary was asked to reset two-factor sign-in: $out"
+    [ ! -e "$TEST_DIR/args" ] || fail "the reset ran on an older binary: $(cat "$TEST_DIR/args")"
+    case "$out" in *"--update"*) ;; *) fail "the refusal does not say to update: $out" ;; esac
+    rm -rf "$TEST_DIR"
+
+    out=$(bash "$SCRIPT_ROOT/install/neodesk.sh" --help 2>&1)
+    case "$out" in *"--reset-two-factor"*) ;; *) fail "--help does not name --reset-two-factor" ;; esac
+    out=$(bash -c 'script=$1; source "$script" --reset-two-factor; echo "$RESET_PASSWORD_MODE $RESET_TWO_FACTOR"' test "$SCRIPT_ROOT/install/neodesk.sh" 2>&1 < /dev/null)
+    [ "$out" = "true true" ] || fail "--reset-two-factor alone: $out"
+)
+
 # LINUX-NATIVE-10: --protocol did nothing; it is no longer in --help and
 # says so instead of being taken silently.
 test_protocol_flag_says_it_does_nothing() (
@@ -2057,6 +2101,7 @@ test_apt_source_failure_goes_on
 test_set_config_says_what_changed
 test_protocol_flag_says_it_does_nothing
 test_installer_uses_neodesk_names
+test_reset_password_can_reset_two_factor
 test_backup_uses_the_servers_backup
 test_backups_are_for_root_only
 test_old_backups_are_pruned

@@ -9503,6 +9503,7 @@
       "command_hint_join": "Open a terminal, paste this command and press Enter. It asks for your password, installs NeoDesk and adds this computer to {server}.",
       "command_hint_support": "Open a terminal, paste this command and press Enter. It starts the support app without installing it.",
       "open_app": "Open NeoDesk",
+      "open_support_app": "NeoDesk Quick Support で開く",
       "code_hint_join": "NeoDesk をすでにお持ちですか？ 設定、サーバー、サーバーに参加 を開き、このコードと下のサーバーアドレスを入力してください:",
       "server_address": "サーバーアドレス: {address}",
       "code_hint_support": "If the app asks for a code, enter:",

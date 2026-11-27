@@ -1,7 +1,9 @@
 package listen
 
 import (
+	"context"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -327,4 +329,50 @@ func FuzzRedirectHost(f *testing.F) {
 			t.Fatalf("Location %q names %q, want %q", location, authority, strings.TrimPrefix(origin, "https://"))
 		}
 	})
+}
+
+// TestRedirectKeepsTheAddressTheBrowserUsed: a request sent to the
+// address the connection reached (a LAN address, or localhost over
+// loopback) is redirected to HTTPS on that address, not to the public
+// host, which a browser on the LAN may not reach (setup audit
+// LINUX-NATIVE-5, WD-4). Any other host, also another of this machine's
+// names or an address the connection did not reach, keeps the configured
+// host.
+func TestRedirectKeepsTheAddressTheBrowserUsed(t *testing.T) {
+	h := Redirect("203.0.113.10", 5443)
+	lan := &net.TCPAddr{IP: net.ParseIP("192.168.1.20"), Port: 3375}
+	loop := &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 3375}
+	loop6 := &net.TCPAddr{IP: net.ParseIP("::1"), Port: 3375}
+	mapped := &net.TCPAddr{IP: net.ParseIP("::ffff:192.168.1.20"), Port: 3375}
+	for _, c := range []struct {
+		local      net.Addr
+		host, want string
+	}{
+		{lan, "192.168.1.20:3375", "https://192.168.1.20:5443/x"},
+		{lan, "192.168.1.20", "https://192.168.1.20:5443/x"},
+		{mapped, "192.168.1.20:3375", "https://192.168.1.20:5443/x"},
+		{loop, "localhost:3375", "https://localhost:5443/x"},
+		{loop, "LocalHost", "https://localhost:5443/x"},
+		{loop, "127.0.0.1:3375", "https://127.0.0.1:5443/x"},
+		{loop6, "[::1]:3375", "https://[::1]:5443/x"},
+		// Not the address the connection reached
+		{lan, "192.168.1.21:3375", "https://203.0.113.10:5443/x"},
+		{lan, "localhost:3375", "https://203.0.113.10:5443/x"},
+		{lan, "attacker.example", "https://203.0.113.10:5443/x"},
+		{loop, "[::1]:3375", "https://203.0.113.10:5443/x"},
+		{loop, "evil.localhost", "https://203.0.113.10:5443/x"},
+		{loop, "", "https://203.0.113.10:5443/x"},
+		{nil, "192.168.1.20", "https://203.0.113.10:5443/x"},
+	} {
+		r := httptest.NewRequest(http.MethodGet, "http://placeholder/x", nil)
+		r.Host, r.RequestURI = c.host, "/x"
+		if c.local != nil {
+			r = r.WithContext(context.WithValue(r.Context(), http.LocalAddrContextKey, c.local))
+		}
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != http.StatusTemporaryRedirect || w.Header().Get("Location") != c.want {
+			t.Errorf("Host %q on %v: %d %q, want %q", c.host, c.local, w.Code, w.Header().Get("Location"), c.want)
+		}
+	}
 }
