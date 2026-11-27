@@ -7,11 +7,13 @@ import (
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/accountmail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
 // The rule for inactive accounts (Settings, Sign-in; off by default): an
@@ -120,22 +122,28 @@ func sweepInactive(ctx context.Context, d *kit.Deps, life *lifecycle.Store, acco
 // inactiveNotice tells the person that the account will be disabled.
 func inactiveNotice(ctx context.Context, d *kit.Deps, a sweepAccount, days int, on time.Time) error {
 	base := accountmail.Base(d, "")
-	brand := accountmail.Branding(d, base)
-	t := accountmail.In(d, accountmail.LangOf(ctx, d, a.ID))
-	vars := map[string]any{"server": brand.Server, "username": a.Username, "days": days, "date": on.UTC().Format("2006-01-02"), "host": accountmail.Host(base)}
-	page := accountmail.Page{
-		Subject: t("account_mail.inactive_subject", vars), Heading: t("account_mail.inactive_heading", vars),
-		Lead: t("account_mail.inactive_lead", vars), Small: []string{t("account_mail.inactive_why", vars)},
-		Footer: t("password_link.mail_footer", vars),
-	}
-	if base != "" {
-		page.Button, page.Link = t("account_mail.inactive_button", vars), base+"/login"
-	}
-	sent, err := accountmail.Send(ctx, d, a.Email, accountmail.Build(brand, page))
+	t, lang, zone := securitymail.ReaderOf(ctx, d, a.ID)
+	sent, err := accountmail.Send(ctx, d, a.Email, InactiveMail(t, lang, zone, base, a.Username, days, on))
 	if err == nil && !sent {
 		err = fmt.Errorf("the mail server didn't take the notice to %s", a.Username)
 	}
 	return err
+}
+
+// InactiveMail is the notice to an account that it is disabled on a day
+// unless it signs in before.
+func InactiveMail(t brandmail.Translate, lang string, zone *time.Location, base, username string, days int, on time.Time) brandmail.Mail {
+	vars := map[string]any{"username": username, "days": days, "date": brandmail.Date(on, lang, zone), "host": brandmail.HostOf(base)}
+	m := brandmail.Mail{
+		Kind: "inactive", T: t, Lang: lang, Automatic: true, Host: brandmail.HostOf(base),
+		Subject: t("mail.inactive.subject", vars), Preheader: t("mail.inactive.preheader", vars),
+		Heading: t("mail.inactive.heading", vars), Lead: t("mail.inactive.lead", vars),
+		Details: []string{t("mail.inactive.rule", vars)}, Why: t("mail.inactive.why", vars),
+	}
+	if base != "" {
+		m.Button, m.Link = t("mail.inactive.button", vars), base+"/login"
+	}
+	return m
 }
 
 // exemptOf reads the body's "inactive_exempt": change says it is there and

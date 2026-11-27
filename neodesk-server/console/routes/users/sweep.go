@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/accountmail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
 // The background job of the account life cycle runs every few minutes
@@ -180,21 +181,26 @@ func expiryNotice(ctx context.Context, d *kit.Deps, life *lifecycle.Store, a swe
 		return err
 	}
 	base := accountmail.Base(d, "")
-	brand := accountmail.Branding(d, base)
 	for _, admin := range admins {
-		t := accountmail.In(d, accountmail.LangOf(ctx, d, admin.ID))
-		vars := map[string]any{"server": brand.Server, "username": a.Username, "date": people.TimeIn(st.ExpiresAt, people.TimeZone(ctx, d.Store, admin.ID)), "host": accountmail.Host(base)}
-		page := accountmail.Page{
-			Subject: t("account_mail.expiry_subject", vars), Heading: t("account_mail.expiry_heading", vars),
-			Lead: t("account_mail.expiry_lead", vars), Small: []string{t("account_mail.expiry_why", vars)},
-			Footer: t("password_link.mail_footer", vars),
-		}
-		if base != "" {
-			page.Button, page.Link = t("account_mail.open_users", vars), base+"/users"
-		}
-		if _, err := accountmail.Send(ctx, d, admin.Email, accountmail.Build(brand, page)); err != nil {
+		t, lang, zone := securitymail.ReaderOf(ctx, d, admin.ID)
+		if _, err := accountmail.Send(ctx, d, admin.Email, ExpiryMail(t, lang, zone, base, a.Username, st.ExpiresAt)); err != nil {
 			d.Log.Error("Expiry notice error:", err.Error())
 		}
 	}
 	return life.Update(ctx, a.ID, func(s *lifecycle.State) { s.ExpiryNoticeAt = now.UTC() })
+}
+
+// ExpiryMail is the notice to an admin that an account ends on a day.
+func ExpiryMail(t brandmail.Translate, lang string, zone *time.Location, base, username string, ends time.Time) brandmail.Mail {
+	vars := map[string]any{"username": username, "date": brandmail.Date(ends, lang, zone), "host": brandmail.HostOf(base)}
+	m := brandmail.Mail{
+		Kind: "expiry", T: t, Lang: lang, Automatic: true, Host: brandmail.HostOf(base),
+		Subject: t("mail.expiry.subject", vars), Preheader: t("mail.expiry.preheader", vars),
+		Heading: t("mail.expiry.heading", vars), Lead: t("mail.expiry.lead", vars),
+		Why: t("mail.expiry.why", vars),
+	}
+	if base != "" {
+		m.Button, m.Link = t("mail.expiry.button", vars), base+"/users"
+	}
+	return m
 }
