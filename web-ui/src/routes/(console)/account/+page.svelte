@@ -69,8 +69,24 @@
 
 <style>
 	.account-parts {
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		align-items: start;
 		gap: var(--space-7);
+		max-width: var(--settings-max, 72rem);
+	}
+	/* Two parts side by side on a wide window, in reading order (Profile and
+	   Email, Password and Two-factor, devices and events), so the page is
+	   not one narrow column beside empty space; the token list and
+	   Preferences, whose rows have two columns of their own, take the width */
+	@media (min-width: 1200px) {
+		.account-parts {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			column-gap: var(--space-7);
+		}
+		.account-parts > :global(#api-tokens),
+		.account-parts > :global(#preferences) {
+			grid-column: 1 / -1;
+		}
 	}
 </style>

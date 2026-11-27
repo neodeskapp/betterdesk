@@ -1,7 +1,7 @@
 <!--
   Your account › Profile (#profile): the signed-in person's picture, name
-  and role, and My status (online, away, busy), which the account menu
-  sets too. The picture comes from single sign-on, or the person uploads
+  and role, and My status (online, away, busy, side by side), which the
+  account menu sets too. The picture comes from single sign-on, or the person uploads
   one here (it then replaces the single sign-on picture) and can remove
   it. Name and role come from the account (Users, or the directory or
   single sign-on provider).
@@ -16,8 +16,8 @@
 	import { shrinkPicture } from '#lib/util/picture.ts';
 	import Avatar from '#lib/ui/Avatar.svelte';
 	import Button from '#lib/ui/Button.svelte';
-	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
+	import ChoiceSegments from '#lib/ui/settings/ChoiceSegments.svelte';
 
 	const user = $derived(session.user);
 	const person = $derived(
@@ -38,7 +38,7 @@
 		const words = r.replace(/_/g, ' ');
 		return words.charAt(0).toUpperCase() + words.slice(1);
 	});
-	const choices = $derived(PRESENCE_VALUES.map((s) => ({ value: s, title: t(`chat.presence_${s}`) })));
+	const choices = $derived(PRESENCE_VALUES.map((s) => ({ value: s, label: t(`chat.presence_${s}`) })));
 
 	let input = $state<HTMLInputElement | null>(null);
 	let busy = $state<'' | 'upload' | 'remove'>('');
@@ -144,15 +144,14 @@
 	<div class="status" id="profile-status">
 		<h3 id="profile-status-title">{t('chat.my_presence')}</h3>
 		<p class="form-hint" id="profile-status-note">{t('account.status_note')}</p>
-		<ChoiceList
-			{choices}
-			name="profile-status"
+		<!-- Three short words side by side: one click, one line -->
+		<ChoiceSegments
+			id="profile-status-control"
+			options={choices}
 			labelledby="profile-status-title"
 			describedby="profile-status-note"
 			value={myPresence.status}
-			onchange={(v, checked) => {
-				if (checked) setPresence(v);
-			}}
+			onchange={(v) => setPresence(v)}
 		/>
 	</div>
 </section>
