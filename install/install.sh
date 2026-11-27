@@ -45,6 +45,7 @@ ADMIN_PASSWORD="${ADMIN_PASSWORD:-}"
 NEODESK_DOMAIN="${NEODESK_DOMAIN:-}"
 LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
 LETSENCRYPT_STAGING=false
+NO_TRAEFIK=false
 SKIP_DOCKER_INSTALL=false
 SKIP_FIREWALL=false
 IMPORT_KEYS=""
@@ -200,10 +201,12 @@ Options (pass them after "bash -s --"):
                                  with a Let's Encrypt certificate that Traefik
                                  renews by itself (the name must point at this
                                  server; ports 80 and 443)
-  --letsencrypt-email ADDRESS    Docker: Let's Encrypt's contact (needed with
-                                 --domain)
+  --email ADDRESS                Docker, optional: the contact address of the
+                                 Let's Encrypt account (also --letsencrypt-email)
   --letsencrypt-staging          Docker: certificates from Let's Encrypt's
-                                 staging server
+                                 staging server (for tests)
+  --no-traefik                   Docker: remove Traefik again; the console
+                                 answers on its own port
   --import-keys FOLDER           Docker: the key pair of a RustDesk server
                                  (id_ed25519 and id_ed25519.pub in FOLDER), so
                                  its clients keep working
@@ -252,7 +255,8 @@ while [ $# -gt 0 ]; do
         --relay-servers) RELAY_SERVERS="$2"; shift 2 ;;
         --admin-password) ADMIN_PASSWORD="$2"; shift 2 ;;
         --domain) NEODESK_DOMAIN="$2"; shift 2 ;;
-        --letsencrypt-email) LETSENCRYPT_EMAIL="$2"; shift 2 ;;
+        --email|--letsencrypt-email) [ $# -ge 2 ] || die "$1 needs an e-mail address"; LETSENCRYPT_EMAIL="$2"; shift 2 ;;
+        --no-traefik) NO_TRAEFIK=true; shift ;;
         --letsencrypt-staging) LETSENCRYPT_STAGING=true; shift ;;
         --skip-docker-install) SKIP_DOCKER_INSTALL=true; shift ;;
         --skip-firewall) SKIP_FIREWALL=true; shift ;;
@@ -505,6 +509,7 @@ install_docker_mode() {
     [ -z "$NEODESK_DOMAIN" ] || args+=(--domain "$NEODESK_DOMAIN")
     [ -z "$LETSENCRYPT_EMAIL" ] || args+=(--email "$LETSENCRYPT_EMAIL")
     [ "$LETSENCRYPT_STAGING" != true ] || args+=(--letsencrypt-staging)
+    [ "$NO_TRAEFIK" != true ] || args+=(--no-traefik)
     [ -z "$IMPORT_KEYS" ] || args+=(--import-keys "$IMPORT_KEYS")
     # The manager opens the ports in ufw or firewalld, before the container
     # starts (Let's Encrypt's challenge comes in on 80), and closes them at

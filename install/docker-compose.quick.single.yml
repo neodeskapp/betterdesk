@@ -44,17 +44,27 @@
 # HTTPS with Let's Encrypt (the profile "traefik"): a small Traefik in front
 # of the console gets a certificate for a domain that points at this server
 # and renews it by itself. neodesk-docker.sh --domain console.example.com
-# --email admin@example.com sets it up; by hand, in .env next to this file:
+# sets it up; by hand, in .env next to this file:
 #   COMPOSE_PROFILES=traefik       (traefik,postgres with PostgreSQL)
 #   NEODESK_DOMAIN=console.example.com   the console's DNS name
-#   LETSENCRYPT_EMAIL=admin@example.com  Let's Encrypt's contact for expiry
-#                                  notices
+#   LETSENCRYPT_EMAIL=you@yourdomain     optional: the contact of the Let's
+#                                  Encrypt account
 #   NEODESK_CONSOLE_BIND=127.0.0.1 the plain console port on this host only
 #   TRUST_PROXY=1                  the client's address comes from Traefik
 #   PANEL_PUBLIC_URL=https://console.example.com   the address in mails
 # Optional: LETSENCRYPT_CA_SERVER (Let's Encrypt's staging server for
 # tests), TRAEFIK_IMAGE_TAG (v3.3). Ports 80 (the certificate's HTTP
-# challenge, then a redirect) and 443 must reach this server.
+# challenge, then a redirect) and 443 must reach this server. After a
+# change of NEODESK_DOMAIN, docker compose up -d makes the Traefik
+# container again with the new name. Switching between the staging and the
+# production server: neodesk-docker.sh moves the other server's acme.json
+# aside; by hand, docker compose stop traefik, delete acme.json in the
+# volume neodesk-traefik-letsencrypt, docker compose up -d.
+#
+# NEODESK_IPV6=true gives the containers' network IPv6 (Docker Engine 27 or
+# newer), so the server sees IPv6 visitors' own addresses instead of the
+# network's gateway. Older Docker Compose versions need docker compose down
+# before it changes.
 #
 # Web console: http://<server>:3375
 # RustDesk clients: ID server and relay <server>, API http://<server>:21121
@@ -271,6 +281,7 @@ services:
       - --global.checknewversion=false
       - --global.sendanonymoususage=false
       - --log.level=INFO
+      - --log.nocolor=true
       - --ping=true
       - --providers.file.filename=/etc/traefik/dynamic.yml
       - --entrypoints.web.address=:80
@@ -285,6 +296,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    # The domain is part of the service's settings, so Compose makes the
+    # container again when it changes and Traefik reads the new routing
+    labels:
+      - sk.neode.traefik.domain=${NEODESK_DOMAIN:-console.invalid}
     configs:
       - source: traefik-dynamic
         target: /etc/traefik/dynamic.yml
@@ -341,6 +356,7 @@ configs:
 networks:
   neodesk-net:
     driver: bridge
+    enable_ipv6: ${NEODESK_IPV6:-false}
 
 volumes:
   neodesk-data:

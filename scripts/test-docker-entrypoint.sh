@@ -130,6 +130,20 @@ test_neodesk_service_keeps_kill() (
     grep -qE '^HEALTHCHECK --interval=10s ' "$SCRIPT_ROOT/docker/Dockerfile" || fail "the image's health check does not run every 10 seconds"
 )
 
+# HTTPS-3: Compose makes a container again only when its service's
+# settings change, not when the content of a config does, so the Traefik
+# service carries the domain of its routing in a label. HTTPS-6: the
+# network takes IPv6 from NEODESK_IPV6. HTTPS-11: the contact is optional.
+test_traefik_follows_the_domain() (
+    local quick="$SCRIPT_ROOT/install/docker-compose.quick.single.yml" block
+    block=$(awk '/^  traefik:/ { on = 1; next } on && /^[a-z]/ { exit } on && /^  [a-z]/ { exit } on' "$quick")
+    printf '%s\n' "$block" | grep -qF -- '- sk.neode.traefik.domain=${NEODESK_DOMAIN:-console.invalid}' \
+        || fail "the Traefik service does not carry the domain, so a new one is not applied"
+    grep -qF 'rule: "Host(`${NEODESK_DOMAIN:-console.invalid}`)"' "$quick" || fail "the routing does not use NEODESK_DOMAIN"
+    grep -qF 'enable_ipv6: ${NEODESK_IPV6:-false}' "$quick" || fail "the network does not take NEODESK_IPV6"
+    grep -qF -- '--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL:-}' "$quick" || fail "the contact is not optional"
+)
+
 # L81: the health check reaches the API over HTTPS when TLS_API=Y and the
 # console over HTTPS when HTTPS_ENABLED=true; the images and the compose
 # files use it.
@@ -336,6 +350,7 @@ test_quick_compose_pulls_the_published_image
 test_cdap_port_is_published
 test_compose_reads_env_file
 test_neodesk_service_keeps_kill
+test_traefik_follows_the_domain
 test_healthcheck_follows_tls
 test_image_binary_knows_its_build
 test_images_keep_their_data_in_the_neodesk_folder
