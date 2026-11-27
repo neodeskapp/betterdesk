@@ -2301,7 +2301,7 @@
       "client_config_title": "RustDesk 用戶端設定",
       "client_host_env_badge": "From env",
       "client_host_settings_link": "開啟設定 → 用戶端公開端點",
-      "client_server_host_env_hint": "位址已在「設定」>「公共用戶端端點」中設定。在那裡清除後，即可重新使用這裡輸入的位址。",
+      "client_server_host_env_hint": "ID 伺服器已在「設定」>「公共用戶端端點」中設定。在那裡清除後，即可重新使用這裡輸入的位址。",
       "client_server_host_hint": "用戶端連上此伺服器所用的位址。在這裡變更只會改變下方的值，方便您複製用於其他位址的值。伺服器本身的設定位於「設定」>「公共用戶端端點」。",
       "client_server_host_label": "用戶端伺服器位址",
       "client_server_host_placeholder": "例如 203.0.113.10 或 desk.example.com",
@@ -3035,6 +3035,8 @@
       "edit_group": "編輯分組",
       "edit_strategy": "編輯規則",
       "edit_title": "設備詳情",
+      "empty_join_requests": "在「加入請求」中核准新電腦",
+      "empty_none": "尚無設備。",
       "empty_text": "沒有符合當前篩選條件的設備",
       "empty_title": "未找到設備",
       "enable_schedule": "啓用基於時間的訪問",
@@ -8330,7 +8332,7 @@
       "fill_all_fields": "請填寫所有字段",
       "general": {
        "api_url_invalid": "請使用以 https:// 或 http:// 開頭的完整位址，例如 https://api.example.com。",
-       "audit_link": "活動 › 安全性與稽核",
+       "audit_link": "活動 › 稽核記錄",
        "audit_moved": "主控台活動記錄位於",
        "auto": "自動偵測",
        "availability_effect": "立即生效。關閉後會停止記錄；已記錄的事件會保留到過期為止。",
@@ -8366,8 +8368,8 @@
        "console_version": "主控台版本",
        "database_file": "資料庫檔案",
        "dev_build": "開發版本",
-       "endpoint_api_help": "用戶端登入時使用的完整位址。除非您改過，伺服器使用連接埠 21114。例如 https://api.example.com 或 http://203.0.113.10:21114。",
-       "endpoint_api_hint": "用戶端登入時使用的完整位址，例如 https://api.example.com。除非您已變更，伺服器使用連接埠 21114。",
+       "endpoint_api_help": "用戶端登入時使用的完整位址。除非您改過，伺服器使用連接埠 21121。例如 https://api.example.com 或 http://203.0.113.10:21121。",
+       "endpoint_api_hint": "用戶端登入時使用的完整位址，例如 https://api.example.com。除非您已變更，伺服器使用連接埠 21121。",
        "endpoint_auto_note": "欄位留空時，用戶端會取得自動偵測的位址，顯示在「用戶端目前取得的值」下。",
        "endpoint_auto_short": "自動偵測",
        "endpoint_id_help": "網際網路上的用戶端連到 ID 伺服器時使用的主機名稱或 IP 位址。如果用戶端透過與此主控台不同的位址連到這台伺服器（例如在反向代理後方），請填寫。例如 remote.example.com。",
@@ -8645,8 +8647,6 @@
       "password_requirements_not_met": "密碼不符合要求",
       "passwords_not_match": "兩次輸入的密碼不一致",
       "public_endpoints_api_url": "公共 API URL",
-      "public_endpoints_api_url_hint": "RustDesk 登入/API 的完整 URL（預設連接埠 21114）。",
-      "public_endpoints_api_url_placeholder": "例如 https://api.example.com",
       "public_endpoints_desc": "RustDesk 用戶端使用的 hostname 與 API URL。用於儀表板設定、QR 與部署字串。",
       "public_endpoints_env_locked": "The server's environment sets this address at every start (PUBLIC_ENDPOINTS_ENV_OVERRIDE=Y), so it can't be changed here. Change it there and restart the server.",
       "public_endpoints_hint": "當控制台 hostname 與 ID/中繼/API 不同時設定（反向代理/分離 DNS）。留空則自動偵測。",
@@ -9053,7 +9053,7 @@
         "title": "設定用戶端使用的位址"
        },
        "backup": {
-        "hint": "備份包含伺服器金鑰。沒有此金鑰，每台電腦都必須重新設定。",
+        "hint": "備份包含伺服器金鑰。沒有此金鑰，每台電腦都必須重新設定。在「伺服器」>「備份」中手動或依排程建立的備份會完成此步驟；安裝指令碼的備份不算。",
         "title": "建立備份"
        },
        "computer": {

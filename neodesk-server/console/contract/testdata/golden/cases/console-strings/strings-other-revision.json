@@ -2301,7 +2301,7 @@
       "client_config_title": "Client-Einrichtung",
       "client_host_env_badge": "From env",
       "client_host_settings_link": "Einstellungen öffnen → Öffentliche Client-Endpunkte",
-      "client_server_host_env_hint": "Die Adressen sind unter Einstellungen, Öffentliche Client-Endpunkte festgelegt. Leere sie dort, um wieder die hier eingegebene Adresse zu verwenden.",
+      "client_server_host_env_hint": "Der ID-Server ist unter Einstellungen, Öffentliche Client-Endpunkte festgelegt. Leere ihn dort, um wieder die hier eingegebene Adresse zu verwenden.",
       "client_server_host_hint": "Die Adresse, über die Clients diesen Server erreichen. Eine Änderung hier ändert nur die Werte darunter, damit du sie für eine andere Adresse kopieren kannst. Die Einstellung des Servers selbst findest du unter Einstellungen, Öffentliche Client-Endpunkte.",
       "client_server_host_label": "Client-Serveradresse",
       "client_server_host_placeholder": "z. B. 203.0.113.10 oder desk.example.com",
@@ -3035,6 +3035,8 @@
       "edit_group": "Gruppe bearbeiten",
       "edit_strategy": "Regel bearbeiten",
       "edit_title": "Gerätedetails",
+      "empty_join_requests": "Neue Computer unter Beitrittsanfragen freigeben",
+      "empty_none": "Noch keine Geräte.",
       "empty_text": "Keine Geräte passen zu den aktuellen Filtern.",
       "empty_title": "Keine Geräte gefunden",
       "enable_schedule": "Zeitplan aktivieren",
@@ -8326,7 +8328,7 @@
       "fill_all_fields": "Bitte fülle alle Felder aus",
       "general": {
        "api_url_invalid": "Gib eine vollständige Adresse an, die mit https:// oder http:// beginnt, etwa https://api.example.com.",
-       "audit_link": "Aktivität › Sicherheit und Audit",
+       "audit_link": "Aktivität › Audit-Protokoll",
        "audit_moved": "Das Aktivitätsprotokoll der Konsole findest du unter",
        "auto": "automatisch gefunden",
        "availability_effect": "Gilt sofort. Beim Ausschalten endet die Aufzeichnung; bereits erfasste Ereignisse bleiben bis zu ihrem Ablauf.",
@@ -8362,8 +8364,8 @@
        "console_version": "Konsolenversion",
        "database_file": "Datenbankdatei",
        "dev_build": "Entwicklungsversion",
-       "endpoint_api_help": "Vollständige Adresse, mit der sich Clients anmelden. Der Server nutzt Port 21114, wenn du ihn nicht geändert hast. Zum Beispiel https://api.example.com oder http://203.0.113.10:21114.",
-       "endpoint_api_hint": "Vollständige Adresse, über die sich Clients anmelden, zum Beispiel https://api.example.com. Der Server nutzt Port 21114, sofern du ihn nicht geändert hast.",
+       "endpoint_api_help": "Vollständige Adresse, mit der sich Clients anmelden. Der Server nutzt Port 21121, wenn du ihn nicht geändert hast. Zum Beispiel https://api.example.com oder http://203.0.113.10:21121.",
+       "endpoint_api_hint": "Vollständige Adresse, über die sich Clients anmelden, zum Beispiel https://api.example.com. Der Server nutzt Port 21121, sofern du ihn nicht geändert hast.",
        "endpoint_auto_note": "Ein leeres Feld gibt Clients die automatisch gefundene Adresse, zu sehen unter Was Clients jetzt erhalten.",
        "endpoint_auto_short": "Automatisch gefunden",
        "endpoint_id_help": "Hostname oder IP-Adresse des ID-Servers, so wie Clients im Internet ihn erreichen. Füll das Feld aus, wenn Clients diesen Server unter einer anderen Adresse erreichen als diese Konsole, etwa hinter einem Reverse Proxy. Zum Beispiel remote.example.com.",
@@ -8641,8 +8643,6 @@
       "password_requirements_not_met": "Passwort erfüllt nicht die Anforderungen",
       "passwords_not_match": "Passwörter stimmen nicht überein",
       "public_endpoints_api_url": "Öffentliche API-URL",
-      "public_endpoints_api_url_hint": "Vollständige URL für RustDesk-Login und API (Standardport 21114).",
-      "public_endpoints_api_url_placeholder": "z. B. https://api.example.com",
       "public_endpoints_desc": "Die Adressen, über die RustDesk-Clients diesen Server erreichen. Sie erscheinen in der Client-Einrichtung auf der Übersicht, in QR-Codes und in Installationsbefehlen.",
       "public_endpoints_env_locked": "Die Umgebung des Servers legt diese Adresse bei jedem Start fest (PUBLIC_ENDPOINTS_ENV_OVERRIDE=Y), deshalb lässt sie sich hier nicht ändern. Ändere sie dort und starte den Server neu.",
       "public_endpoints_hint": "Setzen, wenn Konsolen-Hostname von ID/Relay/API abweicht (Reverse Proxy / getrenntes DNS). Leer = Auto-Erkennung.",
@@ -9049,7 +9049,7 @@
         "title": "Adresse für Clients festlegen"
        },
        "backup": {
-        "hint": "Sie enthält den Schlüssel des Servers. Ohne ihn muss jeder Computer neu eingerichtet werden.",
+        "hint": "Sie enthält den Schlüssel des Servers. Ohne ihn muss jeder Computer neu eingerichtet werden. Eine Sicherung unter Server, Sicherungen hakt diesen Schritt ab, von Hand oder nach Zeitplan; Sicherungen des Installationsskripts zählen nicht.",
         "title": "Sicherung erstellen"
        },
        "computer": {
@@ -12868,7 +12868,7 @@
       "client_config_title": "Client-Einrichtung",
       "client_host_env_badge": "From env",
       "client_host_settings_link": "Einstellungen öffnen → Öffentliche Client-Endpunkte",
-      "client_server_host_env_hint": "Die Adressen sind unter Einstellungen, Öffentliche Client-Endpunkte festgelegt. Leere sie dort, um wieder die hier eingegebene Adresse zu verwenden.",
+      "client_server_host_env_hint": "Der ID-Server ist unter Einstellungen, Öffentliche Client-Endpunkte festgelegt. Leere ihn dort, um wieder die hier eingegebene Adresse zu verwenden.",
       "client_server_host_hint": "Die Adresse, über die Clients diesen Server erreichen. Eine Änderung hier ändert nur die Werte darunter, damit du sie für eine andere Adresse kopieren kannst. Die Einstellung des Servers selbst findest du unter Einstellungen, Öffentliche Client-Endpunkte.",
       "client_server_host_label": "Client-Serveradresse",
       "client_server_host_placeholder": "z. B. 203.0.113.10 oder desk.example.com",
@@ -13602,6 +13602,8 @@
       "edit_group": "Gruppe bearbeiten",
       "edit_strategy": "Regel bearbeiten",
       "edit_title": "Gerätedetails",
+      "empty_join_requests": "Neue Computer unter Beitrittsanfragen freigeben",
+      "empty_none": "Noch keine Geräte.",
       "empty_text": "Keine Geräte passen zu den aktuellen Filtern.",
       "empty_title": "Keine Geräte gefunden",
       "enable_schedule": "Zeitplan aktivieren",
@@ -18893,7 +18895,7 @@
       "fill_all_fields": "Bitte fülle alle Felder aus",
       "general": {
        "api_url_invalid": "Gib eine vollständige Adresse an, die mit https:// oder http:// beginnt, etwa https://api.example.com.",
-       "audit_link": "Aktivität › Sicherheit und Audit",
+       "audit_link": "Aktivität › Audit-Protokoll",
        "audit_moved": "Das Aktivitätsprotokoll der Konsole findest du unter",
        "auto": "automatisch gefunden",
        "availability_effect": "Gilt sofort. Beim Ausschalten endet die Aufzeichnung; bereits erfasste Ereignisse bleiben bis zu ihrem Ablauf.",
@@ -18929,8 +18931,8 @@
        "console_version": "Konsolenversion",
        "database_file": "Datenbankdatei",
        "dev_build": "Entwicklungsversion",
-       "endpoint_api_help": "Vollständige Adresse, mit der sich Clients anmelden. Der Server nutzt Port 21114, wenn du ihn nicht geändert hast. Zum Beispiel https://api.example.com oder http://203.0.113.10:21114.",
-       "endpoint_api_hint": "Vollständige Adresse, über die sich Clients anmelden, zum Beispiel https://api.example.com. Der Server nutzt Port 21114, sofern du ihn nicht geändert hast.",
+       "endpoint_api_help": "Vollständige Adresse, mit der sich Clients anmelden. Der Server nutzt Port 21121, wenn du ihn nicht geändert hast. Zum Beispiel https://api.example.com oder http://203.0.113.10:21121.",
+       "endpoint_api_hint": "Vollständige Adresse, über die sich Clients anmelden, zum Beispiel https://api.example.com. Der Server nutzt Port 21121, sofern du ihn nicht geändert hast.",
        "endpoint_auto_note": "Ein leeres Feld gibt Clients die automatisch gefundene Adresse, zu sehen unter Was Clients jetzt erhalten.",
        "endpoint_auto_short": "Automatisch gefunden",
        "endpoint_id_help": "Hostname oder IP-Adresse des ID-Servers, so wie Clients im Internet ihn erreichen. Füll das Feld aus, wenn Clients diesen Server unter einer anderen Adresse erreichen als diese Konsole, etwa hinter einem Reverse Proxy. Zum Beispiel remote.example.com.",
@@ -19208,8 +19210,6 @@
       "password_requirements_not_met": "Passwort erfüllt nicht die Anforderungen",
       "passwords_not_match": "Passwörter stimmen nicht überein",
       "public_endpoints_api_url": "Öffentliche API-URL",
-      "public_endpoints_api_url_hint": "Vollständige URL für RustDesk-Login und API (Standardport 21114).",
-      "public_endpoints_api_url_placeholder": "z. B. https://api.example.com",
       "public_endpoints_desc": "Die Adressen, über die RustDesk-Clients diesen Server erreichen. Sie erscheinen in der Client-Einrichtung auf der Übersicht, in QR-Codes und in Installationsbefehlen.",
       "public_endpoints_env_locked": "Die Umgebung des Servers legt diese Adresse bei jedem Start fest (PUBLIC_ENDPOINTS_ENV_OVERRIDE=Y), deshalb lässt sie sich hier nicht ändern. Ändere sie dort und starte den Server neu.",
       "public_endpoints_hint": "Setzen, wenn Konsolen-Hostname von ID/Relay/API abweicht (Reverse Proxy / getrenntes DNS). Leer = Auto-Erkennung.",
@@ -19616,7 +19616,7 @@
         "title": "Adresse für Clients festlegen"
        },
        "backup": {
-        "hint": "Sie enthält den Schlüssel des Servers. Ohne ihn muss jeder Computer neu eingerichtet werden.",
+        "hint": "Sie enthält den Schlüssel des Servers. Ohne ihn muss jeder Computer neu eingerichtet werden. Eine Sicherung unter Server, Sicherungen hakt diesen Schritt ab, von Hand oder nach Zeitplan; Sicherungen des Installationsskripts zählen nicht.",
         "title": "Sicherung erstellen"
        },
        "computer": {
