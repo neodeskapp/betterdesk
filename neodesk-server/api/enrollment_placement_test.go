@@ -223,3 +223,19 @@ func TestEnrollmentTokenPlacementIsChecked(t *testing.T) {
 		}
 	})
 }
+
+// rustdesk --deploy --token puts the device where the token says too.
+func TestDeployTokenPutsTheDeviceIntoItsFolderAndOrganization(t *testing.T) {
+	placementStores(t, config.EnrollmentModeManaged, func(t *testing.T, f *placementFixture) {
+		token := f.token(t, f.office, f.org)
+		if code, result := deploy(t, f.srv, token, "DEPLOY0001", newDeployMachine(21)); code != http.StatusOK || result != deployOK {
+			t.Fatalf("deploy = %d %q, want 200 OK", code, result)
+		}
+		if got := f.folderOf(t, "DEPLOY0001"); got != f.office {
+			t.Errorf("folder = %d, want the token's %d", got, f.office)
+		}
+		if got := f.orgOf(t, "DEPLOY0001"); got != f.org {
+			t.Errorf("organization = %q, want the token's %q", got, f.org)
+		}
+	})
+}
