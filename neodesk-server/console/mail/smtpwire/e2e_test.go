@@ -360,12 +360,12 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 	switch sess.Call.Fn {
 	case "sendEmail":
 		m := arg(0)
-		email := mail.Email{Text: text(m["text"]), HTML: text(m["html"])}
+		email := mail.RawEmail{Text: text(m["text"]), HTML: text(m["html"])}
 		email.To, email.ToList = recipients(t, m["to"])
 		if subject := text(m["subject"]); subject != nil {
 			email.Subject = *subject
 		}
-		sent, threw = svc.SendEmail(ctx, email)
+		sent, threw = svc.SendUnbranded(ctx, email)
 		result = sent
 	case "sendAlertEmail":
 		alert := jsbind.Of(jsValues(t, map[string]json.RawMessage{"v": sess.Call.Args[0]}).Get("v"))

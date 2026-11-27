@@ -97,6 +97,10 @@ func (t *SMTP) Send(ctx context.Context, settings Settings, mail Outgoing) error
 		HTML:    mail.HTML,
 		Inline:  mail.Inline,
 		Lang:    mail.Lang,
+
+		ReplyTo:         mail.ReplyTo,
+		Headers:         mail.Headers,
+		MessageIDDomain: mail.MessageIDDomain,
 	}, message.Options{Now: t.Now, Rand: t.Rand})
 	if err != nil {
 		return err

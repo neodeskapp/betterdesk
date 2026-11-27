@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
@@ -27,7 +28,7 @@ func TestAStoredHostThatIsNoTextIsInvalid(t *testing.T) {
 			if answer.Status != 200 || marshal(t, answer.Body) != `{"success":false,"error":"Invalid SMTP configuration"}` {
 				t.Errorf("%s: test %d %s", stored, answer.Status, marshal(t, answer.Body))
 			}
-			sent, err := s.SendEmail(ctx, Email{To: []string{"a@example.org"}, Subject: "s"})
+			sent, err := s.SendEmail(ctx, Email{To: []string{"a@example.org"}, Mail: testMail})
 			if sent || err != nil || len(transport.sends)+len(transport.verifies) != 0 {
 				t.Errorf("%s: sent %v %v, %d connections", stored, sent, err, len(transport.sends)+len(transport.verifies))
 			}
@@ -49,3 +50,6 @@ func TestAStoredHostThatIsNoTextIsInvalid(t *testing.T) {
 		}
 	})
 }
+
+// testMail is a mail with what every mail needs.
+var testMail = brandmail.Mail{Subject: "s", Heading: "h"}
