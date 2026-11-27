@@ -453,6 +453,10 @@ type EnrollmentRequest struct {
 	Tags       string `json:"tags,omitempty"` // comma-separated enrollment metadata
 	PublicKey  string `json:"public_key,omitempty"`
 	Token      string `json:"token,omitempty"` // Optional enrollment credential, POST body only
+	// Group is a folder (device group) by id or name. It counts only when
+	// a valid enrollment token admits the device, and the token's own
+	// folder wins over it (enrollment_placement.go).
+	Group string `json:"group,omitempty"`
 	// RendezvousPK is the key the peer row binds for the signal server, set
 	// only by a deploy (device_deploy.go), never from a request body.
 	RendezvousPK []byte `json:"-"`
@@ -490,6 +494,7 @@ var enrollmentFieldCaps = []struct {
 	{"tags", 1024, func(r *EnrollmentRequest) string { return r.Tags }},
 	{"public_key", 512, func(r *EnrollmentRequest) string { return r.PublicKey }},
 	{"token", 512, func(r *EnrollmentRequest) string { return r.Token }},
+	{"group", enrollmentGroupMax, func(r *EnrollmentRequest) string { return r.Group }},
 }
 
 // checkEnrollmentFields answers why an enrollment request is refused
@@ -711,6 +716,18 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 
 	switch mode {
 	case "open":
+		// A valid enrollment token admits the device as in the other modes,
+		// so it lands in the token's folder and organization. Any other
+		// token changes nothing here: open mode takes the device anyway.
+		if token := strings.TrimSpace(req.Token); token != "" {
+			if ok, deviceToken := s.admitByEnrollmentToken(&req, token, clientIP, "open"); ok {
+				resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
+				resp.DeviceToken = deviceToken
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(resp)
+				return
+			}
+		}
 		// Auto-approve: create peer immediately
 		if err := s.createPeerFromEnrollment(&req, clientIP, true); err != nil {
 			http.Error(w, "Failed to enroll device", http.StatusInternalServerError)
@@ -847,10 +864,11 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 
 // admitByEnrollmentToken redeems an enrollment token for this device.
 //
-// Shared by the `managed` and `locked` modes so both apply identical checks:
+// Shared by the modes so all apply identical checks:
 // the token must exist, be active, be unbound or bound to this exact device, and
 // must not be exhausted. A successful redemption creates the peer, binds the
-// token, records the use and issues the device credential.
+// token, records the use, puts the device where the token says
+// (placeEnrolledDevice) and issues the device credential.
 //
 // Returns the issued device token and whether admission succeeded.
 func (s *Server) admitByEnrollmentToken(req *EnrollmentRequest, rawToken, clientIP, mode string) (bool, string) {
@@ -871,6 +889,7 @@ func (s *Server) admitByEnrollmentToken(req *EnrollmentRequest, rawToken, client
 		log.Printf("[API] Failed to enroll %s by token: %v", req.DeviceID, err)
 		return false, ""
 	}
+	s.placeEnrolledDevice(tok, req.DeviceID, req.Group)
 	deviceToken, err := s.issueEnrollmentDeviceToken(req.DeviceID)
 	if err != nil {
 		// The device is enrolled; without a fresh credential it can still prove

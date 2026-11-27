@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
@@ -36,6 +37,11 @@ type DeviceTokenRequest struct {
 	MaxUses   int    `json:"max_uses"`   // 0 = unlimited, 1 = single-use (default)
 	ExpiresIn int    `json:"expires_in"` // Seconds until expiration (0 = no expiration)
 	Note      string `json:"note"`
+	// FolderID and OrgID are where a device that enrolls with the token
+	// goes: a folder (device group) and an organization, whose policies
+	// then apply to it. 0 and "" are none.
+	FolderID int64  `json:"folder_id"`
+	OrgID    string `json:"org_id"`
 }
 
 // DeviceTokenResponse is the JSON response for a device token.
@@ -55,6 +61,8 @@ type DeviceTokenResponse struct {
 	LastUsedAt  *time.Time `json:"last_used_at,omitempty"`
 	CreatedBy   string     `json:"created_by,omitempty"`
 	Note        string     `json:"note,omitempty"`
+	FolderID    int64      `json:"folder_id,omitempty"`
+	OrgID       string     `json:"org_id,omitempty"`
 }
 
 // toResponse converts a db.DeviceToken to a DeviceTokenResponse.
@@ -73,6 +81,8 @@ func toDeviceTokenResponse(t *db.DeviceToken, includePlainToken bool) *DeviceTok
 		LastUsedAt:  t.LastUsedAt,
 		CreatedBy:   t.CreatedBy,
 		Note:        t.Note,
+		FolderID:    t.FolderID,
+		OrgID:       t.OrgID,
 	}
 	if includePlainToken {
 		resp.Token = t.Token
@@ -139,6 +149,10 @@ func (s *Server) handleCreateDeviceToken(w http.ResponseWriter, r *http.Request)
 		http.Error(w, errNegativeUses, http.StatusBadRequest)
 		return
 	}
+	req.OrgID = strings.TrimSpace(req.OrgID)
+	if !s.tokenPlacementOK(w, r, req.FolderID, req.OrgID) {
+		return
+	}
 
 	// Generate secure token (32 chars)
 	plainToken, err := generateSecureToken(32)
@@ -170,6 +184,8 @@ func (s *Server) handleCreateDeviceToken(w http.ResponseWriter, r *http.Request)
 		ExpiresAt: expiresAt,
 		CreatedBy: creator,
 		Note:      req.Note,
+		FolderID:  req.FolderID,
+		OrgID:     req.OrgID,
 
 		CreatedByToken: tokenOf(r),
 	}
@@ -240,11 +256,14 @@ func (s *Server) handleUpdateDeviceToken(w http.ResponseWriter, r *http.Request)
 	}
 
 	// A field the body leaves out keeps its value; a note of "" clears the
-	// note and max_uses 0 lifts the limit.
+	// note, max_uses 0 lifts the limit, folder_id 0 and org_id "" take the
+	// folder and the organization away.
 	var req struct {
-		Name    string  `json:"name"`
-		MaxUses *int    `json:"max_uses"`
-		Note    *string `json:"note"`
+		Name     string  `json:"name"`
+		MaxUses  *int    `json:"max_uses"`
+		Note     *string `json:"note"`
+		FolderID *int64  `json:"folder_id"`
+		OrgID    *string `json:"org_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -264,6 +283,17 @@ func (s *Server) handleUpdateDeviceToken(w http.ResponseWriter, r *http.Request)
 	if req.Note != nil {
 		token.Note = *req.Note
 	}
+	folder, org := token.FolderID, token.OrgID
+	if req.FolderID != nil {
+		folder = *req.FolderID
+	}
+	if req.OrgID != nil {
+		org = strings.TrimSpace(*req.OrgID)
+	}
+	if (folder != token.FolderID || org != token.OrgID) && !s.tokenPlacementOK(w, r, folder, org) {
+		return
+	}
+	token.FolderID, token.OrgID = folder, org
 
 	if err := s.db.UpdateDeviceToken(token); err != nil {
 		log.Printf("[API] UpdateDeviceToken %d: %v", token.ID, err)
@@ -325,6 +355,8 @@ type BulkTokenRequest struct {
 	NamePrefix string `json:"name_prefix"` // Prefix for token names
 	MaxUses    int    `json:"max_uses"`    // Max uses per token
 	ExpiresIn  int    `json:"expires_in"`  // Seconds until expiration
+	FolderID   int64  `json:"folder_id"`   // Folder of the devices, 0 for none
+	OrgID      string `json:"org_id"`      // Organization of the devices, "" for none
 }
 
 // handleBulkGenerateTokens generates multiple device tokens at once.
@@ -347,6 +379,10 @@ func (s *Server) handleBulkGenerateTokens(w http.ResponseWriter, r *http.Request
 	}
 	if req.MaxUses == 0 {
 		req.MaxUses = 1
+	}
+	req.OrgID = strings.TrimSpace(req.OrgID)
+	if !s.tokenPlacementOK(w, r, req.FolderID, req.OrgID) {
+		return
 	}
 
 	// Calculate expiration
@@ -385,6 +421,8 @@ func (s *Server) handleBulkGenerateTokens(w http.ResponseWriter, r *http.Request
 			UseCount:  0,
 			ExpiresAt: expiresAt,
 			CreatedBy: creator,
+			FolderID:  req.FolderID,
+			OrgID:     req.OrgID,
 
 			CreatedByToken: tokenOf(r),
 		}

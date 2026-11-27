@@ -768,6 +768,10 @@ func (s *SQLiteDB) migrateSchema() error {
 		// made with, so that the end of the token ends it
 		{"device_tokens", "created_by_token", `ALTER TABLE device_tokens ADD COLUMN created_by_token TEXT NOT NULL DEFAULT ''`},
 		{"org_invitations", "created_by_token", `ALTER TABLE org_invitations ADD COLUMN created_by_token TEXT NOT NULL DEFAULT ''`},
+		// device_tokens: the folder and the organization (whose policies
+		// apply) a device that enrolls with the token goes into, 0 and "" for none
+		{"device_tokens", "folder_id", `ALTER TABLE device_tokens ADD COLUMN folder_id INTEGER NOT NULL DEFAULT 0`},
+		{"device_tokens", "org_id", `ALTER TABLE device_tokens ADD COLUMN org_id TEXT NOT NULL DEFAULT ''`},
 		// peer_metrics: network rates of NeoDesk telemetry (L480)
 		{"peer_metrics", "net_rx_bps", `ALTER TABLE peer_metrics ADD COLUMN net_rx_bps REAL DEFAULT NULL`},
 		{"peer_metrics", "net_tx_bps", `ALTER TABLE peer_metrics ADD COLUMN net_tx_bps REAL DEFAULT NULL`},
@@ -2628,9 +2632,9 @@ func (s *SQLiteDB) CreateDeviceToken(t *DeviceToken) error {
 	}
 
 	res, err := s.db.Exec(`
-		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note, created_by_token)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note, t.CreatedByToken)
+		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note, created_by_token, folder_id, org_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note, t.CreatedByToken, t.FolderID, t.OrgID)
 	if err != nil {
 		return fmt.Errorf("db: CreateDeviceToken: %w", err)
 	}
@@ -2644,7 +2648,7 @@ func (s *SQLiteDB) GetDeviceToken(id int64) (*DeviceToken, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note 
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
 		FROM device_tokens WHERE id = ?`, id)
 }
 
@@ -2653,7 +2657,7 @@ func (s *SQLiteDB) GetDeviceTokenByHash(tokenHash string) (*DeviceToken, error) 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note 
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
 		FROM device_tokens WHERE token_hash = ?`, tokenHash)
 }
 
@@ -2662,7 +2666,7 @@ func (s *SQLiteDB) GetDeviceTokenByPeerID(peerID string) (*DeviceToken, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note 
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
 		FROM device_tokens WHERE peer_id = ? AND status IN ('active', 'pending')`, peerID)
 }
 
@@ -2673,7 +2677,7 @@ func (s *SQLiteDB) getDeviceTokenByQuery(query string, args ...interface{}) (*De
 
 	err := s.db.QueryRow(query, args...).Scan(
 		&t.ID, &t.TokenHash, &t.Token, &t.Name, &t.PeerID, &t.Status, &t.MaxUses, &t.UseCount,
-		&createdAt, &expiresAt, &revokedAt, &lastUsedAt, &t.CreatedBy, &t.Note)
+		&createdAt, &expiresAt, &revokedAt, &lastUsedAt, &t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -2715,7 +2719,7 @@ func (s *SQLiteDB) ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, error)
 	defer s.mu.RUnlock()
 
 	query := `SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note 
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
 		FROM device_tokens`
 	if !includeRevoked {
 		query += ` WHERE status != 'revoked'`
@@ -2735,7 +2739,7 @@ func (s *SQLiteDB) ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, error)
 
 		if err := rows.Scan(&t.ID, &t.TokenHash, &t.Token, &t.Name, &t.PeerID, &t.Status,
 			&t.MaxUses, &t.UseCount, &createdAt, &expiresAt, &revokedAt, &lastUsedAt,
-			&t.CreatedBy, &t.Note); err != nil {
+			&t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID); err != nil {
 			return nil, err
 		}
 
@@ -2757,8 +2761,8 @@ func (s *SQLiteDB) UpdateDeviceToken(t *DeviceToken) error {
 	}
 
 	_, err := s.db.Exec(`
-		UPDATE device_tokens SET name=?, peer_id=?, status=?, max_uses=?, expires_at=?, note=?
-		WHERE id=?`, t.Name, t.PeerID, t.Status, t.MaxUses, expiresAt, t.Note, t.ID)
+		UPDATE device_tokens SET name=?, peer_id=?, status=?, max_uses=?, expires_at=?, note=?, folder_id=?, org_id=?
+		WHERE id=?`, t.Name, t.PeerID, t.Status, t.MaxUses, expiresAt, t.Note, t.FolderID, t.OrgID, t.ID)
 	return err
 }
 

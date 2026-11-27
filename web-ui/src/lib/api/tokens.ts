@@ -32,7 +32,11 @@ export const DeviceToken = v.object({
 	note: Text,
 	expires_at: Text,
 	created_at: Text,
-	created_by: Text
+	created_by: Text,
+	/** The folder (device group) a device that joins with it goes into; 0: none */
+	folder_id: Num,
+	/** The organization whose policies the device gets; '': none */
+	org_id: Text
 });
 export type DeviceToken = v.InferOutput<typeof DeviceToken>;
 
@@ -62,6 +66,10 @@ export interface TokenInput {
 	note: string;
 	/** Seconds; 0: never. Only when creating */
 	expires_in?: number;
+	/** The folder a device that joins with it goes into; 0: none */
+	folder_id?: number;
+	/** The organization whose policies the device gets; '': none */
+	org_id?: string;
 }
 
 export async function createToken(body: TokenInput): Promise<NewToken | null> {
