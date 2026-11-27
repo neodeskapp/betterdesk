@@ -506,6 +506,7 @@
     "strategy_deleted": "Regel gelöscht",
     "strategy_not_found": "Diese Regel gibt es nicht mehr.",
     "no_strategies": "Noch keine Regeln. Füge eine hinzu, um Client-Funktionen für ausgewählte Benutzer und Geräte ein- oder auszuschalten.",
+    "no_strategies_short": "Noch keine Regeln.",
     "loading_strategies": "Regeln werden geladen…",
     "groups_saved": "Gerätegruppen gespeichert",
     "group_membership_added": "Zur Gruppe hinzugefügt",
@@ -6030,6 +6031,7 @@
     "max_session_invalid": "Gib eine ganze Zahl von Minuten ein, 0 oder mehr.",
     "policy_none": "Keine Regel: Jedes Gerät behält seine eigene Einstellung.",
     "settings_tab_note": "Was jetzt für diese Organisation gilt. Jeder Wert wird dort geändert, wo er festgelegt ist: Richtlinien auf der Seite Richtlinien, das gemeinsame Adressbuch im Tab Adressbuch.",
+    "settings_tab_lead": "Was jetzt für diese Organisation gilt und wo du es änderst.",
     "policies_group_desc": "Wie Fernsitzungen auf den Geräten dieser Organisation ablaufen.",
     "policies_group_effect": "Geräte bekommen eine Änderung, wenn sie den Server das nächste Mal nach ihrer Richtlinie fragen.",
     "open_org_policies": "Richtlinien dieser Organisation öffnen",
@@ -6044,7 +6046,8 @@
     "danger_zone": "Gefahrenbereich",
     "name_hint": "Steht auf der Seite dieser Organisation, in Listen und bei ihren Mitgliedern.",
     "slug_changed": "Anmeldungen, die die Organisation über ihren Kurznamen angeben, brauchen nach dem Speichern den neuen.",
-    "policy_set": "Für diese Organisation festgelegt."
+    "policy_set": "Für diese Organisation festgelegt.",
+    "network_not_set": "Nicht festgelegt (es gelten die Verbindungseinstellungen des Servers)"
   },
   "chat": {
     "e2e_enabled": "Ende-zu-Ende verschlüsselt",
@@ -8780,6 +8783,7 @@
       "fallback_hint": "Bekommt kein Operator die Mail, geht sie an die Alarmadresse unter Einstellungen › E-Mail.",
       "folder_subject_hint": "Der Betreff nennt den Ordner des Geräts, damit sich Mails danach sortieren lassen.",
       "no_smtp_effect": "Wirkt erst, wenn der E-Mail-Versand unter Einstellungen › E-Mail eingerichtet ist.",
+      "no_smtp_note": "Der E-Mail-Versand ist nicht eingerichtet, deshalb geht noch keine dieser E-Mails raus.",
       "no_recipient": "Wirkt nicht: Niemand bekommt die Mail, solange beide Optionen darunter aus sind."
     },
     "targets": {

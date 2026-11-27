@@ -513,6 +513,7 @@
     "strategy_deleted": "تم حذف القاعدة",
     "strategy_not_found": "هذه القاعدة لم تعد موجودة.",
     "no_strategies": "لا توجد قواعد بعد. أضف قاعدة لتشغيل ميزات العميل أو إيقافها لمستخدمين وأجهزة محددة.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "جارٍ تحميل القواعد…",
     "groups_saved": "تم حفظ مجموعات الأجهزة",
     "group_membership_added": "تمت الإضافة إلى المجموعة",
@@ -6037,6 +6038,7 @@
     "max_session_invalid": "أدخل عددًا صحيحًا من الدقائق، 0 أو أكثر.",
     "policy_none": "لا قاعدة: يحتفظ كل جهاز بإعداده الخاص.",
     "settings_tab_note": "ما يسري على هذه المؤسسة الآن. تُغيَّر كل قيمة حيث ضُبطت: السياسات في صفحة السياسات، ودفتر العناوين المشترك في تبويب دفتر العناوين.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "كيف تعمل الجلسات عن بُعد على أجهزة هذه المؤسسة.",
     "policies_group_effect": "تحصل الأجهزة على التغيير في المرة التالية التي تطلب فيها سياستها من الخادم.",
     "open_org_policies": "فتح سياسات هذه المؤسسة",
@@ -6051,7 +6053,8 @@
     "danger_zone": "منطقة الخطر",
     "name_hint": "يظهر في صفحة هذه المؤسسة وفي القوائم ولأعضائها.",
     "slug_changed": "عمليات تسجيل الدخول التي تسمّي المؤسسة باسمها المختصر تحتاج إلى الاسم الجديد بعد الحفظ.",
-    "policy_set": "مضبوط لهذه المؤسسة."
+    "policy_set": "مضبوط لهذه المؤسسة.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "مشفرة من طرف إلى طرف",
@@ -8787,6 +8790,7 @@
       "fallback_hint": "عندما لا يتلقى أي مشغّل البريد، يذهب إلى عنوان التنبيهات في إعدادات › Email.",
       "folder_subject_hint": "يذكر الموضوع مجلد الجهاز، حتى يمكن فرز الرسائل حسبه.",
       "no_smtp_effect": "لا أثر له حتى يُعد إرسال البريد في إعدادات › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "لا أثر له: لا أحد يتلقى البريد ما دام الخياران أدناه متوقفين."
     },
     "targets": {

@@ -482,6 +482,7 @@
     "strategy_assign_counts": "Urządzenia: {peers}, użytkownicy: {users}, grupy: {groups}",
     "strategy_assign_none": "Jeszcze nigdzie nie zastosowano",
     "no_strategies": "Brak reguł. Dodaj regułę, aby włączać lub wyłączać funkcje klienta dla wybranych użytkowników i urządzeń.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Wczytywanie reguł…",
     "groups_saved": "Grupy urządzenia zapisane",
     "group_membership_added": "Dodano do grupy",
@@ -6316,6 +6317,7 @@
     "max_session_invalid": "Wpisz całkowitą liczbę minut, 0 lub więcej.",
     "policy_none": "Brak zasady: każde urządzenie zachowuje własne ustawienie.",
     "settings_tab_note": "Co teraz dotyczy tej organizacji. Każdą wartość zmienia się tam, gdzie jest ustawiona: polityki na stronie Polityki, wspólną książkę adresową na karcie Książka adresowa.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Jak działają sesje zdalne na urządzeniach tej organizacji.",
     "policies_group_effect": "Urządzenia dostają zmianę, gdy następnym razem poproszą serwer o swoją politykę.",
     "open_org_policies": "Otwórz polityki tej organizacji",
@@ -6330,7 +6332,8 @@
     "danger_zone": "Strefa zagrożenia",
     "name_hint": "Widoczna na stronie tej organizacji, na listach i dla jej członków.",
     "slug_changed": "Logowania, które wskazują organizację jej krótką nazwą, po zapisaniu potrzebują nowej.",
-    "policy_set": "Ustawione dla tej organizacji."
+    "policy_set": "Ustawione dla tej organizacji.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Szyfrowanie end-to-end",
@@ -8780,6 +8783,7 @@
       "fallback_hint": "Gdy żaden operator nie dostaje e-maila, trafia on na adres alertów w Ustawienia › E-mail.",
       "folder_subject_hint": "Temat podaje folder urządzenia, aby e-maile można było według niego sortować.",
       "no_smtp_effect": "Nie ma znaczenia, dopóki wysyłanie e-maili nie jest skonfigurowane w Ustawienia › E-mail.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Nie ma znaczenia: nikt nie dostaje e-maila, dopóki obie opcje poniżej są wyłączone."
     },
     "targets": {

@@ -506,6 +506,7 @@
     "strategy_deleted": "규칙이 삭제되었습니다",
     "strategy_not_found": "이 규칙은 더 이상 존재하지 않습니다.",
     "no_strategies": "아직 규칙이 없습니다. 규칙을 추가하면 선택한 사용자와 장치의 클라이언트 기능을 켜거나 끌 수 있습니다.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "규칙을 불러오는 중…",
     "groups_saved": "장치 그룹이 저장되었습니다.",
     "group_membership_added": "그룹에 추가됨",
@@ -6030,6 +6031,7 @@
     "max_session_invalid": "0 이상의 정수로 분을 입력하세요.",
     "policy_none": "규칙 없음: 각 장치가 자체 설정을 유지합니다.",
     "settings_tab_note": "지금 이 조직에 적용되는 것. 각 값은 설정된 곳에서 바꿉니다: 정책은 정책 페이지, 공유 주소록은 주소록 탭.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "이 조직의 장치에서 원격 세션이 작동하는 방식.",
     "policies_group_effect": "장치는 다음에 서버에 정책을 요청할 때 변경을 받습니다.",
     "open_org_policies": "이 조직의 정책 열기",
@@ -6044,7 +6046,8 @@
     "danger_zone": "위험 구역",
     "name_hint": "이 조직 페이지, 목록, 구성원에게 표시됩니다.",
     "slug_changed": "짧은 이름으로 조직을 지정하는 로그인은 저장 후 새 이름이 필요합니다.",
-    "policy_set": "이 조직에 설정됨."
+    "policy_set": "이 조직에 설정됨.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "종단 간 암호화",
@@ -8780,6 +8783,7 @@
       "fallback_hint": "어느 운영자도 메일을 받지 않으면 설정 › Email의 알림 주소로 갑니다.",
       "folder_subject_hint": "제목에 장치 폴더가 들어가므로 메일을 폴더별로 정리할 수 있습니다.",
       "no_smtp_effect": "설정 › Email에서 이메일 발송을 설정하기 전에는 효과가 없습니다.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "효과 없음: 아래 두 옵션이 모두 꺼져 있는 동안에는 아무도 메일을 받지 않습니다."
     },
     "targets": {

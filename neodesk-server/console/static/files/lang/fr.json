@@ -479,6 +479,7 @@
     "strategy_deleted": "Règle supprimée",
     "strategy_not_found": "Cette règle n'existe plus.",
     "no_strategies": "Aucune règle pour l'instant. Ajoutez-en une pour activer ou désactiver des fonctions du client pour des utilisateurs et des appareils choisis.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Chargement des règles…",
     "groups_saved": "Groupes d'appareils enregistrés",
     "group_membership_added": "Ajouté au groupe",
@@ -6320,6 +6321,7 @@
     "max_session_invalid": "Saisissez un nombre entier de minutes, 0 ou plus.",
     "policy_none": "Aucune règle : chaque appareil garde son propre réglage.",
     "settings_tab_note": "Ce qui s'applique à cette organisation en ce moment. Chaque valeur se modifie là où elle est définie : les politiques sur la page Politiques, le carnet d'adresses partagé dans l'onglet Carnet d'adresses.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Comment fonctionnent les sessions à distance sur les appareils de cette organisation.",
     "policies_group_effect": "Les appareils reçoivent une modification la prochaine fois qu'ils demandent leur politique au serveur.",
     "open_org_policies": "Ouvrir les politiques de cette organisation",
@@ -6334,7 +6336,8 @@
     "danger_zone": "Zone de danger",
     "name_hint": "Affiché sur la page de cette organisation, dans les listes et à ses membres.",
     "slug_changed": "Les connexions qui nomment l'organisation par son nom court ont besoin du nouveau après l'enregistrement.",
-    "policy_set": "Défini pour cette organisation."
+    "policy_set": "Défini pour cette organisation.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Chiffré de bout en bout",
@@ -8784,6 +8787,7 @@
       "fallback_hint": "Quand aucun opérateur ne reçoit l'e-mail, il va à l'adresse d'alerte dans Paramètres › E-mail.",
       "folder_subject_hint": "L'objet nomme le dossier de l'appareil, pour pouvoir trier les e-mails par dossier.",
       "no_smtp_effect": "Sans effet tant que l'envoi d'e-mails n'est pas configuré dans Paramètres › E-mail.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Sans effet : personne ne reçoit l'e-mail tant que les deux options ci-dessous sont désactivées."
     },
     "targets": {

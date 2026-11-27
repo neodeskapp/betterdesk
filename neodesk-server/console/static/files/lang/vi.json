@@ -512,6 +512,7 @@
     "strategy_deleted": "Đã xóa quy tắc",
     "strategy_not_found": "Quy tắc này không còn tồn tại.",
     "no_strategies": "Chưa có quy tắc nào. Hãy thêm một quy tắc để bật hoặc tắt tính năng client cho người dùng và thiết bị được chọn.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Đang tải quy tắc…",
     "groups_saved": "Đã lưu nhóm thiết bị",
     "group_membership_added": "Đã thêm vào nhóm",
@@ -6036,6 +6037,7 @@
     "max_session_invalid": "Nhập số phút là số nguyên, từ 0 trở lên.",
     "policy_none": "Không có quy tắc: mỗi thiết bị giữ cài đặt riêng.",
     "settings_tab_note": "Những gì đang áp dụng cho tổ chức này. Mỗi giá trị được đổi ở nơi nó được đặt: chính sách ở trang Chính sách, sổ địa chỉ chung ở tab Sổ địa chỉ.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Cách phiên từ xa hoạt động trên thiết bị của tổ chức này.",
     "policies_group_effect": "Thiết bị nhận thay đổi vào lần tiếp theo chúng hỏi máy chủ về chính sách.",
     "open_org_policies": "Mở chính sách của tổ chức này",
@@ -6050,7 +6052,8 @@
     "danger_zone": "Vùng nguy hiểm",
     "name_hint": "Hiển thị trên trang của tổ chức này, trong danh sách và cho thành viên.",
     "slug_changed": "Các lần đăng nhập gọi tổ chức bằng tên ngắn sẽ cần tên mới sau khi bạn lưu.",
-    "policy_set": "Đặt cho tổ chức này."
+    "policy_set": "Đặt cho tổ chức này.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Mã hóa đầu cuối",
@@ -8786,6 +8789,7 @@
       "fallback_hint": "Khi không người vận hành nào nhận thư, thư gửi tới địa chỉ cảnh báo trong Cài đặt › Email.",
       "folder_subject_hint": "Tiêu đề ghi thư mục của thiết bị, để thư có thể sắp xếp theo đó.",
       "no_smtp_effect": "Không có tác dụng cho tới khi việc gửi email được thiết lập trong Cài đặt › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Không có tác dụng: không ai nhận thư khi cả hai tùy chọn bên dưới đều tắt."
     },
     "targets": {

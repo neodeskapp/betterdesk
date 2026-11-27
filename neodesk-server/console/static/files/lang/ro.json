@@ -512,6 +512,7 @@
     "strategy_deleted": "Regulă ștearsă",
     "strategy_not_found": "Această regulă nu mai există.",
     "no_strategies": "Nu există încă reguli. Adăugați una pentru a activa sau dezactiva funcții ale clientului pentru utilizatorii și dispozitivele alese.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Se încarcă regulile…",
     "groups_saved": "Grupuri de dispozitive salvate",
     "group_membership_added": "Adăugat la grup",
@@ -6036,6 +6037,7 @@
     "max_session_invalid": "Introduceți un număr întreg de minute, 0 sau mai mult.",
     "policy_none": "Nicio regulă: fiecare dispozitiv își păstrează propria setare.",
     "settings_tab_note": "Ce se aplică acum acestei organizații. Fiecare valoare se modifică acolo unde este setată: politicile pe pagina Politici, agenda de adrese comună în fila Agendă de adrese.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Cum funcționează sesiunile la distanță pe dispozitivele acestei organizații.",
     "policies_group_effect": "Dispozitivele primesc o modificare data viitoare când cer serverului politica lor.",
     "open_org_policies": "Deschideți politicile acestei organizații",
@@ -6050,7 +6052,8 @@
     "danger_zone": "Zonă periculoasă",
     "name_hint": "Afișat pe pagina acestei organizații, în liste și membrilor ei.",
     "slug_changed": "Conectările care numesc organizația după numele scurt au nevoie de cel nou după salvare.",
-    "policy_set": "Setat pentru această organizație."
+    "policy_set": "Setat pentru această organizație.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Criptat de la capăt la capăt",
@@ -8786,6 +8789,7 @@
       "fallback_hint": "Când niciun operator nu primește e-mailul, acesta merge la adresa de alerte din Setări › Email.",
       "folder_subject_hint": "Subiectul numește dosarul dispozitivului, ca e-mailurile să poată fi sortate după el.",
       "no_smtp_effect": "Nu are efect până nu este configurată trimiterea de e-mailuri în Setări › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Nu are efect: nimeni nu primește e-mailul cât timp ambele opțiuni de mai jos sunt dezactivate."
     },
     "targets": {

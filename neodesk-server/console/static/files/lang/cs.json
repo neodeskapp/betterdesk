@@ -506,6 +506,7 @@
     "strategy_deleted": "Pravidlo smazáno",
     "strategy_not_found": "Toto pravidlo už neexistuje.",
     "no_strategies": "Zatím žádná pravidla. Přidejte pravidlo, chcete-li zapínat nebo vypínat funkce klienta pro vybrané uživatele a zařízení.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Načítání pravidel…",
     "groups_saved": "Skupiny zařízení uloženy",
     "group_membership_added": "Přidáno do skupiny",
@@ -6030,6 +6031,7 @@
     "max_session_invalid": "Zadejte celé číslo minut, 0 nebo více.",
     "policy_none": "Žádné pravidlo: každé zařízení si ponechá vlastní nastavení.",
     "settings_tab_note": "Co teď pro tuto organizaci platí. Každá hodnota se mění tam, kde je nastavena: politiky na stránce Politiky, sdílený adresář na kartě Adresář.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Jak fungují vzdálené relace na zařízeních této organizace.",
     "policies_group_effect": "Zařízení dostanou změnu, až příště požádají server o svou politiku.",
     "open_org_policies": "Otevřít politiky této organizace",
@@ -6044,7 +6046,8 @@
     "danger_zone": "Nebezpečná zóna",
     "name_hint": "Zobrazí se na stránce této organizace, v seznamech a jejím členům.",
     "slug_changed": "Přihlášení, která organizaci označují krátkým názvem, budou po uložení potřebovat nový.",
-    "policy_set": "Nastaveno pro tuto organizaci."
+    "policy_set": "Nastaveno pro tuto organizaci.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Koncové šifrování aktivní",
@@ -8780,6 +8783,7 @@
       "fallback_hint": "Když e-mail nedostane žádný operátor, jde na adresu pro upozornění v Nastavení › Email.",
       "folder_subject_hint": "Předmět uvádí složku zařízení, aby šly e-maily podle ní třídit.",
       "no_smtp_effect": "Nemá žádný účinek, dokud není nastavené odesílání e-mailů v Nastavení › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Nemá žádný účinek: e-mail nikdo nedostane, dokud jsou obě možnosti níže vypnuté."
     },
     "targets": {

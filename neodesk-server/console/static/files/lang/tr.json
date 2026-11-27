@@ -512,6 +512,7 @@
     "strategy_deleted": "Kural silindi",
     "strategy_not_found": "Bu kural artık yok.",
     "no_strategies": "Henüz kural yok. Seçilen kullanıcılar ve cihazlar için istemci özelliklerini açmak veya kapatmak üzere bir kural ekleyin.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Kurallar yükleniyor…",
     "groups_saved": "Cihaz grupları kaydedildi",
     "group_membership_added": "Gruba eklendi",
@@ -6036,6 +6037,7 @@
     "max_session_invalid": "0 veya daha büyük, tam sayı olarak dakika girin.",
     "policy_none": "Kural yok: her cihaz kendi ayarını korur.",
     "settings_tab_note": "Bu kuruluş için şu an geçerli olanlar. Her değer ayarlandığı yerde değiştirilir: politikalar Politikalar sayfasında, paylaşılan adres defteri Adres defteri sekmesinde.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Bu kuruluşun cihazlarında uzak oturumların nasıl çalıştığı.",
     "policies_group_effect": "Cihazlar, politikalarını sunucudan bir sonraki istediklerinde değişikliği alır.",
     "open_org_policies": "Bu kuruluşun politikalarını aç",
@@ -6050,7 +6052,8 @@
     "danger_zone": "Tehlikeli bölge",
     "name_hint": "Bu kuruluşun sayfasında, listelerde ve üyelerine gösterilir.",
     "slug_changed": "Kuruluşu kısa adıyla belirten oturum açmalar, kaydettikten sonra yeni adı gerektirir.",
-    "policy_set": "Bu kuruluş için ayarlandı."
+    "policy_set": "Bu kuruluş için ayarlandı.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Uçtan uca şifrelenmiş",
@@ -8786,6 +8789,7 @@
       "fallback_hint": "Hiçbir operatör e-postayı almazsa, e-posta Ayarlar › Email altındaki uyarı adresine gider.",
       "folder_subject_hint": "Konu, cihazın klasörünü belirtir; böylece e-postalar ona göre sıralanabilir.",
       "no_smtp_effect": "E-posta gönderme Ayarlar › Email altında ayarlanana kadar etkisi yok.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Etkisi yok: aşağıdaki iki seçenek de kapalıyken kimse e-postayı almaz."
     },
     "targets": {

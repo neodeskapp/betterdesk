@@ -512,6 +512,7 @@
     "strategy_deleted": "Szabály törölve",
     "strategy_not_found": "Ez a szabály már nem létezik.",
     "no_strategies": "Még nincsenek szabályok. Adjon hozzá egyet, hogy a kiválasztott felhasználóknál és eszközökön be- vagy kikapcsolhassa a kliens funkcióit.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Szabályok betöltése…",
     "groups_saved": "Eszközcsoportok mentve",
     "group_membership_added": "Hozzáadva a csoporthoz",
@@ -6036,6 +6037,7 @@
     "max_session_invalid": "Adjon meg egész számú percet, 0-t vagy többet.",
     "policy_none": "Nincs szabály: minden eszköz megtartja a saját beállítását.",
     "settings_tab_note": "Ami most erre a szervezetre érvényes. Minden érték ott módosítható, ahol be van állítva: az irányelvek az Irányelvek oldalon, a közös címjegyzék a Címjegyzék lapon.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Hogyan működnek a távoli munkamenetek a szervezet eszközein.",
     "policies_group_effect": "Az eszközök akkor kapják meg a módosítást, amikor legközelebb lekérik a szervertől az irányelvüket.",
     "open_org_policies": "A szervezet irányelveinek megnyitása",
@@ -6050,7 +6052,8 @@
     "danger_zone": "Veszélyzóna",
     "name_hint": "Megjelenik a szervezet oldalán, a listákban és a tagjainak.",
     "slug_changed": "Azoknak a bejelentkezéseknek, amelyek a rövid nevével nevezik meg a szervezetet, mentés után az új név kell.",
-    "policy_set": "Ehhez a szervezethez beállítva."
+    "policy_set": "Ehhez a szervezethez beállítva.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Végponttól végpontig titkosítva",
@@ -8786,6 +8789,7 @@
       "fallback_hint": "Ha egyetlen operátor sem kapja meg az e-mailt, az a Beállítások › Email alatti riasztási címre megy.",
       "folder_subject_hint": "A tárgy megnevezi az eszköz mappáját, így az e-mailek eszerint rendezhetők.",
       "no_smtp_effect": "Nincs hatása, amíg az e-mail-küldés nincs beállítva a Beállítások › Email alatt.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Nincs hatása: senki sem kapja meg az e-mailt, amíg mindkét lenti lehetőség ki van kapcsolva."
     },
     "targets": {

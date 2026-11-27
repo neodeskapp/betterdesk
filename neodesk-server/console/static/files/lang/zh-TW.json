@@ -479,6 +479,7 @@
     "strategy_deleted": "規則已刪除",
     "strategy_not_found": "此規則已不存在。",
     "no_strategies": "還沒有規則。新增規則後，可為所選使用者和裝置開啟或關閉用戶端功能。",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "正在載入規則…",
     "groups_saved": "設備分組已保存",
     "group_membership_added": "已添加到分組",
@@ -6320,6 +6321,7 @@
     "max_session_invalid": "請輸入 0 或以上的整數分鐘數。",
     "policy_none": "沒有規則：每台裝置保留自己的設定。",
     "settings_tab_note": "目前適用於此組織的內容。每個值在設定它的地方變更：策略在「策略」頁面，共用通訊錄在「通訊錄」分頁。",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "此組織的裝置上遠端工作階段如何運作。",
     "policies_group_effect": "裝置下次向伺服器要求策略時取得變更。",
     "open_org_policies": "開啟此組織的策略",
@@ -6334,7 +6336,8 @@
     "danger_zone": "危險區域",
     "name_hint": "顯示在此組織的頁面、清單中，並向其成員顯示。",
     "slug_changed": "以簡稱指定組織的登入方式在儲存後需要使用新名稱。",
-    "policy_set": "已為此組織設定。"
+    "policy_set": "已為此組織設定。",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "端到端加密",
@@ -8784,6 +8787,7 @@
       "fallback_hint": "如果沒有操作員收到郵件，郵件會寄到「設置 › Email」中的警示地址。",
       "folder_subject_hint": "郵件主旨包含裝置的資料夾，方便依資料夾整理郵件。",
       "no_smtp_effect": "在「設置 › Email」中設定郵件寄送之前，此項沒有作用。",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "沒有作用：只要下方兩個選項都關閉，就沒有人會收到郵件。"
     },
     "targets": {

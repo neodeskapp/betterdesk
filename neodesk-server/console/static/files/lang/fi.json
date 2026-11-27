@@ -512,6 +512,7 @@
     "strategy_deleted": "Sääntö poistettu",
     "strategy_not_found": "Tätä sääntöä ei ole enää olemassa.",
     "no_strategies": "Ei vielä sääntöjä. Lisää sääntö, jos haluat kytkeä asiakkaan toimintoja päälle tai pois valituilta käyttäjiltä ja laitteilta.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Ladataan sääntöjä…",
     "groups_saved": "Laiteryhmät tallennettu",
     "group_membership_added": "Lisätty ryhmään",
@@ -6036,6 +6037,7 @@
     "max_session_invalid": "Anna kokonainen minuuttimäärä, 0 tai enemmän.",
     "policy_none": "Ei sääntöä: jokainen laite pitää oman asetuksensa.",
     "settings_tab_note": "Mitä tähän organisaatioon nyt sovelletaan. Jokainen arvo muutetaan siellä, missä se asetetaan: käytännöt Käytännöt-sivulla, jaettu osoitekirja Osoitekirja-välilehdellä.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Miten etäistunnot toimivat tämän organisaation laitteilla.",
     "policies_group_effect": "Laitteet saavat muutoksen, kun ne seuraavan kerran pyytävät palvelimelta käytäntöään.",
     "open_org_policies": "Avaa tämän organisaation käytännöt",
@@ -6050,7 +6052,8 @@
     "danger_zone": "Vaaravyöhyke",
     "name_hint": "Näkyy tämän organisaation sivulla, luetteloissa ja sen jäsenille.",
     "slug_changed": "Kirjautumiset, jotka nimeävät organisaation lyhyellä nimellä, tarvitsevat tallennuksen jälkeen uuden nimen.",
-    "policy_set": "Asetettu tälle organisaatiolle."
+    "policy_set": "Asetettu tälle organisaatiolle.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Päästä päähän salattu",
@@ -8786,6 +8789,7 @@
       "fallback_hint": "Kun yksikään operaattori ei saa sähköpostia, se menee hälytysosoitteeseen kohdassa Asetukset › Email.",
       "folder_subject_hint": "Aihe mainitsee laitteen kansion, jotta sähköpostit voi lajitella sen mukaan.",
       "no_smtp_effect": "Ei vaikutusta, ennen kuin sähköpostin lähetys on määritetty kohdassa Asetukset › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Ei vaikutusta: kukaan ei saa sähköpostia niin kauan kuin molemmat alla olevat vaihtoehdot ovat pois päältä."
     },
     "targets": {

@@ -512,6 +512,7 @@
     "strategy_deleted": "Regel slettet",
     "strategy_not_found": "Denne regelen finnes ikke lenger.",
     "no_strategies": "Ingen regler ennå. Legg til en for å slå klientfunksjoner av eller på for valgte brukere og enheter.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Laster inn regler…",
     "groups_saved": "Enhetsgrupper lagret",
     "group_membership_added": "Lagt til i gruppe",
@@ -6036,6 +6037,7 @@
     "max_session_invalid": "Skriv inn et helt antall minutter, 0 eller flere.",
     "policy_none": "Ingen regel: hver enhet beholder sin egen innstilling.",
     "settings_tab_note": "Det som gjelder for denne organisasjonen nå. Hver verdi endres der den er satt: retningslinjer på siden Retningslinjer, den delte adresseboken på fanen Adressebok.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Hvordan fjernøkter virker på enhetene til denne organisasjonen.",
     "policies_group_effect": "Enhetene får en endring neste gang de ber serveren om retningslinjen sin.",
     "open_org_policies": "Åpne retningslinjene til denne organisasjonen",
@@ -6050,7 +6052,8 @@
     "danger_zone": "Faresone",
     "name_hint": "Vises på siden til denne organisasjonen, i lister og for medlemmene.",
     "slug_changed": "Pålogginger som angir organisasjonen med kortnavnet, trenger det nye etter at du har lagret.",
-    "policy_set": "Satt for denne organisasjonen."
+    "policy_set": "Satt for denne organisasjonen.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Ende-til-ende kryptert",
@@ -8786,6 +8789,7 @@
       "fallback_hint": "Når ingen operatør får e-posten, går den til varseladressen under Innstillinger › Email.",
       "folder_subject_hint": "Emnet nevner mappen til enheten, så e-poster kan sorteres etter den.",
       "no_smtp_effect": "Har ingen virkning før sending av e-post er satt opp under Innstillinger › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Har ingen virkning: ingen får e-posten så lenge begge alternativene nedenfor er av."
     },
     "targets": {

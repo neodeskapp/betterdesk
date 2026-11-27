@@ -506,6 +506,7 @@
     "strategy_deleted": "Regra excluída",
     "strategy_not_found": "Esta regra não existe mais.",
     "no_strategies": "Ainda não há regras. Adicione uma para ligar ou desligar funções do cliente para usuários e dispositivos escolhidos.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Carregando regras…",
     "groups_saved": "Grupos de dispositivos salvos",
     "group_membership_added": "Adicionado ao grupo",
@@ -6030,6 +6031,7 @@
     "max_session_invalid": "Introduza um número inteiro de minutos, 0 ou mais.",
     "policy_none": "Sem regra: cada dispositivo mantém a sua própria definição.",
     "settings_tab_note": "O que se aplica agora a esta organização. Cada valor altera-se onde é definido: as políticas na página Políticas, o livro de endereços partilhado no separador Livro de endereços.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Como funcionam as sessões remotas nos dispositivos desta organização.",
     "policies_group_effect": "Os dispositivos recebem uma alteração da próxima vez que pedirem a política ao servidor.",
     "open_org_policies": "Abrir as políticas desta organização",
@@ -6044,7 +6046,8 @@
     "danger_zone": "Zona de perigo",
     "name_hint": "Mostrado na página desta organização, nas listas e aos seus membros.",
     "slug_changed": "Os inícios de sessão que indicam a organização pelo nome curto precisam do novo depois de guardar.",
-    "policy_set": "Definido para esta organização."
+    "policy_set": "Definido para esta organização.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Criptografia ponta a ponta",
@@ -8780,6 +8783,7 @@
       "fallback_hint": "Quando nenhum operador recebe o email, vai para o endereço de alerta em Configurações › Email.",
       "folder_subject_hint": "O assunto indica a pasta do dispositivo, para os emails poderem ser ordenados por ela.",
       "no_smtp_effect": "Não tem efeito até o envio de email estar configurado em Configurações › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Não tem efeito: ninguém recebe o email enquanto as duas opções abaixo estiverem desligadas."
     },
     "targets": {

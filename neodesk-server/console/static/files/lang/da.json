@@ -512,6 +512,7 @@
     "strategy_deleted": "Regel slettet",
     "strategy_not_found": "Denne regel findes ikke længere.",
     "no_strategies": "Ingen regler endnu. Tilføj en for at slå klientfunktioner til eller fra for udvalgte brugere og enheder.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Indlæser regler…",
     "groups_saved": "Enhedsgrupper blev gemt",
     "group_membership_added": "Tilføjet til gruppe",
@@ -6036,6 +6037,7 @@
     "max_session_invalid": "Angiv et helt antal minutter, 0 eller flere.",
     "policy_none": "Ingen regel: hver enhed beholder sin egen indstilling.",
     "settings_tab_note": "Det, der gælder for denne organisation nu. Hver værdi ændres der, hvor den er sat: politikker på siden Politikker, den delte adressebog på fanen Adressebog.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Hvordan fjernsessioner virker på denne organisations enheder.",
     "policies_group_effect": "Enheder får en ændring, næste gang de beder serveren om deres politik.",
     "open_org_policies": "Åbn denne organisations politikker",
@@ -6050,7 +6052,8 @@
     "danger_zone": "Farezone",
     "name_hint": "Vises på denne organisations side, i lister og for dens medlemmer.",
     "slug_changed": "Logins, der angiver organisationen ved dens korte navn, skal bruge det nye, når du har gemt.",
-    "policy_set": "Sat for denne organisation."
+    "policy_set": "Sat for denne organisation.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "End-to-end krypteret",
@@ -8786,6 +8789,7 @@
       "fallback_hint": "Når ingen operatør får mailen, går den til alarmadressen under Indstillinger › Email.",
       "folder_subject_hint": "Emnet nævner enhedens mappe, så mails kan sorteres efter den.",
       "no_smtp_effect": "Har ingen virkning, før afsendelse af e-mail er sat op under Indstillinger › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Har ingen virkning: ingen får mailen, så længe begge muligheder nedenfor er slået fra."
     },
     "targets": {

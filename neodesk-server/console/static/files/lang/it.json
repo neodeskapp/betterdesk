@@ -506,6 +506,7 @@
     "strategy_deleted": "Regola eliminata",
     "strategy_not_found": "Questa regola non esiste più.",
     "no_strategies": "Ancora nessuna regola. Ne aggiunga una per attivare o disattivare funzioni del client per utenti e dispositivi scelti.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Caricamento regole…",
     "groups_saved": "Gruppi dispositivi salvati",
     "group_membership_added": "Aggiunto al gruppo",
@@ -6030,6 +6031,7 @@
     "max_session_invalid": "Inserisci un numero intero di minuti, 0 o più.",
     "policy_none": "Nessuna regola: ogni dispositivo mantiene la propria impostazione.",
     "settings_tab_note": "Cosa si applica ora a questa organizzazione. Ogni valore si cambia dove è impostato: i criteri nella pagina Criteri, la rubrica condivisa nella scheda Rubrica.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Come funzionano le sessioni remote sui dispositivi di questa organizzazione.",
     "policies_group_effect": "I dispositivi ricevono una modifica la prossima volta che chiedono al server il loro criterio.",
     "open_org_policies": "Apri i criteri di questa organizzazione",
@@ -6044,7 +6046,8 @@
     "danger_zone": "Zona pericolosa",
     "name_hint": "Mostrato nella pagina di questa organizzazione, negli elenchi e ai suoi membri.",
     "slug_changed": "Gli accessi che indicano l'organizzazione con il suo nome breve avranno bisogno di quello nuovo dopo il salvataggio.",
-    "policy_set": "Impostato per questa organizzazione."
+    "policy_set": "Impostato per questa organizzazione.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "Crittografia end-to-end",
@@ -8780,6 +8783,7 @@
       "fallback_hint": "Quando nessun operatore riceve l'email, va all'indirizzo per gli avvisi in Impostazioni › Email.",
       "folder_subject_hint": "L'oggetto indica la cartella del dispositivo, così le email si possono ordinare per cartella.",
       "no_smtp_effect": "Non ha effetto finché l'invio di email non è configurato in Impostazioni › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Non ha effetto: nessuno riceve l'email finché entrambe le opzioni qui sotto sono disattivate."
     },
     "targets": {

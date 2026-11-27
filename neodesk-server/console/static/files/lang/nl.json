@@ -506,6 +506,7 @@
     "strategy_deleted": "Regel verwijderd",
     "strategy_not_found": "Deze regel bestaat niet meer.",
     "no_strategies": "Nog geen regels. Voeg er een toe om clientfuncties aan of uit te zetten voor gekozen gebruikers en apparaten.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Regels laden…",
     "groups_saved": "Apparaatgroepen opgeslagen",
     "group_membership_added": "Toegevoegd aan groep",
@@ -6030,6 +6031,7 @@
     "max_session_invalid": "Voer een geheel aantal minuten in, 0 of meer.",
     "policy_none": "Geen regel: elk apparaat houdt zijn eigen instelling.",
     "settings_tab_note": "Wat nu voor deze organisatie geldt. Elke waarde wijzigt u waar die wordt ingesteld: beleid op de pagina Beleid, het gedeelde adresboek op het tabblad Adresboek.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Hoe externe sessies werken op de apparaten van deze organisatie.",
     "policies_group_effect": "Apparaten krijgen een wijziging de volgende keer dat ze de server om hun beleid vragen.",
     "open_org_policies": "Beleid van deze organisatie openen",
@@ -6044,7 +6046,8 @@
     "danger_zone": "Gevarenzone",
     "name_hint": "Getoond op de pagina van deze organisatie, in lijsten en aan de leden.",
     "slug_changed": "Inlogs die de organisatie met haar korte naam aanduiden, hebben na het opslaan de nieuwe nodig.",
-    "policy_set": "Ingesteld voor deze organisatie."
+    "policy_set": "Ingesteld voor deze organisatie.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "End-to-end versleuteld",
@@ -8780,6 +8783,7 @@
       "fallback_hint": "Als geen operator de mail krijgt, gaat hij naar het meldingsadres in Instellingen › Email.",
       "folder_subject_hint": "Het onderwerp noemt de map van het apparaat, zodat mails erop gesorteerd kunnen worden.",
       "no_smtp_effect": "Heeft geen effect totdat het versturen van e-mail is ingesteld in Instellingen › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Heeft geen effect: niemand krijgt de mail zolang beide opties hieronder uit staan."
     },
     "targets": {

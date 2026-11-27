@@ -506,6 +506,7 @@
     "strategy_deleted": "ルールを削除しました",
     "strategy_not_found": "このルールはもう存在しません。",
     "no_strategies": "ルールはまだありません。ルールを追加すると、選択したユーザーとデバイスのクライアント機能をオンまたはオフにできます。",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "ルールを読み込んでいます…",
     "groups_saved": "デバイスグループが保存されました",
     "group_membership_added": "グループに追加しました",
@@ -6030,6 +6031,7 @@
     "max_session_invalid": "分を 0 以上の整数で入力してください。",
     "policy_none": "ルールなし: 各デバイスが自身の設定を保ちます。",
     "settings_tab_note": "この組織に現在適用されているもの。各値は設定されている場所で変更します: ポリシーは「ポリシー」ページ、共有アドレス帳は「アドレス帳」タブです。",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "この組織のデバイスでリモートセッションがどう動作するか。",
     "policies_group_effect": "デバイスは、次にサーバーにポリシーを問い合わせたときに変更を受け取ります。",
     "open_org_policies": "この組織のポリシーを開く",
@@ -6044,7 +6046,8 @@
     "danger_zone": "危険な操作",
     "name_hint": "この組織のページ、一覧、メンバーに表示されます。",
     "slug_changed": "短い名前で組織を指定するサインインでは、保存後に新しい名前が必要になります。",
-    "policy_set": "この組織に設定されています。"
+    "policy_set": "この組織に設定されています。",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "エンドツーエンド暗号化",
@@ -8780,6 +8783,7 @@
       "fallback_hint": "どのオペレーターにもメールが届かない場合は、「設定 › Email」のアラートアドレスに送られます。",
       "folder_subject_hint": "件名にデバイスのフォルダーが入るので、メールをフォルダーで振り分けられます。",
       "no_smtp_effect": "「設定 › Email」でメール送信を設定するまで効果がありません。",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "効果がありません: 下の 2 つのオプションが両方オフの間は誰にもメールが届きません。"
     },
     "targets": {

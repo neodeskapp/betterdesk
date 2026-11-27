@@ -512,6 +512,7 @@
     "strategy_deleted": "Regel borttagen",
     "strategy_not_found": "Den här regeln finns inte längre.",
     "no_strategies": "Inga regler ännu. Lägg till en för att slå på eller av klientfunktioner för valda användare och enheter.",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "Läser in regler…",
     "groups_saved": "Enhetsgrupper har sparats",
     "group_membership_added": "Tillagd i grupp",
@@ -6036,6 +6037,7 @@
     "max_session_invalid": "Ange ett helt antal minuter, 0 eller fler.",
     "policy_none": "Ingen regel: varje enhet behåller sin egen inställning.",
     "settings_tab_note": "Det som gäller för den här organisationen nu. Varje värde ändras där det är satt: policyer på sidan Policyer, den delade adressboken på fliken Adressbok.",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "Hur fjärrsessioner fungerar på den här organisationens enheter.",
     "policies_group_effect": "Enheterna får en ändring nästa gång de ber servern om sin policy.",
     "open_org_policies": "Öppna den här organisationens policyer",
@@ -6050,7 +6052,8 @@
     "danger_zone": "Farozon",
     "name_hint": "Visas på den här organisationens sida, i listor och för dess medlemmar.",
     "slug_changed": "Inloggningar som anger organisationen med dess korta namn behöver det nya när du har sparat.",
-    "policy_set": "Satt för den här organisationen."
+    "policy_set": "Satt för den här organisationen.",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "End-to-end krypterad",
@@ -8786,6 +8789,7 @@
       "fallback_hint": "När ingen operatör får e-posten går den till larmadressen under Inställningar › Email.",
       "folder_subject_hint": "Ämnesraden nämner enhetens mapp, så att e-post kan sorteras efter den.",
       "no_smtp_effect": "Har ingen effekt förrän e-postutskick är konfigurerat under Inställningar › Email.",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "Har ingen effekt: ingen får e-posten så länge båda alternativen nedan är av."
     },
     "targets": {

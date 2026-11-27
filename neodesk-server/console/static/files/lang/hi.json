@@ -512,6 +512,7 @@
     "strategy_deleted": "नियम हटाया गया",
     "strategy_not_found": "यह नियम अब मौजूद नहीं है।",
     "no_strategies": "अभी कोई नियम नहीं है। चुने गए उपयोगकर्ताओं और डिवाइसों के लिए क्लाइंट सुविधाएँ चालू या बंद करने के लिए एक नियम जोड़ें।",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "नियम लोड हो रहे हैं…",
     "groups_saved": "डिवाइस समूह सहेजे गए",
     "group_membership_added": "समूह में जोड़ा गया",
@@ -6036,6 +6037,7 @@
     "max_session_invalid": "मिनटों की पूर्ण संख्या दर्ज करें, 0 या अधिक।",
     "policy_none": "कोई नियम नहीं: हर डिवाइस अपनी सेटिंग रखता है।",
     "settings_tab_note": "अभी इस संगठन पर क्या लागू है। हर मान वहीं बदलता है जहाँ उसे सेट किया गया है: नीतियाँ नीतियों पेज पर, साझा पता पुस्तिका पता पुस्तिका टैब पर।",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "इस संगठन के डिवाइस पर रिमोट सत्र कैसे काम करते हैं।",
     "policies_group_effect": "डिवाइस अगली बार सर्वर से अपनी नीति माँगने पर बदलाव पाते हैं।",
     "open_org_policies": "इस संगठन की नीतियाँ खोलें",
@@ -6050,7 +6052,8 @@
     "danger_zone": "खतरे का क्षेत्र",
     "name_hint": "इस संगठन के पेज पर, सूचियों में और उसके सदस्यों को दिखता है।",
     "slug_changed": "जो साइन-इन संगठन को उसके छोटे नाम से बताते हैं, उन्हें सहेजने के बाद नया नाम चाहिए।",
-    "policy_set": "इस संगठन के लिए सेट।"
+    "policy_set": "इस संगठन के लिए सेट।",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "एंड-टू-एंड एन्क्रिप्टेड",
@@ -8786,6 +8789,7 @@
       "fallback_hint": "जब किसी ऑपरेटर को मेल नहीं मिलता, तो यह सेटिंग्स › Email के अलर्ट पते पर जाता है।",
       "folder_subject_hint": "विषय में डिवाइस का फ़ोल्डर होता है, ताकि मेल उसके हिसाब से छाँटे जा सकें।",
       "no_smtp_effect": "जब तक सेटिंग्स › Email में ईमेल भेजना सेट नहीं होता, इसका कोई असर नहीं।",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "कोई असर नहीं: जब तक नीचे के दोनों विकल्प बंद हैं, किसी को मेल नहीं मिलता।"
     },
     "targets": {

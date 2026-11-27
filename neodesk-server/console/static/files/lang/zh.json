@@ -506,6 +506,7 @@
     "strategy_deleted": "规则已删除",
     "strategy_not_found": "此规则已不存在。",
     "no_strategies": "还没有规则。添加规则后，可为所选用户和设备开启或关闭客户端功能。",
+    "no_strategies_short": "No rules yet.",
     "loading_strategies": "正在加载规则…",
     "groups_saved": "设备分组已保存",
     "group_membership_added": "已添加到分组",
@@ -6298,6 +6299,7 @@
     "max_session_invalid": "请输入 0 或以上的整数分钟数。",
     "policy_none": "无规则：每台设备保留自己的设置。",
     "settings_tab_note": "当前适用于此组织的内容。每个值在设置它的地方更改：策略在“策略”页面，共享通讯录在“通讯录”标签页。",
+    "settings_tab_lead": "What applies to this organization now, and where to change it.",
     "policies_group_desc": "此组织的设备上远程会话如何工作。",
     "policies_group_effect": "设备下次向服务器请求策略时获得更改。",
     "open_org_policies": "打开此组织的策略",
@@ -6312,7 +6314,8 @@
     "danger_zone": "危险区域",
     "name_hint": "显示在此组织的页面、列表中，并向其成员显示。",
     "slug_changed": "用短名称指定组织的登录方式在保存后需要使用新名称。",
-    "policy_set": "已为此组织设置。"
+    "policy_set": "已为此组织设置。",
+    "network_not_set": "Not set (the server’s connection settings apply)"
   },
   "chat": {
     "e2e_enabled": "端到端加密",
@@ -8780,6 +8783,7 @@
       "fallback_hint": "如果没有操作员收到邮件，邮件会发到“设置 › Email”中的告警地址。",
       "folder_subject_hint": "邮件主题包含设备的文件夹，方便按文件夹整理邮件。",
       "no_smtp_effect": "在“设置 › Email”中设置邮件发送之前，此项无效。",
+      "no_smtp_note": "Email sending is not set up, so none of these mails go out yet.",
       "no_recipient": "无效：只要下面两个选项都关闭，就没有人会收到邮件。"
     },
     "targets": {
