@@ -238,15 +238,23 @@ func moveExpiry(t *testing.T, w *routetest.World, target int64, at time.Time) {
 // totpSecret is a two-factor secret for the tests.
 const totpSecret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
 
-// totpNow is the current code of totpSecret.
+// totpNow is the current code of totpSecret. The server accepts only the
+// code of the step it checks in, after the password check, which can take
+// seconds under the race detector. So when less than 15 seconds of the
+// step are left, totpNow waits for the next step and gives its code.
 func totpNow(t *testing.T) string {
 	t.Helper()
 	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(totpSecret)
 	if err != nil {
 		t.Fatal(err)
 	}
+	now := time.Now()
+	if left := 30 - now.Unix()%30; left < 15 {
+		time.Sleep(time.Duration(left)*time.Second - time.Duration(now.Nanosecond()) + 100*time.Millisecond)
+		now = time.Now()
+	}
 	var msg [8]byte
-	binary.BigEndian.PutUint64(msg[:], uint64(time.Now().Unix()/30))
+	binary.BigEndian.PutUint64(msg[:], uint64(now.Unix()/30))
 	mac := hmac.New(sha1.New, key)
 	mac.Write(msg[:])
 	sum := mac.Sum(nil)
