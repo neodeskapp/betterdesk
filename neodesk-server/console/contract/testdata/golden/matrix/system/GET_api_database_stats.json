@@ -374,6 +374,34 @@
       },
       {
        "count": 0,
+       "name": "fleet_compliance"
+      },
+      {
+       "count": 0,
+       "name": "fleet_device_resources"
+      },
+      {
+       "count": 0,
+       "name": "fleet_resources"
+      },
+      {
+       "count": 0,
+       "name": "fleet_task_runs"
+      },
+      {
+       "count": 0,
+       "name": "fleet_tasks"
+      },
+      {
+       "count": 0,
+       "name": "fleet_workflow_runs"
+      },
+      {
+       "count": 0,
+       "name": "fleet_workflows"
+      },
+      {
+       "count": 0,
        "name": "folders"
       },
       {
