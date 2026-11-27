@@ -141,6 +141,10 @@ func TestEnvMergeLikeNode(t *testing.T) {
 		status := envMerge(args, env, string(mustDecode(t, recorded.Templates[c.Template])), serverinfo.OSFS{})
 		kinds[c.StderrKind]++
 
+		commented, goAnswers := envMergeCommentedOut[c.Name]
+		if goAnswers {
+			c.Stdout = commented[0]
+		}
 		if status != c.Status {
 			t.Errorf("%s: exit %d, Node %d (stderr %q)", c.Name, status, c.Status, errOut.String())
 		}
@@ -164,8 +168,11 @@ func TestEnvMergeLikeNode(t *testing.T) {
 			}
 		}
 		after := c.After
-		if sum, fixed := envMergeDifferences[c.Name]; fixed {
+		if sum, fixed := envMergeDifferences[c.Name]; fixed && !goAnswers {
 			after = goEnvAfter(t, c, dir, sum)
+		}
+		if goAnswers {
+			after = goEnvAfterCommentedOut(t, c, dir, commented[1])
 		}
 		compareFiles(t, c.Name, dir, after)
 	}
