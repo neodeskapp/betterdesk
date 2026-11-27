@@ -137,7 +137,10 @@ test.describe('several displays of one device', () => {
 		await expect.poll(async () => (await device(page)).streaming).toEqual([1]);
 		await expect(page.locator('.tile', { hasText: 'Paused' })).toHaveCount(2);
 		// The session info lists each display
-		await page.getByRole('group', { name: 'Session controls' }).getByRole('button', { name: 'More', exact: true }).click();
+		await page
+			.getByRole('group', { name: 'Session controls' })
+			.getByRole('button', { name: 'More', exact: true })
+			.click();
 		await page.getByRole('menuitem', { name: 'Session info' }).click();
 		const sheet = page.locator('.rd-sheet');
 		await expect(sheet.locator('dd[data-display]')).toHaveCount(3);
