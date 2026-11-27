@@ -68,6 +68,9 @@ export async function expectNoAxeViolations(page: Page, include?: string): Promi
 	await settledMotion(page);
 	let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']);
 	if (include) builder = builder.include(include);
+	// A frame sandboxed without scripts (the mail preview) can't run axe:
+	// entering it stalls the run. The mails' own checks are in brandmail.
+	builder = builder.exclude('iframe[sandbox]');
 	const result = await builder.analyze();
 	const summary = result.violations.map(
 		(v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`
