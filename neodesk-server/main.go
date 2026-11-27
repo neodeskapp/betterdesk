@@ -693,6 +693,7 @@ func main() {
 			apiSrv.SetMeshGateway(meshGw)
 		}
 
+		apiSrv.SetDerivedClientPort(startDerivedClientPort(cfg, os.Getenv))
 		if err := apiSrv.Start(ctx); err != nil {
 			logging.Fatalf("Failed to start API server: %v", err)
 		}
