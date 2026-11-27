@@ -32,7 +32,11 @@ export interface RDRendererStats {
 }
 
 export interface RDRendererOptions {
-	/** The window the canvas is in (default: the canvas' own) */
+	/**
+	 * The window the canvas is in (default: the canvas' own). Given, the
+	 * canvas is in a window of its own and follows that window's size: no
+	 * page code there resizes it.
+	 */
 	win?: Window;
 }
 
@@ -85,6 +89,8 @@ export class RDRenderer {
 	_dirty: boolean;
 	_renderLoopActive: boolean;
 	_onPointerMove: (e: PointerEvent) => void;
+	/** Stops following the window the canvas is in (set for a window of its own) */
+	_unfollow: (() => void) | null = null;
 	/** Called after the canvas size changed (the client asks the peer for a keyframe) */
 	onResizeRefresh?: () => void;
 	/** Called with true once a remote cursor image is ready */
@@ -128,6 +134,24 @@ export class RDRenderer {
 
 		this._onPointerMove = (e) => this.panTo(e.offsetX, e.offsetY);
 		canvas.addEventListener('pointermove', this._onPointerMove);
+		if (opts.win) this._followWindow(opts.win);
+	}
+
+	/** Resize with the window the canvas is in, and with its box (the bar above it can wrap) */
+	_followWindow(win: Window): void {
+		const onResize = () => this.resize();
+		win.addEventListener('resize', onResize);
+		const RO = (win as Window & typeof globalThis).ResizeObserver;
+		const box = this.canvas.parentElement;
+		let ro: ResizeObserver | null = null;
+		if (typeof RO === 'function' && box) {
+			ro = new RO(onResize);
+			ro.observe(box);
+		}
+		this._unfollow = () => {
+			win.removeEventListener('resize', onResize);
+			ro?.disconnect();
+		};
 	}
 
 	_dpr(): number {
@@ -523,6 +547,8 @@ export class RDRenderer {
 	 */
 	close(): void {
 		this.stopRenderLoop();
+		this._unfollow?.();
+		this._unfollow = null;
 		this.canvas.removeEventListener('pointermove', this._onPointerMove);
 		if (this._pendingFrame) {
 			this._pendingFrame.close();
