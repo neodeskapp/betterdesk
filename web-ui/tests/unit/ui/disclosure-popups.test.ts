@@ -5,6 +5,7 @@
  */
 import { cleanup, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
+import { flushSync } from 'svelte';
 import { afterEach, describe, expect, test } from 'vitest';
 import ColumnChooser from '../../../src/lib/ui/ColumnChooser.svelte';
 import TagFilter from '../../../src/routes/(console)/devices/TagFilter.svelte';
@@ -36,5 +37,53 @@ describe('popups of checkboxes on Devices', () => {
 	test('Tags', async () => {
 		render(TagFilter, { tags: ['office', 'scanner'], selected: [], onchange: () => {} });
 		await expectDisclosure(screen.getByRole('button', { name: /devices\.tags/ }));
+	});
+});
+
+/**
+ * A click on a checkbox's text focuses the page's main (tabindex -1), the
+ * nearest focusable ancestor, before the click reaches the checkbox. That
+ * must not close the popup, or the click ticks nothing. Focus moving to
+ * something outside still closes it.
+ */
+describe('a click on the text beside a checkbox keeps the popup open', () => {
+	function inMain() {
+		const main = document.createElement('main');
+		main.tabIndex = -1;
+		const elsewhere = document.createElement('button');
+		main.append(elsewhere);
+		document.body.append(main);
+		return { main, elsewhere };
+	}
+
+	async function check(button: HTMLElement, main: HTMLElement, elsewhere: HTMLElement) {
+		await userEvent.setup().click(button);
+		expect(button.getAttribute('aria-expanded')).toBe('true');
+		main.focus();
+		flushSync();
+		expect(document.activeElement).toBe(main);
+		expect(button.getAttribute('aria-expanded'), 'focus on an ancestor closed the popup').toBe('true');
+		elsewhere.focus();
+		flushSync();
+		expect(button.getAttribute('aria-expanded')).toBe('false');
+		main.remove();
+	}
+
+	test('Columns', async () => {
+		const { main, elsewhere } = inMain();
+		render(ColumnChooser, {
+			target: main,
+			props: {
+				columns: [{ id: 'platform', label: 'Platform', hideable: true }],
+				onchange: () => {}
+			}
+		});
+		await check(screen.getByRole('button', { name: /Columns/ }), main, elsewhere);
+	});
+
+	test('Tags', async () => {
+		const { main, elsewhere } = inMain();
+		render(TagFilter, { target: main, props: { tags: ['office'], selected: [], onchange: () => {} } });
+		await check(screen.getByRole('button', { name: /devices\.tags/ }), main, elsewhere);
 	});
 });
