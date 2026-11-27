@@ -25,7 +25,7 @@
 		type Command
 	} from '#lib/api/automation.ts';
 	import { formatNumber } from '#lib/i18n/format.ts';
-	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import {
 		commandTone,
 		isAcknowledged,
@@ -52,7 +52,6 @@
 	import Status from '#lib/ui/Status.svelte';
 	import Table from '#lib/ui/Table.svelte';
 	import Tabs from '#lib/ui/Tabs.svelte';
-	import Tag from '#lib/ui/Tag.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
@@ -353,9 +352,11 @@
 {#snippet ruleNameCell(r: AlertRule)}<span class="strong">{r.name}</span>{#if r.description}<span
 			class="cell-sub">{r.description}</span
 		>{/if}{/snippet}
-{#snippet conditionCell(r: AlertRule)}<Tag
-		label={labelFor(t, 'type', r.condition_type)}
-	/>{#if r.condition_type !== 'custom'}<span class="cell-sub">{labelFor(t, 'op', r.condition_op)}</span
+{#snippet conditionCell(r: AlertRule)}{labelFor(
+		t,
+		'type',
+		r.condition_type
+	)}{#if r.condition_type !== 'custom'}<span class="cell-sub">{labelFor(t, 'op', r.condition_op)}</span
 		>{/if}{/snippet}
 {#snippet valueCell(r: AlertRule)}{#if r.condition_type === 'custom' || r.condition_value === null}<Empty
 		/>{:else}{formatNumber(r.condition_value)}{/if}{/snippet}
@@ -422,7 +423,7 @@
 			>{t('automation.sent_by', { name: c.created_by })}</span
 		>{/if}{/snippet}
 {#snippet commandDeviceCell(c: Command)}<span class="mono">{c.device_id}</span>{/snippet}
-{#snippet commandTypeCell(c: Command)}<Tag label={labelFor(t, 'cmd_type', c.command_type)} />{/snippet}
+{#snippet commandTypeCell(c: Command)}{labelFor(t, 'cmd_type', c.command_type)}{/snippet}
 {#snippet payloadCell(c: Command)}<span class="mono" title={c.payload}>{truncate(c.payload)}</span>{/snippet}
 {#snippet commandStatusCell(c: Command)}<Status
 		tone={commandTone(c.status)}
@@ -447,15 +448,8 @@
 				{#if id === 'rules'}
 					<div class="panel">
 						<div class="panel-head">
-							<div class="notes">
-								<p class="note">{t('automation.rules_note')}</p>
-								<p class="note">
-									{tf(
-										'automation.rules_checked',
-										'Rules are checked as values come in: CPU and memory with each usage report from a device, disk use with its inventory, idle time with its activity report, and offline time once a minute. Custom rules are not checked.'
-									)}
-								</p>
-							</div>
+							<!-- When each kind of rule is checked is said in the rule's sheet, beside its condition -->
+							<p class="note">{t('automation.rules_note')}</p>
 							{#if canEdit}
 								<Button variant="primary" icon={ICONS.add} onclick={() => (ruleSheet = { rule: null })}
 									>{t('automation.create_rule')}</Button
@@ -576,12 +570,6 @@
 		flex-wrap: wrap;
 		align-items: flex-start;
 		gap: var(--space-3) var(--space-4);
-	}
-	.notes {
-		display: flex;
-		flex: 0 1 var(--measure);
-		flex-direction: column;
-		gap: var(--space-1);
 	}
 	.panel-head > .note {
 		flex: 0 1 var(--measure);

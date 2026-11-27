@@ -4,8 +4,9 @@
   logo that NeoDesk clients and support agents show. Its fields are part
   of the Branding tab's draft ("client." fields of AppearanceForm), so the
   tab's one save bar lists and saves them with the rest
-  (POST /api/client-branding for these). A preview at the end of the group
-  follows the fields as people type. Clients pick changes up when they
+  (POST /api/client-branding for these). A preview (ClientAppPreview)
+  follows the fields as people type: in the tab's side column from 1200
+  px, at the end of the group below that. Clients pick changes up when they
   next check in.
 
   Needs branding.edit (both calls): without it the group is left out.
@@ -31,7 +32,6 @@
 	import {
 		DEFAULT_ACCENT,
 		brandingPayload,
-		buttonColors,
 		checkLogo,
 		isHex,
 		logoFromDataUrl,
@@ -40,7 +40,6 @@
 	} from '#lib/clients/branding.ts';
 	import { around } from '#lib/clients/text.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
-	import BrandLogo from '#lib/shell/BrandLogo.svelte';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import ColorField from '#lib/ui/ColorField.svelte';
@@ -52,6 +51,7 @@
 	import SettingsGroup from '#lib/ui/settings/SettingsGroup.svelte';
 	import { inWords } from '#lib/ui/settings/draft.svelte.ts';
 	import type { AppearanceForm } from './appearance-form.svelte.ts';
+	import ClientAppPreview from './ClientAppPreview.svelte';
 
 	let { form }: { form: AppearanceForm } = $props();
 
@@ -191,11 +191,7 @@
 		draft.isChanged('client.accent_color') && !isHex(accent) ? t('client_branding.accent_invalid') : undefined
 	);
 	const logo = $derived(logoSrc(values['client.logo']));
-	const button = $derived(buttonColors(accent));
 	const saved = $derived(savedAt(revision));
-	const contact = $derived(
-		[text('client.phone'), text('client.email'), text('client.website')].map((x) => x.trim()).filter(Boolean)
-	);
 </script>
 
 {#if allowed}
@@ -339,34 +335,7 @@
 			{/snippet}
 		</SettingRow>
 
-		<section class="cb-preview-part" aria-labelledby="cb-preview-title" data-search-skip>
-			<h3 class="cb-sub" id="cb-preview-title">{t('client_branding.preview_title')}</h3>
-			<p class="cb-note">{t('client_branding.preview_note')}</p>
-			<div class="cb-preview">
-				<div class="cb-preview-head">
-					{#if logo}
-						<img class="cb-pv-logo" src={logo} alt="" width="32" height="32" />
-					{:else}
-						<span class="cb-pv-logo"><BrandLogo mark /></span>
-					{/if}
-					<span class="cb-pv-name">{text('client.company_name').trim() || 'NeoDesk'}</span>
-				</div>
-				<div class="cb-preview-body">
-					{#if text('client.support_contact').trim()}
-						<p class="cb-pv-support">{text('client.support_contact').trim()}</p>
-					{/if}
-					{#if contact.length}
-						<ul class="cb-pv-contact">
-							{#each contact as line, i (i)}<li dir="ltr">{line}</li>{/each}
-						</ul>
-					{/if}
-					<span class="cb-pv-button" style:background-color={button.background} style:color={button.text}
-						>{t('client_branding.preview_button')}</span
-					>
-				</div>
-			</div>
-			<p class="cb-note">{t('client_branding.hint')}</p>
-		</section>
+		<ClientAppPreview {form} place="group" />
 	</SettingsGroup>
 {/if}
 
@@ -378,8 +347,7 @@
 		font-weight: 600;
 		color: var(--text-muted);
 	}
-	.cb-revision,
-	.cb-note {
+	.cb-revision {
 		margin: 0;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
@@ -403,82 +371,6 @@
 		border-radius: var(--radius);
 		background: var(--bg-subtle);
 		object-fit: contain;
-	}
-	.cb-preview-part {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-		max-width: 420px;
-		padding: var(--space-4) var(--row-pad-x) var(--space-3);
-	}
-	.cb-preview-part .cb-sub {
-		margin: 0;
-		padding: 0;
-	}
-	/* Preview: a small window like the client's */
-	.cb-preview {
-		overflow: hidden;
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		background: var(--bg);
-	}
-	.cb-preview-head {
-		display: flex;
-		align-items: center;
-		gap: var(--space-3);
-		padding: var(--space-3) var(--space-4);
-		border-bottom: 1px solid var(--rule);
-		background: var(--bg-subtle);
-	}
-	.cb-pv-logo {
-		display: block;
-		flex: none;
-		width: 32px;
-		height: 32px;
-		object-fit: contain;
-	}
-	.cb-pv-logo :global(svg) {
-		display: block;
-		width: 32px;
-		height: 32px;
-	}
-	.cb-pv-name {
-		min-width: 0;
-		font-size: var(--text-md);
-		font-weight: 600;
-		overflow-wrap: anywhere;
-	}
-	.cb-preview-body {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: var(--space-2);
-		padding: var(--space-4);
-	}
-	.cb-pv-support {
-		margin: 0;
-		font-weight: 600;
-		overflow-wrap: anywhere;
-	}
-	.cb-pv-contact {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-		margin: 0;
-		padding: 0;
-		list-style: none;
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-		overflow-wrap: anywhere;
-	}
-	.cb-pv-button {
-		display: inline-flex;
-		align-items: center;
-		min-height: var(--control-h);
-		margin-top: var(--space-2);
-		padding: 0 var(--space-4);
-		border-radius: var(--radius);
-		font-weight: 600;
 	}
 	:global(.client-branding-page .wide-44) {
 		max-width: 44ch;

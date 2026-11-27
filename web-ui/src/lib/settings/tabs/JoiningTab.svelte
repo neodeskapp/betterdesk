@@ -30,6 +30,7 @@
 	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import ShowWhen from '#lib/ui/ShowWhen.svelte';
 	import States from '#lib/ui/States.svelte';
 	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
 	import SettingRow from '#lib/ui/settings/SettingRow.svelte';
@@ -143,6 +144,8 @@
 
 	async function save() {
 		if (draft.busy) return;
+		// The days are hidden while the history is off: a wrong value there goes back to the saved one
+		if (!v.availability_enabled && daysProblem) draft.reset('availability_days');
 		const parts = partsWithChanges(draft.changes, PARTS, ORDER);
 		if (parts.includes('availability') && daysProblem) {
 			draft.error = tf(
@@ -333,39 +336,40 @@
 					help={t('settings.general.availability_enable_hint')}
 					checked={v.availability_enabled}
 					onchange={(on) => draft.set('availability_enabled', on)}
+					controls="availability-retention-group"
 					{...sourceRow(draft, 'availability_enabled', sourceInfo(sources['availability_history.enabled']))}
 				/>
-				<SettingRow
-					id="availability-history-retention"
-					label={t('settings.general.retention_label')}
-					help={tf('settings.joining.retention_help', 'Older entries are deleted automatically.')}
-					error={daysProblem}
-					noEffect={v.availability_enabled
-						? undefined
-						: tf('settings.joining.retention_off', 'Has no effect while availability history is off.')}
-					{...sourceRow(
-						draft,
-						'availability_days',
-						sourceInfo(sources['availability_history.retention_days'])
-					)}
-				>
-					{#snippet control(f)}
-						<Input
-							id={f.id}
-							describedby={f.describedby}
-							invalid={f.invalid}
-							type="number"
-							min="1"
-							max="3650"
-							width="short"
-							value={v.availability_days}
-							oninput={(e) => {
-								const raw = (e.currentTarget as HTMLInputElement).value;
-								draft.set('availability_days', raw === '' ? null : Number(raw));
-							}}
-						/>
-					{/snippet}
-				</SettingRow>
+				<!-- How long to keep it counts only while it is recorded -->
+				<ShowWhen id="availability-retention-group" class="setting-rows-when" when={v.availability_enabled}>
+					<SettingRow
+						id="availability-history-retention"
+						label={t('settings.general.retention_label')}
+						help={tf('settings.joining.retention_help', 'Older entries are deleted automatically.')}
+						error={daysProblem}
+						{...sourceRow(
+							draft,
+							'availability_days',
+							sourceInfo(sources['availability_history.retention_days'])
+						)}
+					>
+						{#snippet control(f)}
+							<Input
+								id={f.id}
+								describedby={f.describedby}
+								invalid={f.invalid}
+								type="number"
+								min="1"
+								max="3650"
+								width="short"
+								value={v.availability_days}
+								oninput={(e) => {
+									const raw = (e.currentTarget as HTMLInputElement).value;
+									draft.set('availability_days', raw === '' ? null : Number(raw));
+								}}
+							/>
+						{/snippet}
+					</SettingRow>
+				</ShowWhen>
 			</SettingsGroup>
 		{/if}
 	</SettingsBody>
@@ -379,6 +383,11 @@
 	.mode-note {
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+	}
+	/* Rows that show for one choice sit in the list like the others */
+	:global(.show-when.setting-rows-when) {
+		gap: 0;
+		margin-bottom: 0;
 	}
 	.group-line {
 		margin: 0;

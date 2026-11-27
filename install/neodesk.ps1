@@ -2,7 +2,7 @@
 
 <#
 .SYNOPSIS
-    NeoDesk Console Manager v3.6.32 - All-in-One Interactive Tool for Windows
+    NeoDesk Console Manager v3.6.42 - All-in-One Interactive Tool for Windows
 
 .DESCRIPTION
     Features:
@@ -86,9 +86,8 @@
     reset-password --reset-two-factor.
 
 .PARAMETER RunAsRoot
-    With NSSM, run the Windows service as LocalSystem instead of its own
-    low-privilege account NT SERVICE\NeoDeskServer. Without NSSM the server
-    is a scheduled task that always runs as SYSTEM, with or without this.
+    Run the Windows service NeoDeskServer as LocalSystem instead of its own
+    low-privilege account NT SERVICE\NeoDeskServer.
 
 .PARAMETER CheckPermissions
     Report whether NeoDesk can update files, change configuration and control services.
@@ -188,7 +187,7 @@ if ($Help) {
 # Configuration
 #===============================================================================
 
-$script:VERSION = "3.6.32"
+$script:VERSION = "3.6.42"
 # Where people ask for help: the NeoDesk Discord
 $script:HELP_URL = "https://discord.gg/nwERSawufr"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -231,10 +230,9 @@ $script:STAGED_SERVER_DIR = ""
 $script:STAGED_SERVER_BINARY = ""
 $script:STAGED_SERVER_VERSION = ""
 
-# The installer needs Administrator. With NSSM the server is a Windows
-# service under its own virtual account (NT SERVICE\NeoDeskServer), or
-# LocalSystem with -RunAsRoot or NEODESK_RUN_AS_ROOT=1. Without NSSM it is
-# a scheduled task that runs as SYSTEM.
+# The installer needs Administrator. The server is the Windows service
+# NeoDeskServer under its own virtual account (NT SERVICE\NeoDeskServer),
+# or LocalSystem with -RunAsRoot or NEODESK_RUN_AS_ROOT=1.
 $script:RUN_AS_ROOT = $RunAsRoot -or ($env:NEODESK_RUN_AS_ROOT -eq "1") -or ($env:NEODESK_RUN_AS_ROOT -eq "true")
 
 if ($NodeJs -or $Flask) {
@@ -873,8 +871,7 @@ function Merge-ConsoleEnv {
         Set-ConsoleEnvValue -Key "UPDATE_GITHUB_BRANCH" -Value $script:UPDATE_GITHUB_BRANCH_GIVEN
     }
 
-    $supervisor = if (Get-NssmPath) { "nssm" } else { "task" }
-    & $bin upgrade-env --from $envFile --write --supervisor $supervisor | Out-Null
+    & $bin upgrade-env --from $envFile --write --supervisor windows-service | Out-Null
     $upgradeCode = $LASTEXITCODE
     $env:NEODESK_ENV_FILE = $savedEnvFile
     if ($upgradeCode -ne 0) {
@@ -961,17 +958,184 @@ function Use-DatabaseInEnv {
 # The server with its web console: binary, console folder, service
 #===============================================================================
 
-# The NSSM executable: on PATH or in tools\ beside the script; $null without.
-function Get-NssmPath {
-    $cmd = Get-Command nssm -ErrorAction SilentlyContinue
-    if ($cmd) { return $cmd.Source }
-    $local = Join-Path $script:ScriptDir "tools\nssm.exe"
-    if (Test-Path $local) { return $local }
+function Get-ServerBinaryPath {
+    return (Join-Path $script:RUSTDESK_PATH "neodesk-server.exe")
+}
+
+#===============================================================================
+# The Windows service NeoDeskServer
+#===============================================================================
+# neodesk-server.exe is the service itself: the service manager starts it,
+# and it answers stop and shutdown by stopping its parts. Older installs
+# ran it through NSSM or as a scheduled task under SYSTEM; their next
+# update or Repair services makes that the Windows service.
+
+# The service's key in the registry; Environment there holds the settings
+# the server starts with besides .env.
+function Get-ServerServiceKey {
+    return "HKLM:\SYSTEM\CurrentControlSet\Services\$($script:SERVER_SERVICE)"
+}
+
+# The service's command line and account as the service manager has them;
+# $null when there is no service.
+function Get-ServerServiceInfo {
+    $svc = Get-CimInstance -ClassName Win32_Service -Filter "Name='$($script:SERVER_SERVICE)'" -ErrorAction SilentlyContinue
+    if (-not $svc) { return $null }
+    return [pscustomobject]@{ PathName = [string]$svc.PathName; StartName = [string]$svc.StartName }
+}
+
+# Gives the service a new command line. Win32_Service.Change takes the
+# quotes around the binary as they are, which sc.exe binPath= does not get
+# through Windows PowerShell. $false when Windows refused.
+function Set-ServerServicePath {
+    param([string]$PathName)
+    $svc = Get-CimInstance -ClassName Win32_Service -Filter "Name='$($script:SERVER_SERVICE)'" -ErrorAction SilentlyContinue
+    if (-not $svc) { return $false }
+    $result = Invoke-CimMethod -InputObject $svc -MethodName Change -Arguments @{ PathName = $PathName }
+    return ($result.ReturnValue -eq 0)
+}
+
+# Gives the service this account through Win32_Service.Change, which takes
+# a virtual account's empty password as it is. $false when Windows refused.
+function Set-ServerServiceAccount {
+    param([string]$Account)
+    $svc = Get-CimInstance -ClassName Win32_Service -Filter "Name='$($script:SERVER_SERVICE)'" -ErrorAction SilentlyContinue
+    if (-not $svc) { return $false }
+    $result = Invoke-CimMethod -InputObject $svc -MethodName Change -Arguments @{ StartName = $Account; StartPassword = "" }
+    return ($result.ReturnValue -eq 0)
+}
+
+# sc.exe with these arguments; returns its exit code.
+function Invoke-ServiceControl {
+    & sc.exe @args | Out-Null
+    return $LASTEXITCODE
+}
+
+# The settings in the service's environment, as KEY=VALUE lines.
+function Get-ServerServiceEnvironment {
+    $p = Get-ItemProperty -Path (Get-ServerServiceKey) -Name Environment -ErrorAction SilentlyContinue
+    if (-not $p) { return @() }
+    return @($p.Environment | Where-Object { $_ -match '^[A-Za-z_][A-Za-z0-9_]*=' })
+}
+
+function Set-ServerServiceEnvironment {
+    param([string[]]$Environment)
+    New-ItemProperty -Path (Get-ServerServiceKey) -Name Environment -PropertyType MultiString -Value ([string[]]@($Environment)) -Force | Out-Null
+}
+
+# A setting of an older install's NSSM service (AppParameters,
+# AppEnvironmentExtra), read from its Parameters key, so nssm.exe need not
+# be there any more.
+function Get-NssmSetting {
+    param([string]$Name)
+    $p = Get-ItemProperty -Path "$(Get-ServerServiceKey)\Parameters" -Name $Name -ErrorAction SilentlyContinue
+    if (-not $p) { return $null }
+    return $p.$Name
+}
+
+# Removes the NSSM settings once the binary is the service.
+function Remove-NssmSettings {
+    Remove-Item -Path "$(Get-ServerServiceKey)\Parameters" -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+# The environment of an older install's NSSM service as KEY=VALUE lines.
+function Get-NssmEnvironment {
+    return @(@(Get-NssmSetting -Name AppEnvironmentExtra) | ForEach-Object { "$_".Trim([char]0, ' ') } | Where-Object { $_ -match '^[A-Za-z_][A-Za-z0-9_]*=' })
+}
+
+# What runs the server: "service" (the Windows service), "nssm" (an older
+# install's NSSM service), "task" (an older install's scheduled task), or
+# "" when nothing does.
+function Get-ServerSupervisor {
+    $info = Get-ServerServiceInfo
+    if ($info) {
+        if ($info.PathName -match '(?i)(^|[\\"])nssm(\.exe)?("|\s|$)') { return "nssm" }
+        return "service"
+    }
+    if (Get-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue) { return "task" }
+    return ""
+}
+
+# The arguments of a command line after its program.
+function Split-ServiceCommandLine {
+    param([string]$PathName)
+    if ($PathName -match '^\s*"[^"]*"\s*(.*)$') { return $Matches[1].Trim() }
+    if ($PathName -match '^\s*\S+\s*(.*)$') { return $Matches[1].Trim() }
+    return ""
+}
+
+# The service's command line for these server arguments.
+function Get-ServerServiceCommandLine {
+    param([string]$Arguments)
+    $line = "`"$(Get-ServerBinaryPath)`""
+    if ($Arguments) { $line += " $Arguments" }
+    return $line
+}
+
+# The server's arguments, from what runs it; $null when nothing does.
+function Get-ServerServiceArguments {
+    switch (Get-ServerSupervisor) {
+        "service" { return (Split-ServiceCommandLine -PathName (Get-ServerServiceInfo).PathName) }
+        "nssm" { return "$(Get-NssmSetting -Name AppParameters)".Trim([char]0, ' ') }
+        "task" { return (Get-LauncherArguments) }
+    }
     return $null
 }
 
-function Get-ServerBinaryPath {
-    return (Join-Path $script:RUSTDESK_PATH "neodesk-server.exe")
+# The server's settings besides .env, from what runs it.
+function Get-ServerServiceSettings {
+    switch (Get-ServerSupervisor) {
+        "service" { return @(Get-ServerServiceEnvironment) }
+        "nssm" { return @(Get-NssmEnvironment) }
+        "task" { return @(Get-LauncherEnvironment) }
+    }
+    return @()
+}
+
+# New arguments for the server, used at its next start. An older install
+# becomes the Windows service first. $false when there is no service.
+function Set-ServerServiceArguments {
+    param([string]$Arguments)
+    if ((Get-ServerSupervisor) -notin @("service", "")) { Update-ServerServiceDefinition | Out-Null }
+    if ((Get-ServerSupervisor) -ne "service") { return $false }
+    return (Set-ServerServicePath -PathName (Get-ServerServiceCommandLine -Arguments $Arguments))
+}
+
+# New settings in the server's environment, used at its next start. An
+# older install becomes the Windows service first.
+function Set-ServerServiceSettings {
+    param([string[]]$Environment)
+    if ((Get-ServerSupervisor) -notin @("service", "")) { Update-ServerServiceDefinition | Out-Null }
+    if ((Get-ServerSupervisor) -ne "service") { return $false }
+    Set-ServerServiceEnvironment -Environment $Environment
+    return $true
+}
+
+# The server's arguments without its TLS options and -force-https.
+function Remove-TlsArguments {
+    param([string]$Arguments)
+    $a = $Arguments -replace '\s*-tls-(cert|key)(\s+|=)("[^"]*"|\S+)', ''
+    $a = $a -replace '\s*-(tls-signal|tls-relay|tls-api|force-https)(=\S+)?(?=\s|$)', ''
+    return $a.Trim()
+}
+
+# TLS of signal and relay with this certificate, or off without one; the
+# API stays HTTP. Used at the server's next start.
+function Set-ServerTls {
+    param([string]$CertPath = "", [string]$KeyPath = "")
+    $current = Get-ServerServiceArguments
+    if ($null -eq $current) { return }
+    $new = Remove-TlsArguments -Arguments $current
+    if ($CertPath) { $new = "$new -tls-cert `"$CertPath`" -tls-key `"$KeyPath`" -tls-signal -tls-relay".Trim() }
+    if ($new -ne $current) { Set-ServerServiceArguments -Arguments $new | Out-Null }
+}
+
+# True when the binary runs as a Windows service itself; older ones need
+# NSSM or the scheduled task. Read from the file, as the other checks.
+function Test-BinaryRunsAsService {
+    param([string]$Path = (Get-ServerBinaryPath))
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'Service stop requested, shutting down' -SimpleMatch -Quiet)
 }
 
 # Get-ManagerCommand ARGS: the command that runs the install's copy of
@@ -985,27 +1149,30 @@ function Get-ManagerCommand {
     return $cmd
 }
 
-# True when NeoDeskServer is a Windows service (NSSM), false when it is the
-# scheduled task.
+# True when NeoDeskServer is a Windows service, false when it is an older
+# install's scheduled task or missing.
 function Test-ServerIsService {
     return [bool](Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)
 }
 
 # The command that restarts the server after a change of .env: the
-# service's restart, or for the scheduled task the end of the server,
-# which its launcher starts again.
+# service's restart, or for an older install's scheduled task the end of
+# the server, which its launcher starts again.
 function Get-RestartCommand {
-    if (Test-ServerIsService) { return "Restart-Service $($script:SERVER_SERVICE)" }
-    return "Stop-Process -Name neodesk-server -Force (the task starts it again)"
+    if ((Get-ServerSupervisor) -eq "task") { return "Stop-Process -Name neodesk-server -Force (the task starts it again)" }
+    return "Restart-Service $($script:SERVER_SERVICE)"
 }
 
 # How the server runs, for the summary and the warnings.
 function Get-ServerAccountText {
-    if (Test-ServerIsService) {
-        if ($script:RUN_AS_ROOT) { return "Windows service $($script:SERVER_SERVICE), as LocalSystem (-RunAsRoot)" }
-        return "Windows service $($script:SERVER_SERVICE), as NT SERVICE\$($script:SERVER_SERVICE)"
+    switch (Get-ServerSupervisor) {
+        "task" { return "scheduled task $($script:SERVER_SERVICE), as SYSTEM (full rights on this machine); the next update makes it a Windows service" }
+        "" { return "not set up (Repair installation, Repair services)" }
     }
-    return "scheduled task $($script:SERVER_SERVICE), as SYSTEM (full rights on this machine)"
+    $account = (Get-ServerServiceInfo).StartName
+    if (-not $account) { $account = "NT SERVICE\$($script:SERVER_SERVICE)" }
+    if ($account -eq "LocalSystem") { $account = "LocalSystem (-RunAsRoot)" }
+    return "Windows service $($script:SERVER_SERVICE), as $account"
 }
 
 # Protect-Folder PATH [-ServiceAccount]: only Administrators and SYSTEM
@@ -1063,22 +1230,12 @@ function Test-BinaryHasCertCommand {
     return [bool](Select-String -Path $Path -Pattern 'cert --out DIR' -SimpleMatch -Quiet)
 }
 
-# The NSSM environment of a service as a list of KEY=VALUE lines.
-function Get-NssmEnvironment {
-    param([string]$Nssm, [string]$Service)
-    if (-not $Nssm) { return @() }
-    return @(@(& $Nssm get $Service AppEnvironmentExtra 2>$null) | ForEach-Object { "$_".Trim([char]0, ' ') } | Where-Object { $_ -match '^[A-Za-z_][A-Za-z0-9_]*=' })
-}
-
 # True when NeoDeskServer runs the server with its web console: this
-# installer puts NEODESK_SUPERVISOR into its environment (NSSM) or its
-# launcher (scheduled task).
+# installer puts NEODESK_SUPERVISOR into its environment (the service, an
+# older NSSM service) or its launcher (an older scheduled task).
 function Test-GoOnlyInstall {
-    $nssm = Get-NssmPath
-    if ($nssm -and (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
-        if (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -like 'NEODESK_SUPERVISOR=*' }) {
-            return $true
-        }
+    if (Get-ServerServiceSettings | Where-Object { $_ -like 'NEODESK_SUPERVISOR=*' }) {
+        return $true
     }
     $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
     return ((Test-Path $launcher) -and [bool](Select-String -Path $launcher -Pattern 'NEODESK_SUPERVISOR=' -SimpleMatch -Quiet))
@@ -1468,11 +1625,12 @@ function Get-ServerArguments {
 
 # The settings NeoDeskServer gets besides those it reads from .env. The
 # signal and relay ports are in .env, where the admin changes them.
+# NEODESK_SUPERVISOR=windows-service tells the server that the service
+# manager starts it again after it ends with a restart request.
 function Get-ServerBaseEnvironment {
-    param([string]$Supervisor = "nssm")
     return @(
         "NEODESK_ENV_FILE=$(Join-Path $script:CONSOLE_PATH '.env')",
-        "NEODESK_SUPERVISOR=$Supervisor",
+        "NEODESK_SUPERVISOR=windows-service",
         "GO_API_PORT=$($script:GO_API_PORT)",
         "MESH_ENABLED=Y"
     )
@@ -1523,65 +1681,78 @@ function Merge-EnvironmentLists {
     return , $out
 }
 
-# Writes NeoDeskServer as an NSSM service that NSSM starts again after
-# every exit (exit code 3 is the server's restart request after a restart,
-# update or restore from the panel). $Environment are its settings.
-function Set-NssmServerService {
-    param([string]$Nssm, [string]$Arguments, [string[]]$Environment)
-    $serverExe = Get-ServerBinaryPath
-    if (-not (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
-        & $Nssm install $script:SERVER_SERVICE $serverExe $Arguments | Out-Null
-    }
-    & $Nssm set $script:SERVER_SERVICE Application $serverExe | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppParameters $Arguments | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppDirectory $script:RUSTDESK_PATH | Out-Null
-    # No version: the console's own updates replace the binary, not the service
-    & $Nssm set $script:SERVER_SERVICE DisplayName "NeoDesk Server" | Out-Null
-    & $Nssm set $script:SERVER_SERVICE Description "NeoDesk server and web console (signal, relay, API, panel)" | Out-Null
-    & $Nssm set $script:SERVER_SERVICE Start SERVICE_AUTO_START | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppEnvironmentExtra $Environment | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppExit Default Restart | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppRestartDelay 2000 | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppStopMethodConsole 10000 | Out-Null
-    # The server logs to standard error: both streams go to one file
-    $log = Get-ServerLogPath
-    New-Item -ItemType Directory -Path (Split-Path -Parent $log) -Force | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppStdout $log | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppStderr $log | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppRotateFiles 1 | Out-Null
-    & $Nssm set $script:SERVER_SERVICE AppRotateBytes 10485760 | Out-Null
-    # The service account needs the server folder and the console's folder
-    # (.env, data); the Node console's account had the console folder.
-    Set-ServiceLeastPrivilege -ServiceName $script:SERVER_SERVICE -NssmPath $Nssm -Paths @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)
-}
-
-# The scheduled-task launcher of the server. Task Scheduler does not start a
-# task again after a clean exit, so the launcher loops: when the server ends
-# (exit code 3 is its restart request) it starts it again after two
-# seconds. Only this loop makes NEODESK_SUPERVISOR true. Before each start
-# a log over 10 MB becomes server.log.1, as NSSM rotates the service's.
-function Write-ServerLauncher {
+# Writes NeoDeskServer as the Windows service that neodesk-server.exe is:
+# started with Windows, under its own virtual account NT SERVICE\NeoDeskServer
+# (LocalSystem with -RunAsRoot), $Arguments on its command line and
+# $Environment in its environment. A stop of the service stops the server
+# cleanly. When the server ends any other way (a crash, an error, or exit
+# status 3, its restart request after a restart, update or restore from
+# the console) the service manager starts it again after 2, 5 and then 10
+# seconds (sc.exe failure, and failureflag for the exit status). The server
+# writes its log itself: logs\server.log, moved to server.log.1 at 10 MB.
+# $false when Windows refused the service.
+function Set-ServerService {
     param([string]$Arguments, [string[]]$Environment)
-    $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
-    $lines = @("@echo off")
-    foreach ($pair in $Environment) {
-        if ($pair -like 'NEODESK_SUPERVISOR=*') { continue }
-        $lines += "set `"$pair`""
+    $name = $script:SERVER_SERVICE
+    $commandLine = Get-ServerServiceCommandLine -Arguments $Arguments
+    # No version: the console's own updates replace the binary, not the service
+    $displayName = "NeoDesk Server"
+    $description = "NeoDesk server and web console (signal, relay, API, console)"
+    $info = Get-ServerServiceInfo
+    try {
+        if (-not $info) {
+            New-Service -Name $name -BinaryPathName $commandLine -DisplayName $displayName -Description $description -StartupType Automatic -ErrorAction Stop | Out-Null
+        } else {
+            if ($info.PathName -ne $commandLine -and -not (Set-ServerServicePath -PathName $commandLine)) {
+                Print-Error "Windows refused the new command line of the service $name"
+                return $false
+            }
+            Set-Service -Name $name -DisplayName $displayName -Description $description -StartupType Automatic -ErrorAction Stop
+        }
+    } catch {
+        Print-Error "Could not set up the Windows service $name`: $($_.Exception.Message)"
+        return $false
     }
-    $lines += "set `"NEODESK_SUPERVISOR=task`""
-    $log = Get-ServerLogPath
-    New-Item -ItemType Directory -Path (Split-Path -Parent $log) -Force | Out-Null
-    $lines += ":run"
-    $lines += "if exist `"$log`" for %%F in (`"$log`") do if %%~zF GTR 10485760 move /y `"$log`" `"$log.1`" >nul"
-    $lines += "`"$(Get-ServerBinaryPath)`" $Arguments >> `"$log`" 2>&1"
-    $lines += "timeout /t 2 /nobreak >nul"
-    $lines += "goto run"
-    Set-Content -Path $launcher -Value $lines -Encoding ASCII
-    & icacls $launcher /inheritance:r /grant:r "*S-1-5-32-544:F" "*S-1-5-18:F" 2>$null | Out-Null
-    return $launcher
+    Set-ServerServiceEnvironment -Environment $Environment
+    # An older install's NSSM settings; the binary reads none of them
+    Remove-NssmSettings
+    $account = if ($script:RUN_AS_ROOT) { "LocalSystem" } else { "NT SERVICE\$name" }
+    if ((Invoke-ServiceControl config $name obj= $account) -ne 0 -and -not (Set-ServerServiceAccount -Account $account)) {
+        Print-Warning "Could not make $account the account of the service $name (sc.exe config)"
+    }
+    if ((Invoke-ServiceControl failure $name reset= 86400 actions= restart/2000/restart/5000/restart/10000) -ne 0 -or
+        (Invoke-ServiceControl failureflag $name 1) -ne 0) {
+        Print-Warning "Could not set the restart after a failure of the service $name (sc.exe failure)"
+    }
+    New-Item -ItemType Directory -Path (Split-Path -Parent (Get-ServerLogPath)) -Force | Out-Null
+    # The service's account needs the server folder (its keys, database,
+    # logs and the binary its updates replace) and the console's folder
+    # (.env, data)
+    Set-ServiceLeastPrivilege -ServiceName $name -Paths @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)
+    return $true
 }
 
-# The environment of an existing launcher: its "set" lines.
+# Ends and removes an older install's scheduled task and its launcher,
+# which would start a second server next to the service.
+function Remove-ServerTask {
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
+    if (Get-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue) {
+        Stop-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
+        Unregister-ScheduledTask -TaskName $script:SERVER_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
+        # The task's launcher started the server; it does not end with it
+        Get-Process -Name "neodesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+    Remove-Item -Path $launcher -Force -ErrorAction SilentlyContinue
+}
+
+# .env names the supervisor too (upgrade-env); an older install's nssm or
+# task there becomes windows-service, so the file says what runs the server.
+function Sync-SupervisorInEnv {
+    $current = Get-ConsoleEnvValue -Key "NEODESK_SUPERVISOR"
+    if ($current -and $current -ne "windows-service") { Set-ConsoleEnvValue -Key "NEODESK_SUPERVISOR" -Value "windows-service" }
+}
+
+# The environment of an older install's task launcher: its "set" lines.
 function Get-LauncherEnvironment {
     $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
     if (-not (Test-Path $launcher)) { return @() }
@@ -1590,8 +1761,8 @@ function Get-LauncherEnvironment {
     })
 }
 
-# The arguments of an existing launcher's server line, without the
-# redirect of its output.
+# The arguments of an older install's task launcher's server line, without
+# the redirect of its output.
 function Get-LauncherArguments {
     $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
     if (-not (Test-Path $launcher)) { return $null }
@@ -1603,20 +1774,10 @@ function Get-LauncherArguments {
     return $null
 }
 
-# The server's log file: both of its output streams, as a service and as
-# a scheduled task.
+# The server's log file, which the service writes itself (and an older
+# install's NSSM service or task launcher wrote).
 function Get-ServerLogPath {
     return (Join-Path $script:RUSTDESK_PATH "logs\server.log")
-}
-
-function Register-ServerTask {
-    param([string]$Launcher)
-    Unregister-ScheduledTask -TaskName $script:SERVER_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
-    $action = New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c `"$Launcher`"" -WorkingDirectory $script:RUSTDESK_PATH
-    $trigger = New-ScheduledTaskTrigger -AtStartup
-    $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero)
-    Register-ScheduledTask -TaskName $script:SERVER_SERVICE -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "NeoDesk server and web console" | Out-Null
 }
 
 # The URL the web console answers /health on: HTTPS_PORT when HTTPS is on
@@ -1669,6 +1830,9 @@ function Start-ServerService {
     }
 }
 
+# Stops the server. Stop-Service waits until the service has stopped all
+# its parts; what is left after that is an older install's task or a
+# server started by hand.
 function Stop-ServerService {
     Stop-Service -Name $script:SERVER_SERVICE -Force -ErrorAction SilentlyContinue
     Stop-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
@@ -1752,7 +1916,9 @@ function Update-GoInstall {
     $after = (Get-FileHash $serverExe -Algorithm SHA256).Hash
 
     Merge-ConsoleEnv -FreshInstall $false | Out-Null
-    Update-ServerServiceDefinition
+    if (-not (Update-ServerServiceDefinition)) {
+        Print-Warning "The Windows service $($script:SERVER_SERVICE) was not written again; $(Get-ServerAccountText)"
+    }
     # Installs made before the folders were locked keep their keys
     # readable to every user otherwise
     Protect-InstallFolders | Out-Null
@@ -1762,6 +1928,11 @@ function Update-GoInstall {
             Print-Error "The new binary did not come up; putting the previous one back"
             Stop-ServerService
             Copy-Item -Path "$serverExe.prev" -Destination $serverExe -Force
+            if ((Get-ServerSupervisor) -eq "service" -and -not (Test-BinaryRunsAsService)) {
+                # A release from before the service cannot answer the
+                # service manager, which ends it after 30 seconds
+                Print-Error "The previous binary cannot run as the Windows service. Install a release again with -Binary, or see $(Get-ServerLogPath)"
+            }
             Start-ServerService
             Test-GoInstall -TimeoutSeconds 60 | Out-Null
         }
@@ -1776,41 +1947,34 @@ function Update-GoInstall {
     return $true
 }
 
-# Writes NeoDeskServer's settings again from the template, keeping its
-# arguments and its other environment; rewrites the scheduled-task launcher
-# (a launcher written before held CONSOLE_PORT=0 and no restart loop), or
-# makes the task an NSSM service once NSSM is there.
+# Writes NeoDeskServer again as the Windows service, keeping the server's
+# arguments and its other settings. An older install's NSSM service or
+# scheduled task becomes that service here, with the arguments and
+# settings it had (the signal and relay ports go to .env); the task and its
+# launcher go. Without any, the service is made new (Setup-Services).
+# $false when the service could not be written.
 function Update-ServerServiceDefinition {
-    $nssm = Get-NssmPath
-    if ($nssm -and (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
-        $serverArgs = "$(& $nssm get $script:SERVER_SERVICE AppParameters 2>$null)".Trim([char]0, ' ')
-        $serverArgs = ($serverArgs -replace '\s-tls-api-port(=\S+)?', '' -replace '\s-tls-api(=\S+)?', '').Trim()
-        if ($serverArgs -match '-relay-servers\s+"?([^"\s]+)') { Set-PanelPublicHost -Address $Matches[1] }
-        $current = Move-PortsToEnvFile (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -notlike 'CONSOLE_PORT=0' })
-        $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $current)
-        Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
-        return
+    $kind = Get-ServerSupervisor
+    if (-not $kind) { return (Setup-Services) }
+    if (-not (Test-BinaryRunsAsService)) {
+        Print-Error "$(Get-ServerBinaryPath) is too old to run as a Windows service; install the newest release with $(Get-ManagerCommand '-Update')"
+        return $false
     }
-    if (Get-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue) {
-        $serverArgs = Get-LauncherArguments
-        if (-not $serverArgs) { $serverArgs = Get-ServerArguments -ServerIP (Resolve-RelayIp) }
-        if ($serverArgs -match '-relay-servers\s+"?([^"\s]+)') { Set-PanelPublicHost -Address $Matches[1] }
-        $current = Move-PortsToEnvFile (Get-LauncherEnvironment | Where-Object { $_ -notlike 'CONSOLE_PORT=0' })
-        if ($nssm) {
-            # NSSM is there now: the task becomes the Windows service under
-            # its own account, with the task's arguments and settings
-            Unregister-ScheduledTask -TaskName $script:SERVER_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
-            $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $current)
-            Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
-            Print-Success "The scheduled task $($script:SERVER_SERVICE) is now a Windows service: $(Get-ServerAccountText)"
-            return
-        }
-        $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "task"), $current)
-        $launcherPath = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
-        Register-ServerTask -Launcher $launcherPath
-        return
-    }
-    Setup-Services
+    $serverArgs = Get-ServerServiceArguments
+    if (-not $serverArgs) { $serverArgs = Get-ServerArguments -ServerIP (Resolve-RelayIp) }
+    $serverArgs = ($serverArgs -replace '\s-tls-api-port(=\S+)?', '' -replace '\s-tls-api(=\S+)?', '').Trim()
+    if ($serverArgs -match '-relay-servers\s+"?([^"\s]+)') { Set-PanelPublicHost -Address $Matches[1] }
+    $current = Move-PortsToEnvFile (Get-ServerServiceSettings | Where-Object { $_ -notlike 'CONSOLE_PORT=0' })
+    $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment), $current)
+    # NSSM's own process must end before its service runs the binary
+    if ($kind -eq "nssm") { Stop-Service -Name $script:SERVER_SERVICE -Force -ErrorAction SilentlyContinue }
+    if ($kind -eq "task") { Stop-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue }
+    if (-not (Set-ServerService -Arguments $serverArgs -Environment $environment)) { return $false }
+    Remove-ServerTask
+    Sync-SupervisorInEnv
+    if ($kind -eq "nssm") { Print-Success "The NSSM service $($script:SERVER_SERVICE) is now the server's own Windows service: $(Get-ServerAccountText)" }
+    if ($kind -eq "task") { Print-Success "The scheduled task $($script:SERVER_SERVICE) is now a Windows service: $(Get-ServerAccountText)" }
+    return $true
 }
 function Invoke-ManagementCli {
     param(
@@ -1982,35 +2146,34 @@ function Setup-Services {
     $serverArgs = Get-ServerArguments -ServerIP $serverIP
     $extra = @($connModeEnv)
 
-    $nssm = Get-NssmPath
-    if (-not $nssm) {
-        Print-Warning "NSSM not found: the server runs as a scheduled task under SYSTEM, with full rights on this machine."
-        Print-Info "For a Windows service under its own low-privilege account, put nssm.exe on the Path or in $(Join-Path $script:RUSTDESK_PATH 'tools'),"
-        Print-Info "then run Repair installation, Repair services: $(Get-ManagerCommand)"
-        $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "task"), $extra)
-        $launcher = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
-        Register-ServerTask -Launcher $launcher
-        Print-Success "Scheduled task $($script:SERVER_SERVICE) created (its launcher starts the server again after it ends)"
-        return
+    if (-not (Test-BinaryRunsAsService)) {
+        Print-Error "$(Get-ServerBinaryPath) is too old to run as a Windows service; install the newest release"
+        return $false
     }
 
-    # Retired services
+    # Retired services of older installs
     foreach ($svc in @($script:HBBS_SERVICE, $script:HBBR_SERVICE, "NeoDeskAPI")) {
-        & $nssm stop $svc 2>$null | Out-Null
-        & $nssm remove $svc confirm 2>$null | Out-Null
+        if (Get-Service -Name $svc -ErrorAction SilentlyContinue) {
+            Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
+            Invoke-ServiceControl delete $svc | Out-Null
+        }
     }
-    # A scheduled task of an install without NSSM would start a second
-    # server next to the service
-    Unregister-ScheduledTask -TaskName $script:SERVER_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
 
+    # A reinstall keeps the settings the server had
+    $kind = Get-ServerSupervisor
     $current = @()
-    if (Test-GoOnlyInstall) {
-        $current = Move-PortsToEnvFile (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE)
+    if ($kind -and (Test-GoOnlyInstall)) {
+        $current = Move-PortsToEnvFile (Get-ServerServiceSettings)
     }
-    $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $extra, $current)
-    Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
+    if ($kind -eq "nssm") { Stop-Service -Name $script:SERVER_SERVICE -Force -ErrorAction SilentlyContinue }
+    if ($kind -eq "task") { Stop-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue }
+    $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment), $extra, $current)
+    if (-not (Set-ServerService -Arguments $serverArgs -Environment $environment)) { return $false }
+    Remove-ServerTask
+    Sync-SupervisorInEnv
 
-    Print-Success "Windows service $($script:SERVER_SERVICE) configured (server and web console)"
+    Print-Success "Windows service $($script:SERVER_SERVICE) configured (server and web console): $(Get-ServerAccountText)"
+    return $true
 }
 
 function Start-Services {
@@ -2149,7 +2312,10 @@ function Repair-Services {
         return
     }
     Stop-ServerService
-    Update-ServerServiceDefinition
+    if (-not (Update-ServerServiceDefinition)) {
+        Print-Error "The Windows service $($script:SERVER_SERVICE) could not be written"
+        return
+    }
     if (-not (Start-ServicesWithVerification)) {
         Print-Error "neodesk-server failed to start after the repair"
         return
@@ -3181,31 +3347,22 @@ function Generate-SSLCertificates {
     }
 }
 
+# Gives the service's virtual account NT SERVICE\<service> change rights
+# on the folders it needs, below the lock of Protect-Folder. A virtual
+# account is unprivileged, managed by Windows, needs no password and may
+# log on as a service. Nothing with -RunAsRoot, where the service runs as
+# LocalSystem.
 function Set-ServiceLeastPrivilege {
     param(
         [string]$ServiceName,
-        [string]$NssmPath,
         [string[]]$Paths
     )
-    # Privilege separation: run the NSSM service under its per-service virtual
-    # account (NT SERVICE\<service>) instead of the default LocalSystem. Virtual
-    # accounts are unprivileged, auto-managed, need no password, and already hold
-    # the "Log on as a service" right. Skipped when -RunAsRoot is set.
-    if ($script:RUN_AS_ROOT) {
-        & $NssmPath set $ServiceName ObjectName "LocalSystem" 2>$null | Out-Null
-        return
-    }
-
+    if ($script:RUN_AS_ROOT) { return }
     $account = "NT SERVICE\$ServiceName"
-    & $NssmPath set $ServiceName ObjectName $account "" 2>$null | Out-Null
-
     foreach ($p in $Paths) {
         if ($p -and (Test-Path $p)) {
-            try {
-                & icacls "$p" /grant "${account}:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
-            } catch {
-                Print-Warning "Could not grant $account access to $p"
-            }
+            & icacls "$p" /grant "${account}:(OI)(CI)M" /T /C /Q 2>$null | Out-Null
+            if ($LASTEXITCODE -ne 0) { Print-Warning "Could not grant $account access to $p" }
         }
     }
     Print-Info "Service $ServiceName runs under least-privilege account ($account)"
@@ -3313,7 +3470,7 @@ function Do-Install {
         Migrate-SQLiteToPostgreSQL
     }
 
-    Setup-Services
+    if (-not (Setup-Services)) { Print-Error "Setting up the Windows service failed"; return $false }
     $adminPassword = Create-AdminUser
 
     # Configure firewall rules
@@ -3797,13 +3954,16 @@ function Check-PortStatus {
     return $result
 }
 
-# The ports the installers open: RustDesk's (NAT test, signal TCP and UDP,
-# relay), the client API port, the CDAP gateway (21122) while CDAP is on,
+# The ports the installers open: the API port a stock RustDesk client
+# without an API server setting calls (the signal port minus 2, 21114:
+# callers from other hosts get only the client API there), RustDesk's (NAT
+# test, signal TCP and UDP, relay), the client API port, the CDAP gateway (21122) while CDAP is on,
 # and the console's ports unless TLS ends at a reverse proxy (TRUST_PROXY).
 function Get-FirewallPorts {
     $signal = [int](Get-SignalPort)
     $relay = [int](Get-RelayPort)
     $ports = @(
+        @{Port = $signal - 2; Proto = "TCP"; Name = "NeoDesk API for clients without an API server setting"},
         @{Port = $signal - 1; Proto = "TCP"; Name = "NeoDesk NAT test"},
         @{Port = $signal; Proto = "TCP"; Name = "NeoDesk ID server TCP"},
         @{Port = $signal; Proto = "UDP"; Name = "NeoDesk ID server UDP"},
@@ -4166,30 +4326,8 @@ function Do-Uninstall {
     
     Print-Step "Removing services..."
     
-    # Remove Windows services (NSSM). Installations may keep NSSM beside the
-    # installer instead of putting it on PATH.
-    $nssmCommand = Get-Command nssm -ErrorAction SilentlyContinue
-    $nssmCandidates = @()
-    if ($nssmCommand) {
-        $nssmCandidates += if ($nssmCommand -is [System.Management.Automation.ApplicationInfo]) {
-            $nssmCommand.Source
-        } else {
-            [string]$nssmCommand
-        }
-    }
-    $nssmCandidates += Join-Path $script:ScriptDir "tools\nssm.exe"
-    $nssm = $nssmCandidates |
-        Where-Object { $_ -and (Test-Path $_) } |
-        Select-Object -First 1
-    if ($nssm) {
-        & $nssm remove $script:SERVER_SERVICE confirm 2>$null
-        & $nssm remove $script:HBBS_SERVICE confirm 2>$null
-        & $nssm remove $script:HBBR_SERVICE confirm 2>$null
-        & $nssm remove $script:CONSOLE_SERVICE confirm 2>$null
-    }
-
-    # Also remove services directly when NSSM is unavailable or a stale
-    # service definition survived an earlier uninstall.
+    # The services, the server's own and those of older installs (NSSM
+    # services are Windows services too)
     foreach ($serviceName in @(
         $script:SERVER_SERVICE,
         $script:HBBS_SERVICE,
@@ -4199,11 +4337,11 @@ function Do-Uninstall {
     )) {
         if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
             Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
-            sc.exe delete $serviceName 2>$null | Out-Null
+            Invoke-ServiceControl delete $serviceName | Out-Null
         }
     }
     
-    # Remove scheduled tasks
+    # Remove the scheduled tasks of older installs
     Unregister-ScheduledTask -TaskName $script:SERVER_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $script:HBBS_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $script:HBBR_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
@@ -4729,24 +4867,7 @@ function Do-ConfigureSSL {
             Set-Content $envFile -Value $envContent -NoNewline
             
             # Configure Go server with TLS for signal/relay
-            $nssm = Get-Command nssm -ErrorAction SilentlyContinue
-            if ($nssm) {
-                $goSvcName = $script:SERVER_SERVICE
-                try {
-                    $goArgs = & nssm get $goSvcName AppParameters 2>$null
-                    if ($goArgs) {
-                        # Remove old TLS args
-                        $goArgs = $goArgs -replace ' -tls-cert [^ ]*', ''
-                        $goArgs = $goArgs -replace ' -tls-key [^ ]*', ''
-                        $goArgs = $goArgs -replace ' -tls-signal', ''
-                        $goArgs = $goArgs -replace ' -tls-relay', ''
-                        $goArgs = $goArgs -replace ' -tls-api', ''
-                        # Add new TLS args
-                        $goArgs = "$goArgs -tls-cert $certPath -tls-key $keyPath -tls-signal -tls-relay"
-                        & nssm set $goSvcName AppParameters $goArgs 2>$null
-                    }
-                } catch { }
-            }
+            Set-ServerTls -CertPath $certPath -KeyPath $keyPath
             
             Print-Success "Self-signed certificate generated (valid 10 years)"
             Print-Info "Certificate: $certPath"
@@ -4768,21 +4889,7 @@ function Do-ConfigureSSL {
             }
             
             # Remove TLS args from Go server
-            $nssm = Get-Command nssm -ErrorAction SilentlyContinue
-            if ($nssm) {
-                $goSvcName = $script:SERVER_SERVICE
-                try {
-                    $goArgs = & nssm get $goSvcName AppParameters 2>$null
-                    if ($goArgs) {
-                        $goArgs = $goArgs -replace ' -tls-cert [^ ]*', ''
-                        $goArgs = $goArgs -replace ' -tls-key [^ ]*', ''
-                        $goArgs = $goArgs -replace ' -tls-signal', ''
-                        $goArgs = $goArgs -replace ' -tls-relay', ''
-                        $goArgs = $goArgs -replace ' -tls-api', ''
-                        & nssm set $goSvcName AppParameters $goArgs 2>$null
-                    }
-                } catch { }
-            }
+            Set-ServerTls
             
             Set-Content $envFile -Value $envContent -NoNewline
             Print-Success "SSL disabled. Running in HTTP mode."
@@ -4896,25 +5003,7 @@ function Do-ConfigureSSL {
             Set-Content $envFile -Value $envContent -NoNewline
             
             # === Configure Go server with TLS for signal + relay only ===
-            $nssm = Get-Command nssm -ErrorAction SilentlyContinue
-            if ($nssm) {
-                $goSvcName = $script:SERVER_SERVICE
-                try {
-                    $goArgs = & nssm get $goSvcName AppParameters 2>$null
-                    if ($goArgs) {
-                        # Remove old TLS args
-                        $goArgs = $goArgs -replace ' -tls-cert [^ ]*', ''
-                        $goArgs = $goArgs -replace ' -tls-key [^ ]*', ''
-                        $goArgs = $goArgs -replace ' -tls-signal', ''
-                        $goArgs = $goArgs -replace ' -tls-relay', ''
-                        $goArgs = $goArgs -replace ' -tls-api', ''
-                        $goArgs = $goArgs -replace ' -force-https', ''
-                        # Add TLS args without -tls-api
-                        $goArgs = "$goArgs -tls-cert $certPath -tls-key $keyPath -tls-signal -tls-relay"
-                        & nssm set $goSvcName AppParameters $goArgs 2>$null
-                    }
-                } catch { }
-            }
+            Set-ServerTls -CertPath $certPath -KeyPath $keyPath
             
             Print-Success "TLS configured"
             Write-Host ""
@@ -4949,20 +5038,6 @@ function Do-ConfigureSSL {
         Print-Info "Panel, signal and relay use TLS; the internal Go API stays HTTP"
         $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
         $envContent = $envContent -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
-        
-        $nssm = Get-Command nssm -ErrorAction SilentlyContinue
-        if ($nssm) {
-            $goSvcName = $script:SERVER_SERVICE
-            try {
-                $goArgs = & nssm get $goSvcName AppParameters 2>$null
-                if ($goArgs) {
-                    $goArgs = $goArgs -replace ' -tls-api', ''
-                    $goArgs = $goArgs -replace ' -force-https', ''
-                    & nssm set $goSvcName AppParameters $goArgs 2>$null
-                }
-            } catch { }
-        }
-        
     } elseif ($sslChoice -ne "4") {
         # === Standard SSL (options 1-3): API stays HTTP for RustDesk client compatibility ===
         $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
@@ -4971,18 +5046,11 @@ function Do-ConfigureSSL {
         # Only the Node.js console read NODE_EXTRA_CA_CERTS
         $envContent = $envContent -replace '(?m)^NODE_EXTRA_CA_CERTS=.*\r?\n?', ''
 
-        $nssm = Get-Command nssm -ErrorAction SilentlyContinue
-        if ($nssm) {
-            # Remove -tls-api from Go server service (standard SSL doesn't use API TLS)
-            $goSvcName = $script:SERVER_SERVICE
-            try {
-                $goArgs = & nssm get $goSvcName AppParameters 2>$null
-                if ($goArgs) {
-                    $goArgs = $goArgs -replace ' -tls-api', ''
-                    $goArgs = $goArgs -replace ' -force-https', ''
-                    & nssm set $goSvcName AppParameters $goArgs 2>$null
-                }
-            } catch { }
+        # The API stays HTTP: no -tls-api on the server
+        $current = Get-ServerServiceArguments
+        if ($current) {
+            $kept = ($current -replace '\s*-(tls-api|force-https)(=\S+)?(?=\s|$)', '').Trim()
+            if ($kept -ne $current) { Set-ServerServiceArguments -Arguments $kept | Out-Null }
         }
         
         Print-Info "Signal/relay TLS enabled, API stays HTTP (RustDesk client compatibility)"
@@ -4994,24 +5062,6 @@ function Do-ConfigureSSL {
         $envContent = $envContent -replace '(?m)^ENTERPRISE_TLS=.*\r?\n?', ''
         $envContent = $envContent -replace 'ALLOW_SELF_SIGNED_CERTS=.*', 'ALLOW_SELF_SIGNED_CERTS=false'
         
-        # Remove ALL TLS args from Go server service
-        $nssm = Get-Command nssm -ErrorAction SilentlyContinue
-        if ($nssm) {
-            $goSvcName = $script:SERVER_SERVICE
-            try {
-                $goArgs = & nssm get $goSvcName AppParameters 2>$null
-                if ($goArgs) {
-                    $goArgs = $goArgs -replace ' -tls-cert [^ ]*', ''
-                    $goArgs = $goArgs -replace ' -tls-key [^ ]*', ''
-                    $goArgs = $goArgs -replace ' -tls-signal', ''
-                    $goArgs = $goArgs -replace ' -tls-relay', ''
-                    $goArgs = $goArgs -replace ' -tls-api', ''
-                    $goArgs = $goArgs -replace ' -force-https', ''
-                    & nssm set $goSvcName AppParameters $goArgs 2>$null
-                }
-            } catch { }
-        }
-        
         Print-Info "All TLS disabled, API URLs reverted to HTTP"
     }
     
@@ -5019,7 +5069,6 @@ function Do-ConfigureSSL {
     
     Write-Host ""
     if (Confirm-Action "Restart NeoDesk to apply changes?") {
-        # The service or the scheduled task
         Stop-ServerService
         Start-ServerService
         Print-Success "NeoDesk restarted"
@@ -5032,6 +5081,15 @@ function Do-ConfigureSSL {
 # HTTP/HTTPS Protocol Toggle
 #===============================================================================
 
+# The server's settings without the HTTPS keys an older install's service
+# carried, which won over .env: the protocol switch writes them to .env.
+function Clear-TlsSettingsOfService {
+    $settings = @(Get-ServerServiceSettings)
+    $kept = @($settings | Where-Object { $_ -notmatch '^(HTTPS_ENABLED|ALLOW_SELF_SIGNED_CERTS|RUSTDESK_API_TLS|NODE_EXTRA_CA_CERTS|ENTERPRISE_TLS|HTTP_REDIRECT_HTTPS)=' } |
+            ForEach-Object { $_ -replace '^(HBBS_API_URL|NEODESK_API_URL)=https://localhost', '$1=http://localhost' })
+    if (($kept -join "`n") -ne ($settings -join "`n")) { Set-ServerServiceSettings -Environment $kept | Out-Null }
+}
+
 function Do-ToggleProtocol {
     Print-Header
     Write-Host "========== PROTOCOL TOGGLE (HTTP / HTTPS) ==========" -ForegroundColor White
@@ -5040,32 +5098,20 @@ function Do-ToggleProtocol {
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
     $sslDir = Join-Path $script:RUSTDESK_PATH "ssl"
 
-    # Detect current mode from NSSM or .env
+    # The current mode: HTTPS_ENABLED of the server's settings, which win
+    # over .env, else of .env
     $currentMode = "HTTP"
-    # The console runs in the server, under the server's service
-    $nssmConsole = $script:SERVER_SERVICE
-    try {
-        $nssmEnv = (nssm get $nssmConsole AppEnvironmentExtra 2>$null) -join "`n"
-        if ($nssmEnv -match "HTTPS_ENABLED=true") {
-            $currentMode = "HTTPS"
-        }
-    } catch {
-        if (Test-Path $envFile) {
-            $envContent = Get-Content $envFile -Raw
-            if ($envContent -match "HTTPS_ENABLED=true") {
-                $currentMode = "HTTPS"
-            }
-        }
+    $settings = @(Get-ServerServiceSettings)
+    $https = @($settings | Where-Object { $_ -like 'HTTPS_ENABLED=*' } | Select-Object -First 1)
+    if ($https.Count -gt 0) {
+        if ($https[0] -eq 'HTTPS_ENABLED=true') { $currentMode = "HTTPS" }
+    } elseif ((Get-ConsoleEnvValue -Key "HTTPS_ENABLED") -eq "true") {
+        $currentMode = "HTTPS"
     }
 
-    $tlsSignal = "no"
-    $tlsRelay = "no"
-    $nssmServer = "NeoDeskServer"
-    try {
-        $serverArgs = nssm get $nssmServer AppParameters 2>$null
-        if ($serverArgs -match "-tls-signal") { $tlsSignal = "yes" }
-        if ($serverArgs -match "-tls-relay") { $tlsRelay = "yes" }
-    } catch {}
+    $serverArgs = "$(Get-ServerServiceArguments)"
+    $tlsSignal = if ($serverArgs -match "-tls-signal") { "yes" } else { "no" }
+    $tlsRelay = if ($serverArgs -match "-tls-relay") { "yes" } else { "no" }
 
     Write-Host "  Current mode: $currentMode" -ForegroundColor White
     Write-Host "  Signal TLS:   $tlsSignal"
@@ -5100,31 +5146,9 @@ function Do-ToggleProtocol {
                 Set-Content -Path $envFile -Value $content.TrimEnd() -Encoding UTF8
             }
 
-            # Update NSSM console service
-            try {
-                $env = (nssm get $nssmConsole AppEnvironmentExtra 2>$null) -join "`n"
-                $env = $env -replace "HTTPS_ENABLED=true", "HTTPS_ENABLED=false"
-                $env = $env -replace "ALLOW_SELF_SIGNED_CERTS=true", "ALLOW_SELF_SIGNED_CERTS=false"
-                $env = $env -replace "RUSTDESK_API_TLS=[^\s]+", "RUSTDESK_API_TLS=false"
-                $env = $env -replace "HBBS_API_URL=https://localhost", "HBBS_API_URL=http://localhost"
-                $env = $env -replace "NEODESK_API_URL=https://localhost", "NEODESK_API_URL=http://localhost"
-                $env = $env -replace "(?m)^NODE_EXTRA_CA_CERTS=.*$", ""
-                $env = $env -replace "(?m)^ENTERPRISE_TLS=.*$", ""
-                $env = ($env -split "`n" | Where-Object { $_.Trim() -ne "" }) -join "`n"
-                nssm set $nssmConsole AppEnvironmentExtra $env 2>$null | Out-Null
-            } catch {}
-
-            # Remove TLS args from Go server
-            try {
-                $args = nssm get $nssmServer AppParameters 2>$null
-                $args = $args -replace '\s*-tls-cert\s+[^\s]+', ''
-                $args = $args -replace '\s*-tls-key\s+[^\s]+', ''
-                $args = $args -replace '\s*-tls-signal', ''
-                $args = $args -replace '\s*-tls-relay', ''
-                $args = $args -replace '\s*-tls-api', ''
-                $args = $args -replace '\s*-force-https', ''
-                nssm set $nssmServer AppParameters $args.Trim() 2>$null | Out-Null
-            } catch {}
+            Clear-TlsSettingsOfService
+            # No TLS on the server
+            Set-ServerTls
 
             Print-Success "Switched to HTTP mode"
             Write-Host ""
@@ -5199,36 +5223,9 @@ function Do-ToggleProtocol {
                 Set-Content -Path $envFile -Value $content.TrimEnd() -Encoding UTF8
             }
 
-            # Update NSSM console service
-            try {
-                $env = (nssm get $nssmConsole AppEnvironmentExtra 2>$null) -join "`n"
-                $env = $env -replace "HTTPS_ENABLED=false", "HTTPS_ENABLED=true"
-                if ($env -notmatch "HTTPS_ENABLED=") { $env += "`nHTTPS_ENABLED=true" }
-                $env = $env -replace "ALLOW_SELF_SIGNED_CERTS=false", "ALLOW_SELF_SIGNED_CERTS=true"
-                if ($env -notmatch "ALLOW_SELF_SIGNED_CERTS=") { $env += "`nALLOW_SELF_SIGNED_CERTS=true" }
-                # Go API stays HTTP
-                $env = $env -replace "HBBS_API_URL=https://localhost", "HBBS_API_URL=http://localhost"
-                $env = $env -replace "NEODESK_API_URL=https://localhost", "NEODESK_API_URL=http://localhost"
-                if ($env -notmatch "NODE_EXTRA_CA_CERTS=") { $env += "`nNODE_EXTRA_CA_CERTS=$certFile" }
-                else { $env = $env -replace "(?m)^NODE_EXTRA_CA_CERTS=.*$", "NODE_EXTRA_CA_CERTS=$certFile" }
-                $env = ($env -split "`n" | Where-Object { $_.Trim() -ne "" }) -join "`n"
-                nssm set $nssmConsole AppEnvironmentExtra $env 2>$null | Out-Null
-            } catch {}
-
-            # Add TLS to Go server (signal + relay only, NOT API)
-            try {
-                $args = nssm get $nssmServer AppParameters 2>$null
-                # Remove old TLS args
-                $args = $args -replace '\s*-tls-cert\s+[^\s]+', ''
-                $args = $args -replace '\s*-tls-key\s+[^\s]+', ''
-                $args = $args -replace '\s*-tls-signal', ''
-                $args = $args -replace '\s*-tls-relay', ''
-                $args = $args -replace '\s*-tls-api', ''
-                $args = $args -replace '\s*-force-https', ''
-                # Add signal + relay TLS (API stays HTTP)
-                $args = "$($args.Trim()) -tls-cert $certFile -tls-key $keyFile -tls-signal -tls-relay"
-                nssm set $nssmServer AppParameters $args 2>$null | Out-Null
-            } catch {}
+            Clear-TlsSettingsOfService
+            # TLS for signal and relay only; the API stays HTTP
+            Set-ServerTls -CertPath $certFile -KeyPath $keyFile
 
             Print-Success "Switched to HTTPS mode"
             Write-Host ""
@@ -5244,22 +5241,12 @@ function Do-ToggleProtocol {
     Write-Host ""
     $restart = Read-Host "Restart NeoDesk services now? [Y/n]"
     if ($restart -ne "n" -and $restart -ne "N") {
-        try {
-            nssm restart $nssmServer 2>$null | Out-Null
-            nssm restart $nssmConsole 2>$null | Out-Null
-            Start-Sleep -Seconds 2
-            Print-Success "NeoDesk services restarted"
-            Write-Host ""
-            # Quick status check
-            $serverStatus = (nssm status $nssmServer 2>$null)
-            $consoleStatus = (nssm status $nssmConsole 2>$null)
-            if ($serverStatus -match "Running") { Print-Success "Go Server:   running" }
-            else { Print-Error "Go Server:   $serverStatus" }
-            if ($consoleStatus -match "Running") { Print-Success "Web Console: running" }
-            else { Print-Error "Web Console: $consoleStatus" }
-        } catch {
-            Print-Error "Failed to restart services: $_"
-        }
+        Stop-ServerService
+        Start-ServerService
+        Start-Sleep -Seconds 2
+        $status = (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue).Status
+        if ("$status" -eq "Running") { Print-Success "NeoDesk restarted: $($script:SERVER_SERVICE) is running" }
+        else { Print-Error "$($script:SERVER_SERVICE): $(if ($status) { $status } else { 'not found' }) (log: $(Get-ServerLogPath))" }
     }
 
     Press-Enter

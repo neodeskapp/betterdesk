@@ -33,6 +33,14 @@ export const test = base.extend<{ problems: Problems; role: Role; allowProblems:
 				// Firefox also logs a font download that a navigation away aborted
 				// (status NS_BINDING_ABORTED); like the aborted request below, no failure
 				if (/downloadable font: download failed .*status=2152398850\b/.test(m.text())) return;
+				// The init script above runs in every frame; in a frame sandboxed
+				// without scripts (the mail preview) Chromium blocks it and says so
+				if (
+					/^Blocked script execution in 'about:srcdoc' because the document's frame is sandboxed/.test(
+						m.text()
+					)
+				)
+					return;
 				problems.list.push('console: ' + m.text());
 			});
 			page.on('pageerror', (e) => problems.list.push('pageerror: ' + e.message));
@@ -60,6 +68,9 @@ export async function expectNoAxeViolations(page: Page, include?: string): Promi
 	await settledMotion(page);
 	let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']);
 	if (include) builder = builder.include(include);
+	// A frame sandboxed without scripts (the mail preview) can't run axe:
+	// entering it stalls the run. The mails' own checks are in brandmail.
+	builder = builder.exclude('iframe[sandbox]');
 	const result = await builder.analyze();
 	const summary = result.violations.map(
 		(v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`

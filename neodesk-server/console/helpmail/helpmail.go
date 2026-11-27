@@ -213,6 +213,7 @@ func (s *Service) HandleEvent(ctx context.Context, data any) error {
 		return err
 	}
 	var recipients []string
+	reason := mail.HelpForOperator
 	if config.NotifyAssignedOperators {
 		operators, err := s.opts.OperatorEmails(ctx, deviceID)
 		if err != nil {
@@ -228,7 +229,7 @@ func (s *Service) HandleEvent(ctx context.Context, data any) error {
 			return err
 		}
 		if alert != "" {
-			recipients = append(recipients, alert)
+			recipients, reason = append(recipients, alert), mail.HelpForAlert
 		}
 	}
 	if len(recipients) == 0 {
@@ -256,6 +257,7 @@ func (s *Service) HandleEvent(ctx context.Context, data any) error {
 				Message:  jsbind.String(message),
 			},
 			FolderName: jsbind.String(subjectFolder),
+			Reason:     reason,
 		})
 		if err != nil {
 			return err

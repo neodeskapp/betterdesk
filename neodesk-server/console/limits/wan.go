@@ -43,6 +43,7 @@ var wanMethods = map[string][]string{
 	"/api/branding":                      {"GET"},
 	"/api/devices/register":              {"POST"},
 	"/api/devices/register/status":       {"GET"},
+	"/api/devices/deploy":                {"POST"},
 	"/api/pairing/redeem":                {"POST"},
 	"/api/pairing/config":                {"POST"},
 	"/api/peers":                         {"GET"},

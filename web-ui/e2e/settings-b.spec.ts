@@ -227,8 +227,11 @@ test.describe('system settings tasks', () => {
 		await page.goto(`${UI}/settings?tab=backup#update-backups-panel`);
 		await expect(page).toHaveURL(/\/server\/backups#update-backups-panel$/, START);
 		await expect(page.getByRole('heading', { name: 'Before updates' })).toBeInViewport(START);
-		// Deleting older update backups is apart, at the end
-		await expect(page.getByRole('heading', { name: 'Danger zone' })).toBeVisible();
+		// Deleting older update backups is apart, at the end, once there are some
+		const list = page.locator('#update-backups-list');
+		await expect(list.locator('.state')).toHaveCount(0, START);
+		const none = await list.getByText('No update backups yet.').isVisible();
+		await expect(page.getByRole('heading', { name: 'Danger zone' })).toHaveCount(none ? 0 : 1);
 		await expect(page.getByRole('button', { name: /Save number|Delete older backups now/ })).toHaveCount(0);
 		await page.goto(`${UI}/settings?tab=updates`);
 		await expect(page).toHaveURL(/\/server\/updates$/, START);

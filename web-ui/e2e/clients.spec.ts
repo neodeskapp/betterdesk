@@ -170,7 +170,10 @@ for (const role of ROLES) {
 			// The preview follows the form; the tab's save bar names the change
 			const before = await name.inputValue();
 			await name.fill('Preview Test');
-			await expect(page.locator('.cb-pv-name')).toHaveText('Preview Test');
+			// One preview shows: beside the fields on wide screens, in the group below that
+			const shown = page.locator('.cb-pv-name').filter({ visible: true });
+			await expect(shown).toHaveCount(1);
+			await expect(shown).toHaveText('Preview Test');
 			const bar = page.getByRole('region', { name: 'Unsaved changes' });
 			await expect(bar).toContainText('Client app: Company name');
 			await expectNoAxeViolations(page);

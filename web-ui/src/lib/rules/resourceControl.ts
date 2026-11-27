@@ -1,6 +1,8 @@
 /**
  * USB and drive access without a DOM: the five kinds of rules, the values
- * the editor shows (defaults allow everything), the body each category's
+ * the editor shows (defaults allow everything; a limit with no number is
+ * no limit, which the server stores as 0; lists are one entry per row),
+ * the body each category's
  * save sends, which categories changed, the device list's search and the
  * "Rules followed" summary.
  */
@@ -20,21 +22,21 @@ export const SAVE_LABEL: Readonly<Record<RcCategory, string>> = {
 };
 
 export interface RcValues {
-	usb: { storage_policy: string; whitelist: string; audit_log: boolean };
+	usb: { storage_policy: string; whitelist: string[]; audit_log: boolean };
 	optical: { policy: string; audit_log: boolean };
 	monitors: { max_count: number | null; resolution: string; brightness: number; power_schedule: string };
 	disks: {
 		readonly: boolean;
 		encryption_required: boolean;
 		smart_monitoring: boolean;
-		hidden_partitions: string;
+		hidden_partitions: string[];
 	};
 	quotas: {
 		cpu_limit: number;
 		ram_limit: number;
 		bandwidth_limit: number | null;
 		disk_quota: number | null;
-		process_whitelist: string;
+		process_whitelist: string[];
 	};
 }
 
@@ -47,6 +49,8 @@ const numOr = (x: unknown, d: number) => {
 	const n = Number(x);
 	return x !== null && x !== undefined && x !== '' && Number.isFinite(n) && n ? n : d;
 };
+/** A limit where 0 or nothing means no limit: null, so the field is empty */
+const limit = (x: unknown) => numOr(x, 0) || null;
 
 export function rcValuesFrom(policy: Raw | null): RcValues {
 	const p = policy ?? {};
@@ -58,12 +62,12 @@ export function rcValuesFrom(policy: Raw | null): RcValues {
 	return {
 		usb: {
 			storage_policy: str(usb.storage_policy, 'allowed'),
-			whitelist: list(usb.whitelist).join('\n'),
+			whitelist: list(usb.whitelist),
 			audit_log: usb.audit_log !== false
 		},
 		optical: { policy: str(optical.policy, 'allowed'), audit_log: optical.audit_log !== false },
 		monitors: {
-			max_count: numOr(monitors.max_count, 0),
+			max_count: limit(monitors.max_count),
 			resolution: str(monitors.resolution, 'any'),
 			brightness: numOr(monitors.brightness, 100),
 			power_schedule: str(monitors.power_schedule, '')
@@ -72,23 +76,19 @@ export function rcValuesFrom(policy: Raw | null): RcValues {
 			readonly: !!disks.readonly,
 			encryption_required: !!disks.encryption_required,
 			smart_monitoring: !!disks.smart_monitoring,
-			hidden_partitions: list(disks.hidden_partitions).join(', ')
+			hidden_partitions: list(disks.hidden_partitions)
 		},
 		quotas: {
 			cpu_limit: numOr(quotas.cpu_limit, 100),
 			ram_limit: numOr(quotas.ram_limit, 100),
-			bandwidth_limit: numOr(quotas.bandwidth_limit, 0),
-			disk_quota: numOr(quotas.disk_quota, 0),
-			process_whitelist: list(quotas.process_whitelist).join('\n')
+			bandwidth_limit: limit(quotas.bandwidth_limit),
+			disk_quota: limit(quotas.disk_quota),
+			process_whitelist: list(quotas.process_whitelist)
 		}
 	};
 }
 
-const lines = (s: string, sep: RegExp | string) =>
-	s
-		.split(sep)
-		.map((x) => x.trim())
-		.filter(Boolean);
+const entries = (list: readonly string[]) => list.map((x) => x.trim()).filter(Boolean);
 /** A whole number of at least 0, or the fallback */
 const int = (x: number | null, d: number) => {
 	const n = Math.trunc(Number(x));
@@ -101,7 +101,7 @@ export function rcBody(category: RcCategory, v: RcValues): Raw {
 		case 'usb':
 			return {
 				storage_policy: v.usb.storage_policy,
-				whitelist: lines(v.usb.whitelist, '\n'),
+				whitelist: entries(v.usb.whitelist),
 				audit_log: v.usb.audit_log
 			};
 		case 'optical':
@@ -118,7 +118,7 @@ export function rcBody(category: RcCategory, v: RcValues): Raw {
 				readonly: v.disks.readonly,
 				encryption_required: v.disks.encryption_required,
 				smart_monitoring: v.disks.smart_monitoring,
-				hidden_partitions: lines(v.disks.hidden_partitions, ',')
+				hidden_partitions: entries(v.disks.hidden_partitions)
 			};
 		case 'quotas':
 			return {
@@ -126,7 +126,7 @@ export function rcBody(category: RcCategory, v: RcValues): Raw {
 				ram_limit: int(v.quotas.ram_limit, 100),
 				bandwidth_limit: int(v.quotas.bandwidth_limit, 0),
 				disk_quota: int(v.quotas.disk_quota, 0),
-				process_whitelist: lines(v.quotas.process_whitelist, '\n')
+				process_whitelist: entries(v.quotas.process_whitelist)
 			};
 	}
 }

@@ -20,6 +20,10 @@ on:
       - 'scripts/test-docker-installer.sh'
       - 'scripts/check-supervisor-env.sh'
       - 'scripts/test-windows-installer.ps1'
+      - 'scripts/test-windows-service.ps1'
+      - 'neodesk-server/main.go'
+      - 'neodesk-server/winservice*.go'
+      - 'neodesk-server/logging/**'
       - 'scripts/check-go-toolchain-pins.sh'
       - 'neodesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
@@ -51,6 +55,10 @@ on:
       - 'scripts/test-docker-installer.sh'
       - 'scripts/check-supervisor-env.sh'
       - 'scripts/test-windows-installer.ps1'
+      - 'scripts/test-windows-service.ps1'
+      - 'neodesk-server/main.go'
+      - 'neodesk-server/winservice*.go'
+      - 'neodesk-server/logging/**'
       - 'scripts/check-go-toolchain-pins.sh'
       - 'neodesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
@@ -163,7 +171,8 @@ jobs:
         run: |
           $files = @(
             "install/neodesk.ps1",
-            "scripts/test-windows-installer.ps1"
+            "scripts/test-windows-installer.ps1",
+            "scripts/test-windows-service.ps1"
           )
           foreach ($file in $files) {
             $tokens = $null
@@ -178,6 +187,33 @@ jobs:
               throw "$file failed to parse: $($messages -join '; ')"
             }
           }
+
+  windows-service:
+    name: Windows service on a real install
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
+      - name: Build the server
+        working-directory: neodesk-server
+        shell: pwsh
+        run: |
+          $env:CGO_ENABLED = "0"
+          go build -trimpath -o "$env:RUNNER_TEMP\neodesk-server.exe" .
+      # neodesk.ps1 -Auto installs it as the service NeoDeskServer; then a
+      # stop, a crash, the update of an install made as a SYSTEM task and
+      # the uninstall, in Windows PowerShell 5.1 as on a server
+      - name: Install, stop, restart, update and uninstall the service
+        shell: powershell
+        run: .\scripts\test-windows-service.ps1 -Binary "$env:RUNNER_TEMP\neodesk-server.exe"
+      - name: The server's log
+        if: always()
+        shell: pwsh
+        run: Get-Content C:\NeoDesk\logs\server.log -Tail 200 -ErrorAction SilentlyContinue
 
   installer-unit:
     name: Installer reliability unit tests

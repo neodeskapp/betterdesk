@@ -3,13 +3,15 @@
   such as Active Directory, as one draft with one save bar (PATTERN.md
   rule 1) and a filter, since it has more than 15 settings. Test
   connection is an action: it tries the values as they are on the page,
-  saved or not. While directory sign-in is off, each group says once that
-  its settings do nothing (rule 6); the fields stay editable, so a
-  directory can be set up before it is turned on. The server reports no
-  source for these settings: a row says "Set here" only for a stored
-  value (lib/settings/sources.ts storedSource), and nothing claims a
-  default. The TLS check and the timeout sit behind Advanced (structure
-  plan, rows 35 and 36).
+  saved or not. While directory sign-in is off, the page says once, under
+  the switch, that its settings do nothing (settings-pass-2.md rule D);
+  the fields stay editable, so a directory can be set up before it is
+  turned on. The server reports no source for these settings: a row says
+  "Set here" only for a stored value (lib/settings/sources.ts
+  storedSource), and nothing claims a default. Every setting is on the
+  page at once; the ones of the other way to find people (service account
+  or direct bind) show only for that way, or while the filter looks for
+  something.
 
   Element ids are the old page's (the rows carry them), for links and the
   settings search.
@@ -20,11 +22,11 @@
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
-	import ChoiceList from '#lib/ui/ChoiceList.svelte';
-	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import Select from '#lib/ui/Select.svelte';
+	import ShowWhen from '#lib/ui/ShowWhen.svelte';
 	import States from '#lib/ui/States.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
@@ -107,8 +109,6 @@
 	let refused = $state<Partial<Record<string, string>>>({});
 	let test = $state<{ message: string; tone: 'neutral' | 'ok' | 'error' }>({ message: '', tone: 'neutral' });
 	let testing = $state(false);
-	let advancedOpen = $state(false);
-	let attrsOpen = $state(false);
 
 	const v = $derived(draft.values);
 	const roleNames = $derived(roles.map((r) => r.value));
@@ -165,7 +165,6 @@
 				'settings_ui.fix_marked',
 				'Some values are not right yet. They are marked on the page.'
 			);
-			if (wrong.some((f) => f === 'skip_tls_verify' || f === 'conn_timeout_sec')) advancedOpen = true;
 			document.getElementById(`${ROW_IDS[wrong[0] as Field]}-control`)?.focus();
 			return;
 		}
@@ -224,20 +223,6 @@
 		if (canConfig) void load();
 	});
 
-	// A filter, a change or a refusal inside a folded part shows it
-	$effect(() => {
-		if (
-			filter.active ||
-			['skip_tls_verify', 'conn_timeout_sec'].some((f) => draft.isChanged(f) || refused[f])
-		)
-			advancedOpen = true;
-		if (
-			filter.active ||
-			['user_attr_id', 'user_attr_email', 'user_attr_name'].some((f) => draft.isChanged(f))
-		)
-			attrsOpen = true;
-	});
-
 	const ROW_IDS: Record<Field, string> = {
 		enabled: 'ldap-enabled',
 		host: 'ldap-host',
@@ -270,12 +255,11 @@
 		{ id: 'ldap-groups', label: t('settings.ldap_group_mapping') }
 	]);
 
-	const notUsed = (direct: boolean) =>
-		v.direct_bind === direct
-			? undefined
-			: direct
-				? tf('settings.ldap.only_direct', 'Used only while Direct bind is on.')
-				: tf('settings.ldap.not_direct', 'Not used while Direct bind is on.');
+	/** The default role as a list of names; the chosen role's sentence goes under it */
+	const roleOptions = $derived(
+		roleChoices('ldap-default-role', roles, v.default_role).map((c) => ({ value: c.value, label: c.title }))
+	);
+	const roleHint = $derived(roles.find((r) => r.value === v.default_role)?.hint ?? '');
 
 	function numberFrom(e: Event): number | null {
 		const raw = (e.currentTarget as HTMLInputElement).value;
@@ -291,11 +275,6 @@
 		changed={draft.isChanged(field)}
 		source={opts.password ? null : stored(field)}
 		error={errorOf(field)}
-		noEffect={field === 'direct_bind_dn'
-			? notUsed(true)
-			: ['bind_dn', 'bind_password', 'base_dn', 'user_filter'].includes(field)
-				? notUsed(false)
-				: undefined}
 	>
 		{#snippet control(f)}
 			<Input
@@ -313,7 +292,13 @@
 	</SettingRow>
 {/snippet}
 
-{#snippet toggle(field: Field, label: string, help: string, onchange?: (on: boolean) => void)}
+{#snippet toggle(
+	field: Field,
+	label: string,
+	help: string,
+	onchange?: (on: boolean) => void,
+	controls?: string
+)}
 	<SettingRow
 		id={ROW_IDS[field] ?? field}
 		{label}
@@ -321,14 +306,16 @@
 		checked={!!v[field]}
 		onchange={onchange ?? ((on) => set(field, on as never))}
 		changed={draft.isChanged(field)}
+		{controls}
 	/>
 {/snippet}
 
 {#snippet offNote()}
 	{#if !v.enabled}<Notice
+			id="ldap-off-note"
 			message={tf(
-				'settings.ldap.off_note',
-				'These settings do nothing while LDAP sign-in is off. You can fill them in and test the connection first.'
+				'settings.ldap.off_note_page',
+				'LDAP sign-in is off, so the settings on this page do nothing yet. You can fill them in and test the connection first.'
 			)}
 		/>{/if}
 {/snippet}
@@ -350,20 +337,16 @@
 			<SettingsGroup
 				id="ldap-form"
 				title={tf('settings.ldap.signin_title', 'Directory sign-in')}
-				description={tf(
-					'settings.ldap.signin_note',
-					'People sign in to the console with their account from your directory, such as Active Directory.'
-				)}
 				consequence={t('settings.signin.ldap_effect')}
 			>
 				{@render toggle('enabled', t('settings.ldap_enabled'), t('settings.signin.ldap_enabled_hint'))}
+				{#if !v.enabled}<div class="row-note">{@render offNote()}</div>{/if}
 			</SettingsGroup>
 
 			<SettingsGroup
 				id="ldap-connection"
 				title={t('settings.ldap_connection')}
 				description={tf('settings.ldap.connection_note', 'Where the console reaches your directory server.')}
-				note={offNote}
 			>
 				{#snippet actions()}
 					<Button id="ldap-test-btn" size="sm" busy={testing} onclick={() => void runTest()}
@@ -418,42 +401,39 @@
 						'Start without TLS on the usual port and switch to TLS before signing in.'
 					)
 				)}
-				<div class="advanced" id="ldap-advanced">
-					<Disclosure title={t('settings.connection_mode_advanced')} level={3} bind:open={advancedOpen}>
-						{@render toggle(
-							'skip_tls_verify',
-							t('settings.ldap_skip_verify'),
-							tf(
-								'settings.ldap.skip_verify_help',
-								'Accepts any certificate from the directory. Use it only to test with a self-signed certificate.'
-							)
-						)}
-						<SettingRow
-							id="ldap-conn-timeout"
-							label={t('settings.ldap_timeout')}
-							help={tf(
-								'settings.ldap.timeout_help',
-								'Seconds to wait for the directory, when connecting and for each answer. Empty: 10 seconds.'
-							)}
-							changed={draft.isChanged('conn_timeout_sec')}
-							error={errorOf('conn_timeout_sec')}
-						>
-							{#snippet control(f)}
-								<Input
-									id={f.id}
-									describedby={f.describedby}
-									invalid={f.invalid}
-									type="number"
-									min="1"
-									max="120"
-									width="short"
-									value={v.conn_timeout_sec}
-									oninput={(e) => set('conn_timeout_sec', numberFrom(e))}
-								/>
-							{/snippet}
-						</SettingRow>
-					</Disclosure>
-				</div>
+				<h3 class="rows-subhead" id="ldap-advanced">{t('settings.connection_mode_advanced')}</h3>
+				{@render toggle(
+					'skip_tls_verify',
+					t('settings.ldap_skip_verify'),
+					tf(
+						'settings.ldap.skip_verify_help',
+						'Accepts any certificate from the directory. Use it only to test with a self-signed certificate.'
+					)
+				)}
+				<SettingRow
+					id="ldap-conn-timeout"
+					label={t('settings.ldap_timeout')}
+					help={tf(
+						'settings.ldap.timeout_help',
+						'Seconds to wait for the directory, when connecting and for each answer. Empty: 10 seconds.'
+					)}
+					changed={draft.isChanged('conn_timeout_sec')}
+					error={errorOf('conn_timeout_sec')}
+				>
+					{#snippet control(f)}
+						<Input
+							id={f.id}
+							describedby={f.describedby}
+							invalid={f.invalid}
+							type="number"
+							min="1"
+							max="120"
+							width="short"
+							value={v.conn_timeout_sec}
+							oninput={(e) => set('conn_timeout_sec', numberFrom(e))}
+						/>
+					{/snippet}
+				</SettingRow>
 			</SettingsGroup>
 
 			<SettingsGroup
@@ -463,7 +443,6 @@
 					'settings.ldap.bind_note',
 					'Either a service account searches for the person, or the console signs in with a name built from what they typed.'
 				)}
-				note={offNote}
 			>
 				{@render toggle(
 					'direct_bind',
@@ -471,70 +450,85 @@
 					tf(
 						'settings.ldap.direct_bind_help',
 						'Sign in with a DN built from the name the person types, without a service account.'
-					)
-				)}
-				{@render text(
-					'bind_dn',
-					t('settings.ldap_bind_dn'),
-					tf(
-						'settings.ldap.bind_dn_help',
-						'A read-only account that searches for people. For example cn=readonly,dc=example,dc=com.'
 					),
-					{ mono: true }
+					undefined,
+					'ldap-direct-bind-fields ldap-bind-search-fields'
 				)}
-				{@render text(
-					'bind_password',
-					t('settings.ldap_bind_password'),
-					tf('settings.ldap.bind_password_help', 'The password of the service account.'),
-					{ password: true }
-				)}
+				<!-- The service account's fields: only without direct bind (and while the filter looks) -->
+				<ShowWhen
+					id="ldap-bind-search-fields"
+					class="when-off setting-rows-when"
+					when={!v.direct_bind || filter.active}
+				>
+					{@render text(
+						'bind_dn',
+						t('settings.ldap_bind_dn'),
+						tf(
+							'settings.ldap.bind_dn_help',
+							'A read-only account that searches for people. For example cn=readonly,dc=example,dc=com.'
+						),
+						{ mono: true }
+					)}
+					{@render text(
+						'bind_password',
+						t('settings.ldap_bind_password'),
+						tf('settings.ldap.bind_password_help', 'The password of the service account.'),
+						{ password: true }
+					)}
+					{@render text(
+						'user_filter',
+						t('settings.ldap_user_filter'),
+						tf(
+							'settings.ldap.user_filter_help',
+							'How a person is found by the name they type, with {{username}} where the name goes. Empty: (sAMAccountName={{username}}). For example (uid={{username}}).'
+						),
+						{ mono: true }
+					)}
+				</ShowWhen>
+				<ShowWhen
+					id="ldap-direct-bind-fields"
+					class="setting-rows-when"
+					when={v.direct_bind || filter.active}
+				>
+					{@render text(
+						'direct_bind_dn',
+						t('settings.ldap_direct_bind_dn'),
+						tf(
+							'settings.ldap.direct_bind_dn_help',
+							'The DN to sign in with, with {{username}} where the name goes. For example uid={{username}},ou=users,dc=example,dc=com.'
+						),
+						{ mono: true }
+					)}
+				</ShowWhen>
+				<!-- Used both ways: direct bind searches groups under it too -->
 				{@render text(
 					'base_dn',
 					t('settings.ldap_base_dn'),
 					tf('settings.ldap.base_dn_help', 'Where people are searched. For example dc=example,dc=com.'),
 					{ mono: true }
 				)}
-				{@render text(
-					'user_filter',
-					t('settings.ldap_user_filter'),
-					tf(
-						'settings.ldap.user_filter_help',
-						'How a person is found by the name they type, with {{username}} where the name goes. Empty: (sAMAccountName={{username}}). For example (uid={{username}}).'
-					),
-					{ mono: true }
-				)}
-				{@render text(
-					'direct_bind_dn',
-					t('settings.ldap_direct_bind_dn'),
-					tf(
-						'settings.ldap.direct_bind_dn_help',
-						'The DN to sign in with, with {{username}} where the name goes. For example uid={{username}},ou=users,dc=example,dc=com.'
-					),
-					{ mono: true }
-				)}
-				<div class="advanced" id="ldap-attrs">
-					<Disclosure title={t('settings.ldap_user_attrs')} level={3} bind:open={attrsOpen}>
-						<p class="fold-note">{t('settings.signin.attrs_note')}</p>
-						{@render text(
-							'user_attr_id',
-							t('settings.ldap_attr_id'),
-							tf(
-								'settings.ldap.attr_id_help',
-								'The attribute with the sign-in name. For example sAMAccountName or uid.'
-							)
-						)}
-						{@render text(
-							'user_attr_email',
-							t('settings.ldap_attr_email'),
-							tf('settings.ldap.attr_email_help', 'For example mail.')
-						)}
-						{@render text(
-							'user_attr_name',
-							t('settings.ldap_attr_name'),
-							tf('settings.ldap.attr_name_help', 'For example displayName or cn.')
-						)}
-					</Disclosure>
+				<div class="rows-subhead" id="ldap-attrs">
+					<h3>{t('settings.ldap_user_attrs')}</h3>
+					<p class="subhead-note">{t('settings.signin.attrs_note')}</p>
 				</div>
+				{@render text(
+					'user_attr_id',
+					t('settings.ldap_attr_id'),
+					tf(
+						'settings.ldap.attr_id_help',
+						'The attribute with the sign-in name. For example sAMAccountName or uid.'
+					)
+				)}
+				{@render text(
+					'user_attr_email',
+					t('settings.ldap_attr_email'),
+					tf('settings.ldap.attr_email_help', 'For example mail.')
+				)}
+				{@render text(
+					'user_attr_name',
+					t('settings.ldap_attr_name'),
+					tf('settings.ldap.attr_name_help', 'For example displayName or cn.')
+				)}
 			</SettingsGroup>
 
 			<SettingsGroup
@@ -545,7 +539,6 @@
 					'settings.ldap.groups_effect',
 					'A person gets the role at each sign-in through the directory.'
 				)}
-				note={offNote}
 			>
 				{@render text(
 					'group_base_dn',
@@ -585,21 +578,20 @@
 						'settings.ldap.default_role_help',
 						'The role of people whose groups match no entry of the map below.'
 					)}
-					group
 					changed={draft.isChanged('default_role')}
 					source={stored('default_role')}
 					error={errorOf('default_role')}
 				>
 					{#snippet control(f)}
-						<div id={f.id}>
-							<ChoiceList
-								name="ldap-default-role"
-								labelledby={f.labelledby}
-								describedby={f.describedby}
-								bind:value={() => v.default_role, (r) => set('default_role', r)}
-								choices={roleChoices('ldap-default-role', roles, v.default_role)}
-							/>
-						</div>
+						<Select
+							id={f.id}
+							describedby={[f.describedby, roleHint && 'ldap-default-role-hint'].filter(Boolean).join(' ') ||
+								undefined}
+							invalid={f.invalid}
+							options={roleOptions}
+							bind:value={() => v.default_role, (r) => set('default_role', r)}
+						/>
+						{#if roleHint}<p class="field-now" id="ldap-default-role-hint">{roleHint}</p>{/if}
 					{/snippet}
 				</SettingRow>
 				<SettingRow
@@ -634,14 +626,40 @@
 {/if}
 
 <style>
-	.advanced {
-		padding: var(--space-2) var(--row-pad-x) 0;
+	/* A heading inside a group's rows, lined up with the row names */
+	.rows-subhead {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		margin: 0;
+		padding: var(--space-4) var(--row-pad-x) var(--space-2);
+		border-bottom: 1px solid var(--rule);
+		font-size: var(--text-md);
+		font-weight: 600;
 	}
-	.advanced :global(.setting-row:last-child) {
-		border-bottom: 0;
+	.rows-subhead h3 {
+		margin: 0;
+		font-size: var(--text-md);
 	}
-	.fold-note {
-		margin: var(--space-2) 0;
+	.subhead-note {
+		margin: 0;
+		max-width: var(--measure);
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+		font-weight: 400;
+	}
+	/* Rows that show for one choice sit in the list like the others */
+	:global(.show-when.setting-rows-when) {
+		gap: 0;
+		margin-bottom: 0;
+	}
+	/* The page-wide note under the switch that it is about */
+	.row-note {
+		padding: var(--space-2) var(--row-pad-x);
+	}
+	/* Under a control: what the chosen value means */
+	.field-now {
+		margin: var(--space-1) 0 0;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}

@@ -2,8 +2,8 @@
 # Every way NeoDesk is installed on Linux tells the server who starts it
 # again (NEODESK_SUPERVISOR): the systemd unit neodesk.sh writes and
 # the image. Without it a confirmed restart, update or restore in the panel
-# cannot end the process (RC1). neodesk.ps1's NSSM service and task are
-# checked in scripts/test-windows-installer.ps1.
+# cannot end the process (RC1). neodesk.ps1's Windows service is checked in
+# scripts/test-windows-installer.ps1 and scripts/test-windows-service.ps1.
 #
 #   bash scripts/check-supervisor-env.sh
 set -euo pipefail

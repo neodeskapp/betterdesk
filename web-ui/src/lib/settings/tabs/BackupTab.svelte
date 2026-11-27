@@ -2,14 +2,16 @@
   Server › Backups (/server/backups, server.config; /settings?tab=backup
   leads here). One settings page (PATTERN.md):
 
-    summary      what a backup holds now (the server's parts, with why a
-                 part is left out), and the scheduled backups' state
-    Make a backup     actions: download one, make one now
+    Make a backup     actions: download one, make one now; the warning
+                      that a backup holds secrets, once
     Scheduled backups settings: on, how often, time of day, how many to
-                      keep, where
+                      keep, where; the last run and a failure on the group
     Before updates    setting: how many update backups to keep; the list
     Restore           three steps: a file, what to restore, confirm
-    Danger zone       Delete older update backups now
+    What a backup holds now  the server's parts (in, left out and why)
+                      and the counts, side by side (settings-pass-2 rule I:
+                      no side column, so the rows get the width)
+    Danger zone       Delete older update backups now, once there are some
 
   The settings of both groups are one SettingsDraft saved by the one
   ChangesBar. Downloading, scheduling and restoring full backups is for
@@ -73,7 +75,6 @@
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import DangerZone from '#lib/ui/DangerZone.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
-	import Facts, { type Fact } from '#lib/ui/Facts.svelte';
 	import FilePicker from '#lib/ui/FilePicker.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
 	import Input from '#lib/ui/Input.svelte';
@@ -82,7 +83,6 @@
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
 	import Time from '#lib/ui/Time.svelte';
-	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
 	import KeepCount from '#lib/ui/settings/KeepCount.svelte';
@@ -489,11 +489,21 @@
 			value: stats ? (stats.dbType === 'postgres' ? 'PostgreSQL' : 'SQLite') : undefined
 		}
 	]);
-	const stateFacts = $derived<Fact[]>([
-		{ label: t('backup.schedule_last_run'), value: lastRun },
-		{ label: t('settings.side.next_backup'), value: nextRun },
-		{ label: t('settings.side.backup_kept'), value: savedToFact }
-	]);
+	/** The group's state, beside its heading: when the last scheduled backup ran */
+	const lastRunWords = $derived(
+		scheduleStatus?.lastSuccessAt
+			? tf('backups_page.last_run', 'Last scheduled backup: {when}', {
+					when: formatDate(scheduleStatus.lastSuccessAt, {
+						day: 'numeric',
+						month: 'short',
+						hour: '2-digit',
+						minute: '2-digit'
+					})
+				})
+			: v.enabled || savedSchedule?.enabled
+				? tf('backups_page.last_run_none', 'No scheduled backup yet')
+				: undefined
+	);
 
 	$effect(() => {
 		if (!allowed) return;
@@ -511,31 +521,10 @@
 			? [{ id: 'scheduled-backup-panel', label: tf('backups_page.schedule_title', 'Scheduled backups') }]
 			: []),
 		{ id: 'update-backups-panel', label: tf('backups_page.updates_title', 'Before updates') },
-		...(fullBackups ? [{ id: 'backup-restore', label: t('settings.backup_tab.restore_title') }] : [])
+		...(fullBackups ? [{ id: 'backup-restore', label: t('settings.backup_tab.restore_title') }] : []),
+		{ id: 'backup-contents', label: tf('backups_page.holds_title', 'What a backup holds now') }
 	]);
 </script>
-
-{#snippet lastRun()}
-	<Time value={scheduleStatus?.lastSuccessAt} empty={t('settings.side.backup_none')} />
-{/snippet}
-{#snippet nextRun()}
-	{#if next.kind === 'off'}
-		<Status tone="neutral" label={t('settings.side.backup_off')} />
-	{:else if next.kind === 'soon'}
-		<Status tone="waiting" label={t('settings.side.backup_soon')} />
-	{:else if next.kind === 'at'}
-		<Time value={next.at} relative={false} />
-	{:else}
-		<Time value={null} />
-	{/if}
-{/snippet}
-{#snippet savedToFact()}
-	{#if savedSchedule?.destinationType === 'path' && savedSchedule.destinationPath}
-		<ValueCopy value={savedSchedule.destinationPath} copy={false} />
-	{:else}
-		{destinationLabel('local')}
-	{/if}
-{/snippet}
 
 <SettingsPage
 	id="server-backups"
@@ -546,64 +535,20 @@
 	)}
 	need="server.config"
 	{sections}
-	summaryLast
 >
-	{#snippet summary()}
-		<section class="summary-part" aria-labelledby="backup-contents-title">
-			<h2 id="backup-contents-title">{tf('backups_page.holds_title', 'What a backup holds now')}</h2>
-			<p class="summary-note">
-				{tf('backups_page.holds_note', 'As this server would write it now, on this kind of install.')}
-			</p>
-			{#if statsError}
-				<Status tone="danger" label={statsError} />
-			{:else if !stats}
-				<States kind="loading" />
-			{:else}
-				{#if partsIn.length}
-					<ul class="parts" aria-label={tf('backups_page.parts_in', 'In a backup')}>
-						{#each partsIn as p (p.id)}
-							<li id={`backup-part-${p.id}`} class="part is-in">
-								<span class="part-mark" aria-hidden="true">✓</span>
-								<span>{p.label}</span>
-							</li>
-						{/each}
-					</ul>
-				{/if}
-				{#if partsOut.length}
-					<h3 class="parts-title">{tf('backups_page.parts_out', 'Left out')}</h3>
-					<ul class="parts">
-						{#each partsOut as p (p.id)}
-							<li id={`backup-part-${p.id}`} class="part is-out">
-								<span>{p.label}</span>
-								<span class="part-reason">{p.reason}</span>
-							</li>
-						{/each}
-					</ul>
-				{/if}
-				<Notice tone="warning" message={securityWarning(stats, t, i18n.locale)} />
-				<IdFacts items={countFacts} label={tf('backups_page.counts', 'Counts')} />
-			{/if}
-		</section>
-		{#if fullBackups}
-			<!-- No landmark: the Scheduled backups group of the page has the same name -->
-			<section class="summary-part">
-				<h2 id="backup-side-title">{tf('backups_page.schedule_title', 'Scheduled backups')}</h2>
-				<Facts items={stateFacts} />
-				{#if scheduleStatus?.lastError}
-					<p class="state-error">{t('settings.side.backup_failed', { error: scheduleStatus.lastError })}</p>
-				{/if}
-			</section>
-		{/if}
-	{/snippet}
-
 	<SettingsGroup
 		id="backup-create"
 		title={tf('backups_page.make_title', 'Make a backup')}
 		description={tf(
-			'backups_page.make_note',
-			'One .tar.gz file. You can restore it on this server or on a new one. What it holds is listed under "What a backup holds now".'
+			'backups_page.make_note_short',
+			'One .tar.gz file. You can restore it on this server or on a new one.'
 		)}
 	>
+		{#snippet note()}
+			{#if fullBackups && stats}
+				<Notice id="backup-secrets-warning" tone="warning" message={securityWarning(stats, t, i18n.locale)} />
+			{/if}
+		{/snippet}
 		{#if !fullBackups}
 			<div class="group-pad">
 				<Notice id="backup-super-admin-only" message={t('settings.backup_tab.super_admin_only')} />
@@ -668,7 +613,15 @@
 					'The server makes a full backup on its own and checks that it can be read back.'
 				)}
 				consequence={scheduleConsequence}
+				status={lastRunWords}
 			>
+				{#snippet note()}
+					{#if scheduleStatus?.lastError}
+						<p class="state-error" id="scheduled-backup-error">
+							{t('settings.side.backup_failed', { error: scheduleStatus.lastError })}
+						</p>
+					{/if}
+				{/snippet}
 				<SettingRow
 					id="scheduled-backup-enabled"
 					label={tf('backups_page.enabled', 'Make backups on a schedule')}
@@ -958,7 +911,52 @@
 		</SettingsGroup>
 	{/if}
 
-	{#if loaded && updateBackups !== null}
+	<SettingsGroup
+		id="backup-contents"
+		title={tf('backups_page.holds_title', 'What a backup holds now')}
+		description={tf('backups_page.holds_note', 'As this server would write it now, on this kind of install.')}
+	>
+		{#if statsError}
+			<div class="group-pad"><Status tone="danger" label={statsError} /></div>
+		{:else if !stats}
+			<div class="group-pad"><States kind="loading" /></div>
+		{:else}
+			<div class="contents">
+				{#if partsIn.length}
+					<div class="contents-part">
+						<h3 class="parts-title">{tf('backups_page.parts_in', 'In a backup')}</h3>
+						<ul class="parts">
+							{#each partsIn as p (p.id)}
+								<li id={`backup-part-${p.id}`} class="part is-in">
+									<span class="part-mark" aria-hidden="true">✓</span>
+									<span>{p.label}</span>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+				{#if partsOut.length}
+					<div class="contents-part">
+						<h3 class="parts-title">{tf('backups_page.parts_out', 'Left out')}</h3>
+						<ul class="parts">
+							{#each partsOut as p (p.id)}
+								<li id={`backup-part-${p.id}`} class="part is-out">
+									<span>{p.label}</span>
+									<span class="part-reason">{p.reason}</span>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+				<div class="contents-part">
+					<h3 class="parts-title">{tf('backups_page.counts', 'Counts')}</h3>
+					<IdFacts items={countFacts} label={tf('backups_page.counts', 'Counts')} />
+				</div>
+			</div>
+		{/if}
+	</SettingsGroup>
+
+	{#if loaded && updateBackups?.length}
 		<div id="backup-danger">
 			<DangerZone
 				title={tf('backups_page.danger_title', 'Danger zone')}
@@ -1003,22 +1001,18 @@
 {/if}
 
 <style>
-	.summary-part {
+	/* In a backup, left out and the counts side by side where there is room */
+	.contents {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+		gap: var(--space-4) var(--space-6);
+		padding: var(--space-3) var(--row-pad-x);
+	}
+	.contents-part {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
-	}
-	.summary-part + .summary-part {
-		margin-top: var(--space-5);
-	}
-	.summary-part h2 {
-		margin: 0;
-		font-size: var(--text-md);
-	}
-	.summary-note {
-		margin: 0;
-		color: var(--text-muted);
-		font-size: var(--text-sm);
+		min-width: 0;
 	}
 	.parts {
 		display: flex;
@@ -1046,7 +1040,7 @@
 		font-size: var(--text-sm);
 	}
 	.parts-title {
-		margin: var(--space-2) 0 0;
+		margin: 0;
 		font-size: var(--text-sm);
 		font-weight: 600;
 	}
@@ -1088,6 +1082,13 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-2);
+	}
+	/* Wide: the action's button in the settings' control column, lined up with the controls below */
+	@container settings-rows (min-width: 900px) {
+		.action-row {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) var(--setting-control-w, 30rem);
+		}
 	}
 	.inline-controls {
 		display: flex;

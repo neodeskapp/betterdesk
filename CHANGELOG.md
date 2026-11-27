@@ -5,6 +5,76 @@
 
 ---
 
+## [3.6.42] — 2026-11-27
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.6.41] — 2026-11-27
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.6.40] — 2026-11-27
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.6.39] — 2026-11-27
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.6.38] — 2026-11-27
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.6.37] — 2026-11-27
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.6.36] — 2026-11-27
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.6.35] — 2026-11-27
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.6.34] — 2026-11-27
+
+### Changed
+- _(none yet)_
+
+---
+
+## [3.6.33] — 2026-11-27
+
+### Changed
+- _(none yet)_
+
+---
+
 ## [3.6.32] — 2026-11-27
 
 ### Changed
@@ -628,3 +698,13 @@ Second release candidate, and the first as NeoDesk.
 [3.6.30]: https://github.com/neodeskapp/neodesk/compare/v3.6.29...v3.6.30
 [3.6.31]: https://github.com/neodeskapp/neodesk/compare/v3.6.30...v3.6.31
 [3.6.32]: https://github.com/neodeskapp/neodesk/compare/v3.6.31...v3.6.32
+[3.6.33]: https://github.com/neodeskapp/neodesk/compare/v3.6.32...v3.6.33
+[3.6.34]: https://github.com/neodeskapp/neodesk/compare/v3.6.33...v3.6.34
+[3.6.35]: https://github.com/neodeskapp/neodesk/compare/v3.6.34...v3.6.35
+[3.6.36]: https://github.com/neodeskapp/neodesk/compare/v3.6.35...v3.6.36
+[3.6.37]: https://github.com/neodeskapp/neodesk/compare/v3.6.36...v3.6.37
+[3.6.38]: https://github.com/neodeskapp/neodesk/compare/v3.6.37...v3.6.38
+[3.6.39]: https://github.com/neodeskapp/neodesk/compare/v3.6.38...v3.6.39
+[3.6.40]: https://github.com/neodeskapp/neodesk/compare/v3.6.39...v3.6.40
+[3.6.41]: https://github.com/neodeskapp/neodesk/compare/v3.6.40...v3.6.41
+[3.6.42]: https://github.com/neodeskapp/neodesk/compare/v3.6.41...v3.6.42

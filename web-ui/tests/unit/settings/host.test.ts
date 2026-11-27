@@ -58,6 +58,8 @@ describe('settings tabs in the URL', () => {
 		expect(tabDescKey('general', true)).toBe('settings.page.general_desc');
 		expect(tabDescKey('general', false)).toBe('settings.page.general_desc_viewer');
 		expect(tabDescKey('auth', false)).toBe('settings.page.auth_desc_viewer');
+		// The sign-in rules only: your own password is on Your account
+		expect(tabDescKey('auth', true)).toBe('settings.page.auth_rules_desc');
 		expect(tabDescKey('branding', false)).toBe('settings.page.branding_desc');
 	});
 });

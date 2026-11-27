@@ -1111,7 +1111,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'backup-create',
 		'backups_page.make_title',
 		'',
-		['backups_page.make_note', 'backups_page.download_title'],
+		['backups_page.make_note_short', 'backups_page.download_title'],
 		'server.config'
 	],
 	[
@@ -1351,6 +1351,38 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'settings.email.alert_email',
 		'',
 		['settings.email.alert_email_hint'],
+		'server.config'
+	],
+	[
+		'email',
+		'email-from-name',
+		'settings.email.from_name',
+		'settings.email.identity_title',
+		[],
+		'server.config'
+	],
+	[
+		'email',
+		'email-organisation',
+		'settings.email.organisation',
+		'settings.email.identity_title',
+		['settings.email.organisation_hint'],
+		'server.config'
+	],
+	[
+		'email',
+		'email-support-email',
+		'settings.email.support_email',
+		'settings.email.identity_title',
+		['settings.email.support_email_hint'],
+		'server.config'
+	],
+	[
+		'email',
+		'email-support-url',
+		'settings.email.support_url',
+		'settings.email.identity_title',
+		['settings.email.support_url_hint'],
 		'server.config'
 	],
 	['time', 'time-billing-timezone', 'settings.time.billing_timezone', '', [], 'server.config'],
@@ -1623,7 +1655,7 @@ export const TAB_IDS: Readonly<Record<string, string>> = {
 	brand:
 		'agent-bg-color agent-bg-color-panel agent-bg-color-picker agent-bg-file-name agent-bg-gradient agent-bg-gradient-panel agent-bg-image-file agent-bg-image-panel agent-bg-image-url agent-bg-upload-status agent-show-powered brand-name branding-agent branding-agent-title branding-footer branding-footer-title branding-identity branding-identity-title branding-login branding-login-title branding-rdclient branding-rdclient-title cb-contact-title cb-look-title client-app client-app-accent client-app-company client-app-email client-app-logo client-app-phone client-app-support client-app-title client-app-website footer-text login-bg-color login-bg-color-panel login-bg-color-picker login-bg-config login-bg-file-name login-bg-gradient login-bg-gradient-panel login-bg-image-file login-bg-image-panel login-bg-image-url login-bg-overlay login-bg-overlay-group login-bg-overlay-value login-bg-upload-status login-promo-mode-selector login-slides-add login-slides-list login-slides-max-hint login-slides-panel login-slides-restore login-subtitle login-title logo-file-name logo-icon-name logo-icon-panel logo-image-file logo-image-panel logo-image-url logo-svg-input logo-svg-panel logo-text-accent logo-text-input logo-text-panel rdclient-bg-color rdclient-bg-color-panel rdclient-bg-color-picker rdclient-bg-file-name rdclient-bg-gradient rdclient-bg-gradient-panel rdclient-bg-image-file rdclient-bg-image-panel rdclient-bg-image-url rdclient-bg-overlay rdclient-bg-overlay-group rdclient-bg-overlay-value rdclient-bg-size rdclient-bg-upload-status show-powered',
 	email:
-		'email-smtp-alert email-smtp-auth email-smtp-auth-fields email-smtp-form email-smtp-from email-smtp-host email-smtp-pass email-smtp-port email-smtp-save-btn email-smtp-secure email-smtp-user email-title',
+		'email-from-name email-identity email-identity-save email-organisation email-preview-kind email-preview-lang email-preview-send email-previews email-smtp-alert email-smtp-auth email-smtp-auth-fields email-smtp-form email-smtp-from email-smtp-host email-smtp-pass email-smtp-port email-smtp-save-btn email-smtp-secure email-smtp-user email-support-email email-support-url email-title email-unsubscribed',
 	time: 'time-billing-month-hint time-billing-timezone time-billing-timezone-custom time-check-status time-clock-advanced time-clock-detail time-clock-last-error time-clock-max-skew time-clock-ntp-server time-clock-ntp-servers time-clock-offset time-clock-os-sync time-clock-require-sync time-clock-settings-form time-clock-trust-os time-custom-zone time-detect-timezone-btn time-ntp time-ntp-title time-save-clock-settings-btn time-side-title time-timesync-check-btn time-zone time-zone-now time-zone-title',
 	meshcentral:
 		'mesh-agents-online mesh-body mesh-cert-banner mesh-cert-state mesh-copy-server-id mesh-download-msh mesh-group-add mesh-groups-form mesh-groups-list mesh-groups-status mesh-groups-title mesh-install mesh-msh-name mesh-recordings mesh-recordings-table mesh-server-id mesh-settings-panel mesh-state mesh-status-enabled mesh-title',

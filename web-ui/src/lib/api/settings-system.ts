@@ -479,6 +479,78 @@ export function testSmtp() {
 	);
 }
 
+// ── Mails: sender, footer, previews ──
+
+export const MailIdentity = v.looseObject({
+	from_name: Text,
+	organisation: Text,
+	support_email: Text,
+	support_url: Text
+});
+export type MailIdentity = v.InferOutput<typeof MailIdentity>;
+
+const IdentityAnswer = v.looseObject({ identity: MailIdentity, default_from_name: Text });
+
+/** Who the mails say they are from and who runs the server */
+export function getMailIdentity(signal?: AbortSignal) {
+	return api(IdentityAnswer, '/api/settings/email/identity', { signal });
+}
+
+/** A refusal names its field ({error, field}) */
+export function saveMailIdentity(input: MailIdentity) {
+	return api(IdentityAnswer, '/api/settings/email/identity', { method: 'PUT', body: input });
+}
+
+const MailKinds = v.looseObject({
+	kinds: v.array(v.looseObject({ kind: v.string(), title: Text })),
+	languages: v.optional(v.nullable(v.array(v.looseObject({ code: v.string(), name: Text }))), []),
+	default_language: Text
+});
+
+/** The mails the console sends, and the languages they come in */
+export function getMailKinds(signal?: AbortSignal) {
+	return api(MailKinds, '/api/settings/email/previews', { signal });
+}
+
+export const MailPreview = v.looseObject({
+	kind: Text,
+	lang: Text,
+	from: Text,
+	subject: Text,
+	preheader: Text,
+	html: Text,
+	text: Text
+});
+export type MailPreview = v.InferOutput<typeof MailPreview>;
+
+/** One mail with the branding of now, its HTML in the light or dark palette */
+export function getMailPreview(kind: string, lang: string, scheme: 'light' | 'dark', signal?: AbortSignal) {
+	const q = new URLSearchParams({ lang, scheme });
+	return api(MailPreview, `/api/settings/email/previews/${encodeURIComponent(kind)}?${q}`, { signal });
+}
+
+/** Sends the mail to the signed-in admin's own address */
+export function sendMailPreview(kind: string, lang: string) {
+	return api(v.looseObject({ to: Text }), `/api/settings/email/previews/${encodeURIComponent(kind)}/send`, {
+		method: 'POST',
+		body: { lang }
+	});
+}
+
+const Unsubscribed = v.looseObject({ unsubscribed: v.record(v.string(), v.array(v.string())) });
+
+/** The addresses that turned a notification off, by kind (chat, alert, help) */
+export function getUnsubscribed(signal?: AbortSignal) {
+	return api(Unsubscribed, '/api/settings/email/unsubscribed', { signal });
+}
+
+export function resubscribe(kind: string, address: string) {
+	return api(Unsubscribed, '/api/settings/email/unsubscribed/resubscribe', {
+		method: 'POST',
+		body: { kind, address }
+	});
+}
+
 // ── Time zones and clock ──
 
 export const ClockSettings = v.looseObject({

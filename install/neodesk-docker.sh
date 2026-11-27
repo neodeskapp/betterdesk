@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
 #
-#   NeoDesk Console Manager v3.6.32 (Docker)
+#   NeoDesk Console Manager v3.6.42 (Docker)
 #
 #   Installs, updates and removes NeoDesk on Docker: one container that
 #   runs the published image ghcr.io/neodeskapp/neodesk (signal,
@@ -20,7 +20,7 @@ fi
 
 set -Eeuo pipefail
 
-VERSION="3.6.32"
+VERSION="3.6.42"
 # Where people ask for help: the NeoDesk Discord
 NEODESK_HELP_URL="https://discord.gg/nwERSawufr"
 # The console's host port when .env names none: 3375 since 3.6.0-rc.5
@@ -52,6 +52,9 @@ LETSENCRYPT_STAGING="${LETSENCRYPT_STAGING:-false}"
 TRAEFIK_ACTION=""
 LETSENCRYPT_STAGING_CA="https://acme-staging-v02.api.letsencrypt.org/directory"
 CERT_TIMEOUT="${NEODESK_CERT_TIMEOUT:-120}"
+# IPv6 on the containers' network of a new install (NEODESK_IPV6): true or
+# false given here; without it on when Docker Engine is 27 or newer
+IPV6_SET="${NEODESK_IPV6:-}"
 
 # The folder of a RustDesk server's key pair (id_ed25519, id_ed25519.pub)
 # to take over
@@ -240,6 +243,13 @@ Options:
                          without it gets a trusted certificate
   --no-traefik           Remove Traefik again; the console answers on its
                          own port as before
+  --no-ipv6              A new install without IPv6 on the containers'
+                         network (NEODESK_IPV6=false). Without it a new
+                         install on Docker Engine 27 or newer gets IPv6, so
+                         the console sees IPv6 visitors' own addresses, and
+                         Docker publishes the ports on IPv6 past ufw and
+                         firewalld as it does on IPv4. An install keeps the
+                         setting in .env
   --no-move              postgres: do not move the data; the install stays on
                          SQLite and nothing changes
   --overwrite-postgres   postgres: delete the PostgreSQL volume of an earlier
@@ -319,6 +329,7 @@ parse_args() {
             --email=*) LETSENCRYPT_EMAIL_SET="${1#*=}" ;;
             --letsencrypt-staging) LETSENCRYPT_STAGING=true ;;
             --no-traefik) TRAEFIK_ACTION=off ;;
+            --no-ipv6) IPV6_SET=false ;;
             --no-move) MOVE_DATA=no ;;
             --overwrite-postgres) OVERWRITE_POSTGRES=true ;;
             --purge) PURGE=true ;;
@@ -359,6 +370,11 @@ parse_args() {
     case "${LETSENCRYPT_STAGING,,}" in
         1|y|yes|true|on) LETSENCRYPT_STAGING=true ;;
         *) LETSENCRYPT_STAGING=false ;;
+    esac
+    case "${IPV6_SET,,}" in
+        "") ;;
+        1|y|yes|true|on) IPV6_SET=true ;;
+        *) IPV6_SET=false ;;
     esac
     DOMAIN_SET="${DOMAIN_SET,,}"
     if [ -n "$DOMAIN_SET" ]; then
@@ -944,12 +960,13 @@ check_internet() {
 # The host firewall: ufw or firewalld
 #===============================================================================
 
-# Docker publishes IPv4 ports past ufw and firewalld, but IPv6 visitors
-# come in through docker-proxy and the INPUT chain, where the host firewall
-# decides. So the ports NeoDesk publishes are opened there when one of
-# them is on, before the container starts (Let's Encrypt's challenge
-# comes in on 80), and closed again when they are no longer served or at
-# uninstall. Only rules this manager added are closed: in ufw the ones
+# Docker publishes IPv4 ports past ufw and firewalld, and IPv6 ports too
+# when the containers' network has IPv6 (NEODESK_IPV6=true). Without it
+# IPv6 visitors come in through docker-proxy and the INPUT chain, where the
+# host firewall decides. So the ports NeoDesk publishes are opened there
+# when one of them is on, before the container starts (Let's Encrypt's
+# challenge comes in on 80), and closed again when they are no longer
+# served or at uninstall. Only rules this manager added are closed: in ufw the ones
 # with the comment "NeoDesk ...", in both the ones in FIREWALL_RECORD.
 
 firewall_record() { printf '%s\n' "$NEODESK_DIR/.firewall"; }
@@ -1372,6 +1389,46 @@ write_settings() {
     esac
 }
 
+# ipv6_settings: whether a new install's network gets IPv6
+# (NEODESK_IPV6). With it Docker gives the containers IPv6 addresses and
+# publishes the ports on IPv6 with NAT as on IPv4, so the server sees IPv6
+# visitors' own addresses instead of the network's gateway. That needs
+# Docker Engine 27 or newer (it picks the network's IPv6 subnet and sets
+# up the IPv6 NAT by itself) and a host where Docker can make an IPv6
+# network, which a throwaway network checks. NEODESK_IPV6 given to this
+# script wins; on an older engine or without IPv6 the network stays IPv4
+# and it says why. .env keeps the answer, so later runs leave it alone,
+# and installs from before have none, so they stay on IPv4.
+ipv6_settings() {
+    local engine error probe="neodesk-ipv6-check"
+    [ -z "$(env_get NEODESK_IPV6)" ] || return 0
+    if [ -n "$IPV6_SET" ]; then
+        env_set NEODESK_IPV6 "$IPV6_SET"
+        return 0
+    fi
+    engine=$(docker version -f '{{.Server.Version}}' 2>/dev/null || true)
+    if ! version_at_least "${engine:-0}" 27.0.0; then
+        env_set NEODESK_IPV6 false
+        say "IPv4 only on the containers' network: IPv6 needs Docker Engine 27 or newer, this is ${engine:-an unknown version}."
+        ipv6_off_hint
+        return 0
+    fi
+    docker network rm "$probe" >/dev/null 2>&1 || true
+    if ! error=$(docker network create --ipv6 "$probe" 2>&1 >/dev/null); then
+        env_set NEODESK_IPV6 false
+        say "IPv4 only on the containers' network: Docker could not make an IPv6 network here (${error%%$'\n'*})."
+        ipv6_off_hint
+        return 0
+    fi
+    docker network rm "$probe" >/dev/null 2>&1 || true
+    env_set NEODESK_IPV6 true
+}
+
+ipv6_off_hint() {
+    say "  IPv6 visitors show up in the activity log as the network's gateway, and sign-in limits count them as one."
+    say "  To change it later: NEODESK_IPV6=true in $(env_file), then cd $NEODESK_DIR && docker compose down && docker compose up -d"
+}
+
 # traefik_settings: Traefik with Let's Encrypt in front of the console:
 # the profile, the domain and the contact, the console's own port on this
 # host only, the client's address from Traefik and the address in mails
@@ -1640,7 +1697,13 @@ do_install() {
     if [ "$state" != foreign ] && docker volume inspect "$DATA_VOLUME" >/dev/null 2>&1; then
         say "The volume $DATA_VOLUME is there from an earlier install; its data is used."
     fi
+    # Only a folder without settings is a new install for IPv6: one whose
+    # container was removed (docker compose down) or that is taken over
+    # keeps its network as it was
+    local fresh=false
+    [ "$state" != new ] || [ -f "$(env_file)" ] || fresh=true
     write_settings
+    [ "$fresh" != true ] || ipv6_settings
     if [ "$USE_POSTGRES" = true ] && ! on_postgres; then
         postgres_settings
     fi
@@ -1862,6 +1925,10 @@ print_summary() {
     say "  Key:           ${key:-not made yet; later: docker exec neodesk cat /opt/neodesk/data/id_ed25519.pub}"
     say ""
     say "Ports to open in a firewall in front of this machine: TCP $(console_firewall_ports "$domain")21114-21119, 21121, 21122 and UDP 21116"
+    if [ "$(env_get NEODESK_IPV6)" = true ]; then
+        say "IPv6:            the containers' network has IPv6 (NEODESK_IPV6), so the console sees IPv6 visitors' own addresses."
+        say "                 Docker publishes the ports past ufw and firewalld on IPv6 as on IPv4: closing one there does not block it."
+    fi
     say "Logs:            cd $NEODESK_DIR && docker compose logs -f neodesk"
     say "Update:          $(manager_cmd)   (or: cd $NEODESK_DIR && docker compose pull && docker compose up -d)"
     say "Settings:        $(env_file)   (then: cd $NEODESK_DIR && docker compose up -d)"

@@ -6,7 +6,9 @@
   (lib/settings/sources.ts): a value saved here wins over the SMTP_
   variables of the environment, so nothing is locked. Beside the form:
   whether mail works now with Test connection (an action that checks the
-  saved server), and what sends email.
+  saved server), and what sends email. Below it (MailsPanel): the sender
+  name and footer of the mails, a preview of each mail with "Send me this
+  mail", and the addresses that turned a notification off.
 -->
 <script lang="ts">
 	import { ApiError } from '#lib/api/client.ts';
@@ -33,6 +35,8 @@
 	import { SettingsDraft, saveAndConfirm } from '#lib/ui/settings/draft.svelte.ts';
 	import { emailProblem, smtpProblems, splitEmails, type SmtpValues } from '../email.ts';
 	import { sourceInfo, sourceRow } from '../sources.ts';
+	import '../side-rows.css';
+	import MailsPanel from './MailsPanel.svelte';
 
 	const allowed = can('server.config');
 
@@ -202,6 +206,18 @@
 	};
 
 	const src = (field: string) => sourceInfo(sources[`smtp.${field}`]);
+	/**
+	 * What an empty field means: the server's default ("Empty uses
+	 * neodesk@localhost"), said beside the field while it is empty and
+	 * the default applies. Empty when there is nothing to say.
+	 */
+	function emptyUses(field: 'host' | 'user' | 'pass' | 'from'): string {
+		if (String(v[field] ?? '').trim()) return '';
+		const info = src(field);
+		const value = info.hasDefault ? String(info.default ?? '').trim() : '';
+		if (!value || info.lockedBy) return '';
+		return tf('settings.email.empty_uses', 'Empty uses {value}.', { value });
+	}
 	const configured = $derived(!!config?.configured);
 	const facts = $derived([
 		{
@@ -223,9 +239,10 @@
 		{...sourceRow(draft, field, src(field))}
 	>
 		{#snippet control(f)}
+			{@const empty = emptyUses(field)}
 			<Input
 				id={f.id}
-				describedby={f.describedby}
+				describedby={[f.describedby, empty && `${f.id}-empty`].filter(Boolean).join(' ') || undefined}
 				invalid={f.invalid}
 				class={field === 'host' ? 'mono' : undefined}
 				{type}
@@ -234,6 +251,7 @@
 				value={v[field]}
 				oninput={(e) => set(field, (e.currentTarget as HTMLInputElement).value)}
 			/>
+			{#if empty}<p class="empty-uses" id="{f.id}-empty">{empty}</p>{/if}
 		{/snippet}
 	</SettingRow>
 {/snippet}
@@ -289,7 +307,7 @@
 {#if !allowed}
 	<States message={t('settings.page.admin_only')} />
 {:else}
-	<SettingsBody summary={side} summaryLabel={t('settings.side.state_title')} {bar}>
+	<SettingsBody summary={side} summaryLabel={t('settings.side.state_title')} {bar} class="side-rows">
 		{#if loadError && !loaded}
 			<States kind="error" message={loadError} onretry={() => void load()} />
 		{:else if !loaded}
@@ -400,6 +418,7 @@
 					{/snippet}
 				</SettingRow>
 			</SettingsGroup>
+			<MailsPanel />
 		{/if}
 	</SettingsBody>
 {/if}
@@ -418,9 +437,13 @@
 	.summary-stack :global(.facts > dt) {
 		max-width: 160px;
 	}
-	.hint {
+	.hint,
+	.empty-uses {
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+	}
+	.empty-uses {
+		margin: var(--space-1) 0 0;
 	}
 	.settings-inline-controls {
 		display: flex;

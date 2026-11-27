@@ -42,12 +42,12 @@
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
 	import ShareBar from '#lib/ui/ShareBar.svelte';
 	import Table from '#lib/ui/Table.svelte';
 	import Tabs from '#lib/ui/Tabs.svelte';
-	import Tag from '#lib/ui/Tag.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import Toolbar from '#lib/ui/Toolbar.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
@@ -237,10 +237,8 @@
 {#snippet nameCell(p: DlpPolicy)}<span class="strong">{p.name}</span>{#if p.description}<span class="cell-sub"
 			>{p.description}</span
 		>{/if}{/snippet}
-{#snippet typeCell(p: DlpPolicy)}{#if typeOf(p)}<Tag label={label(typeOf(p))} />{:else}<Empty
-		/>{/if}{/snippet}
-{#snippet actionCell(p: DlpPolicy)}{#if p.action}<Tag label={actionLabel(t, p.action)} />{:else}<Empty
-		/>{/if}{/snippet}
+{#snippet typeCell(p: DlpPolicy)}{#if typeOf(p)}{label(typeOf(p))}{:else}<Empty />{/if}{/snippet}
+{#snippet actionCell(p: DlpPolicy)}{#if p.action}{actionLabel(t, p.action)}{:else}<Empty />{/if}{/snippet}
 {#snippet scopeCell(p: DlpPolicy)}{#if p.scope}<ValueCopy value={p.scope} />{:else}{t(
 			'dataguard.scope_all'
 		)}{/if}{/snippet}
@@ -261,8 +259,7 @@
 {#snippet eventDeviceCell(e: DlpEvent)}{#if e.device_id}<ValueCopy value={e.device_id} />{:else}<Empty
 		/>{/if}{/snippet}
 {#snippet eventPolicyCell(e: DlpEvent)}{#if e.policy_name}{e.policy_name}{:else}<Empty />{/if}{/snippet}
-{#snippet eventActionCell(e: DlpEvent)}{#if e.action}<Tag label={actionLabel(t, e.action)} />{:else}<Empty
-		/>{/if}{/snippet}
+{#snippet eventActionCell(e: DlpEvent)}{#if e.action}{actionLabel(t, e.action)}{:else}<Empty />{/if}{/snippet}
 {#snippet eventDetailCell(e: DlpEvent)}{@const d = detailText(e)}{#if d}{d}{:else}<Empty />{/if}{/snippet}
 
 {#if !allowed}
@@ -272,9 +269,9 @@
 		<div class="page-head">
 			<h1>{t('nav.dataguard')}</h1>
 			<p class="page-description">{t('dataguard.page_description')}</p>
-			<!-- Only the NeoDesk client fetches the policies (L413) -->
-			<p class="page-description">{t('dataguard.client_note')}</p>
 		</div>
+		<!-- Only the NeoDesk client fetches the policies (L413): true for the whole page, said once at the top -->
+		<div class="client-note"><Notice id="dg-client-note" message={t('dataguard.client_note')} /></div>
 
 		<Tabs {tabs} value={shownTab} label={t('dataguard.views_label')} onchange={selectTab}>
 			{#snippet children(id)}
@@ -400,6 +397,9 @@
 	}
 	.dg-page :global(td.col-time) {
 		white-space: nowrap;
+	}
+	.client-note {
+		max-width: var(--measure);
 	}
 	.dg-page :global(td.col-scope) {
 		max-width: 24ch;

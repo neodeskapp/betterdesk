@@ -3,6 +3,7 @@ package users
 import (
 	"cmp"
 	"context"
+	"database/sql"
 	"net/http"
 	"regexp"
 	"slices"
@@ -15,7 +16,6 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/accountmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
@@ -53,6 +53,18 @@ func (h *handlers) senderName(r *http.Request) string {
 	return people.NameOf(r.Context(), h.d.Store, kit.UserID(r), fallback)
 }
 
+// senderEmail is the signed-in account's address, for replies.
+func (h *handlers) senderEmail(r *http.Request) string {
+	var email sql.NullString
+	if h.d.Store == nil || kit.UserID(r) == 0 {
+		return ""
+	}
+	if err := h.d.Store.QueryRow(r.Context(), `SELECT email FROM users WHERE id = ?`, kit.UserID(r)).Scan(&email); err != nil {
+		return ""
+	}
+	return strings.TrimSpace(email.String)
+}
+
 // sendLink makes a new link of the purpose for the account, which ends
 // its earlier one, and mails it to the address in the language given, or
 // for "" in the recipient's language: the account's preferred language,
@@ -69,20 +81,18 @@ func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose
 		return false, time.Time{}, err
 	}
 	base := strings.TrimRight(h.consoleBase(r), "/")
-	host := base
-	if i := strings.Index(host, "://"); i >= 0 {
-		host = host[i+3:]
-	}
-	translate := accountmail.In(h.d, accountmail.LangOf(ctx, h.d, userID))
+	t, lang, zone := securitymail.ReaderOf(ctx, h.d, userID)
 	if language != "" {
-		translate = securitymail.Translator(h.d, language)
+		t, lang = securitymail.Translator(h.d, language), language
 	}
-	m := passwordlinks.BuildMail(translate, passwordlinks.MailFacts{
-		Purpose: purpose, Link: passwordlinks.SetPasswordLink(base, token), Username: username,
-		Sender: h.senderName(r), Host: host, Expires: brandmail.When(expires),
-		Branding: brandmail.Of(h.d.Branding, base),
+	brand := brandmail.Of(h.d.Branding)
+	brand.Host = brandmail.HostOf(base)
+	m := passwordlinks.BuildMail(t, passwordlinks.MailFacts{
+		Purpose: purpose, Lang: lang, Link: passwordlinks.SetPasswordLink(base, token), Username: username,
+		Sender: h.senderName(r), SenderEmail: h.senderEmail(r), Expires: expires, Zone: zone, Branding: brand,
 	})
-	sent, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline, Lang: m.Lang})
+	m.Host = brand.Host
+	sent, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{to}, Mail: m})
 	if err != nil || !sent {
 		return false, expires, err
 	}

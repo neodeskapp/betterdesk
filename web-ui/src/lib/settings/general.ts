@@ -294,3 +294,43 @@ export function endpointSourceLabel(
 	if (source === 'relay_servers') return t('settings.side.src_env', { name: 'RELAY_SERVERS' });
 	return t('settings.side.src_auto');
 }
+
+/**
+ * The line under an empty address field of Settings › General: which
+ * address clients get instead and where it comes from (the client setup
+ * the server hands out, getClientConfig). A stored address cleared on the
+ * page says only that the address found automatically will apply, since
+ * the server finds it after the save.
+ */
+export function emptyEndpointLine(o: {
+	value: string;
+	source: string | undefined;
+	variable: string;
+	clearedHere: boolean;
+}): string {
+	const value = o.value.trim();
+	if (o.clearedHere || !value)
+		return tf(
+			'settings.general.endpoint_empty_unknown',
+			'Empty: clients get the address found automatically.'
+		);
+	const envName =
+		o.source === 'env'
+			? o.variable
+			: o.source === 'panel_host'
+				? 'PANEL_PUBLIC_HOST'
+				: o.source === 'relay_servers'
+					? 'RELAY_SERVERS'
+					: '';
+	if (envName)
+		return tf(
+			'settings.general.endpoint_empty_env',
+			"Empty: clients get {value}, from {name} in the server's environment.",
+			{ value, name: envName }
+		);
+	if (o.source === 'saved')
+		return tf('settings.general.endpoint_empty_now', 'Empty: clients get {value}.', { value });
+	return tf('settings.general.endpoint_empty_auto', 'Empty: clients get {value}, found automatically.', {
+		value
+	});
+}

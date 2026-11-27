@@ -123,8 +123,9 @@ func TestLinks(t *testing.T) {
 }
 
 // The invite mail names the account, the sender, the link and the end
-// of the link, in the text and the HTML part, in the console's language
-// files.
+// of the link in the reader's date format, in the text and the HTML
+// part, in the console's language files; replies go to the sender. A
+// reset the person asked for is automatic and names no sender.
 func TestBuildMail(t *testing.T) {
 	texts := i18n.New("../static/files/lang", "en")
 	texts.Load()
@@ -135,22 +136,34 @@ func TestBuildMail(t *testing.T) {
 		}
 		return texts.Translate("en", key, i18n.V(pairs...))
 	}
-	m := BuildMail(tr, MailFacts{
-		Purpose: PurposeInvite, Link: "https://desk.example/set-password#tok", Username: "ada",
-		Sender: "Grace Hopper", Host: "desk.example", Expires: "2026-12-02 12:00 UTC",
-		Branding: brandmail.Branding{Server: "Acme Desk"},
-	})
-	if m.Subject != "Grace Hopper invited you to Acme Desk" {
-		t.Errorf("subject %q", m.Subject)
+	b := brandmail.Branding{Server: "Acme Desk", Host: "desk.example"}
+	f := MailFacts{
+		Purpose: PurposeInvite, Lang: "en", Link: "https://desk.example/set-password#tok", Username: "ada",
+		Sender: "Grace Hopper", SenderEmail: "grace@desk.example", Expires: time.Date(2026, 12, 2, 12, 0, 0, 0, time.UTC), Zone: time.UTC,
+		Branding: b,
 	}
-	for _, part := range []string{m.Text, m.HTML} {
-		for _, want := range []string{"https://desk.example/set-password#tok", "ada", "2026-12-02 12:00 UTC", "Grace Hopper made you an account on Acme Desk", "Choose your password"} {
+	m := BuildMail(tr, f)
+	if m.Subject != "Grace Hopper invited you to Acme Desk" || m.ReplyTo != "grace@desk.example" {
+		t.Errorf("subject %q, reply to %q", m.Subject, m.ReplyTo)
+	}
+	built := brandmail.Render(m, b, "")
+	for _, part := range []string{built.Text, built.HTML} {
+		for _, want := range []string{"https://desk.example/set-password#tok", "ada", "2 December 2026, 12:00 UTC", "Grace Hopper made you an account on Acme Desk", "Choose your password"} {
 			if !strings.Contains(part, want) {
-				t.Errorf("no %q in\n%s", want, part)
+				t.Errorf("no %q in %s", want, part)
 			}
 		}
-		if strings.Contains(part, "password_link.") {
-			t.Errorf("a key without text in\n%s", part)
+		if strings.Contains(part, "mail.") || strings.Contains(part, "2026-12-02") {
+			t.Errorf("a key without text or a raw date in %s", part)
 		}
+	}
+	f.Branding.Server = "NeoDesk"
+	if m := BuildMail(tr, f); m.Subject != "Grace Hopper made you a NeoDesk account" {
+		t.Errorf("default name subject %q", m.Subject)
+	}
+	f.Purpose, f.Self = PurposeReset, true
+	self := BuildMail(tr, f)
+	if !self.Automatic || self.ReplyTo != "" || strings.Contains(self.Lead+self.Why, "Grace") {
+		t.Errorf("self reset: automatic %v, reply to %q, %q %q", self.Automatic, self.ReplyTo, self.Lead, self.Why)
 	}
 }

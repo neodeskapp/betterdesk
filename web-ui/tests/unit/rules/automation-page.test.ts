@@ -121,6 +121,16 @@ describe('alerts and automation page', () => {
 		render(Page);
 		expect(await screen.findByRole('button', { name: 'automation.view_result' })).toBeVisible();
 		expect(screen.getByRole('button', { name: 'automation.details' })).toBeVisible();
+		// The command type is plain text in its cell, not a tag (no pills)
+		expect(document.querySelector('.automation-page .tag')).toBeNull();
+		expect(screen.getAllByText('shell').length).toBe(2);
 		pageState.url = new URL('http://localhost/app/automation');
+	});
+
+	test('the rules tab has one note; when each rule is checked is said in the rule sheet', async () => {
+		signIn('server_admin', ['server.config', 'device.view', 'audit.view']);
+		render(Page);
+		expect(await screen.findByText('automation.rules_note')).toBeVisible();
+		expect(screen.queryByText(/Rules are checked as values come in/)).toBeNull();
 	});
 });

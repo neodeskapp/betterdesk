@@ -117,9 +117,18 @@ describe('data loss prevention', () => {
 describe('USB and drive access', () => {
 	test('a device without rules shows defaults that allow everything', () => {
 		const v = rcValuesFrom(null);
-		expect(v.usb).toEqual({ storage_policy: 'allowed', whitelist: '', audit_log: true });
+		expect(v.usb).toEqual({ storage_policy: 'allowed', whitelist: [], audit_log: true });
 		expect(v.monitors.brightness).toBe(100);
-		expect(v.quotas).toMatchObject({ cpu_limit: 100, ram_limit: 100, bandwidth_limit: 0, disk_quota: 0 });
+		// No limit is an empty field, not a 0 the admin has to know about
+		expect(v.monitors.max_count).toBeNull();
+		expect(v.quotas).toMatchObject({
+			cpu_limit: 100,
+			ram_limit: 100,
+			bandwidth_limit: null,
+			disk_quota: null
+		});
+		// ...and goes back to the server as the 0 it stores for no limit
+		expect(rcBody('quotas', v)).toMatchObject({ bandwidth_limit: 0, disk_quota: 0 });
 	});
 
 	test('saved rules are shown and saved back in the same shape', () => {
@@ -129,7 +138,9 @@ describe('USB and drive access', () => {
 			quotas: { cpu_limit: 50, process_whitelist: ['chrome.exe'] }
 		};
 		const v = rcValuesFrom(saved);
-		expect(v.usb.whitelist).toBe('0781:5583\n046d:c52b');
+		// One entry per row, no comma or line lists
+		expect(v.usb.whitelist).toEqual(['0781:5583', '046d:c52b']);
+		expect(v.disks.hidden_partitions).toEqual(['D:', '/mnt/x']);
 		expect(rcBody('usb', v)).toEqual(saved.usb);
 		expect(rcBody('disks', v)).toEqual({
 			readonly: true,

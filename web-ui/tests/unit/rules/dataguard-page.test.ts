@@ -35,7 +35,8 @@ beforeEach(() => {
 		const url = new URL(input, location.origin);
 		requests.push(url.pathname);
 		let data: unknown = {};
-		if (url.pathname === '/api/dataguard/policies') data = [{ id: 1, name: 'USB', enabled: 1 }];
+		if (url.pathname === '/api/dataguard/policies')
+			data = [{ id: 1, name: 'USB', enabled: 1, policy_type: 'usb', action: 'block' }];
 		if (url.pathname === '/api/dataguard/stats')
 			data = { total: 150, blocked: 150, logged: 0, usb_events: 150, file_events: 0, by_policy: { '1': 75 } };
 		if (url.pathname === '/api/dataguard/events') {
@@ -108,5 +109,16 @@ describe('data loss prevention page', () => {
 			expect(table.querySelector('tbody tr[data-index] td.is-num')).toHaveTextContent('75')
 		);
 		expect(requests).not.toContain('/api/dataguard/events');
+	});
+
+	test('the client note is one notice at the top, and type and action are plain text, not tags', async () => {
+		signIn();
+		render(Page);
+		const table = await screen.findByRole('table', { name: 'dataguard.tab_policies' });
+		await vi.waitFor(() => expect(table).toHaveTextContent('dataguard.action_block'));
+		expect(document.querySelector('.dg-page .tag')).toBeNull();
+		const note = document.getElementById('dg-client-note');
+		expect(note).toHaveTextContent('dataguard.client_note');
+		expect(screen.getAllByText('dataguard.client_note')).toHaveLength(1);
 	});
 });

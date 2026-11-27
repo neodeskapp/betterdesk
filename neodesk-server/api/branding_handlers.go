@@ -453,6 +453,9 @@ type EnrollmentRequest struct {
 	Tags       string `json:"tags,omitempty"` // comma-separated enrollment metadata
 	PublicKey  string `json:"public_key,omitempty"`
 	Token      string `json:"token,omitempty"` // Optional enrollment credential, POST body only
+	// RendezvousPK is the key the peer row binds for the signal server, set
+	// only by a deploy (device_deploy.go), never from a request body.
+	RendezvousPK []byte `json:"-"`
 }
 
 // EnrollmentResponse is returned to the desktop client.
@@ -1264,6 +1267,8 @@ func (s *Server) listEnrollmentHistory(statusFilter string) []enrollmentDecision
 // handleApproveDevice approves a pending enrollment request.
 // POST /api/enrollment/approve/{id}
 func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
+	enrollmentDecisionMu.Lock()
+	defer enrollmentDecisionMu.Unlock()
 	deviceID := r.PathValue("id")
 	if deviceID == "" {
 		http.Error(w, "Device ID required", http.StatusBadRequest)
@@ -1396,6 +1401,8 @@ func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
 // handleRejectDevice rejects a pending enrollment request.
 // POST /api/enrollment/reject/{id}
 func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
+	enrollmentDecisionMu.Lock()
+	defer enrollmentDecisionMu.Unlock()
 	deviceID := r.PathValue("id")
 	if deviceID == "" {
 		http.Error(w, "Device ID required", http.StatusBadRequest)
@@ -1680,6 +1687,7 @@ func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP strin
 	if err := s.db.UpsertPeer(&db.Peer{
 		ID:         req.DeviceID,
 		UUID:       req.UUID,
+		PK:         req.RendezvousPK,
 		IP:         clientIP,
 		Hostname:   req.Hostname,
 		OS:         req.Platform,

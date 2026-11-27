@@ -75,7 +75,7 @@ async function expectNightly(page: Page): Promise<void> {
 	if (saved.next.timeZone === 'UTC') expect([at.getUTCHours(), at.getUTCMinutes()]).toEqual([2, 0]);
 	// The page says when, once, and not "within a minute"
 	await expect(page.getByText(/^The next backup runs on this schedule: /)).toBeVisible();
-	await expect(page.locator('.settings-summary')).not.toContainText('Within a minute');
+	await expect(page.locator('#main-content')).not.toContainText('Within a minute');
 }
 
 test.describe('back up the server every night and keep 14 copies', () => {

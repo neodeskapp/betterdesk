@@ -3,6 +3,7 @@ package passwordlinks
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
@@ -22,8 +23,9 @@ func TestBuildMailSaysItsLanguage(t *testing.T) {
 			return texts.Translate(c.lang, key, i18n.V(pairs...))
 		}
 		for _, purpose := range []string{PurposeInvite, PurposeReset} {
-			m := BuildMail(tr, MailFacts{Purpose: purpose, Link: "https://desk.example/set-password#tok", Username: "ada", Sender: "Grace", Host: "desk.example", Expires: "2026-12-02 12:00 UTC", Branding: brandmail.Branding{Server: "Acme Desk"}})
-			if m.Lang != c.lang || !strings.Contains(m.HTML, `<html lang="`+c.lang+`" dir="`+c.dir+`">`) {
+			b := brandmail.Branding{Server: "Acme Desk", Host: "desk.example"}
+			m := brandmail.Render(BuildMail(tr, MailFacts{Purpose: purpose, Lang: c.lang, Link: "https://desk.example/set-password#tok", Username: "ada", Sender: "Grace", Expires: time.Now(), Branding: b}), b, "")
+			if m.Lang != c.lang || !strings.Contains(m.HTML, `<html lang="`+c.lang+`" dir="`+c.dir+`"`) {
 				t.Errorf("%s %s mail: Lang %q, page starts %.120q", c.lang, purpose, m.Lang, m.HTML)
 			}
 			if m.Text == "" {

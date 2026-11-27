@@ -27,7 +27,6 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
@@ -135,17 +134,23 @@ func Translator(d *kit.Deps, language string) func(key string, vars map[string]a
 
 // notice is what one mail says.
 type notice struct {
-	// key is the switch; subject, heading and lead are language keys
-	// below security_notice.
-	key                    string
-	subject, heading, lead string
-	// facts are lines below the lead, already in the mail's language;
-	// when writes a time in the recipient's time zone
-	facts func(t func(string, map[string]any) string, when func(time.Time) string) []string
-	// notYou is the key of what to do when it was not them
-	notYou string
+	// key is the switch, kind the mail's name for the previews
+	key, kind string
+	// subject, preheader, lead and notYou are keys below mail.security,
+	// heading below security_notice
+	subject, preheader, heading, lead, notYou string
+	// facts are rows below the lead, in the mail's language
+	facts factsFunc
 	// to is the address when it is not the account's own
 	to string
+}
+
+// ReaderOf is how a mail to an account is written: the texts of its
+// preferred language (else the console's default), that language's code
+// and the account's time zone (else the server's).
+func ReaderOf(ctx context.Context, d *kit.Deps, userID int64) (brandmail.Translate, string, *time.Location) {
+	lang := Language(ctx, d, userID)
+	return Translator(d, lang), lang, brandmail.Zone(people.TimeZone(ctx, d.Store, userID))
 }
 
 // Ready reports whether a notice of the switch would go out to the
@@ -187,50 +192,50 @@ func (n *Notices) deliver(ctx context.Context, userID int64, nt notice) error {
 	if to == "" {
 		return nil
 	}
-	built := n.build(who, nt)
-	_, err = m.SendEmail(ctx, mail.Email{To: []string{to}, Subject: built.subject, Text: &built.text, HTML: &built.html, Inline: built.inline})
+	_, err = m.SendEmail(ctx, mail.Email{To: []string{to}, Mail: n.build(who, nt)})
 	return err
 }
 
-// built is a written notice.
-type built struct {
-	subject, text, html string
-	inline              []message.Inline
-}
-
-// build writes the notice in the recipient's language.
-func (n *Notices) build(who *recipient, nt notice) built {
+// build writes the notice in the recipient's language and time zone:
+// what happened, when and from where, what to do when it wasn't them, and
+// that admins switch these notices.
+func (n *Notices) build(who *recipient, nt notice) brandmail.Mail {
 	base := ""
 	if n.d.Mail != nil {
 		base = strings.TrimRight(n.d.Mail.GetPanelBaseURL(), "/")
 	}
-	brand := brandmail.Of(n.d.Branding, base)
-	t := Translator(n.d, languageOr(n.d, who.language))
-	host := base
-	if i := strings.Index(host, "://"); i >= 0 {
-		host = host[i+3:]
+	lang := languageOr(n.d, who.language)
+	return buildNotice(Translator(n.d, lang), lang, brandmail.Zone(who.zone), who.username, brandmail.HostOf(base), base, nt)
+}
+
+func buildNotice(t brandmail.Translate, lang string, zone *time.Location, username, host, base string, nt notice) brandmail.Mail {
+	vars := map[string]any{"username": username, "host": host}
+	m := brandmail.Mail{
+		Kind: nt.kind, T: t, Lang: lang, Automatic: true,
+		Subject:   t("mail.security."+nt.subject, vars),
+		Preheader: t("mail.security."+nt.preheader, vars),
+		Heading:   t("security_notice."+nt.heading, vars),
+		Lead:      t("mail.security."+nt.lead, vars),
+		Details:   []string{t("mail.security."+nt.notYou, vars)},
+		Why:       t("mail.security.why", vars),
+		TurnOff:   t("mail.security.turn_off", vars),
 	}
-	vars := map[string]any{"server": brand.Server, "username": who.username, "host": host}
-	subject := t("security_notice."+nt.subject, vars)
-	heading := t("security_notice."+nt.heading, vars)
-	lead := t("security_notice."+nt.lead, vars)
-	var facts []string
 	if nt.facts != nil {
-		facts = nt.facts(t, func(at time.Time) string { return people.TimeIn(at, who.zone) })
+		m.Facts = nt.facts(t, func(at time.Time) string { return brandmail.DateTime(at, lang, zone) })
 	}
-	notYou := t("security_notice."+nt.notYou, vars)
-	footer := t("security_notice.footer", vars)
-	button, link := "", ""
 	if base != "" {
-		button, link = t("security_notice.button", vars), base+"/account"
+		m.Button, m.Link = t("mail.security.button", vars), base+"/account"
 	}
-	small := append(append([]string{}, facts...), notYou)
-	lines := []string{heading, "", lead, ""}
-	lines = append(lines, small...)
-	if link != "" {
-		lines = append(lines, "", button+": "+link)
+	return m
+}
+
+// PreviewMails are the notices with made-up facts, for the mail previews.
+func PreviewMails(t brandmail.Translate, lang, username, base string, at time.Time) []brandmail.Mail {
+	host, zone := brandmail.HostOf(base), time.Local
+	return []brandmail.Mail{
+		buildNotice(t, lang, zone, username, host, base, signInNotice(SignIn{At: at, IP: "203.0.113.24", Browser: "Firefox on Windows"})),
+		buildNotice(t, lang, zone, username, host, base, passwordNotice(PasswordBySelf, at)),
+		buildNotice(t, lang, zone, username, host, base, twoFactorNotice(TwoFactorOn, at)),
+		buildNotice(t, lang, zone, username, host, base, emailNotice("old@example.com", "new@example.com", at)),
 	}
-	lines = append(lines, "", "--", footer)
-	page := brandmail.Page{Branding: brand, Heading: heading, Lead: lead, Small: small, Button: button, Link: link, Footer: footer}
-	return built{subject: subject, text: strings.Join(lines, "\n") + "\n", html: brandmail.HTML(page), inline: brandmail.Inline(page)}
 }

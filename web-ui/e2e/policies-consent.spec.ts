@@ -106,6 +106,8 @@ async function expectSaved(page: Page, id: string): Promise<void> {
 	await expect(connection.getByText(NOT_APPLIED)).toBeVisible();
 	await expect(page.locator('.changes-bar')).toHaveCount(0);
 	await expect(page.locator('#pol-audit')).toContainText('Connection', LOAD);
+	// The group is plain text in the table, not a tag
+	await expect(page.locator('#pol-audit .tag')).toHaveCount(0);
 	expect(await storedMode(page, id)).toEqual({ value: 'attended', source: 'organization' });
 }
 

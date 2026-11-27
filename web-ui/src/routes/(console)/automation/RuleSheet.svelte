@@ -1,8 +1,10 @@
 <!--
   Create or edit an alert rule: name and description, what it watches
   (condition; comparison and threshold with its unit for every kind but
-  Custom; which device), and the alert (severity, on or off). Enter in a
-  field saves; refusals go on the field and in the status line.
+  Custom; all devices or one), and the alert (severity, on or off). The
+  condition's help says when the server checks it; the device ID field
+  shows only for "One device". Enter in a field saves; refusals go on the
+  field and in the status line.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -10,6 +12,7 @@
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import {
 		CONDITION_TYPES,
+		checkedWhenKey,
 		labelFor,
 		OPERATORS,
 		ruleBody,
@@ -18,6 +21,7 @@
 		unitKey
 	} from '#lib/rules/automation.ts';
 	import Button from '#lib/ui/Button.svelte';
+	import ChoiceSegments from '#lib/ui/settings/ChoiceSegments.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import FormSection from '#lib/ui/FormSection.svelte';
@@ -33,18 +37,29 @@
 
 	const uid = $props.id();
 	const limitId = `${uid}-limit`;
+	const deviceId = `${uid}-device`;
+
+	/** "One device": the rule watches the device whose ID is typed; else every device */
+	let oneDevice = $state(untrack(() => !!rule?.scope_device_id));
 
 	const form = createForm({
 		initial: untrack(() => ruleValues(rule)),
 		validate: (v) => {
 			const check = ruleBody(v);
-			if (check.ok) return null;
-			return check.field === 'name'
-				? { name: t('automation.name_required') }
-				: { condition_value: t('automation.threshold_required') };
+			const errors: { name?: string; condition_value?: string; scope_device_id?: string } = {};
+			if (!check.ok) {
+				if (check.field === 'name') errors.name = t('automation.name_required');
+				else errors.condition_value = t('automation.threshold_required');
+			}
+			if (oneDevice && !v.scope_device_id.trim())
+				errors.scope_device_id = tf(
+					'automation.device_required',
+					'Enter the device ID, or choose All devices.'
+				);
+			return Object.keys(errors).length ? errors : null;
 		},
 		submit: async (v) => {
-			const check = ruleBody(v);
+			const check = ruleBody(oneDevice ? v : { ...v, scope_device_id: '' });
 			if (!check.ok) throw new FormError(t('automation.threshold_required'), check.field);
 			try {
 				if (rule) await updateRule(rule.id, check.body);
@@ -60,6 +75,7 @@
 	});
 
 	const custom = $derived(form.values.condition_type === 'custom');
+	const checkedWhen = $derived(checkedWhenKey(form.values.condition_type));
 	const unit = $derived(unitKey(form.values.condition_type));
 
 	const conditionOptions = $derived(
@@ -67,6 +83,10 @@
 	);
 	const opOptions = $derived(OPERATORS.map((o) => ({ value: o, label: labelFor(t, 'op', o) })));
 	const severityOptions = $derived(SEVERITIES.map((s) => ({ value: s, label: labelFor(t, 'severity', s) })));
+	const scopeOptions = $derived([
+		{ value: 'all', label: t('automation.scope_all') },
+		{ value: 'one', label: tf('automation.scope_one', 'One device') }
+	]);
 </script>
 
 <Sheet
@@ -89,7 +109,16 @@
 			{/snippet}
 		</Field>
 		<FormSection title={t('automation.section_condition')}>
-			<Field label={t('automation.condition_type')} hint={t('automation.condition_hint')} width="host">
+			<Field
+				label={t('automation.condition_type')}
+				hint={checkedWhen
+					? tf(checkedWhen.key, checkedWhen.fallback)
+					: tf(
+							'automation.custom_not_checked',
+							'A custom rule has no value the server can measure, so it raises no alerts by itself.'
+						)}
+				width="host"
+			>
 				{#snippet children(f)}
 					<Select
 						{...f}
@@ -129,25 +158,37 @@
 					{/snippet}
 				</Field>
 			</ShowWhen>
-			{#if custom}
-				<p class="hint">
-					{tf(
-						'automation.custom_not_checked',
-						'A custom rule has no value the server can measure, so it raises no alerts by itself.'
-					)}
-				</p>
-			{/if}
-			<Field label={t('automation.scope_device')} hint={t('automation.scope_hint')} width="medium">
-				{#snippet children(f)}
-					<Input
-						{...f}
-						class="mono"
-						autocomplete="off"
-						spellcheck={false}
-						bind:value={form.values.scope_device_id}
-					/>
-				{/snippet}
-			</Field>
+			<div class="scope">
+				<p class="scope-label" id="{uid}-scope-label">{t('automation.scope_device')}</p>
+				<ChoiceSegments
+					id="{uid}-scope"
+					labelledby="{uid}-scope-label"
+					options={scopeOptions}
+					value={oneDevice ? 'one' : 'all'}
+					onchange={(v) => {
+						oneDevice = v === 'one';
+						if (!oneDevice) form.values.scope_device_id = '';
+					}}
+				/>
+			</div>
+			<ShowWhen id={deviceId} when={oneDevice}>
+				<Field
+					label={tf('automation.device_id', 'Device ID')}
+					hint={tf('automation.device_id_hint', 'The ID the device shows in its NeoDesk app.')}
+					error={form.errors.scope_device_id}
+					width="medium"
+				>
+					{#snippet children(f)}
+						<Input
+							{...f}
+							class="mono"
+							autocomplete="off"
+							spellcheck={false}
+							bind:value={form.values.scope_device_id}
+						/>
+					{/snippet}
+				</Field>
+			</ShowWhen>
 		</FormSection>
 		<FormSection title={t('automation.section_alert')}>
 			<Field label={t('automation.severity')} hint={t('automation.severity_hint')} width="medium">
@@ -186,9 +227,14 @@
 	.unit {
 		color: var(--text-muted);
 	}
-	.hint {
+	.scope {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
 		margin: 0;
-		color: var(--text-muted);
-		font-size: var(--text-sm);
+	}
+	.scope-label {
+		margin: 0;
+		font-weight: 600;
 	}
 </style>

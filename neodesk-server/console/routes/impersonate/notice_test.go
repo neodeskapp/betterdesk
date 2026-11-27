@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 )
 
 // The person viewed gets a mail in their own language: who, when, why.
@@ -29,11 +31,11 @@ func TestTheNoticeMail(t *testing.T) {
 		t.Fatalf("to: %v", m.To)
 	}
 	berlin, _ := time.LoadLocation("Europe/Berlin")
-	day := time.Now().In(berlin).Format("2006-01-02")
-	if m.Subject != "Sam Super hat NeoDesk mit deinem Konto angesehen" {
+	day := brandmail.Date(time.Now(), "de", berlin)
+	if m.Subject != "Sam Super hat die Konsole mit deinem Konto angesehen" {
 		t.Errorf("subject: %q", m.Subject)
 	}
-	if m.Text == nil || !strings.Contains(*m.Text, "Sam Super hat NeoDesk am "+day) || !strings.Contains(*m.Text, " Europe/Berlin") || !strings.Contains(*m.Text, "Ticket 4711: the device list is empty") ||
+	if m.Text == nil || !strings.Contains(*m.Text, "Wann: "+day) || !strings.Contains(*m.Text, "Uhr CE") || !strings.Contains(*m.Text, "Ticket 4711: the device list is empty") ||
 		!strings.Contains(*m.Text, "https://desk.example/account") {
 		t.Errorf("text: %v", textOf(m.Text))
 	}

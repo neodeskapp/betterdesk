@@ -66,7 +66,9 @@ test('what Save file does and when it takes effect is said once for the group', 
 	const group = await screen.findByRole('region', { name: 'Files on this server' });
 	expect(group.textContent).toContain(
 		'Save file writes the file at once and keeps a copy of the previous version. When the change takes effect depends on the file: the line under the editor says it.'
-	);
+	); // "Pick a file" is said once, where the editor is still empty, not again on the group
+	expect(group.textContent).not.toContain('Pick a file');
+	expect(screen.getByText('settings.advanced_select_file')).toBeTruthy();
 });
 
 test('the restart is a separate action named as the hint under the editor names it', async () => {

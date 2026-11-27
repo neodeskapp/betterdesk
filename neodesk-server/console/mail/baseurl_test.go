@@ -82,7 +82,10 @@ func TestTheHelpLinkUsesThePublicAddress(t *testing.T) {
 		t.Fatal(ok, err)
 	}
 	m := transport.sends[0].mail
-	if want := "Help request from PC-01\n\nA new help request was submitted.\n\nDevice: PC-01\nMessage: Need help\n"; *m.Text != want || strings.Contains(*m.HTML, "<a ") || strings.Contains(*m.HTML, "help-requests") {
-		t.Errorf("a mail without an address: text %q, html %q", *m.Text, *m.HTML)
+	if strings.Contains(*m.HTML, "<a ") || strings.Contains(*m.HTML, "help-requests") || strings.Contains(*m.Text, "http") || len(m.Headers) != 1 {
+		t.Errorf("a mail without an address has a link: text %q, headers %v", *m.Text, m.Headers)
+	}
+	if !strings.Contains(*m.Text, "An admin can change who gets these mails") || strings.Contains(*m.Text, "link below") {
+		t.Errorf("a mail without an address points at a link: %q", *m.Text)
 	}
 }

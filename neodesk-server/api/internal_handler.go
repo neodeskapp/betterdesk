@@ -183,6 +183,7 @@ var noCredentialPaths = map[string]bool{
 	"/api/auth/sso/status":               true,
 	"/api/devices/register":              true,
 	"/api/devices/register/status":       true,
+	"/api/devices/deploy":                true,
 	"/api/devices/self/access-policy":    true,
 	"/api/devices/self/help-request":     true,
 	"/api/devices/self/totp":             true,

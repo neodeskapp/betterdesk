@@ -48,9 +48,11 @@
 	} from '../appearance.ts';
 	import BackgroundFields from '../BackgroundFields.svelte';
 	import ClientAppBranding from '../ClientAppBranding.svelte';
+	import ClientAppPreview from '../ClientAppPreview.svelte';
 	import RangeField from '../RangeField.svelte';
 	import ThemePreview from '../ThemePreview.svelte';
 	import { readabilityText } from '../readability.ts';
+	import '../side-rows.css';
 
 	const canEdit = can('branding.edit');
 	const form = new AppearanceForm();
@@ -212,11 +214,17 @@
 	const consolePreview = $derived(tf('settings.brand.console_preview', 'Console preview'));
 </script>
 
-<!-- Below 1200 px the preview comes first: at the end it would sit right
-     after the client app's own preview -->
+<!-- Below 1200 px the console preview comes first: at the end it would sit
+     right after the client app's own preview. From 1200 px the client app
+     preview joins it in the side column, beside the fields -->
 {#snippet preview()}
 	<h2 class="preview-title" id="branding-preview-title">{consolePreview}</h2>
-	<p class="preview-note">{t('settings.side.preview_note')}</p>
+	<p class="preview-note">
+		{tf(
+			'settings.side.preview_note_all',
+			'The console with the choices on this page. After you save, everyone sees them the next time they load a page.'
+		)}
+	</p>
 	<ThemePreview
 		palette={previewPalette}
 		mode={v.themeMode}
@@ -226,6 +234,7 @@
 		fontHeading={v.fontHeading}
 		fontBody={v.fontBody}
 	/>
+	{#if canEdit}<ClientAppPreview {form} place="side" />{/if}
 {/snippet}
 
 {#snippet top()}
@@ -239,7 +248,6 @@
 		/>
 	{/if}
 	{#if form.loadError}<States kind="error" message={form.loadError} onretry={() => void form.load()} />{/if}
-	<p class="applies">{t('settings.appearance.save_effect')}</p>
 {/snippet}
 
 {#snippet bar()}
@@ -254,7 +262,7 @@
 	summaryLabel={consolePreview}
 	{top}
 	{bar}
-	class="branding-tab"
+	class="branding-tab side-rows side-sticky"
 >
 	<fieldset class="branding-form" disabled={!canEdit} aria-busy={!form.loaded}>
 		<legend class="sr-only">{t('settings.tab_brand')}</legend>
@@ -362,6 +370,7 @@
 			<ShowWhen id="logo-svg-panel" when={v.logoType === 'svg'}>
 				<SettingRow
 					id="logo-svg-input"
+					class="is-wide"
 					label={t('branding.logo_svg_code')}
 					help={t('branding.logo_svg_hint')}
 					error={form.refusedAt('logoSvg')}
@@ -516,6 +525,7 @@
 			<ShowWhen id="login-slides-panel" when={v.loginPromoMode === 'slides'}>
 				<SettingRow
 					id="login-slides-list"
+					class="is-wide"
 					label={t('branding.login_slides_title')}
 					help="{t('branding.login_slides_desc')} {t('branding.login_slides_max')}"
 					group
@@ -554,71 +564,76 @@
 											>
 										</div>
 									</div>
-									<Field
-										id="{p}-file"
-										label={t('branding.login_slide_image')}
-										hint={tf(
-											'settings.brand.slide_upload_help',
-											'Uploaded when you pick it and used once you save.'
-										)}
-									>
-										{#snippet children(ff)}<FilePicker
-												id={ff.id}
-												describedby={ff.describedby}
-												accept="image/png,image/jpeg,image/webp,image/gif"
-												onchange={(e) => void onSlideFile(i, e.currentTarget)}
-											/>{/snippet}
-									</Field>
-									<Field
-										id="{p}-url"
-										label={t('branding.bg_image_url')}
-										hint={tf(
-											'settings.brand.slide_url_help',
-											'Filled in when you upload a picture. An address on this server, for example /img/login-slides/free.jpg.'
-										)}
-										error={form.refusedAt(`loginSlides.${i}.imageUrl`)}
-									>
-										{#snippet children(ff)}<Input {...ff} bind:value={slide.imageUrl} />{/snippet}
-									</Field>
-									<Field
-										id="{p}-title"
-										label={t('branding.login_slide_title')}
-										hint={shownTitle
-											? tf('settings.brand.slide_empty_shows', 'Empty shows "{text}".', { text: shownTitle })
-											: undefined}
-										error={form.refusedAt(`loginSlides.${i}.title`)}
-									>
-										{#snippet children(ff)}<Input
-												{...ff}
-												maxlength={120}
-												bind:value={slide.title}
-											/>{/snippet}
-									</Field>
-									<Field
-										id="{p}-body"
-										label={t('branding.login_slide_body')}
-										hint={shownBody
-											? tf('settings.brand.slide_empty_shows', 'Empty shows "{text}".', { text: shownBody })
-											: undefined}
-										error={form.refusedAt(`loginSlides.${i}.body`)}
-									>
-										{#snippet children(ff)}<Textarea
-												{...ff}
-												rows={2}
-												maxlength={400}
-												bind:value={slide.body}
-											/>{/snippet}
-									</Field>
-									<div class="form-group">
-										<label class="form-label" for="{p}-overlay">{t('branding.bg_overlay')}</label>
-										<RangeField
-											id="{p}-overlay"
-											unit="%"
-											min={0}
-											max={90}
-											step={5}
-											bind:value={slide.overlay}
-										/>
+									<!-- Two fields a line where there is room: picture and its address, then title and text -->
+									<div class="slide-fields">
+										<Field
+											id="{p}-file"
+											label={t('branding.login_slide_image')}
+											hint={tf(
+												'settings.brand.slide_upload_help',
+												'Uploaded when you pick it and used once you save.'
+											)}
+										>
+											{#snippet children(ff)}<FilePicker
+													id={ff.id}
+													describedby={ff.describedby}
+													accept="image/png,image/jpeg,image/webp,image/gif"
+													onchange={(e) => void onSlideFile(i, e.currentTarget)}
+												/>{/snippet}
+										</Field>
+										<Field
+											id="{p}-url"
+											label={t('branding.bg_image_url')}
+											hint={tf(
+												'settings.brand.slide_url_help',
+												'Filled in when you upload a picture. An address on this server, for example /img/login-slides/free.jpg.'
+											)}
+											error={form.refusedAt(`loginSlides.${i}.imageUrl`)}
+										>
+											{#snippet children(ff)}<Input {...ff} bind:value={slide.imageUrl} />{/snippet}
+										</Field>
+										<Field
+											id="{p}-title"
+											label={t('branding.login_slide_title')}
+											hint={shownTitle
+												? tf('settings.brand.slide_empty_shows', 'Empty shows "{text}".', {
+														text: shownTitle
+													})
+												: undefined}
+											error={form.refusedAt(`loginSlides.${i}.title`)}
+										>
+											{#snippet children(ff)}<Input
+													{...ff}
+													maxlength={120}
+													bind:value={slide.title}
+												/>{/snippet}
+										</Field>
+										<Field
+											id="{p}-body"
+											label={t('branding.login_slide_body')}
+											hint={shownBody
+												? tf('settings.brand.slide_empty_shows', 'Empty shows "{text}".', { text: shownBody })
+												: undefined}
+											error={form.refusedAt(`loginSlides.${i}.body`)}
+										>
+											{#snippet children(ff)}<Textarea
+													{...ff}
+													rows={2}
+													maxlength={400}
+													bind:value={slide.body}
+												/>{/snippet}
+										</Field>
+										<div class="form-group">
+											<label class="form-label" for="{p}-overlay">{t('branding.bg_overlay')}</label>
+											<RangeField
+												id="{p}-overlay"
+												unit="%"
+												min={0}
+												max={90}
+												step={5}
+												bind:value={slide.overlay}
+											/>
+										</div>
 									</div>
 								</li>
 							{/each}
@@ -755,7 +770,6 @@
 		padding: 0;
 		border: 0;
 	}
-	.applies,
 	.preview-note,
 	.row-line {
 		margin: 0;
@@ -802,7 +816,13 @@
 		padding: var(--space-4) 0;
 		border-bottom: 1px solid var(--rule);
 	}
-	.slide > :global(.form-group) {
+	.slide-fields {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+		gap: var(--space-3) var(--space-5);
+		align-items: start;
+	}
+	.slide-fields > :global(.form-group) {
 		margin: 0;
 	}
 	.slide-head {

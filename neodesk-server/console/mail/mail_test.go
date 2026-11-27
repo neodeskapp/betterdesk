@@ -88,8 +88,7 @@ func TestThePasswordIsNeverInAnAnswer(t *testing.T) {
 		// Neither the connection test nor a mail puts it in an answer or the log
 		transport.verifyErr = errors.New("Invalid login")
 		test := marshal(t, s.TestSMTPSettings(ctx).Body)
-		text := "body"
-		_, _ = s.SendEmail(ctx, Email{To: []string{"someone@example.org"}, Subject: "subject", Text: &text})
+		_, _ = s.SendEmail(ctx, Email{To: []string{"someone@example.org"}, Mail: testMail})
 		for _, line := range log.lines {
 			if strings.Contains(line[1], "s3cret") || strings.Contains(line[1], "5551234") {
 				t.Fatalf("pass %s: log line %q", pass, line)
@@ -273,22 +272,24 @@ func TestMailsEscapeWhatTheyPrint(t *testing.T) {
 	// The branded layout escapes as html.EscapeString does: quotes as &#34;
 	escaped = `&lt;script&gt;alert(&#34;x&#34;)&lt;/script&gt;&amp;`
 	words, brand := New(Options{}).words(), brandmail.Branding{Server: hostile}
-	_, _, html, err := alertMail(
+	am, err := alertMail(
 		Alert{Severity: jsbind.String(hostile), DeviceID: jsbind.String(hostile), Message: jsbind.String(hostile), TriggeredAt: jsbind.String(hostile)},
-		AlertRule{Name: jsbind.String(hostile), Description: jsbind.String(hostile), ConditionValue: jsbind.Number(1)}, words, brand)
+		AlertRule{Name: jsbind.String(hostile), Description: jsbind.String(hostile), ConditionValue: jsbind.Number(1)}, words, AlertFacts{Server: hostile})
 	if err != nil {
 		t.Fatal(err)
 	}
+	html := brandmail.Render(am, brand, "").HTML
 	// The title and the heading name the rule; severity, device, message and
 	// time are facts, the description a line below them
 	if strings.Count(html, escaped) < 7 || strings.Contains(html, "<script>") {
 		t.Fatalf("alert mail: %s", html)
 	}
-	_, _, html, err = helpRequestMail(HelpRequest{Hostname: jsbind.String(hostile), DeviceID: jsbind.String(hostile), Message: jsbind.String(hostile)},
-		jsbind.String(hostile), `https://panel.example.org/?a="b"&c=<d>`, words, brand)
+	hm, err := helpRequestMail(HelpRequest{Hostname: jsbind.String(hostile), DeviceID: jsbind.String(hostile), Message: jsbind.String(hostile)},
+		jsbind.String(hostile), HelpForOperator, `https://panel.example.org/?a="b"&c=<d>`, hostile, words)
 	if err != nil {
 		t.Fatal(err)
 	}
+	html = brandmail.Render(hm, brand, "").HTML
 	if strings.Count(html, escaped) < 6 || strings.Contains(html, "<script>") ||
 		!strings.Contains(html, `href="https://panel.example.org/?a=&#34;b&#34;&amp;c=&lt;d&gt;/help-requests"`) {
 		t.Fatalf("help request mail: %s", html)
@@ -302,12 +303,12 @@ func TestTheLogNamesNoAddressAndNoBody(t *testing.T) {
 	storeConfig(t, db, fullConfig)
 	s, transport, log := newTestService(db, nil, Options{})
 	body := "the body of the message"
-	ok, err := s.SendEmail(context.Background(), Email{To: []string{"alice@example.org, bob@example.org"}, Subject: "the subject", Text: &body, HTML: &body})
+	ok, err := s.SendEmail(context.Background(), Email{To: []string{"alice@example.org, bob@example.org"}, Mail: brandmail.Mail{Subject: "the subject", Heading: body}})
 	if !ok || err != nil {
 		t.Fatal(ok, err)
 	}
 	transport.sendErr = errors.New("connect ECONNREFUSED 10.0.0.1:587")
-	if ok, _ := s.SendEmail(context.Background(), Email{To: []string{"carol@example.org"}, ToList: true, Subject: "the subject", Text: &body}); ok {
+	if ok, _ := s.SendEmail(context.Background(), Email{To: []string{"carol@example.org"}, ToList: true, Mail: brandmail.Mail{Subject: "the subject", Heading: body}}); ok {
 		t.Fatal("a failed mail counts as sent")
 	}
 	want := [][2]string{
@@ -332,8 +333,7 @@ func TestWithoutATransportNothingIsSent(t *testing.T) {
 	storeConfig(t, db, fullConfig)
 	log := &logLines{}
 	s := New(Options{DB: db, Logger: log})
-	text := "x"
-	if ok, err := s.SendEmail(context.Background(), Email{To: []string{"a@example.org"}, Text: &text}); ok || err != nil {
+	if ok, err := s.SendEmail(context.Background(), Email{To: []string{"a@example.org"}, Mail: testMail}); ok || err != nil {
 		t.Fatal(ok, err)
 	}
 	if got := marshal(t, s.TestSMTPSettings(context.Background()).Body); got != `{"success":false,"error":"No SMTP configuration"}` {
@@ -394,18 +394,19 @@ func TestHelpRequestNotification(t *testing.T) {
 			t.Fatal(ok, err)
 		}
 		m := transport.sends[0].mail
-		// The heading, the lead, the facts and the link, as the branded page has them (accessibility audit M-B1)
-		wantText := "Help request from PC-01\n\nA new help request was submitted.\n\nDevice: PC-01\nDevice ID: dev-1\nFolder: Support\nMessage: Need help\n\nOpen help requests in NeoDesk: https://panel.example.org/help-requests\n"
-		if m.Subject != "[Support] Help request — PC-01" || !sameStrings(m.To, []string{"alice@example.com"}) || m.ToList || *m.Text != wantText ||
-			m.From != "from@example.com" || !strings.Contains(*m.HTML, `href="https://panel.example.org/help-requests"`) {
+		// The heading, the lead, the facts and the link, in the layout of every mail
+		if m.Subject != "[Support] NeoDesk: PC-01 asks for help" || !sameStrings(m.To, []string{"alice@example.com"}) || m.ToList ||
+			m.From != `"NeoDesk" <from@example.com>` || !strings.Contains(*m.HTML, `href="https://panel.example.org/help-requests"`) ||
+			!strings.Contains(*m.Text, "Device ID: dev-1") || !strings.Contains(*m.Text, "Folder: Support") ||
+			!strings.Contains(*m.Text, "Open the help requests:") || !strings.Contains(*m.Text, "https://panel.example.org/help-requests") {
 			t.Fatalf("mail %s", describe(m))
 		}
 		// Without a device id and a folder only their lines go
 		if ok, err := s.SendHelpRequestEmail(ctx, HelpRequestEmail{To: []string{"alice@example.com"}, HelpRequest: HelpRequest{Hostname: jsbind.String("PC-02")}}); !ok || err != nil {
 			t.Fatal(ok, err)
 		}
-		if got, want := *transport.sends[1].mail.Text, "Help request from PC-02\n\nA new help request was submitted.\n\nDevice: PC-02\nMessage: \n\nOpen help requests in NeoDesk: https://panel.example.org/help-requests\n"; got != want {
-			t.Fatalf("text %q, want %q", got, want)
+		if got := *transport.sends[1].mail.Text; strings.Contains(got, "Device ID") || strings.Contains(got, "Folder") || !strings.Contains(got, "Device: PC-02") {
+			t.Fatalf("text %q", got)
 		}
 		for range 2 {
 			if err := s.LogEmailNotificationSent(ctx, "help_request", "42", "alice@example.com"); err != nil {
@@ -578,7 +579,6 @@ func TestConcurrentUse(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			text := "x"
 			for k := range 25 {
 				switch (i + k) % 4 {
 				case 0:
@@ -588,7 +588,7 @@ func TestConcurrentUse(t *testing.T) {
 				case 2:
 					_ = s.GetSMTPSettings(context.Background())
 				}
-				if ok, err := s.SendEmail(context.Background(), Email{To: []string{strconv.Itoa(k) + "@example.org"}, Text: &text}); !ok || err != nil {
+				if ok, err := s.SendEmail(context.Background(), Email{To: []string{strconv.Itoa(k) + "@example.org"}, Mail: testMail}); !ok || err != nil {
 					t.Error(ok, err)
 				}
 			}

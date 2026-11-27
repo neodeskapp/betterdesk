@@ -67,6 +67,9 @@ test('the time servers are rows; a wrong one is said on its row and nothing is s
 	expect(document.getElementById('time-clock-ntp-servers')).toHaveTextContent(
 		'Set in the environment file (NTP_SERVERS). Saving here replaces it.'
 	);
+	// Name left, control right, also beside the clock column; on a phone the form comes before that column
+	expect(document.querySelector('.settings-tab-body')).toHaveClass('side-rows');
+	expect(document.querySelector('.settings-body')).toHaveClass('summary-last');
 	await user.click(screen.getByRole('button', { name: 'Add a time server' }));
 	await user.type(screen.getByRole('textbox', { name: 'Time server 2' }), 'ntp.example.com:123');
 	expect(screen.getByText(/without a port/)).toBeInTheDocument();

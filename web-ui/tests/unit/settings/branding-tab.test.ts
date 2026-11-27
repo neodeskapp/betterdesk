@@ -89,6 +89,21 @@ describe('Settings › Branding', () => {
 		expect(screen.getByRole('complementary', { name: 'Console preview' })).toBeInTheDocument();
 	});
 
+	test('the client app preview sits in the side column next to the fields and follows them', async () => {
+		const user = userEvent.setup();
+		await loaded();
+		const side = screen.getByRole('complementary', { name: 'Console preview' });
+		const preview = within(side).getByRole('region', { name: 'Client app preview' });
+		const company = screen.getByLabelText('client_branding.company_name');
+		await user.clear(company);
+		await user.type(company, 'Acme Ltd');
+		expect(preview).toHaveTextContent('Acme Ltd');
+		// Below 1200 px it stays at the end of the client app group (CSS shows one of the two)
+		expect(document.querySelector('#client-app .cb-preview-part.is-group')).toHaveTextContent('Acme Ltd');
+		expect(document.querySelector('.branding-tab')).toHaveClass('side-rows', 'side-sticky');
+		expect(document.body).not.toHaveTextContent('settings.appearance.save_effect');
+	}, 20_000);
+
 	test('one save bar lists the name and the client app change, and one Save sends both', async () => {
 		const user = userEvent.setup();
 		await loaded();

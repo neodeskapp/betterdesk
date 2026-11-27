@@ -45,7 +45,9 @@ mgr() {
 
 # docker: what the manager asks of Docker, recorded in $CALLS. State:
 # exists, running (the container), current-image, pulled (the image the
-# tag names), dir (the container's compose folder).
+# tag names), dir (the container's compose folder), engine (the Docker
+# Engine's version, 29.1.0 without it), no-ipv6 (Docker can make no IPv6
+# network).
 docker() {
     printf '%s\n' "$*" >> "$CALLS"
     local arg format="" prev="" out="" file=""
@@ -57,6 +59,13 @@ docker() {
     done
     case "$1" in
         info) return 0 ;;
+        version) cat "$TEST_DIR/engine" 2>/dev/null || printf '29.1.0\n'; return 0 ;;
+        network)
+            if [ "$2" = create ] && [ -f "$TEST_DIR/no-ipv6" ]; then
+                printf 'Error response from daemon: could not find an available, non-overlapping IPv6 address pool\n' >&2
+                return 1
+            fi
+            return 0 ;;
         compose)
             case "$2" in
                 version) [ "${3:-}" = --short ] && printf '2.29.1\n'; return 0 ;;
@@ -837,6 +846,9 @@ test_install_sh_passes_the_domain() (
     install_sh --no-traefik || fail "install.sh with --no-traefik failed: $(cat "$dir/out")"
     [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --no-traefik" ] \
         || fail "the manager ran with --no-traefik as: $(cat "$dir/manager-args")"
+    install_sh --no-ipv6 || fail "install.sh with --no-ipv6 failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --no-ipv6" ] \
+        || fail "the manager ran with --no-ipv6 as: $(cat "$dir/manager-args")"
     rm -rf "$dir"
 )
 
@@ -958,6 +970,60 @@ test_domain_change_remakes_traefik() (
          DOMAIN_SET=remote.example.net; TRAEFIK_ACTION=on
          COMMAND=update; do_install' > /dev/null 2>&1 || fail "the second run with the domain failed"
     grep -q '^compose up -d --no-deps --force-recreate traefik' "$CALLS" || fail "a second --domain did not make Traefik try again: $(cat "$CALLS")"
+    rm -rf "$TEST_DIR"
+)
+
+# HTTPS-6, owner call docker-ipv6: a new install on Docker Engine 27 or
+# newer gets the IPv6 network and its summary says Docker publishes the
+# ports past ufw on IPv6 too. An older engine, a host where Docker can
+# make no IPv6 network and --no-ipv6 keep IPv4, the first two saying why.
+# Installs from before (no NEODESK_IPV6 in .env, also one whose container
+# was removed) stay as they are.
+test_new_install_gets_ipv6() (
+    load
+    local out
+    out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "a fresh install failed: $out"
+    grep -qx 'NEODESK_IPV6=true' "$NEODESK_DIR/.env" || fail "a new install on Engine 29 has no IPv6: $(cat "$NEODESK_DIR/.env")"
+    grep -qx 'network create --ipv6 neodesk-ipv6-check' "$CALLS" || fail "IPv6 was not checked with a network: $(cat "$CALLS")"
+    grep -qx 'network rm neodesk-ipv6-check' "$CALLS" || fail "the check's network was not removed: $(cat "$CALLS")"
+    printf '%s' "$out" | grep -q 'publishes the ports past ufw and firewalld on IPv6' || fail "the summary does not say IPv6 ports pass ufw: $out"
+    # A rerun keeps the setting, also when the engine says otherwise now
+    printf '26.1.4\n' > "$TEST_DIR/engine"
+    out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "the second run failed: $out"
+    grep -qx 'NEODESK_IPV6=true' "$NEODESK_DIR/.env" || fail "a rerun changed the IPv6 setting: $(cat "$NEODESK_DIR/.env")"
+    rm -rf "$TEST_DIR"
+
+    load
+    printf '26.1.4\n' > "$TEST_DIR/engine"
+    out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "an install on Engine 26 failed: $out"
+    grep -qx 'NEODESK_IPV6=false' "$NEODESK_DIR/.env" || fail "an install on Engine 26 is not on IPv4: $(cat "$NEODESK_DIR/.env")"
+    printf '%s' "$out" | grep -q 'IPv6 needs Docker Engine 27 or newer, this is 26.1.4' || fail "the install on Engine 26 does not say why: $out"
+    if grep -q 'network create' "$CALLS"; then fail "an install on Engine 26 tried an IPv6 network"; fi
+    if printf '%s' "$out" | grep -q 'on IPv6 as on IPv4'; then fail "an IPv4 install's summary talks about IPv6 ports: $out"; fi
+    rm -rf "$TEST_DIR"
+
+    load
+    : > "$TEST_DIR/no-ipv6"
+    out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "an install without IPv6 on the host failed: $out"
+    grep -qx 'NEODESK_IPV6=false' "$NEODESK_DIR/.env" || fail "a host without IPv6 networks is not on IPv4: $(cat "$NEODESK_DIR/.env")"
+    printf '%s' "$out" | grep -q 'could not make an IPv6 network here (Error response from daemon: could not find' \
+        || fail "the install without IPv6 does not say why: $out"
+    rm -rf "$TEST_DIR"
+
+    load
+    out=$(mgr 'parse_args --no-ipv6; do_install' 2>&1) || fail "an install with --no-ipv6 failed: $out"
+    grep -qx 'NEODESK_IPV6=false' "$NEODESK_DIR/.env" || fail "--no-ipv6 did not keep IPv4: $(cat "$NEODESK_DIR/.env")"
+    if grep -q 'network create' "$CALLS"; then fail "--no-ipv6 still tried an IPv6 network"; fi
+    rm -rf "$TEST_DIR"
+
+    # An install from before: one whose container is gone, then running
+    load
+    mkdir -p "$NEODESK_DIR"
+    printf 'NEODESK_DOCKER_LAYOUT=single\nRELAY_SERVERS=203.0.113.10\n' > "$NEODESK_DIR/.env"
+    out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "the install with an earlier .env failed: $out"
+    if grep -q '^NEODESK_IPV6=' "$NEODESK_DIR/.env"; then fail "an earlier install whose container was gone got an IPv6 setting"; fi
+    out=$(mgr 'COMMAND=update; do_install' 2>&1) || fail "the update of an earlier install failed: $out"
+    if grep -q '^NEODESK_IPV6=' "$NEODESK_DIR/.env"; then fail "an update gave an earlier install an IPv6 setting"; fi
     rm -rf "$TEST_DIR"
 )
 
@@ -1350,6 +1416,7 @@ test_staging_needs_a_staging_certificate
 test_staging_to_production_renews
 test_domain_change_remakes_traefik
 test_dns_check_knows_ipv6
+test_new_install_gets_ipv6
 test_files_come_from_the_release
 test_install_sh_takes_the_release_files
 test_update_moves_the_default_console_port

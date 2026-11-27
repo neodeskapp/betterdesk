@@ -125,7 +125,7 @@ func TestImportWithInvites(t *testing.T) {
 		t.Errorf("ida's role: %s", got)
 	}
 	mails := mailsTo(box, "anna@example.test", 0)
-	wantSubject := strings.NewReplacer("{sender}", "e2e_admin", "{server}", "NeoDesk").Replace(langText(t, "de", "password_link.invite_subject"))
+	wantSubject := strings.NewReplacer("{sender}", "e2e_admin").Replace(langText(t, "de", "mail.account_invite.subject"))
 	if len(mails) != 1 || mails[0].Subject != wantSubject {
 		t.Errorf("anna's invite: %v, want the German %q", subjects(mails), wantSubject)
 	}
