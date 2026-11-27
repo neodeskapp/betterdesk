@@ -122,10 +122,12 @@ describe('one save for the rest', () => {
 		const server = routes();
 		const user = userEvent.setup();
 		render(JoiningTab);
-		const days = await screen.findByRole('spinbutton', { name: 'settings.general.retention_label' });
-		expect(document.getElementById('availability-history-retention')).toHaveTextContent(
-			'Has no effect while availability history is off.'
-		);
+		// How long to keep the history shows only while it is recorded
+		const history = await screen.findByRole('checkbox', { name: /settings\.availability_history_enable/ });
+		expect(screen.queryByRole('spinbutton', { name: 'settings.general.retention_label' })).toBeNull();
+		expect(history).toHaveAttribute('aria-controls', 'availability-retention-group');
+		await user.click(history);
+		const days = screen.getByRole('spinbutton', { name: 'settings.general.retention_label' });
 		await user.clear(days);
 		await user.type(days, '0');
 		expect(document.getElementById('availability-history-retention-error')).toHaveTextContent(
