@@ -104,7 +104,7 @@ for (const role of ROLES) {
 			await page.locator('.session-canvas').focus();
 			await page.keyboard.press('F8');
 			await expect(controls.locator('[aria-haspopup="menu"]').first()).toBeFocused();
-			for (const name of ['Keys', 'View', 'More']) {
+			for (const name of ['Keyboard', 'Settings', 'More']) {
 				await controls.getByRole('button', { name, exact: true }).click();
 				await expect(page.getByRole('menu')).toBeVisible();
 				await expectNoAxeViolations(page, '.session-bar, .controls, [role="menu"]');
@@ -113,7 +113,7 @@ for (const role of ROLES) {
 				await expect(controls.getByRole('button', { name, exact: true })).toBeFocused();
 			}
 			// Settings that are on show in the bar, and switch off from there
-			await controls.getByRole('button', { name: 'More', exact: true }).click();
+			await controls.getByRole('button', { name: 'Settings', exact: true }).click();
 			await page.getByRole('menuitemcheckbox', { name: 'View only' }).click();
 			await page.keyboard.press('Escape');
 			const viewOnly = controls.getByRole('button', { name: 'View only', exact: true });

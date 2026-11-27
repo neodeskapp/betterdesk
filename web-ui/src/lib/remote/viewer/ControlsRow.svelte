@@ -1,15 +1,15 @@
 <!--
   The session controls at the end of the session bar while a picture
-  shows. From the start: what is switched on (recording, view only,
-  blocked input, privacy mode, sound off, the clipboard when it is off or
-  waits for a click), each as a pressed button that switches it off again;
-  then Displays, Keys and View, Chat, File transfer and More, Full screen
-  and Disconnect. Settings that are off most of the time live in the
-  menus and show up at the start once they are on.
+  shows. Every control is an icon with its word under it; the tooltip says
+  what is behind it. From the start: what is switched on (recording, view
+  only, blocked input, privacy mode, sound off, the clipboard when it is
+  off or waits for a click), each as a pressed button that switches it off
+  again; then Displays, Keyboard and Settings, Chat, Files and More, Full
+  screen and Disconnect. Settings holds every option of the session, each
+  on/off option with a line that says what it does; More holds actions only.
 
-  Narrower viewers drop the menus' words first (tooltips and accessible
-  names keep them), then the words of the switched-on settings and
-  Disconnect; below 760 px Chat and File transfer move into More.
+  The narrowest viewers keep the icons and drop the words (tooltips and
+  accessible names keep them); below 760 px Chat and Files move into More.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -102,7 +102,7 @@
 		return () => ro.disconnect();
 	});
 
-	/* ── View: the settings people seldom change wait behind Advanced settings ── */
+	/* ── Settings: the ones people seldom change wait behind Show advanced settings ── */
 
 	const ADVANCED_KEY = 'nd_viewer_view_advanced';
 	let advanced = $state(readAdvanced());
@@ -264,19 +264,27 @@
 		{#if !watchOnly}
 			<span class="tool-anchor" bind:this={keysAnchor}>
 				<ToolMenu
-					label={tf('remote_viewer.keys', 'Keys')}
+					label={tf('remote_viewer.keyboard', 'Keyboard')}
+					hint={tf('remote_viewer.keyboard_hint', 'Ctrl+Alt+Del, the Windows key and typing text')}
 					icon="keyboard"
 					onopen={() => s && viewer.refreshMonitors(s)}
 				>
-					<MenuItem icon="keyboard" onselect={() => viewer.ctrlAltDel()}
-						><span translate="no">Ctrl+Alt+Del</span></MenuItem
+					<MenuItem
+						icon="keyboard"
+						hint={tf('remote_viewer.cad_hint', 'Opens the sign-in or security screen')}
+						onselect={() => viewer.ctrlAltDel()}><span translate="no">Ctrl+Alt+Del</span></MenuItem
 					>
 					<!-- Keys the browser keeps for itself (all of them in Firefox and Safari, which have no Keyboard Lock) -->
-					<MenuItem icon="keyboard" onselect={() => viewer.sendSpecialKey('Meta')}
+					<MenuItem
+						icon="keyboard"
+						hint={tf('remote_viewer.windows_key_hint', 'Opens the Start menu')}
+						onselect={() => viewer.sendSpecialKey('Meta')}
 						>{tf('remote.send_windows_key', 'Windows key')}</MenuItem
 					>
-					<MenuItem icon="keyboard" onselect={() => viewer.sendSpecialKey('Alt+Tab')}
-						><span translate="no">Alt+Tab</span></MenuItem
+					<MenuItem
+						icon="keyboard"
+						hint={tf('remote_viewer.alt_tab_hint', 'Switches to another window')}
+						onselect={() => viewer.sendSpecialKey('Alt+Tab')}><span translate="no">Alt+Tab</span></MenuItem
 					>
 					<MenuItem icon="lock" onselect={() => viewer.lockScreen()}
 						>{tf('remote.lock_screen', 'Lock screen')}</MenuItem
@@ -295,13 +303,9 @@
 					{/if}
 					<MenuDivider />
 					<MenuItem
-						type="checkbox"
-						checked={s?.toggles.blockInput ?? false}
-						onselect={() => viewer.setToggle('blockInput', !(s?.toggles.blockInput ?? false))}
-						>{tf('remote.block_input', 'Block user input')}</MenuItem
-					>
-					<MenuItem icon="settings_backup_restore" onselect={() => viewer.resetKeyboard()}
-						>{tf('remote.reset_keyboard', 'Reset keyboard')}</MenuItem
+						icon="settings_backup_restore"
+						hint={tf('remote_viewer.reset_keyboard_hint', 'Releases keys that seem stuck')}
+						onselect={() => viewer.resetKeyboard()}>{tf('remote.reset_keyboard', 'Reset keyboard')}</MenuItem
 					>
 					{#if winSessions.sessions.length >= 2}
 						<MenuDivider />
@@ -364,7 +368,13 @@
 			</span>
 		{/if}
 
-		<ToolMenu label={tf('remote_viewer.view', 'View')} icon="tune" menuClass="display-menu">
+		<!-- Every setting of the session in one place: the picture, then what is switched on or off -->
+		<ToolMenu
+			label={tf('remote_viewer.settings', 'Settings')}
+			hint={tf('remote_viewer.settings_hint', 'Picture quality, view only, privacy mode, recording and more')}
+			icon="settings"
+			menuClass="display-menu"
+		>
 			<div class="display-grid">
 				<div role="group" aria-labelledby="{uid}-q">
 					<div class="menu-label" id="{uid}-q">{tf('remote.image_quality', 'Image quality')}</div>
@@ -393,8 +403,69 @@
 					<MenuChoice kind="checkbox" checked={s?.audioMuted ?? false} onselect={() => viewer.toggleAudio()}
 						>{tf('remote_viewer.mute', 'Mute sound')}</MenuChoice
 					>
-					<MenuChoice kind="checkbox" checked={advanced} onselect={toggleAdvanced}
-						>{tf('remote_viewer.advanced_settings', 'Advanced settings')}</MenuChoice
+				</div>
+				<div class="span-all" role="group" aria-labelledby="{uid}-sess">
+					<div class="menu-label" id="{uid}-sess">{tf('remote_viewer.session_settings', 'This session')}</div>
+					<div class="session-grid">
+						{#if !watchOnly}
+							<MenuChoice
+								kind="checkbox"
+								checked={s?.viewOnly ?? false}
+								disabled={!(s?.allowed.keyboard ?? true)}
+								hint={tf('remote_viewer.view_only_hint', 'See the screen without controlling it')}
+								onselect={() => viewer.toggleViewOnly()}>{tf('remote.view_only', 'View only')}</MenuChoice
+							>
+							<MenuChoice
+								kind="checkbox"
+								checked={s?.toggles.blockInput ?? false}
+								hint={tf(
+									'remote_viewer.block_input_hint',
+									"People at the device can't use their mouse or keyboard"
+								)}
+								onselect={() => viewer.setToggle('blockInput', !(s?.toggles.blockInput ?? false))}
+								>{tf('remote.block_input', 'Block user input')}</MenuChoice
+							>
+						{/if}
+						<MenuChoice
+							kind="checkbox"
+							checked={s?.toggles.privacy ?? false}
+							hint={tf('remote_viewer.privacy_hint', 'The screen at the device goes dark while you work')}
+							onselect={() => viewer.setToggle('privacy', !(s?.toggles.privacy ?? false))}
+							>{tf('remote.privacy_mode', 'Privacy mode')}</MenuChoice
+						>
+						<MenuChoice
+							kind="checkbox"
+							checked={recording}
+							hint={tf('remote_viewer.record_hint', 'Saves a video of this session')}
+							onselect={() => viewer.toggleRecording()}
+							>{tf('remote_viewer.record_session', 'Record the session')}</MenuChoice
+						>
+						<MenuChoice
+							kind="checkbox"
+							checked={s?.toggles.disableClipboard ?? false}
+							hint={tf('remote_viewer.clipboard_off_hint', 'Copy and paste between the two computers stops')}
+							onselect={() => viewer.setToggle('disableClipboard', !(s?.toggles.disableClipboard ?? false))}
+							>{tf('remote.disable_clipboard', 'Disable clipboard')}</MenuChoice
+						>
+						<MenuChoice
+							kind="checkbox"
+							checked={s?.toggles.lockAfter ?? false}
+							hint={tf('remote_viewer.lock_after_hint', 'The device locks when you disconnect')}
+							onselect={() => viewer.setToggle('lockAfter', !(s?.toggles.lockAfter ?? false))}
+							>{tf('remote.lock_after_session', 'Lock after session')}</MenuChoice
+						>
+					</div>
+				</div>
+				<div class="span-all advanced-row">
+					<MenuChoice
+						kind="action"
+						icon={advanced ? 'expand_less' : 'expand_more'}
+						expanded={advanced}
+						hint={tf('remote_viewer.advanced_hint', 'Frame rate, keyboard mode and codec')}
+						onselect={toggleAdvanced}
+						>{advanced
+							? tf('remote_viewer.advanced_hide', 'Hide advanced settings')
+							: tf('remote_viewer.advanced_show', 'Show advanced settings')}</MenuChoice
 					>
 				</div>
 				{#if advanced}
@@ -444,32 +515,32 @@
 	<div class="group">
 		{#if !watchOnly && !narrow}
 			<Button
-				class="toolbar-btn is-icon"
+				class="toolbar-btn"
 				icon="chat"
 				id={SHEET_BUTTONS.chat}
-				title={tf('remote.chat', 'Chat')}
+				title={tf('remote_viewer.chat_hint', 'Chat with the person at the device')}
 				aria-pressed={viewer.sheet === 'chat'}
 				aria-controls="rd-sheet-host"
 				onclick={() => viewer.toggleSheet('chat')}
-				><span class="sr-only">{tf('remote.chat', 'Chat')}</span></Button
+				><span class="tb-label">{tf('remote.chat', 'Chat')}</span></Button
 			>
 			<Button
-				class="toolbar-btn is-icon"
+				class="toolbar-btn"
 				icon="folder_open"
 				id={SHEET_BUTTONS.files}
-				title={tf('remote.file_transfer', 'File transfer')}
+				title={tf('remote_viewer.files_hint', 'Copy files to and from the device')}
 				aria-pressed={viewer.sheet === 'files'}
 				aria-controls="rd-sheet-host"
 				disabled={!(s?.allowed.file ?? true)}
 				onclick={() => viewer.toggleSheet('files')}
-				><span class="sr-only">{tf('remote.file_transfer', 'File transfer')}</span></Button
+				><span class="tb-label">{tf('remote_viewer.files', 'Files')}</span></Button
 			>
 		{/if}
 		<!-- More carries the Session info sheet's button id, so closing the sheet focuses it -->
 		<ToolMenu
 			label={tf('remote_viewer.more', 'More')}
+			hint={tf('remote_viewer.more_hint', 'Session info, refresh the screen, restart the device')}
 			icon="more_vert"
-			iconOnly
 			buttonId={SHEET_BUTTONS.info}
 		>
 			{#if !watchOnly && narrow}
@@ -483,36 +554,6 @@
 				>
 				<MenuDivider />
 			{/if}
-			<MenuItem type="checkbox" checked={recording} onselect={() => viewer.toggleRecording()}
-				>{tf('remote_viewer.record_session', 'Record the session')}</MenuItem
-			>
-			{#if !watchOnly}
-				<MenuItem
-					type="checkbox"
-					checked={s?.viewOnly ?? false}
-					disabled={!(s?.allowed.keyboard ?? true)}
-					onselect={() => viewer.toggleViewOnly()}>{tf('remote.view_only', 'View only')}</MenuItem
-				>
-			{/if}
-			<MenuItem
-				type="checkbox"
-				checked={s?.toggles.privacy ?? false}
-				onselect={() => viewer.setToggle('privacy', !(s?.toggles.privacy ?? false))}
-				>{tf('remote.privacy_mode', 'Privacy mode')}</MenuItem
-			>
-			<MenuItem
-				type="checkbox"
-				checked={s?.toggles.disableClipboard ?? false}
-				onselect={() => viewer.setToggle('disableClipboard', !(s?.toggles.disableClipboard ?? false))}
-				>{tf('remote.disable_clipboard', 'Disable clipboard')}</MenuItem
-			>
-			<MenuItem
-				type="checkbox"
-				checked={s?.toggles.lockAfter ?? false}
-				onselect={() => viewer.setToggle('lockAfter', !(s?.toggles.lockAfter ?? false))}
-				>{tf('remote.lock_after_session', 'Lock after session')}</MenuItem
-			>
-			<MenuDivider />
 			<MenuItem icon="info" onselect={() => viewer.toggleSheet('info')}
 				>{tf('remote_viewer.session_info', 'Session info')}</MenuItem
 			>
@@ -544,17 +585,17 @@
 				? tf('remote_viewer.exit_fullscreen', 'Exit full screen')
 				: tf('remote.fullscreen', 'Full screen')}
 			<Button
-				class="toolbar-btn is-icon"
+				class="toolbar-btn"
 				icon={viewer.fullscreen ? 'fullscreen_exit' : 'fullscreen'}
 				title={`${fsLabel} (F11)`}
-				onclick={ontogglefullscreen}><span class="sr-only">{fsLabel}</span></Button
+				onclick={ontogglefullscreen}><span class="tb-label">{fsLabel}</span></Button
 			>
 		{/if}
 		<Button
 			variant="danger-quiet"
 			class="toolbar-btn"
 			icon="link_off"
-			title={tf('remote.disconnect', 'Disconnect')}
+			title={tf('remote_viewer.disconnect_hint', 'End the session with this device')}
 			onclick={() => viewer.disconnect()}
 			><span class="st-label">{tf('remote.disconnect', 'Disconnect')}</span></Button
 		>
@@ -574,7 +615,7 @@
 	.group {
 		display: flex;
 		align-items: center;
-		gap: var(--space-1);
+		gap: 2px;
 	}
 	.group + .group {
 		padding-inline-start: var(--space-2);
@@ -586,33 +627,49 @@
 		font-size: var(--text-sm);
 		white-space: nowrap;
 	}
-	.controls :global(.toolbar-btn) {
+	/* Every control: its icon with its word under it, so nothing has to be
+	   guessed from a symbol. Quiet until hovered, pressed or open. */
+	.controls :global(.btn.toolbar-btn) {
+		flex-direction: column;
 		flex-shrink: 0;
-		gap: var(--space-1);
+		gap: 1px;
+		min-width: 52px;
+		min-height: var(--viewer-tool-h);
+		padding: 3px var(--space-2);
+		border-color: transparent;
+		background: transparent;
+		line-height: 1.15;
 	}
-	.controls :global(.toolbar-btn.is-icon) {
-		width: var(--control-h);
-		padding: 0;
+	.controls :global(.btn.toolbar-btn:hover:not(:disabled)) {
+		background: var(--hover);
 	}
 	.controls :global(.toolbar-btn > .material-icons:not(.btn-caret)) {
 		color: var(--text-muted);
+		font-size: 20px;
+	}
+	.controls :global(.toolbar-btn :is(.tb-label, .st-label)) {
+		display: inline-flex;
+		align-items: center;
+		font-size: var(--text-xs);
+		white-space: nowrap;
 	}
 	.controls :global(.toolbar-btn:hover > .material-icons),
 	.controls :global(.toolbar-btn[aria-pressed='true'] > .material-icons) {
 		color: var(--text);
 	}
 	/* Switched-on settings, open sheets and open menus: the selected look of the control set */
-	.controls :global(.toolbar-btn[aria-pressed='true']),
-	.controls :global(.toolbar-btn[aria-expanded='true']) {
+	.controls :global(.btn.toolbar-btn[aria-pressed='true']),
+	.controls :global(.btn.toolbar-btn[aria-expanded='true']) {
 		border-color: var(--accent);
 		background: var(--accent-tint);
 		color: var(--text);
 	}
-	.controls :global(.toolbar-btn.recording),
+	.controls :global(.btn.toolbar-btn.recording),
 	.controls :global(.toolbar-btn.recording > .material-icons) {
 		border-color: var(--danger);
 		color: var(--danger);
 	}
+	.controls :global(.btn-danger-quiet),
 	.controls :global(.btn-danger-quiet > .material-icons) {
 		color: var(--danger);
 	}
@@ -670,22 +727,35 @@
 		font-weight: 600;
 	}
 	:global(.display-menu) {
-		width: min(600px, calc(100vw - 2 * var(--space-4)));
+		width: min(640px, calc(100vw - 2 * var(--space-4)));
 	}
 	.display-grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: var(--space-1) var(--space-2);
 	}
+	.span-all {
+		grid-column: 1 / -1;
+		padding-top: var(--space-1);
+		border-top: 1px solid var(--rule);
+	}
+	.session-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0 var(--space-2);
+	}
 	@media (max-width: 720px) {
 		.display-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
+		.session-grid {
+			grid-template-columns: minmax(0, 1fr);
+		}
 	}
-	/* Narrower viewers: the words move into the tooltip and the accessible
-	   name (visually hidden, not removed); the menus' words go first */
-	@container viewer (max-width: 1240px) {
-		.controls :global(.tb-label) {
+	/* The narrowest viewers: the words move into the tooltip and the
+	   accessible name (visually hidden, not removed) */
+	@container viewer (max-width: 640px) {
+		.controls :global(.toolbar-btn :is(.tb-label, .st-label)) {
 			position: absolute;
 			width: 1px;
 			height: 1px;
@@ -693,23 +763,9 @@
 			clip: rect(0 0 0 0);
 			white-space: nowrap;
 		}
-		.controls :global(.toolbar-btn:has(.tb-label)) {
+		.controls :global(.btn.toolbar-btn) {
 			min-width: var(--control-h);
-			padding-inline: var(--space-2);
-		}
-	}
-	@container viewer (max-width: 1000px) {
-		.st-label {
-			position: absolute;
-			width: 1px;
-			height: 1px;
-			overflow: hidden;
-			clip: rect(0 0 0 0);
-			white-space: nowrap;
-		}
-		.controls :global(.toolbar-btn:has(.st-label)) {
-			width: var(--control-h);
-			padding: 0;
+			padding-inline: var(--space-1);
 		}
 		.package-badge {
 			display: none;

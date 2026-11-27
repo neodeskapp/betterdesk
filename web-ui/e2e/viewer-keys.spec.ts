@@ -42,10 +42,10 @@ test('on a Mac, Cmd+S goes over as Ctrl+S; Cmd+L stays; the menu turns it off', 
 
 	await page.keyboard.press('F8');
 	const controls = page.getByRole('group', { name: 'Session controls' });
-	await controls.getByRole('button', { name: 'View', exact: true }).click();
-	// Cmd as Ctrl waits behind Advanced settings
-	const advanced = page.getByRole('menuitemcheckbox', { name: 'Advanced settings' });
-	if ((await advanced.getAttribute('aria-checked')) !== 'true') await advanced.click();
+	await controls.getByRole('button', { name: 'Settings', exact: true }).click();
+	// Cmd as Ctrl waits behind Show advanced settings
+	const advanced = page.getByRole('menuitem', { name: /^(Show|Hide) advanced settings$/ });
+	if ((await advanced.getAttribute('aria-expanded')) !== 'true') await advanced.click();
 	const toggle = page.getByRole('menuitemcheckbox', { name: 'Send Cmd as Ctrl for common shortcuts' });
 	await expect(toggle).toHaveAttribute('aria-checked', 'true');
 	await toggle.click();

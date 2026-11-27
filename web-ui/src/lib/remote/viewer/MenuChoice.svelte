@@ -3,7 +3,9 @@
   (menuitemradio, the default), a switch (menuitemcheckbox) or an action
   (menuitem), so several viewer settings can be changed in one go, as in
   the old Display and Screens menus. The shared MenuItem's radio closes its
-  menu on select.
+  menu on select. hint: a line under the label that says what the choice
+  does (the item's description, not part of its name). expanded: an action
+  that shows or hides more choices (aria-expanded).
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -15,6 +17,8 @@
 		icon?: string;
 		disabled?: boolean;
 		title?: string;
+		hint?: string;
+		expanded?: boolean;
 		onselect: () => void;
 		children: Snippet;
 	}
@@ -25,9 +29,12 @@
 		icon,
 		disabled = false,
 		title,
+		hint,
+		expanded,
 		onselect,
 		children
 	}: Props = $props();
+	const uid = $props.id();
 	const role = $derived(
 		kind === 'radio' ? 'menuitemradio' : kind === 'checkbox' ? 'menuitemcheckbox' : 'menuitem'
 	);
@@ -41,11 +48,19 @@
 	tabindex="-1"
 	{disabled}
 	{title}
+	aria-expanded={expanded}
+	aria-labelledby={hint ? `${uid}-label` : undefined}
+	aria-describedby={hint ? `${uid}-hint` : undefined}
 	onclick={() => {
 		if (!disabled) onselect();
 	}}
 >
-	{#if icon}<Icon name={icon} class="lead" />{/if}<span class="menu-item-label">{@render children()}</span>
+	{#if icon}<Icon name={icon} class="lead" />{/if}{#if hint}<span class="choice-text"
+			><span class="menu-item-label" id="{uid}-label">{@render children()}</span><span
+				class="choice-hint"
+				id="{uid}-hint">{hint}</span
+			></span
+		>{:else}<span class="menu-item-label">{@render children()}</span>{/if}
 	{#if kind !== 'action'}<Icon name="check" class={checked ? 'tick' : 'tick is-off'} />{/if}
 </button>
 
@@ -84,6 +99,19 @@
 	.menu-item-label {
 		flex: 1;
 		min-width: 0;
+	}
+	.choice-text {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		min-width: 0;
+		padding-block: 2px;
+	}
+	.choice-hint {
+		color: var(--text-muted);
+		font-size: var(--text-xs);
+		font-weight: 400;
+		line-height: 1.35;
 	}
 	.menu-choice :global(.lead) {
 		font-size: 20px;
