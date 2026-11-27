@@ -244,7 +244,8 @@
 	title={t('settings.email.previews_title')}
 	description={t('settings.email.previews_note')}
 >
-	<div class="mails-pickers">
+	<!-- Which mail to show: no setting, so no row in the settings list -->
+	<div class="mails-pickers" data-search-skip>
 		<Field id="email-preview-kind" label={t('settings.email.preview_mail')}>
 			{#snippet children(f)}
 				<Select {...f} options={kinds} bind:value={kind} onchange={() => void loadPreview()} />

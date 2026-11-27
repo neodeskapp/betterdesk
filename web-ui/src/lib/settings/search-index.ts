@@ -1353,6 +1353,38 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		['settings.email.alert_email_hint'],
 		'server.config'
 	],
+	[
+		'email',
+		'email-from-name',
+		'settings.email.from_name',
+		'settings.email.identity_title',
+		[],
+		'server.config'
+	],
+	[
+		'email',
+		'email-organisation',
+		'settings.email.organisation',
+		'settings.email.identity_title',
+		['settings.email.organisation_hint'],
+		'server.config'
+	],
+	[
+		'email',
+		'email-support-email',
+		'settings.email.support_email',
+		'settings.email.identity_title',
+		['settings.email.support_email_hint'],
+		'server.config'
+	],
+	[
+		'email',
+		'email-support-url',
+		'settings.email.support_url',
+		'settings.email.identity_title',
+		['settings.email.support_url_hint'],
+		'server.config'
+	],
 	['time', 'time-billing-timezone', 'settings.time.billing_timezone', '', [], 'server.config'],
 	// Your own time zone (Your account, Preferences) has the same label: it
 	// comes after the console's, so a search for the time zone lists that first
