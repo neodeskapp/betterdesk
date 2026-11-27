@@ -104,7 +104,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "not found"
+     "error": "device_not_found"
     }
    }
   }

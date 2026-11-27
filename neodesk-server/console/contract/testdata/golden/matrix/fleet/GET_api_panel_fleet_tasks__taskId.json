@@ -110,7 +110,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "not found"
+     "error": "Task not found"
     }
    }
   }

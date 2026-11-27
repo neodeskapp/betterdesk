@@ -103,7 +103,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "not found"
+     "error": "Resource not found"
     }
    }
   }

@@ -79,12 +79,9 @@
   },
   {
    "roles": [
-    "operator",
-    "global_admin",
-    "super_admin",
-    "admin"
+    "operator"
    ],
-   "status": 404,
+   "status": 201,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -105,10 +102,190 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "error": "not found"
+     "data": {
+      "connections": [],
+      "created_at": "<volatile>",
+      "created_by": "e2e_operator",
+      "id": 1,
+      "name": "contract",
+      "nodes": [],
+      "org_id": "",
+      "updated_at": "<volatile>"
+     },
+     "id": 1,
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "connections": [],
+      "created_at": "<volatile>",
+      "created_by": "e2e_global_admin",
+      "id": 2,
+      "name": "contract",
+      "nodes": [],
+      "org_id": "",
+      "updated_at": "<volatile>"
+     },
+     "id": 2,
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "connections": [],
+      "created_at": "<volatile>",
+      "created_by": "e2e_super_admin",
+      "id": 3,
+      "name": "contract",
+      "nodes": [],
+      "org_id": "",
+      "updated_at": "<volatile>"
+     },
+     "id": 3,
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "data.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "data.updated_at",
+     "format": "9999-99-99A99:99:99A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "connections": [],
+      "created_at": "<volatile>",
+      "created_by": "e2e_admin",
+      "id": 4,
+      "name": "contract",
+      "nodes": [],
+      "org_id": "",
+      "updated_at": "<volatile>"
+     },
+     "id": 4,
+     "success": true
     }
    }
   }
