@@ -3954,13 +3954,16 @@ function Check-PortStatus {
     return $result
 }
 
-# The ports the installers open: RustDesk's (NAT test, signal TCP and UDP,
-# relay), the client API port, the CDAP gateway (21122) while CDAP is on,
+# The ports the installers open: the API port a stock RustDesk client
+# without an API server setting calls (the signal port minus 2, 21114:
+# callers from other hosts get only the client API there), RustDesk's (NAT
+# test, signal TCP and UDP, relay), the client API port, the CDAP gateway (21122) while CDAP is on,
 # and the console's ports unless TLS ends at a reverse proxy (TRUST_PROXY).
 function Get-FirewallPorts {
     $signal = [int](Get-SignalPort)
     $relay = [int](Get-RelayPort)
     $ports = @(
+        @{Port = $signal - 2; Proto = "TCP"; Name = "NeoDesk API for clients without an API server setting"},
         @{Port = $signal - 1; Proto = "TCP"; Name = "NeoDesk NAT test"},
         @{Port = $signal; Proto = "TCP"; Name = "NeoDesk ID server TCP"},
         @{Port = $signal; Proto = "UDP"; Name = "NeoDesk ID server UDP"},
