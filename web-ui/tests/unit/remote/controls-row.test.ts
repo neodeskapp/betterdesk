@@ -56,6 +56,9 @@ const { Viewer } = await import('../../../src/lib/remote/viewer.svelte.ts');
 const { default: ControlsRow } = await import('../../../src/lib/remote/viewer/ControlsRow.svelte');
 type ViewerData = ConstructorParameters<typeof Viewer>[0]['data'];
 
+/** A control in the bar by its accessible name (its word), or null */
+const button = (name: string) => screen.queryByRole('button', { name });
+
 function streamingViewer(capabilities: ViewerData['capabilities']) {
 	const d = {
 		success: true,
@@ -86,21 +89,33 @@ describe('remote viewer controls', () => {
 			guest_peer_ids: ['900100012']
 		});
 		render(ControlsRow, { viewer: v, id: 'ctl' });
-		expect(screen.queryByTitle('Keys')).toBeNull();
-		expect(screen.queryByTitle('Chat')).toBeNull();
-		expect(screen.queryByTitle('File transfer')).toBeNull();
-		expect(screen.queryByTitle('View only')).toBeNull();
+		expect(button('Keyboard')).toBeNull();
+		expect(button('Chat')).toBeNull();
+		expect(button('Files')).toBeNull();
+		expect(button('View only')).toBeNull();
 		// Watching and leaving stay
-		expect(screen.getByTitle('View')).toBeInTheDocument();
-		expect(screen.getByTitle('More')).toBeInTheDocument();
-		expect(screen.getByTitle('Disconnect')).toBeInTheDocument();
+		expect(button('Settings')).toBeInTheDocument();
+		expect(button('More')).toBeInTheDocument();
+		expect(button('Disconnect')).toBeInTheDocument();
 	});
 
-	test('an operator gets Keys, View, Chat, File transfer and More, and no switched-on settings yet', () => {
+	test('an operator gets Keyboard, Settings, Chat, Files and More, each with its word and a tooltip, and no switched-on settings yet', () => {
 		const v = streamingViewer({ transport: 'rd' });
 		render(ControlsRow, { viewer: v, id: 'ctl' });
-		for (const name of ['Keys', 'View', 'Chat', 'File transfer', 'More', 'Disconnect'])
-			expect(screen.getByTitle(name)).toBeInTheDocument();
+		const tips: Record<string, string> = {
+			Keyboard: 'Ctrl+Alt+Del, the Windows key and typing text',
+			Settings: 'Picture quality, view only, privacy mode, recording and more',
+			Chat: 'Chat with the person at the device',
+			Files: 'Copy files to and from the device',
+			More: 'Session info, refresh the screen, restart the device',
+			Disconnect: 'End the session with this device'
+		};
+		for (const [name, tip] of Object.entries(tips)) {
+			const b = button(name)!;
+			// The word is on the button itself, not only in the tooltip
+			expect(b.textContent).toContain(name);
+			expect(b).toHaveAttribute('title', tip);
+		}
 		expect(screen.queryByTitle('View only')).toBeNull();
 		expect(screen.queryByTitle('Turn sound on')).toBeNull();
 		expect(screen.queryByTitle('Stop recording')).toBeNull();
@@ -132,11 +147,62 @@ describe('remote viewer controls', () => {
 		const v = streamingViewer({ transport: 'rd' });
 		render(ControlsRow, { viewer: v, id: 'ctl' });
 		const c = v.sessions[0]!.client as unknown as FakeClient;
-		expect(screen.getByTitle('File transfer')).toBeEnabled();
+		expect(button('Files')).toBeEnabled();
 		c.emit('permission', { permission: 0, enabled: false });
 		c.emit('permission', { permission: 4, enabled: false });
 		await vi.waitFor(() => expect(screen.getByTitle('View only')).toBeDisabled());
 		expect(screen.getByTitle('View only')).toHaveAttribute('aria-pressed', 'true');
-		expect(screen.getByTitle('File transfer')).toBeDisabled();
+		expect(button('Files')).toBeDisabled();
+	});
+
+	test('Settings holds every on/off option of the session, each with a line that says what it does', async () => {
+		const v = streamingViewer({ transport: 'rd' });
+		render(ControlsRow, { viewer: v, id: 'ctl' });
+		await fireEvent.click(button('Settings')!);
+		const lines: Record<string, string> = {
+			'View only': 'See the screen without controlling it',
+			'Block user input': "People at the device can't use their mouse or keyboard",
+			'Privacy mode': 'The screen at the device goes dark while you work',
+			'Record the session': 'Saves a video of this session',
+			'Disable clipboard': 'Copy and paste between the two computers stops',
+			'Lock after session': 'The device locks when you disconnect'
+		};
+		for (const [name, line] of Object.entries(lines)) {
+			const item = await screen.findByRole('menuitemcheckbox', { name });
+			expect(item).toHaveAccessibleDescription(line);
+		}
+		// Switching one on keeps the menu open and shows it in the bar
+		const c = v.sessions[0]!.client as unknown as FakeClient;
+		await fireEvent.click(screen.getByRole('menuitemcheckbox', { name: 'View only' }));
+		expect(c.setViewOnly).toHaveBeenLastCalledWith(true);
+		expect(screen.getByRole('menuitemcheckbox', { name: 'View only' })).toHaveAttribute(
+			'aria-checked',
+			'true'
+		);
+	});
+
+	test('Show advanced settings opens frame rate, keyboard mode and codec in the Settings menu', async () => {
+		localStorage.removeItem('nd_viewer_view_advanced');
+		const v = streamingViewer({ transport: 'rd' });
+		render(ControlsRow, { viewer: v, id: 'ctl' });
+		await fireEvent.click(button('Settings')!);
+		expect(screen.queryByText('Frame rate')).toBeNull();
+		const show = await screen.findByRole('menuitem', { name: 'Show advanced settings' });
+		expect(show).toHaveAttribute('aria-expanded', 'false');
+		expect(show).toHaveAccessibleDescription('Frame rate, keyboard mode and codec');
+		await fireEvent.click(show);
+		expect(await screen.findByText('Frame rate')).toBeInTheDocument();
+		expect(screen.getByRole('menuitem', { name: 'Hide advanced settings' })).toHaveAttribute(
+			'aria-expanded',
+			'true'
+		);
+	});
+
+	test('More holds actions only: the on/off options live in Settings', async () => {
+		const v = streamingViewer({ transport: 'rd' });
+		render(ControlsRow, { viewer: v, id: 'ctl' });
+		await fireEvent.click(button('More')!);
+		expect(await screen.findByRole('menuitem', { name: 'Session info' })).toBeInTheDocument();
+		expect(screen.queryAllByRole('menuitemcheckbox')).toHaveLength(0);
 	});
 });

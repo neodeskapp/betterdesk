@@ -1,8 +1,8 @@
 <!--
-  A control in the viewer's session bar that opens a menu: icon, label
-  (visually hidden in narrower windows, kept as the name and tooltip) and
-  a caret. iconOnly keeps the label for the name and tooltip only and
-  leaves out the caret (More). buttonId names the button, so a side sheet
+  A control in the viewer's session bar that opens a menu: icon, and under
+  it the label with a caret (visually hidden in the narrowest viewers, kept
+  as the name). hint is the tooltip: what the menu holds. iconOnly keeps
+  the label for the name and tooltip only and leaves out the caret. buttonId names the button, so a side sheet
   opened from the menu can give focus back to it. Same keyboard as MenuButton: Enter, Space or the arrows open it,
   Escape closes and returns focus.
 -->
@@ -15,6 +15,8 @@
 
 	interface Props {
 		label: string;
+		/** The tooltip: what is in the menu (the label when left out) */
+		hint?: string;
 		icon: string;
 		menuClass?: string;
 		iconOnly?: boolean;
@@ -23,7 +25,7 @@
 		children: Snippet;
 	}
 
-	let { label, icon, menuClass = '', iconOnly = false, buttonId, onopen, children }: Props = $props();
+	let { label, hint, icon, menuClass = '', iconOnly = false, buttonId, onopen, children }: Props = $props();
 
 	const uid = $props.id();
 	const btnId = $derived(buttonId ?? `${uid}-btn`);
@@ -50,7 +52,7 @@
 		{icon}
 		bind:element={button}
 		id={btnId}
-		title={label}
+		title={hint ?? label}
 		aria-haspopup="menu"
 		aria-expanded={open}
 		aria-controls={open ? `${uid}-menu` : undefined}
@@ -67,10 +69,9 @@
 			}
 		}}
 	>
-		{#if iconOnly}<span class="sr-only">{label}</span>{:else}<span class="tb-label">{label}</span><Icon
-				name="expand_more"
-				class="btn-caret"
-			/>{/if}
+		{#if iconOnly}<span class="sr-only">{label}</span>{:else}<span class="tb-label"
+				>{label}<Icon name="expand_more" class="btn-caret" /></span
+			>{/if}
 	</Button>
 	<Menu
 		bind:open
@@ -93,8 +94,8 @@
 		display: inline-flex;
 	}
 	.tool-anchor :global(.btn-caret) {
-		margin-inline-start: -2px;
+		margin-inline-start: -1px;
 		color: var(--text-muted);
-		font-size: 18px;
+		font-size: 16px;
 	}
 </style>

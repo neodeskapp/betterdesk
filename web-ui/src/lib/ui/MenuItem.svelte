@@ -16,7 +16,9 @@
   marks a label in another language.
   `href` makes it a link (type item only); `download` marks a link to a
   file (true, or the file name), as on Button. `haspopup` says the item
-  opens another menu or a dialog (aria-haspopup).
+  opens another menu or a dialog (aria-haspopup). `hint`: a line under the
+  label that says what the item does (its description, not part of its
+  name, so typeahead and the accessible name keep the label alone).
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -34,6 +36,7 @@
 		lang?: string;
 		lead?: Snippet;
 		haspopup?: 'menu' | 'dialog';
+		hint?: string;
 		class?: string;
 		onselect?: () => void;
 		children: Snippet;
@@ -50,13 +53,21 @@
 		lang,
 		lead,
 		haspopup,
+		hint,
 		class: cls = '',
 		onselect,
 		children
 	}: Props = $props();
 
 	const menu = getMenu();
-	const classes = $derived(['menu-item', danger && 'danger', type === 'radio' && 'is-radio', cls]);
+	const uid = $props.id();
+	const classes = $derived([
+		'menu-item',
+		danger && 'danger',
+		type === 'radio' && 'is-radio',
+		hint && 'has-hint',
+		cls
+	]);
 	const role = $derived(
 		type === 'checkbox' ? 'menuitemcheckbox' : type === 'radio' ? 'menuitemradio' : 'menuitem'
 	);
@@ -95,6 +106,8 @@
 		{role}
 		aria-checked={type === 'item' ? undefined : checked}
 		aria-haspopup={haspopup}
+		aria-labelledby={hint ? `${uid}-label` : undefined}
+		aria-describedby={hint ? `${uid}-hint` : undefined}
 		tabindex="-1"
 		aria-disabled={disabled || undefined}
 		{lang}
@@ -106,7 +119,12 @@
 			{@render lead()}
 		{:else if icon}
 			<Icon name={icon} />
-		{/if}<span class="menu-item-label">{@render children()}</span>
+		{/if}{#if hint}<span class="menu-item-text"
+				><span class="menu-item-label" id="{uid}-label">{@render children()}</span><span
+					class="menu-item-hint"
+					id="{uid}-hint">{hint}</span
+				></span
+			>{:else}<span class="menu-item-label">{@render children()}</span>{/if}
 		{#if type === 'radio'}
 			<!-- Always there (hidden unless chosen), so Menu sees an icon in every item and adds no spacer -->
 			<Icon name="check" class={checked ? 'menu-item-tick' : 'menu-item-tick is-off'} />
@@ -216,6 +234,28 @@
 		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+	.menu-item-text {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		min-width: 0;
+		padding-block: 2px;
+	}
+	.has-hint {
+		white-space: normal;
+	}
+	.has-hint .menu-item-label {
+		white-space: nowrap;
+	}
+	.menu-item-hint {
+		max-width: 300px;
+		color: var(--text-muted);
+		font-size: var(--text-xs);
+		line-height: 1.35;
+	}
+	.danger .menu-item-hint {
+		color: inherit;
 	}
 	.is-radio > .menu-item-label {
 		flex: 1;

@@ -43,12 +43,12 @@ test('full screen: a browser without Keyboard Lock says which shortcuts stay wit
 	}
 });
 
-test('Keys sends the Windows key and Alt+Tab', async ({ page }) => {
+test('Keyboard sends the Windows key and Alt+Tab', async ({ page }) => {
 	test.skip(!(await streaming(page)), 'the console runs without ND_DEV_MOCK_REMOTE=1');
 	await page.locator('.session-canvas').focus();
 	await page.keyboard.press('F8');
 	const controls = page.getByRole('group', { name: 'Session controls' });
-	await controls.getByRole('button', { name: 'Keys', exact: true }).click();
+	await controls.getByRole('button', { name: 'Keyboard', exact: true }).click();
 	const menu = page.getByRole('menu');
 	await expect(menu.getByRole('menuitem', { name: 'Windows key' })).toBeVisible();
 	await expect(menu.getByRole('menuitem', { name: 'Alt+Tab' })).toBeVisible();

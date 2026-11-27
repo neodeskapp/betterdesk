@@ -77,6 +77,7 @@
 
 <ToolMenu
 	label={tf('remote_viewer.displays', 'Displays')}
+	hint={tf('remote_viewer.displays_hint', 'Choose which screen of the device you see')}
 	icon="screenshot_monitor"
 	menuClass={together ? 'displays-menu' : 'displays-menu is-compact'}
 	onopen={() => viewer.refreshMonitors(s)}

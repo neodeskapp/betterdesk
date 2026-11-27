@@ -700,7 +700,9 @@
 
 <style>
 	:global(:root) {
-		--viewer-bar-h: calc(var(--control-h) + 2 * var(--space-1) + 1px);
+		/* The session controls: an icon with its word under it */
+		--viewer-tool-h: 46px;
+		--viewer-bar-h: calc(max(var(--control-h), var(--viewer-tool-h)) + 2 * var(--space-1) + 1px);
 		--sheet-w: 380px;
 		--sheet-w-files: clamp(440px, 42vw, 900px);
 		--mobile-bar-h: 52px;
