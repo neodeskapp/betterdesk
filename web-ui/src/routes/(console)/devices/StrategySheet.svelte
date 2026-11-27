@@ -1,7 +1,8 @@
 <!--
   Add or edit an access rule: who and where (a user group and a device
-  group), the client settings it sets (one row per setting: the client
-  decides, on, off) and whether it is applied.
+  group), the client settings it sets (one row per setting, its three
+  choices side by side so each takes one click: the client decides, on,
+  off) and whether it is applied.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -22,6 +23,7 @@
 	import Input from '#lib/ui/Input.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
+	import ChoiceSegments from '#lib/ui/settings/ChoiceSegments.svelte';
 	import { createForm } from '#lib/ui/form.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 
@@ -136,8 +138,14 @@
 			<div class="perm-grid" role="group" aria-labelledby="{uid}-perms-title">
 				{#each STRATEGY_PERMISSIONS as p (p.key)}
 					<div class="perm-row">
-						<label for="{uid}-{p.key}">{t(p.labelKey)}</label>
-						<Select id="{uid}-{p.key}" options={choices} bind:value={form.values.permissions[p.key]} />
+						<span class="perm-name" id="{uid}-{p.key}-name">{t(p.labelKey)}</span>
+						<ChoiceSegments
+							id="{uid}-{p.key}"
+							labelledby="{uid}-{p.key}-name"
+							options={choices}
+							value={form.values.permissions[p.key] ?? ''}
+							onchange={(v) => (form.values.permissions[p.key] = v as Choice)}
+						/>
 					</div>
 				{/each}
 			</div>
@@ -170,18 +178,23 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
-	/* One row per client setting: label, then the choice */
+	/* One row per client setting: its name, then the three choices; the choices go under the name when both don't fit */
 	.perm-grid {
 		border-top: 1px solid var(--rule);
 	}
 	.perm-row {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(9rem, 14rem);
-		gap: var(--space-3);
+		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-1) var(--space-3);
 		min-height: var(--control-h);
 		padding: var(--space-1) 0;
 		border-bottom: 1px solid var(--rule);
+	}
+	.perm-name {
+		flex: 1 1 10rem;
+		min-width: 0;
 	}
 	.enabled {
 		margin-top: var(--space-5);

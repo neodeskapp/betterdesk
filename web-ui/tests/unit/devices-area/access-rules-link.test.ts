@@ -45,4 +45,19 @@ describe('a link to the access rules', () => {
 		await vi.waitFor(() => expect(document.querySelector('details.access-rules')).not.toBeNull());
 		expect(document.querySelector<HTMLDetailsElement>('details.access-rules')?.open).toBe(false);
 	});
+
+	test('with no rule the section says so in three words, not the note again', async () => {
+		vi.stubGlobal(
+			'fetch',
+			async () =>
+				new Response(JSON.stringify({ success: true, data: { strategies: [] } }), {
+					headers: { 'Content-Type': 'application/json' }
+				})
+		);
+		pageState.url = new URL('http://localhost/app/devices#access-rules');
+		render(AccessRules, { groups: [], devices: [] });
+		await vi.waitFor(() =>
+			expect(document.querySelector('.access-rules .state')?.textContent).toBe('No rules yet.')
+		);
+	});
 });
