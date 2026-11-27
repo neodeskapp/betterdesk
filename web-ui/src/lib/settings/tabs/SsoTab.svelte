@@ -3,13 +3,14 @@
   Connect provider, as one draft with one save bar (PATTERN.md rule 1)
   and a filter, since it has more than 15 settings. Test discovery is an
   action: it asks the issuer on the page, saved or not. While single
-  sign-on is off, each group says once that its settings do nothing; the
-  private networks are checked anyway, as the server does. The server
-  reports no source for these settings: a row says "Set here" only for a
-  stored value, and nothing claims a default. The endpoints and the
-  private networks sit behind Advanced (structure plan, rows 56 and 66
-  to 68): they matter only without auto-discovery or for a provider in a
-  private network.
+  sign-on is off, the page says once, under the switch, that its settings
+  do nothing (settings-pass-2.md rule D); the private networks are checked
+  anyway, as the server does. The server reports no source for these
+  settings: a row says "Set here" only for a stored value, and nothing
+  claims a default. Every setting is on the page at once; the endpoints
+  show while Auto-discovery is off, while one of them is filled in (the
+  console falls back to them without a discovery document) and while the
+  filter looks for something.
 
   Element ids are the old page's (the rows carry them), for links and the
   settings search.
@@ -20,11 +21,11 @@
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
-	import ChoiceList from '#lib/ui/ChoiceList.svelte';
-	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
+	import Select from '#lib/ui/Select.svelte';
+	import ShowWhen from '#lib/ui/ShowWhen.svelte';
 	import States from '#lib/ui/States.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
@@ -146,8 +147,6 @@
 	let refused = $state<Partial<Record<string, string>>>({});
 	let test = $state<{ message: string; tone: 'neutral' | 'ok' | 'error' }>({ message: '', tone: 'neutral' });
 	let testing = $state(false);
-	let advancedOpen = $state(false);
-	let claimsOpen = $state(false);
 
 	const v = $derived(draft.values);
 	const roleNames = $derived(roles.map((r) => r.value));
@@ -197,15 +196,6 @@
 		);
 	};
 
-	const ADVANCED: readonly Field[] = [
-		'auto_discovery',
-		'authorization_url',
-		'token_url',
-		'userinfo_url',
-		'allowed_private_cidrs'
-	];
-	const CLAIMS: readonly Field[] = ['claim_username', 'claim_email', 'claim_name', 'claim_groups'];
-
 	async function save() {
 		if (draft.busy) return;
 		const wrong = (Object.keys(ROW_IDS) as Field[]).filter((f) => problems[f]);
@@ -214,7 +204,6 @@
 				'settings_ui.fix_marked',
 				'Some values are not right yet. They are marked on the page.'
 			);
-			if (wrong.some((f) => ADVANCED.includes(f))) advancedOpen = true;
 			const first = wrong[0] as Field;
 			document
 				.getElementById(
@@ -251,7 +240,6 @@
 					const field = err instanceof ApiError ? (err.data as { field?: unknown } | null)?.field : undefined;
 					if (typeof field === 'string' && field in ROW_IDS) {
 						refused = { [field]: errText(err) };
-						if (ADVANCED.includes(field as Field)) advancedOpen = true;
 					}
 					throw err;
 				}
@@ -292,12 +280,6 @@
 		if (canConfig) void load();
 	});
 
-	// A filter, a change or a refusal inside a folded part shows it
-	$effect(() => {
-		if (filter.active || ADVANCED.some((f) => draft.isChanged(f) || refused[f])) advancedOpen = true;
-		if (filter.active || CLAIMS.some((f) => draft.isChanged(f))) claimsOpen = true;
-	});
-
 	const sections = $derived([
 		{ id: 'oidc-form', label: tf('settings.sso.signin_title', 'Single sign-on') },
 		{ id: 'oidc-provider', label: t('settings.oidc_provider') },
@@ -305,13 +287,20 @@
 		{ id: 'oidc-roles', label: t('settings.oidc_role_mapping') }
 	]);
 
-	const manualNote = $derived(
-		v.auto_discovery
-			? tf(
-					'settings.sso.manual_unused',
-					'Used only while Auto-discovery is off, or when the provider has no discovery document.'
-				)
-			: undefined
+	/** The default role as a list of names; the chosen role's sentence goes under it */
+	const roleOptions = $derived(
+		roleChoices('oidc-default-role', roles, v.default_role).map((c) => ({ value: c.value, label: c.title }))
+	);
+	const roleHint = $derived(roles.find((r) => r.value === v.default_role)?.hint ?? '');
+
+	/**
+	 * Endpoints typed in or stored stay on the page with Auto-discovery on:
+	 * the console falls back to them when the provider has no discovery
+	 * document
+	 */
+	const MANUAL = ['authorization_url', 'token_url', 'userinfo_url'] as const;
+	const hasManual = $derived(
+		MANUAL.some((f) => String(v[f] ?? '').trim() !== '' || String(draft.loaded[f] ?? '').trim() !== '')
 	);
 </script>
 
@@ -319,7 +308,7 @@
 	field: Field,
 	label: string,
 	help: string,
-	opts: { mono?: boolean; password?: boolean; url?: boolean; noEffect?: string } = {}
+	opts: { mono?: boolean; password?: boolean; url?: boolean } = {}
 )}
 	<SettingRow
 		id={ROW_IDS[field] ?? field}
@@ -328,7 +317,6 @@
 		changed={draft.isChanged(field)}
 		source={opts.password ? null : stored(field)}
 		error={errorOf(field)}
-		noEffect={opts.noEffect}
 	>
 		{#snippet control(f)}
 			<Input
@@ -347,7 +335,13 @@
 	</SettingRow>
 {/snippet}
 
-{#snippet toggle(field: Field, label: string, help: string, onchange?: (on: boolean) => void)}
+{#snippet toggle(
+	field: Field,
+	label: string,
+	help: string,
+	onchange?: (on: boolean) => void,
+	controls?: string
+)}
 	<SettingRow
 		id={ROW_IDS[field] ?? field}
 		{label}
@@ -355,16 +349,8 @@
 		checked={!!v[field]}
 		onchange={onchange ?? ((on) => set(field, on as never))}
 		changed={draft.isChanged(field)}
+		{controls}
 	/>
-{/snippet}
-
-{#snippet offNote()}
-	{#if !v.enabled}<Notice
-			message={tf(
-				'settings.sso.off_note',
-				'These settings do nothing while single sign-on is off. You can fill them in and test discovery first.'
-			)}
-		/>{/if}
 {/snippet}
 
 {#snippet bar()}<ChangesBar {draft} onsave={save} />{/snippet}
@@ -384,10 +370,6 @@
 			<SettingsGroup
 				id="oidc-form"
 				title={tf('settings.sso.signin_title', 'Single sign-on')}
-				description={tf(
-					'settings.sso.signin_note',
-					'People sign in to the console with an account from an identity provider such as Microsoft Entra ID, Okta, Google or Keycloak (OpenID Connect).'
-				)}
 				consequence={t('settings.signin.oidc_effect')}
 			>
 				{@render toggle(
@@ -399,6 +381,15 @@
 					),
 					setEnabled
 				)}
+				{#if !v.enabled}<div class="row-note">
+						<Notice
+							id="oidc-off-note"
+							message={tf(
+								'settings.sso.off_note_page',
+								'Single sign-on is off, so the settings on this page do nothing yet. You can fill them in and test discovery first.'
+							)}
+						/>
+					</div>{/if}
 			</SettingsGroup>
 
 			<SettingsGroup
@@ -408,7 +399,6 @@
 					'settings.sso.provider_note',
 					'What the provider gave you when you registered the console with it.'
 				)}
-				note={offNote}
 			>
 				{#snippet actions()}
 					<Button id="oidc-test-btn" size="sm" busy={testing} onclick={() => void runTest()}
@@ -482,70 +472,75 @@
 						'Protects the sign-in against a stolen code. Turn it off only if the provider refuses it.'
 					)
 				)}
-				<div class="advanced" id="oidc-advanced">
-					<Disclosure title={t('settings.connection_mode_advanced')} level={3} bind:open={advancedOpen}>
-						<p class="fold-note">{t('settings.signin.oidc_advanced_note')}</p>
-						{@render toggle(
-							'auto_discovery',
-							t('settings.oidc_auto_discovery'),
-							tf(
-								'settings.sso.discovery_help',
-								'The console reads the endpoints from the issuer. Off: enter them below.'
-							)
-						)}
-						<div id="oidc-manual-endpoints">
-							{@render text(
-								'authorization_url',
-								t('settings.oidc_authorization_url'),
-								tf('settings.sso.auth_url_help', 'For example https://idp.example.com/authorize.'),
-								{ mono: true, url: true, noEffect: manualNote }
-							)}
-							{@render text(
-								'token_url',
-								t('settings.oidc_token_url'),
-								tf('settings.sso.token_url_help', 'For example https://idp.example.com/token.'),
-								{ mono: true, url: true, noEffect: manualNote }
-							)}
-							{@render text(
-								'userinfo_url',
-								t('settings.oidc_userinfo_url'),
-								tf('settings.sso.userinfo_url_help', 'For example https://idp.example.com/userinfo.'),
-								{ mono: true, url: true, noEffect: manualNote }
-							)}
-						</div>
-						<SettingRow
-							id="oidc-allowed-private-cidrs"
-							label={t('settings.oidc_allowed_private_cidrs')}
-							help={tf(
-								'settings.sso.cidrs_help',
-								'For a provider on your own network: one address or range per row. For example 10.20.0.0/16 or 192.168.50.10. Empty: the console reaches no private address.'
-							)}
-							group
-							changed={draft.isChanged('allowed_private_cidrs')}
-							source={stored('allowed_private_cidrs')}
-							error={errorOf('allowed_private_cidrs')}
-						>
-							{#snippet control(f)}
-								<ListEditor
-									id={f.id}
-									describedby={f.describedby}
-									items={v.allowed_private_cidrs}
-									onchange={(list) => set('allowed_private_cidrs', list)}
-									itemLabel={(n) => tf('settings.sso.network_n', 'Private network {n}', { n })}
-									check={privateNetworkProblem}
-									addLabel={tf('settings.sso.network_add', 'Add a network')}
-								/>
-							{/snippet}
-						</SettingRow>
-					</Disclosure>
+				<div class="rows-subhead" id="oidc-advanced">
+					<h3>{t('settings.connection_mode_advanced')}</h3>
+					<p class="subhead-note">{t('settings.signin.oidc_advanced_note')}</p>
 				</div>
+				{@render toggle(
+					'auto_discovery',
+					t('settings.oidc_auto_discovery'),
+					tf(
+						'settings.sso.discovery_help',
+						'The console reads the endpoints from the issuer. Off: enter them below.'
+					),
+					undefined,
+					'oidc-manual-endpoints'
+				)}
+				<!-- Used only without auto-discovery (and shown while the filter looks) -->
+				<ShowWhen
+					id="oidc-manual-endpoints"
+					class="when-off setting-rows-when"
+					when={!v.auto_discovery || hasManual || filter.active}
+				>
+					{@render text(
+						'authorization_url',
+						t('settings.oidc_authorization_url'),
+						tf('settings.sso.auth_url_help', 'For example https://idp.example.com/authorize.'),
+						{ mono: true, url: true }
+					)}
+					{@render text(
+						'token_url',
+						t('settings.oidc_token_url'),
+						tf('settings.sso.token_url_help', 'For example https://idp.example.com/token.'),
+						{ mono: true, url: true }
+					)}
+					{@render text(
+						'userinfo_url',
+						t('settings.oidc_userinfo_url'),
+						tf('settings.sso.userinfo_url_help', 'For example https://idp.example.com/userinfo.'),
+						{ mono: true, url: true }
+					)}
+				</ShowWhen>
+				<SettingRow
+					id="oidc-allowed-private-cidrs"
+					label={t('settings.oidc_allowed_private_cidrs')}
+					help={tf(
+						'settings.sso.cidrs_help',
+						'For a provider on your own network: one address or range per row. For example 10.20.0.0/16 or 192.168.50.10. Empty: the console reaches no private address.'
+					)}
+					group
+					changed={draft.isChanged('allowed_private_cidrs')}
+					source={stored('allowed_private_cidrs')}
+					error={errorOf('allowed_private_cidrs')}
+				>
+					{#snippet control(f)}
+						<ListEditor
+							id={f.id}
+							describedby={f.describedby}
+							items={v.allowed_private_cidrs}
+							onchange={(list) => set('allowed_private_cidrs', list)}
+							itemLabel={(n) => tf('settings.sso.network_n', 'Private network {n}', { n })}
+							check={privateNetworkProblem}
+							addLabel={tf('settings.sso.network_add', 'Add a network')}
+						/>
+					{/snippet}
+				</SettingRow>
 			</SettingsGroup>
 
 			<SettingsGroup
 				id="oidc-accounts"
 				title={tf('settings.sso.accounts_title', 'Accounts')}
 				description={tf('settings.sso.accounts_note', 'Who gets an account and how the sign-in page starts.')}
-				note={offNote}
 			>
 				{@render toggle(
 					'allow_signup',
@@ -563,34 +558,33 @@
 						'The sign-in page goes to the provider at once. To sign in with a password instead, open /login?autoLaunch=0.'
 					)
 				)}
-				<div class="advanced" id="oidc-claims">
-					<Disclosure title={t('settings.oidc_claim_mapping')} level={3} bind:open={claimsOpen}>
-						<p class="fold-note">{t('settings.signin.attrs_note')}</p>
-						{@render text(
-							'claim_username',
-							t('settings.oidc_claim_username'),
-							tf('settings.sso.claim_user_help', 'For example preferred_username.')
-						)}
-						{@render text(
-							'claim_email',
-							t('settings.oidc_claim_email'),
-							tf('settings.sso.claim_email_help', 'For example email.')
-						)}
-						{@render text(
-							'claim_name',
-							t('settings.oidc_claim_name'),
-							tf('settings.sso.claim_name_help', 'For example name.')
-						)}
-						{@render text(
-							'claim_groups',
-							t('settings.oidc_claim_groups'),
-							tf(
-								'settings.sso.claim_groups_help',
-								'The claim with the groups for the role map below. For example groups.'
-							)
-						)}
-					</Disclosure>
+				<div class="rows-subhead" id="oidc-claims">
+					<h3>{t('settings.oidc_claim_mapping')}</h3>
+					<p class="subhead-note">{t('settings.signin.attrs_note')}</p>
 				</div>
+				{@render text(
+					'claim_username',
+					t('settings.oidc_claim_username'),
+					tf('settings.sso.claim_user_help', 'For example preferred_username.')
+				)}
+				{@render text(
+					'claim_email',
+					t('settings.oidc_claim_email'),
+					tf('settings.sso.claim_email_help', 'For example email.')
+				)}
+				{@render text(
+					'claim_name',
+					t('settings.oidc_claim_name'),
+					tf('settings.sso.claim_name_help', 'For example name.')
+				)}
+				{@render text(
+					'claim_groups',
+					t('settings.oidc_claim_groups'),
+					tf(
+						'settings.sso.claim_groups_help',
+						'The claim with the groups for the role map below. For example groups.'
+					)
+				)}
 			</SettingsGroup>
 
 			<SettingsGroup
@@ -604,7 +598,6 @@
 					'settings.sso.roles_effect',
 					'A person gets the role at each sign-in through the provider.'
 				)}
-				note={offNote}
 			>
 				<SettingRow
 					id="oidc-default-role"
@@ -613,21 +606,20 @@
 						'settings.sso.default_role_help',
 						'The role of people whose groups match no entry of the map below.'
 					)}
-					group
 					changed={draft.isChanged('default_role')}
 					source={stored('default_role')}
 					error={errorOf('default_role')}
 				>
 					{#snippet control(f)}
-						<div id={f.id}>
-							<ChoiceList
-								name="oidc-default-role"
-								labelledby={f.labelledby}
-								describedby={f.describedby}
-								bind:value={() => v.default_role, (r) => set('default_role', r)}
-								choices={roleChoices('oidc-default-role', roles, v.default_role)}
-							/>
-						</div>
+						<Select
+							id={f.id}
+							describedby={[f.describedby, roleHint && 'oidc-default-role-hint'].filter(Boolean).join(' ') ||
+								undefined}
+							invalid={f.invalid}
+							options={roleOptions}
+							bind:value={() => v.default_role, (r) => set('default_role', r)}
+						/>
+						{#if roleHint}<p class="field-now" id="oidc-default-role-hint">{roleHint}</p>{/if}
 					{/snippet}
 				</SettingRow>
 				<SettingRow
@@ -662,14 +654,40 @@
 {/if}
 
 <style>
-	.advanced {
-		padding: var(--space-2) var(--row-pad-x) 0;
+	/* A heading inside a group's rows, lined up with the row names */
+	.rows-subhead {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		margin: 0;
+		padding: var(--space-4) var(--row-pad-x) var(--space-2);
+		border-bottom: 1px solid var(--rule);
+		font-size: var(--text-md);
+		font-weight: 600;
 	}
-	.advanced :global(.setting-row:last-child) {
-		border-bottom: 0;
+	.rows-subhead h3 {
+		margin: 0;
+		font-size: var(--text-md);
 	}
-	.fold-note {
-		margin: var(--space-2) 0;
+	.subhead-note {
+		margin: 0;
+		max-width: var(--measure);
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+		font-weight: 400;
+	}
+	/* Rows that show for one choice sit in the list like the others */
+	:global(.show-when.setting-rows-when) {
+		gap: 0;
+		margin-bottom: 0;
+	}
+	/* The page-wide note under the switch that it is about */
+	.row-note {
+		padding: var(--space-2) var(--row-pad-x);
+	}
+	/* Under a control: what the chosen value means */
+	.field-now {
+		margin: var(--space-1) 0 0;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}

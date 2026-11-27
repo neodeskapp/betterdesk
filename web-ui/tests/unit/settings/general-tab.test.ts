@@ -40,7 +40,12 @@ function routes(extra: Record<string, unknown> = {}) {
 			logged_in_only_initiator: false,
 			operator_only_outbound: false
 		},
-		'GET /api/dashboard/client-config': { server_id: 'auto.example.com', relay_server: '', api_url: '' },
+		'GET /api/dashboard/client-config': {
+			server_id: 'auto.example.com',
+			relay_server: 'relay.example.com:21117',
+			api_url: '',
+			endpoint_sources: { host: 'auto', relay: 'env', api: 'auto' }
+		},
 		'GET /api/panel/settings/sources': {
 			'public_endpoints.public_server_id': {
 				value_source: 'default',
@@ -123,17 +128,23 @@ describe('one save for the addresses and the connection strategy', () => {
 });
 
 describe('what each row says', () => {
-	test('an address set nowhere is the one found automatically; a stored rule offers Reset to its default', async () => {
+	test('an empty address says under its field which address clients get instead; a stored rule offers Reset to its default', async () => {
 		routes();
 		const user = userEvent.setup();
 		render(GeneralTab);
-		await idField();
-		expect(document.getElementById('public-server-id')).toHaveTextContent(/found automatically/i);
-		// What an empty address does is said once for the group, not under each of the three
-		const group = document.getElementById('public-endpoints')!;
-		const sentence = 'An empty field gives clients the address found automatically';
-		expect(group.textContent!.split(sentence).length - 1).toBe(1);
-		expect(document.getElementById('public-server-id')).toHaveTextContent('Found automatically');
+		const field = await idField();
+		const now = document.getElementById('public-server-id-now');
+		expect(now).toHaveTextContent('Empty: clients get auto.example.com, found automatically.');
+		expect(field.getAttribute('aria-describedby')).toContain('public-server-id-now');
+		// The relay address comes from the environment: named with its variable
+		expect(document.getElementById('public-relay-server-now')).toHaveTextContent(
+			"Empty: clients get relay.example.com:21117, from PUBLIC_RELAY_SERVER in the server's environment."
+		);
+		// No side column that says it a second time, and no group sentence pointing at one
+		expect(document.querySelector('.settings-summary')).toBeNull();
+		expect(document.getElementById('public-endpoints')).not.toHaveTextContent(/What clients get now/);
+		await user.type(field, 'desk.example.com');
+		expect(document.getElementById('public-server-id-now')).toBeNull();
 		const reset = screen.getByRole('button', { name: 'Reset to default: settings.general.conn_same_nat' });
 		await user.click(reset);
 		expect(screen.getByRole('checkbox', { name: /settings\.general\.conn_same_nat/ })).toBeChecked();
@@ -190,6 +201,38 @@ describe('what each row says', () => {
 		await user.click(screen.getByRole('radio', { name: /settings\.general\.conn_relay/ }));
 		expect(screen.getAllByText('Has no effect: every session goes through the relay server.')).toHaveLength(
 			2
+		);
+	});
+
+	test('the connection rules show at once, not behind a fold', async () => {
+		routes();
+		render(GeneralTab);
+		await idField();
+		for (const id of ['conn-p2p-fallback-ms', 'conn-same-nat-relay', 'conn-operator-only-outbound'])
+			expect(document.getElementById(id)?.closest('details'), id).toBeNull();
+	});
+
+	test('what the running server uses is said only while it differs from the saved strategy', async () => {
+		const same = { always_use_relay: false, p2p_fallback_ms: 2000 };
+		routes({
+			[`GET ${CONNECTION}`]: { mode: 'p2p_first', source: 'systemd', p2p_fallback_ms: 2000, runtime: same }
+		});
+		render(GeneralTab);
+		await idField();
+		expect(document.getElementById('connection-mode-runtime')).toBeNull();
+		cleanup();
+		routes({
+			[`GET ${CONNECTION}`]: {
+				mode: 'p2p_first',
+				source: 'systemd',
+				p2p_fallback_ms: 2000,
+				runtime: { always_use_relay: true }
+			}
+		});
+		render(GeneralTab);
+		await idField();
+		expect(document.getElementById('connection-mode-runtime')).toHaveTextContent(
+			'settings.general.conn_running'
 		);
 	});
 });
