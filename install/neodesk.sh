@@ -1050,22 +1050,28 @@ get_local_ip() {
     echo "127.0.0.1"
 }
 
+# ask_connection_mode: in an interactive run, asks once whether sessions
+# try a direct connection first or always go through the relay.
+ask_connection_mode() {
+    CONNECTION_MODE="${CONNECTION_MODE:-p2p_first}"
+    [ "$AUTO_MODE" = false ] && [ -z "${CONNECTION_MODE_SET:-}" ] || return 0
+    echo ""
+    print_info "Connection strategy: P2P hole punch vs relay-only routing."
+    echo -e "  ${CYAN}1)${NC} P2P first (recommended) — try direct connection, fall back to relay"
+    echo -e "  ${CYAN}2)${NC} Relay only — route all sessions through the relay server"
+    echo -ne "  ${CYAN}Select connection mode [1]:${NC} "
+    read -r _conn_choice
+    case "$_conn_choice" in
+        2) CONNECTION_MODE="relay_only" ;;
+        *) CONNECTION_MODE="p2p_first" ;;
+    esac
+    CONNECTION_MODE_SET=1
+    echo ""
+}
+
 # Resolve P2P/relay connection strategy env vars for systemd/NSSM.
 resolve_connection_mode_env() {
-    CONNECTION_MODE="${CONNECTION_MODE:-p2p_first}"
-    if [ "$AUTO_MODE" = false ] && [ -z "$CONNECTION_MODE_SET" ]; then
-        echo ""
-        print_info "Connection strategy: P2P hole punch vs relay-only routing."
-        echo -e "  ${CYAN}1)${NC} P2P first (recommended) — try direct connection, fall back to relay"
-        echo -e "  ${CYAN}2)${NC} Relay only — route all sessions through the relay server"
-        echo -ne "  ${CYAN}Select connection mode [1]:${NC} "
-        read -r _conn_choice
-        case "$_conn_choice" in
-            2) CONNECTION_MODE="relay_only" ;;
-            *) CONNECTION_MODE="p2p_first" ;;
-        esac
-        echo ""
-    fi
+    ask_connection_mode
 
     P2P_FALLBACK_MS="${P2P_FALLBACK_MS:-2000}"
     SAME_NAT_RELAY="${SAME_NAT_RELAY:-Y}"
@@ -3854,6 +3860,12 @@ prepare_postgresql() {
         print_info "PostgreSQL: the database given with --pg-uri; nothing is set up on this machine"
         return 0
     fi
+    # The database is made on this machine, so a host elsewhere could not
+    # have it
+    if ! is_local_postgresql_host; then
+        print_error "PostgreSQL on $POSTGRESQL_HOST: give a database on another machine with --pg-uri (POSTGRESQL_URI)"
+        return 1
+    fi
     install_postgresql || { print_error "PostgreSQL installation failed"; return 1; }
     setup_postgresql_database || { print_error "PostgreSQL setup failed"; return 1; }
 }
@@ -3889,22 +3901,34 @@ choose_database_type() {
         2)
             USE_POSTGRESQL="true"
             print_info "Selected: PostgreSQL"
-            
-            # Ask for PostgreSQL details or use defaults
             echo ""
-            read -p "PostgreSQL host [$POSTGRESQL_HOST]: " pg_host
-            POSTGRESQL_HOST="${pg_host:-$POSTGRESQL_HOST}"
-            
-            read -p "PostgreSQL port [$POSTGRESQL_PORT]: " pg_port
-            POSTGRESQL_PORT="${pg_port:-$POSTGRESQL_PORT}"
-            
-            read -p "PostgreSQL database [$POSTGRESQL_DB]: " pg_db
+            local _menu_items=(
+                $'On this machine\tInstalls PostgreSQL here and creates the database and its user'
+                $'An existing database\tOn this or another machine, given as a connection URI'
+            )
+            local _menu_returns=( 1 2 )
+            menu_choose "PostgreSQL" "Where the database is"
+            if [ "${MENU_CHOICE:-1}" = 2 ]; then
+                local pg_uri=""
+                while [ -z "$pg_uri" ]; do
+                    read -rp "Connection URI (postgres://user:password@host:5432/database): " pg_uri || return 1
+                    if ! is_postgres_url "$pg_uri"; then
+                        print_warning "The URI starts with postgres:// or postgresql://"
+                        pg_uri=""
+                    fi
+                done
+                POSTGRESQL_URI="$pg_uri"
+                return 0
+            fi
+
+            # The database on this machine: its name, user and password
+            read -rp "Database name [$POSTGRESQL_DB]: " pg_db
             POSTGRESQL_DB="${pg_db:-$POSTGRESQL_DB}"
-            
-            read -p "PostgreSQL user [$POSTGRESQL_USER]: " pg_user
+
+            read -rp "Database user [$POSTGRESQL_USER]: " pg_user
             POSTGRESQL_USER="${pg_user:-$POSTGRESQL_USER}"
-            
-            read -sp "PostgreSQL password (leave empty to generate): " pg_pass
+
+            read -rsp "Password of that user (leave empty to generate): " pg_pass
             echo ""
             POSTGRESQL_PASS="${pg_pass:-}"
             ;;
@@ -4448,6 +4472,28 @@ CREDEOF
     print_success "Web console folder ready"
 }
 
+# address_host ADDRESS: the host of an address clients get (host,
+# host:port, [v6]:port, a list of them): its first host without the port.
+address_host() {
+    local host="${1%%,*}"
+    case "$host" in
+        \[*) host="${host#[}"; host="${host%%]*}" ;;
+        *:*:*) ;;
+        *:*) host="${host%%:*}" ;;
+    esac
+    printf '%s\n' "$host"
+}
+
+# san_entry HOST: HOST as a subjectAltName entry, IP: for an address and
+# DNS: for a name.
+san_entry() {
+    if [[ "$1" =~ ^[0-9.]+$ ]] || [[ "$1" == *:* ]]; then
+        printf 'IP:%s\n' "$1"
+    else
+        printf 'DNS:%s\n' "$1"
+    fi
+}
+
 generate_ssl_certificates() {
     print_step "Generating self-signed TLS certificates..."
     
@@ -4479,14 +4525,28 @@ generate_ssl_certificates() {
         san_list="$san_list,IP:$lan_ip"
     fi
     
+    # The address clients get when it was given (--relay-servers, the
+    # custom address of the relay question): the console's redirects lead
+    # there (PANEL_PUBLIC_HOST), so the certificate is for it too
+    local relay_host
+    relay_host=$(address_host "${RELAY_SERVERS:-}")
+    if [ -n "$relay_host" ] && [ "$relay_host" != "$server_ip" ] && [ "$relay_host" != "$lan_ip" ] \
+        && [ "$relay_host" != "${SSL_DOMAIN:-}" ]; then
+        san_list="$(san_entry "$relay_host"),$san_list"
+        print_info "Adding the relay address to the certificate: $relay_host"
+    else
+        relay_host=""
+    fi
+
     # Add custom domain if provided via environment variable
     if [ -n "${SSL_DOMAIN:-}" ]; then
         san_list="DNS:$SSL_DOMAIN,$san_list"
         print_info "Adding domain to certificate: $SSL_DOMAIN"
     fi
     
-    # Determine CN (Common Name) — prefer domain, fallback to public IP
-    local cn="${SSL_DOMAIN:-$server_ip}"
+    # The common name: the domain, else the relay address given, else the
+    # public IP
+    local cn="${SSL_DOMAIN:-${relay_host:-$server_ip}}"
     
     # The binary makes the pair (no OpenSSL needed); an older binary
     # without the cert command leaves it to openssl
@@ -4495,6 +4555,7 @@ generate_ssl_certificates() {
     if [ -x "$bin" ] && grep -q 'cert --out DIR' "$bin" 2>/dev/null; then
         local -a cert_args=(cert --out "$ssl_dir" --force)
         [ -n "${SSL_DOMAIN:-}" ] && cert_args+=(--host "$SSL_DOMAIN")
+        [ -n "$relay_host" ] && cert_args+=(--host "$relay_host")
         cert_args+=(--host "$server_ip")
         [ -n "$lan_ip" ] && [ "$lan_ip" != "$server_ip" ] && cert_args+=(--host "$lan_ip")
         if ! "$bin" "${cert_args[@]}" >/dev/null; then
@@ -4783,6 +4844,33 @@ remove_retired_units() {
     done
 }
 
+# ask_relay_address: in an interactive run without RELAY_SERVERS or a
+# --relay-mode, asks once for the address clients get: the public IP, the
+# LAN IP or one typed in.
+ask_relay_address() {
+    [ "$AUTO_MODE" = false ] && [ -z "${RELAY_SERVERS:-}" ] && [ "${RELAY_MODE:-auto}" = "auto" ] \
+        && [ "${RELAY_ASKED:-false}" != true ] || return 0
+    local _local_ip _relay_choice
+    _local_ip=$(get_local_ip)
+    echo ""
+    print_info "Relay server address controls how clients connect for remote sessions."
+    echo -e "  ${CYAN}1)${NC} Internet / public  ${DIM}(auto-detect public IP — default)${NC}"
+    echo -e "  ${CYAN}2)${NC} LAN only           ${DIM}(use this server's local IP: $_local_ip)${NC}"
+    echo -e "  ${CYAN}3)${NC} Custom address     ${DIM}(enter a specific IP or host)${NC}"
+    echo -ne "  ${CYAN}Select relay mode [1]:${NC} "
+    read -r _relay_choice
+    case "$_relay_choice" in
+        2) RELAY_MODE="local" ;;
+        3)
+            echo -ne "  ${CYAN}Enter relay address (IP or host[:port]):${NC} "
+            read -r RELAY_SERVERS
+            ;;
+        *) RELAY_MODE="auto" ;;
+    esac
+    RELAY_ASKED=true
+    echo ""
+}
+
 setup_services() {
     print_step "Configuring the systemd service..."
 
@@ -4796,31 +4884,13 @@ setup_services() {
 
     # Relay address: RELAY_SERVERS, else the mode (auto = public IP, local =
     # LAN IP), asked for in an interactive run
-    if [ "$AUTO_MODE" = false ] && [ -z "$RELAY_SERVERS" ] && [ "${RELAY_MODE:-auto}" = "auto" ]; then
-        local _local_ip
-        _local_ip=$(get_local_ip)
-        echo ""
-        print_info "Relay server address controls how clients connect for remote sessions."
-        echo -e "  ${CYAN}1)${NC} Internet / public  ${DIM}(auto-detect public IP — default)${NC}"
-        echo -e "  ${CYAN}2)${NC} LAN only           ${DIM}(use this server's local IP: $_local_ip)${NC}"
-        echo -e "  ${CYAN}3)${NC} Custom address     ${DIM}(enter a specific IP or host)${NC}"
-        echo -ne "  ${CYAN}Select relay mode [1]:${NC} "
-        read -r _relay_choice
-        case "$_relay_choice" in
-            2) RELAY_MODE="local" ;;
-            3)
-                echo -ne "  ${CYAN}Enter relay address (IP or host[:port]):${NC} "
-                read -r RELAY_SERVERS
-                ;;
-            *) RELAY_MODE="auto" ;;
-        esac
-        echo ""
-    fi
+    ask_relay_address
 
-    local server_ip
+    local server_ip relay_mode="$RELAY_MODE"
     server_ip=$(resolve_relay_ip)
     resolve_connection_mode_env
-    print_info "Relay server IP: $server_ip (mode: ${RELAY_SERVERS:+fixed}${RELAY_SERVERS:-$RELAY_MODE})"
+    [ -n "${RELAY_SERVERS:-}" ] && relay_mode=fixed
+    print_info "Relay server IP: $server_ip (mode: $relay_mode)"
     set_panel_public_host "${SSL_DOMAIN:-$server_ip}"
 
     local signal_rate_limit="${SIGNAL_RATE_LIMIT_PER_IP:-20}"
@@ -5121,15 +5191,28 @@ update_go_install() {
     note_console_port_move "$port_named"
 }
 
+# credentials_box TITLE PASSWORD: the admin's sign-in in a box, with the
+# command that gives a new password. The right border stays in line for a
+# password of up to 42 characters.
+credentials_box() {
+    local width=56 line
+    local -a rows=("  Login:    admin" "  Password: $2" "" "  Lost it? sudo $(basename "$MANAGER_COMMAND") --reset-password")
+    local bar
+    bar=$(printf '═%.0s' $(seq 1 "$width"))
+    echo -e "${GREEN}╔${bar}╗${NC}"
+    printf "${GREEN}║${NC}${BOLD}%-${width}s${NC}${GREEN}║${NC}\n" "  $1"
+    echo -e "${GREEN}╠${bar}╣${NC}"
+    for line in "${rows[@]}"; do
+        printf "${GREEN}║${NC}%-${width}s${GREEN}║${NC}\n" "$line"
+    done
+    echo -e "${GREEN}╚${bar}╝${NC}"
+}
+
 # Shows the admin's first password, once: only when this run made the
 # console's .env. The server makes the admin at its first start from
 # DEFAULT_ADMIN_PASSWORD.
 create_admin_user() {
-    print_step "Admin account..."
-
     if [ "${FRESH_CONSOLE_ENV:-false}" != true ]; then
-        print_info "The admin account and its password stay as they are."
-        print_info "Forgot it? sudo $(basename "$MANAGER_COMMAND") --reset-password"
         return 0
     fi
     local admin_password="${ADMIN_PASSWORD:-}"
@@ -5139,12 +5222,7 @@ create_admin_user() {
 
     if [ -n "$admin_password" ]; then
         echo ""
-        echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${GREEN}║            PANEL LOGIN CREDENTIALS                    ║${NC}"
-        echo -e "${GREEN}╠════════════════════════════════════════════════════════╣${NC}"
-        echo -e "${GREEN}║  Login:    ${WHITE}admin${GREEN}                                     ║${NC}"
-        echo -e "${GREEN}║  Password: ${WHITE}${admin_password}${GREEN}                         ║${NC}"
-        echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
+        credentials_box "Web console sign-in (shown only now)" "$admin_password"
         echo ""
 
         if [ "$STORE_ADMIN_CREDENTIALS" = "true" ]; then
@@ -5157,13 +5235,9 @@ CREDEOF
             chown root:root "$RUSTDESK_PATH/.admin_credentials" 2>/dev/null || true
             chmod 600 "$RUSTDESK_PATH/.admin_credentials"
             print_info "Credentials saved in: $RUSTDESK_PATH/.admin_credentials (root-only, 0600)"
-        else
-            print_warning "Credentials are not persisted by default (security hardening)."
-            print_info "Set STORE_ADMIN_CREDENTIALS=true to restore legacy behavior."
         fi
     else
-        print_warning "No admin password available for display"
-        print_info "Use option 6 (Password reset) if needed"
+        print_warning "No admin password to show; set one with: sudo $(basename "$MANAGER_COMMAND") --reset-password"
     fi
 }
 
@@ -5195,8 +5269,8 @@ print_install_summary() {
     relay=$(relay_port)
     id_server="$host"
     [ "$signal" = 21116 ] || id_server="$host:$signal"
-    relay_server="$host"
-    [ "$relay" = 21117 ] || relay_server="$host:$relay"
+    # The relay with its port, as the console's Client setup shows it
+    relay_server="$host:$relay"
 
     echo ""
     echo -e "${GREEN}${BOLD}NeoDesk is installed${NC}"
@@ -5211,7 +5285,8 @@ print_install_summary() {
         echo "                 The certificate is self-signed, so the browser warns once."
     fi
     if [ "${FRESH_CONSOLE_ENV:-false}" = true ]; then
-        echo "  First sign-in: user admin, with the password shown above (it is not shown again)"
+        echo "  First sign-in: user admin, with the password shown above (it is not shown again;"
+        echo "                 lost it? sudo $cmd --reset-password)"
     else
         echo "  Sign in:       user admin; forgot the password? sudo $cmd --reset-password"
     fi
@@ -5252,6 +5327,27 @@ forget_first_admin_password() {
 # Installation
 #===============================================================================
 
+# ask_install_questions: the questions of an interactive install that are
+# left after the database: the address clients get, the connection
+# strategy, and whether HTTPS ends at a reverse proxy or gets another
+# certificate than the self-signed one (INSTALL_TLS_STEP proxy or
+# certificate, done after the install).
+ask_install_questions() {
+    INSTALL_TLS_STEP=""
+    [ "$AUTO_MODE" = false ] || return 0
+    ask_relay_address
+    ask_connection_mode
+    [ "$MINIMAL_MODE" != true ] || return 0
+    echo ""
+    print_info "The console gets HTTPS with a self-signed certificate on port 5443."
+    if confirm "Will a reverse proxy (Caddy, nginx) handle HTTPS for the console instead?"; then
+        INSTALL_TLS_STEP=proxy
+    elif confirm "Replace the self-signed certificate with Let's Encrypt or your own after the install?"; then
+        INSTALL_TLS_STEP=certificate
+    fi
+    echo ""
+}
+
 # Minimal installation: the same server with its web console off
 # (CONSOLE_PORT=0 in .env); setting a port there turns it on.
 do_install_minimal() {
@@ -5290,8 +5386,10 @@ do_install() {
     print_info "Starting NeoDesk v$VERSION installation..."
     echo ""
 
-    # Choose database type (SQLite or PostgreSQL)
-    choose_database_type
+    # Every question comes before the install: the database, the address
+    # clients get, the connection strategy and the HTTPS set-up
+    choose_database_type || return 1
+    ask_install_questions
 
     # Stop services if running (prevents "Text file busy" error)
     graceful_stop_services
@@ -5320,7 +5418,6 @@ do_install() {
     fi
 
     setup_services
-    create_admin_user
 
     # Configure firewall rules
     print_step "Configuring firewall rules..."
@@ -5332,32 +5429,28 @@ do_install() {
     fi
     [ "$install_ok" = true ] && forget_first_admin_password
 
+    # The HTTPS set-up chosen at the start, before the summary, which it
+    # changes (a reverse proxy closes the console's ports)
+    if [ "$install_ok" = true ]; then
+        case "${INSTALL_TLS_STEP:-}" in
+            proxy) do_configure_reverse_proxy || true ;;
+            certificate) do_configure_ssl || true ;;
+        esac
+    fi
+    [ "$install_ok" = true ] && install_manager_command
+
     echo ""
     if [ "$install_ok" = true ]; then
         print_success "Installation completed successfully!"
     else
         print_warning "Installation finished but neodesk-server does not answer."
-        print_info "Run option 8 (Diagnostics) to investigate."
+        print_info "Look into it with: sudo $(basename "$MANAGER_COMMAND"), then Diagnostics"
     fi
-    echo ""
 
+    # The password and the summary come last, so nothing pushes them off
+    # the screen
+    create_admin_user
     print_install_summary
-
-    # Offer TLS configuration for fresh installs
-    if [ "$install_ok" = true ] && [ "$AUTO_MODE" = false ] && [ "$MINIMAL_MODE" != true ]; then
-        echo ""
-        print_info "Production TLS options:"
-        print_info "  • External reverse proxy (Caddy/Nginx on :443) — recommended when a proxy already handles certificates"
-        print_info "  • Enterprise TLS (Option 5 in SSL menu) — NeoDesk-native HTTPS on panel + signal/relay"
-        echo ""
-        if confirm "Will TLS terminate at an external reverse proxy (Caddy/Nginx)?"; then
-            do_configure_reverse_proxy || true
-        elif confirm "Would you like to configure HTTPS Enterprise now? (Option 5 in SSL menu)"; then
-            do_configure_ssl
-        fi
-    fi
-
-    [ "$install_ok" = true ] && install_manager_command
 
     if [ "$AUTO_MODE" = false ]; then
         press_enter
@@ -6177,12 +6270,7 @@ do_reset_password() {
         # start with a forced password update
         forget_first_admin_password
 
-        echo -e "${GREEN}╔════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${GREEN}║              NEW LOGIN CREDENTIALS                       ║${NC}"
-        echo -e "${GREEN}╠════════════════════════════════════════════════════════╣${NC}"
-        echo -e "${GREEN}║  Login:    ${WHITE}admin${GREEN}                                     ║${NC}"
-        echo -e "${GREEN}║  Password: ${WHITE}${new_password}${GREEN}                         ║${NC}"
-        echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
+        credentials_box "New web console sign-in (shown only now)" "$new_password"
 
         # Persist credentials only when explicitly requested.
         if [ "$STORE_ADMIN_CREDENTIALS" = "true" ]; then
@@ -8079,7 +8167,10 @@ main() {
         if [ "${NEODESK_SETUP_CALLED_AS:-}" = neodesk ]; then
             echo "Run: sudo neodesk ${NEODESK_ORIG_ARGV[*]}"
         else
-            echo "Run: sudo $0"
+            case "$0" in
+                bash|-bash|*/bash) echo "Run: curl -fsSL https://neode.sk/neodesk.sh | sudo bash" ;;
+                *) echo "Run: sudo $0" ;;
+            esac
         fi
         exit 1
     fi
