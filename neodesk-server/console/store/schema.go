@@ -82,10 +82,16 @@ func (d *DB) Migrate(ctx context.Context) error {
 		}
 		logging.Logf(logComponent, "WARN: Migration %s error: %v", failed.name, err)
 	}
+	newInstall := slices.Contains(m.created, "settings")
+	d.newInstall.Store(newInstall)
+	for _, n := range m.notes {
+		if !n.added || !newInstall {
+			logging.Logf(logComponent, "%s", n.line)
+		}
+	}
 	if len(m.created) > 0 {
 		logging.Logf(logComponent, "Migration: created %d tables: %s", len(m.created), strings.Join(m.created, ", "))
 	}
-	d.newInstall.Store(slices.Contains(m.created, "settings"))
 
 	shape, err := inspect(ctx, conn, d.dialect)
 	if err != nil {
@@ -132,6 +138,26 @@ type step struct {
 type migration struct {
 	dialect Dialect
 	created []string
+	// notes are what the steps did, logged in order after the migration
+	notes []migrationNote
+}
+
+// migrationNote is a line for the log of the migration. An added line
+// names a column or row the migration added; on a new database those are
+// part of setting it up and are not logged.
+type migrationNote struct {
+	line  string
+	added bool
+}
+
+// note keeps a line for the log of the migration.
+func (m *migration) note(format string, args ...any) {
+	m.notes = append(m.notes, migrationNote{line: fmt.Sprintf(format, args...)})
+}
+
+// noteAdded keeps the line for a column or row the migration added.
+func (m *migration) noteAdded(format string, args ...any) {
+	m.notes = append(m.notes, migrationNote{line: fmt.Sprintf(format, args...), added: true})
 }
 
 // run runs the steps in one transaction. When one fails nothing of the
@@ -142,19 +168,19 @@ func (m *migration) run(ctx context.Context, conn *sql.Conn, steps []step) (fail
 	if err != nil {
 		return step{name: steps[0].name}, fmt.Errorf("begin: %w", err)
 	}
-	created := len(m.created)
+	created, notes := len(m.created), len(m.notes)
 	defer func() {
 		if p := recover(); p != nil {
 			_ = sqlTx.Rollback()
 			panic(p)
 		}
 		if err != nil {
-			m.created = m.created[:created]
+			m.created, m.notes = m.created[:created], m.notes[:notes]
 			_ = sqlTx.Rollback()
 			return
 		}
 		if cErr := sqlTx.Commit(); cErr != nil {
-			m.created = m.created[:created]
+			m.created, m.notes = m.created[:created], m.notes[:notes]
 			failed, err = step{name: steps[len(steps)-1].name}, fmt.Errorf("commit: %w", cErr)
 		}
 	}()
@@ -396,7 +422,7 @@ func auditTargets(definition string) []step {
 func accessTokensAsHashes() step {
 	return step{
 		name: "keep access tokens as their hash",
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
 			type tokenRow struct {
 				id    int64
 				token string
@@ -424,7 +450,7 @@ func accessTokensAsHashes() step {
 				}
 			}
 			if len(plain) > 0 {
-				logging.Logf(logComponent, "Migration: kept %d access tokens as their hash only", len(plain))
+				m.note("Migration: kept %d access tokens as their hash only", len(plain))
 			}
 			return nil
 		},
@@ -439,13 +465,13 @@ func accessTokensAsHashes() step {
 func dropBackupShareLogin() step {
 	return step{
 		name: "drop the backup share login",
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
 			res, err := tx.Exec(ctx, `DELETE FROM settings WHERE key = 'scheduled_backup_smb'`)
 			if err != nil {
 				return err
 			}
 			if n, err := res.RowsAffected(); err == nil && n > 0 {
-				logging.Logf(logComponent, "Migration: deleted the scheduled backup's network share login")
+				m.note("Migration: deleted the scheduled backup's network share login")
 			}
 			return nil
 		},
@@ -462,7 +488,7 @@ func dropBackupShareLogin() step {
 func widenConditionValue() step {
 	return step{
 		name: "widen alert_rules.condition_value",
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
 			var dataType string
 			err := tx.QueryRow(ctx, `SELECT data_type FROM information_schema.columns
 				WHERE table_schema = current_schema() AND table_name = 'alert_rules' AND column_name = 'condition_value'`).Scan(&dataType)
@@ -507,7 +533,7 @@ func widenConditionValue() step {
 					return err
 				}
 			}
-			logging.Logf(logComponent, "Migration: widened alert_rules.condition_value to double precision")
+			m.note("Migration: widened alert_rules.condition_value to double precision")
 			return nil
 		},
 	}
@@ -628,8 +654,8 @@ func addColumn(tolerant bool, table, column, definition string) step {
 	return step{
 		name:    "add " + table + "." + column,
 		lenient: tolerant,
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
-			return ensureColumn(ctx, tx, table, column, definition)
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
+			return ensureColumn(ctx, tx, m, table, column, definition)
 		},
 	}
 }
@@ -642,7 +668,7 @@ func addTimeColumn(table, column string) step {
 	return step{
 		name:    "add " + table + "." + column,
 		lenient: lenient,
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
 			cols, err := tableColumns(ctx, tx, table)
 			if err != nil {
 				return err
@@ -650,7 +676,7 @@ func addTimeColumn(table, column string) step {
 			if _, ok := cols[column]; ok || len(cols) == 0 {
 				return nil
 			}
-			if err := ensureColumn(ctx, tx, table, column, "TEXT"); err != nil {
+			if err := ensureColumn(ctx, tx, m, table, column, "TEXT"); err != nil {
 				return err
 			}
 			_, err = tx.tx.ExecContext(ctx, "UPDATE "+table+" SET "+column+" = datetime('now')")
@@ -660,7 +686,7 @@ func addTimeColumn(table, column string) step {
 }
 
 // ensureColumn adds the column unless the table has it or does not exist.
-func ensureColumn(ctx context.Context, tx *Tx, table, column, definition string) error {
+func ensureColumn(ctx context.Context, tx *Tx, m *migration, table, column, definition string) error {
 	cols, err := tableColumns(ctx, tx, table)
 	if err != nil {
 		return err
@@ -672,7 +698,7 @@ func ensureColumn(ctx context.Context, tx *Tx, table, column, definition string)
 	if _, err := tx.tx.ExecContext(ctx, ddl); err != nil {
 		return err
 	}
-	logging.Logf(logComponent, "Migration: added %s.%s", table, column)
+	m.noteAdded("Migration: added %s.%s", table, column)
 	return nil
 }
 
@@ -724,7 +750,7 @@ func hasTable(ctx context.Context, tx *Tx, table string) (bool, error) {
 func seedDefaultGroup(table, note string) step {
 	return step{
 		name: "seed " + table,
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
 			var n int
 			if err := tx.QueryRow(ctx, "SELECT COUNT(*) FROM "+table).Scan(&n); err != nil {
 				return err
@@ -735,7 +761,7 @@ func seedDefaultGroup(table, note string) step {
 			if _, err := tx.Exec(ctx, "INSERT INTO "+table+" (guid, name, note) VALUES (?, ?, ?)", uuid.NewString(), "Default", note); err != nil {
 				return err
 			}
-			logging.Logf(logComponent, "Migration: added the default row to %s", table)
+			m.noteAdded("Migration: added the default row to %s", table)
 			return nil
 		},
 	}
@@ -780,7 +806,7 @@ func DeviceTokenExpiryText(dialect Dialect) string {
 func deviceTokensWithoutExpiry() step {
 	return step{
 		name: "keep device tokens without an expiry",
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
 			expiry := DeviceTokenExpiryText(tx.Dialect())
 			res, err := tx.Exec(ctx, `UPDATE access_tokens SET expires_at = ?
 				WHERE token_kind = 'device' AND NOT revoked AND expires_at < ?`, expiry, expiry)
@@ -788,7 +814,7 @@ func deviceTokensWithoutExpiry() step {
 				return err
 			}
 			if n, err := res.RowsAffected(); err == nil && n > 0 {
-				logging.Logf(logComponent, "Migration: kept %d device tokens without an expiry", n)
+				m.note("Migration: kept %d device tokens without an expiry", n)
 			}
 			return nil
 		},
@@ -812,7 +838,7 @@ const liveConsoleDeviceToken = `token_kind = 'device' AND NOT revoked
 func deviceTokensHeldByNoAccount() step {
 	return step{
 		name: "move device tokens out of access_tokens",
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
 			if ok, err := hasTable(ctx, tx, "device_tokens"); err != nil || !ok {
 				return err
 			}
@@ -827,7 +853,7 @@ func deviceTokensHeldByNoAccount() step {
 				return err
 			}
 			if n, err := res.RowsAffected(); err == nil && n > 0 {
-				logging.Logf(logComponent, "Migration: moved %d device tokens into device_tokens", n)
+				m.note("Migration: moved %d device tokens into device_tokens", n)
 			}
 			return nil
 		},
@@ -844,8 +870,8 @@ const accessTokenHashIndex = "CREATE UNIQUE INDEX IF NOT EXISTS idx_access_token
 func accessTokenHashes() step {
 	return step{
 		name: "hash access tokens",
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
-			if err := ensureColumn(ctx, tx, "access_tokens", "token_hash", "TEXT"); err != nil {
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
+			if err := ensureColumn(ctx, tx, m, "access_tokens", "token_hash", "TEXT"); err != nil {
 				return err
 			}
 			if _, err := tx.Exec(ctx, accessTokenHashIndex); err != nil {
@@ -878,7 +904,7 @@ func accessTokenHashes() step {
 				}
 			}
 			if len(missing) > 0 {
-				logging.Logf(logComponent, "Migration: hashed %d access tokens", len(missing))
+				m.note("Migration: hashed %d access tokens", len(missing))
 			}
 			return nil
 		},
@@ -891,8 +917,8 @@ func agentBundleSlugs() step {
 	return step{
 		name:    "agent_bundles.slug",
 		lenient: true,
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
-			if err := ensureColumn(ctx, tx, "agent_bundles", "slug", "TEXT DEFAULT NULL"); err != nil {
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
+			if err := ensureColumn(ctx, tx, m, "agent_bundles", "slug", "TEXT DEFAULT NULL"); err != nil {
 				return err
 			}
 			if _, err := tx.Exec(ctx, `CREATE UNIQUE INDEX IF NOT EXISTS idx_agent_bundles_slug ON agent_bundles (slug) WHERE slug IS NOT NULL AND slug != ''`); err != nil {
@@ -944,7 +970,7 @@ func agentBundleSlugs() step {
 				taken[slug] = true
 			}
 			if len(missing) > 0 {
-				logging.Logf(logComponent, "Migration: gave %d agent bundles a slug", len(missing))
+				m.note("Migration: gave %d agent bundles a slug", len(missing))
 			}
 			return nil
 		},
@@ -978,13 +1004,13 @@ func agentBundleProductTypes() step {
 	return step{
 		name:    "agent_bundles.product_type",
 		lenient: true,
-		run: func(ctx context.Context, tx *Tx, _ *migration) error {
+		run: func(ctx context.Context, tx *Tx, m *migration) error {
 			cols, err := tableColumns(ctx, tx, "agent_bundles")
 			if err != nil {
 				return err
 			}
 			state, existed := cols[column]
-			if err := ensureColumn(ctx, tx, "agent_bundles", column, definition); err != nil {
+			if err := ensureColumn(ctx, tx, m, "agent_bundles", column, definition); err != nil {
 				return err
 			}
 			if tx.dialect == Postgres && !existed {
@@ -995,7 +1021,7 @@ func agentBundleProductTypes() step {
 				return err
 			}
 			if n, err := res.RowsAffected(); err == nil && n > 0 {
-				logging.Logf(logComponent, "Migration: set product_type of %d agent bundles", n)
+				m.note("Migration: set product_type of %d agent bundles", n)
 			}
 			if tx.dialect != Postgres {
 				return nil
@@ -1004,13 +1030,13 @@ func agentBundleProductTypes() step {
 				if _, err := tx.Exec(ctx, `ALTER TABLE agent_bundles ALTER COLUMN product_type SET NOT NULL`); err != nil {
 					return err
 				}
-				logging.Logf(logComponent, "Migration: agent_bundles.product_type is now NOT NULL")
+				m.note("Migration: agent_bundles.product_type is now NOT NULL")
 			}
 			if !strings.Contains(state.defaultSQL, "neodesk-support") {
 				if _, err := tx.Exec(ctx, `ALTER TABLE agent_bundles ALTER COLUMN product_type SET DEFAULT 'neodesk-support'`); err != nil {
 					return err
 				}
-				logging.Logf(logComponent, "Migration: agent_bundles.product_type has its default")
+				m.note("Migration: agent_bundles.product_type has its default")
 			}
 			return nil
 		},

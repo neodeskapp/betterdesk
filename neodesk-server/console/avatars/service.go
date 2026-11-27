@@ -14,6 +14,9 @@
 // a PNG, JPEG, WebP or GIF file, the declared type must agree, and the
 // file may have 512 KB. It is not decoded, resized or written anew; the
 // stored bytes are the bytes that came.
+//
+// Thumbnail makes a small copy of a picture for the quick support app,
+// which shows the helper the server vouches for.
 package avatars
 
 import (

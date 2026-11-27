@@ -1,15 +1,20 @@
 package main
 
 import (
+	"bytes"
 	"errors"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
 	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 func TestWriteBootstrapAdminCredentialsDoesNotOverwriteExistingFile(t *testing.T) {
@@ -362,5 +367,49 @@ func TestAConsoleThatCannotStartStopsNothingElse(t *testing.T) {
 	withoutConsoleOnError(func() { stopped = true }, nil)()
 	if !stopped {
 		t.Error("a console that started is not stopped")
+	}
+}
+
+// DOCKER-QUICK-13: a fresh SQLite install's start says once that the panel
+// sync reads the main file, and does not go on to call that file a legacy
+// auth.db.
+func TestAttachPanelSyncNamesTheMainFileOnce(t *testing.T) {
+	dir := t.TempDir()
+	mainPath := filepath.Join(dir, "db_v2.sqlite3")
+	database, err := db.OpenSQLite(mainPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { database.Close() })
+	if err := database.Migrate(); err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	prev := log.Writer()
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(prev) })
+	apiSrv := api.New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
+	attachPanelSync(apiSrv, nil, database, mainPath, filepath.Join(dir, "data", "auth.db"))()
+	if out := buf.String(); strings.Contains(out, "legacy auth.db") || !strings.Contains(out, "RustDesk panel sync: main SQLite database") {
+		t.Fatalf("log:\n%s", out)
+	}
+}
+
+// LINUX-NATIVE-20: a migration that takes a while (the first start sets
+// up every table) is announced while it runs; a quick one says nothing.
+func TestSlowMigrationIsAnnounced(t *testing.T) {
+	var buf bytes.Buffer
+	prev := log.Writer()
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(prev) })
+
+	if err := migrateSaying(func() error { return nil }, time.Second); err != nil || buf.Len() != 0 {
+		t.Fatalf("quick migration: %v, log %q", err, buf.String())
+	}
+	if err := migrateSaying(func() error { time.Sleep(200 * time.Millisecond); return nil }, 20*time.Millisecond); err != nil {
+		t.Fatal(err)
+	}
+	if out := buf.String(); !strings.Contains(out, "Database: setting up its tables") || !strings.Contains(out, "Database: tables ready") {
+		t.Fatalf("slow migration log %q", out)
 	}
 }

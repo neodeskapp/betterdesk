@@ -24,7 +24,8 @@ export const TABS = [
 	'brand',
 	'email',
 	'time',
-	'meshcentral'
+	'meshcentral',
+	'quicksupport'
 ] as const;
 export type TabId = (typeof TABS)[number];
 
@@ -40,7 +41,8 @@ export const ADMIN_TABS: readonly TabId[] = [
 	'joining',
 	'email',
 	'time',
-	'meshcentral'
+	'meshcentral',
+	'quicksupport'
 ];
 
 /** The tab's name: page title, breadcrumb and search results */
@@ -54,7 +56,8 @@ export const TAB_TITLE: Readonly<Record<TabId, string>> = {
 	brand: 'settings.tab_brand',
 	email: 'settings.tab_email',
 	time: 'settings.tab_time',
-	meshcentral: 'nav.meshcentral'
+	meshcentral: 'nav.meshcentral',
+	quicksupport: 'settings.tab_quicksupport'
 };
 
 /**

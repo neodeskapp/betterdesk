@@ -112,6 +112,16 @@
 				"countId": null
 			},
 			{
+				"page": "quick-support-feedback",
+				"href": "/help-requests/feedback",
+				"text": "Feedback",
+				"group": "",
+				"core": true,
+				"keywords": "feedback quick support rating stars answers survey",
+				"external": false,
+				"countId": null
+			},
+			{
 				"page": "tickets",
 				"href": "/tickets",
 				"text": "Tickets",
@@ -463,6 +473,16 @@
 				"group": "Console",
 				"core": false,
 				"keywords": "meshcentral mesh meshagent",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:quicksupport",
+				"href": "/settings?tab=quicksupport",
+				"text": "Quick support",
+				"group": "Console",
+				"core": false,
+				"keywords": "quick support feedback form questions survey",
 				"external": false,
 				"countId": null
 			},

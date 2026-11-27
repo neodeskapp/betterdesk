@@ -26,6 +26,7 @@ export const TAB_TERMS: Readonly<Record<string, string>> = {
 	email: 'email e-mail mail smtp',
 	time: 'time zeit uhr clock',
 	meshcentral: 'mesh meshcentral meshagent',
+	quicksupport: 'quick support schnellhilfe feedback rückmeldung survey umfrage',
 	'server-config-files': 'server advanced erweitert expert config konfiguration dateien',
 	policies: 'policy policies organization richtlinie richtlinien organisation',
 	permissions: 'role roles permission rights access rolle rollen berechtigung rechte zugriff'
@@ -59,6 +60,7 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'availability-history-enabled': 'uptime online history verlauf erreichbarkeit',
 	'availability-history-retention': 'retention keep days aufbewahrung tage',
 	'mesh-settings-panel': 'meshcentral meshagent mesh',
+	'qs-feedback-questions': 'feedback survey stars rating fragen sterne bewertung umfrage',
 	'mesh-groups-form': 'meshcentral mesh groups gruppen',
 	'mesh-msh-name': 'msh meshagent',
 	'mesh-recordings': 'recording aufzeichnung',

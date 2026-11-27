@@ -143,6 +143,7 @@ func (s *Server) onboardRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/onboard/devices/{id}/key-request", s.inProcessOnly(s.handleDeviceKeyRequest))
 	mux.HandleFunc("POST /api/onboard/devices/{id}/key-request/approve", s.inProcessOnly(s.handleApproveDeviceKey))
 	s.onboardSessionRoutes(mux)
+	s.onboardFeedbackRoutes(mux)
 }
 
 // inProcessOnly answers 404 to a request that did not come through

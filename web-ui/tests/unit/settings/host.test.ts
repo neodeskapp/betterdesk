@@ -35,6 +35,7 @@ describe('settings tabs in the URL', () => {
 			'joining',
 			'ldap',
 			'meshcentral',
+			'quicksupport',
 			'sso',
 			'time'
 		]);

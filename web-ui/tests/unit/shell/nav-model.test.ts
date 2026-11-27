@@ -45,7 +45,8 @@ describe('pageKey (lib/consoleNav.js pageKey)', () => {
 		['/generator', '', 'devices-add'],
 		['/keys', '', 'devices-add'],
 		['/pairing', '', 'devices-add'],
-		['/help-requests', '', 'help-requests']
+		['/help-requests', '', 'help-requests'],
+		['/help-requests/feedback', '', 'quick-support-feedback']
 	])('%s%s is %s', (path, search, key) => {
 		expect(pageKey(path, search)).toBe(key);
 	});
