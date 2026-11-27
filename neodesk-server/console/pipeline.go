@@ -101,6 +101,7 @@ func (s *Server) buildPipeline() http.Handler {
 // begin prepares a request for the pipeline: the accessors of package kit.
 func (s *Server) begin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.proxyHint.note(r, s.cfg.TrustProxy)
 		next.ServeHTTP(w, kit.Begin(r, s.cfg.TrustProxy, s.deps.I18n.Bundle))
 	})
 }

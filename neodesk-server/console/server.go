@@ -142,6 +142,8 @@ type Server struct {
 	// impersonation holds "Sign in as" to read-only (package
 	// impersonation): a step of the pipeline and the socket upgrades
 	impersonation *impersonation.Service
+	// proxyHint logs once that a proxy TRUST_PROXY ignores is in front
+	proxyHint untrustedProxyHint
 }
 
 // clientAPIPort is the client API port while the console listens on it

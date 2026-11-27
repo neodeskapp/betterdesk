@@ -1,7 +1,10 @@
 package config
 
 import (
+	"bytes"
+	"log"
 	"net"
+	"strings"
 	"testing"
 )
 
@@ -92,4 +95,35 @@ func mustParseCIDR(t *testing.T, cidr string) *net.IPNet {
 		t.Fatal(err)
 	}
 	return n
+}
+
+// HTTPS-14: TRUST_PROXY without TRUSTED_PROXIES, as the installer's
+// Traefik setup has it, logs what it means with the value as written,
+// not that headers will be IGNORED.
+func TestTrustProxyWithoutListSaysWhatItMeans(t *testing.T) {
+	var buf bytes.Buffer
+	prev := log.Writer()
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(prev) })
+	t.Setenv("TRUST_PROXY", "1")
+
+	cfg := DefaultConfig()
+	cfg.TrustProxy = true
+	cfg.WarnProxyTrustMisconfig()
+	out := buf.String()
+	for _, want := range []string{"TRUST_PROXY=1 without TRUSTED_PROXIES", "the console trusts its proxy", "21114, 21118, 21119"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("log %q, want %q in it", out, want)
+		}
+	}
+	if strings.Contains(out, "IGNORED") || strings.Contains(out, "=Y") {
+		t.Errorf("log reads like a misconfiguration: %q", out)
+	}
+
+	buf.Reset()
+	cfg.TrustedProxies, _ = ParseTrustedProxies("10.0.0.0/8")
+	cfg.WarnProxyTrustMisconfig()
+	if buf.Len() != 0 {
+		t.Errorf("logged with TRUSTED_PROXIES set: %q", buf.String())
+	}
 }
