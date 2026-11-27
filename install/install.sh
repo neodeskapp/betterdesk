@@ -46,6 +46,7 @@ NEODESK_DOMAIN="${NEODESK_DOMAIN:-}"
 LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
 LETSENCRYPT_STAGING=false
 NO_TRAEFIK=false
+NO_IPV6=false
 SKIP_DOCKER_INSTALL=false
 SKIP_FIREWALL=false
 IMPORT_KEYS=""
@@ -207,6 +208,9 @@ Options (pass them after "bash -s --"):
                                  staging server (for tests)
   --no-traefik                   Docker: remove Traefik again; the console
                                  answers on its own port
+  --no-ipv6                      Docker: a new install without IPv6 on the
+                                 containers' network (on by default with
+                                 Docker Engine 27 or newer)
   --import-keys FOLDER           Docker: the key pair of a RustDesk server
                                  (id_ed25519 and id_ed25519.pub in FOLDER), so
                                  its clients keep working
@@ -257,6 +261,7 @@ while [ $# -gt 0 ]; do
         --domain) NEODESK_DOMAIN="$2"; shift 2 ;;
         --email|--letsencrypt-email) [ $# -ge 2 ] || die "$1 needs an e-mail address"; LETSENCRYPT_EMAIL="$2"; shift 2 ;;
         --no-traefik) NO_TRAEFIK=true; shift ;;
+        --no-ipv6) NO_IPV6=true; shift ;;
         --letsencrypt-staging) LETSENCRYPT_STAGING=true; shift ;;
         --skip-docker-install) SKIP_DOCKER_INSTALL=true; shift ;;
         --skip-firewall) SKIP_FIREWALL=true; shift ;;
@@ -510,6 +515,7 @@ install_docker_mode() {
     [ -z "$LETSENCRYPT_EMAIL" ] || args+=(--email "$LETSENCRYPT_EMAIL")
     [ "$LETSENCRYPT_STAGING" != true ] || args+=(--letsencrypt-staging)
     [ "$NO_TRAEFIK" != true ] || args+=(--no-traefik)
+    [ "$NO_IPV6" != true ] || args+=(--no-ipv6)
     [ -z "$IMPORT_KEYS" ] || args+=(--import-keys "$IMPORT_KEYS")
     # The manager opens the ports in ufw or firewalld, before the container
     # starts (Let's Encrypt's challenge comes in on 80), and closes them at
