@@ -61,6 +61,7 @@
 	import SettingsGroup from '#lib/ui/settings/SettingsGroup.svelte';
 	import { SettingsDraft, saveAndConfirm } from '#lib/ui/settings/draft.svelte.ts';
 	import { sourceInfo, sourceRow } from '../sources.ts';
+	import '../side-rows.css';
 
 	const allowed = can('server.config');
 
@@ -367,7 +368,14 @@
 {#if !allowed}
 	<States message={t('settings.page.admin_only')} />
 {:else}
-	<SettingsBody summary={side} summaryLabel={t('settings.side.clock_title')} {bar}>
+	<!-- On a phone the time zone comes first; the period and the clock it decides follow -->
+	<SettingsBody
+		summary={side}
+		summaryLabel={t('settings.side.clock_title')}
+		summaryLast
+		{bar}
+		class="side-rows"
+	>
 		{#if loadError && !loaded}
 			<States kind="error" message={loadError} onretry={() => void load()} />
 		{:else if !loaded}
