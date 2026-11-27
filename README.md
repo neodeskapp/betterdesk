@@ -119,18 +119,15 @@ points at the server. A small Traefik container then gets a Let's Encrypt
 certificate and serves the console on ports 80 and 443:
 
 ```bash
-curl -fsSL https://neode.sk/install.sh | sudo bash -s -- \
-  --domain <domain> --letsencrypt-email <email-address>
+curl -fsSL https://neode.sk/install.sh | sudo bash -s -- --domain <domain>
 ```
 
-Put the DNS name in place of `<domain>` and your own address in place of
-`<email-address>`; Let's Encrypt refuses addresses at example.com.
-`neodesk-docker.sh --domain ... --email ...` does the same for an existing
-install, and `--no-traefik` turns it off again. `--letsencrypt-staging` tests
-with Let's Encrypt's staging server, whose certificate browsers don't trust. A
-later run without it keeps the staging certificate:
-[Install with Docker](https://neode.sk/docs/getting-started/docker#when-the-certificate-doesnt-come)
-says how to get a trusted one then.
+Put the DNS name in place of `<domain>`. `--email <email-address>` adds a
+contact address for the Let's Encrypt account; it is optional.
+`sudo bash /opt/neodesk/docker/neodesk-docker.sh --domain <domain>` does the
+same for an existing install, and `--no-traefik` turns it off again. Add
+`--letsencrypt-staging` to test with Let's Encrypt's staging server first; a
+later run without it gets a trusted certificate.
 
 ### Linux
 
@@ -166,8 +163,10 @@ first; that lasts until you close the window. See
    address under **Client server address**.
 3. Copy them into the client's network settings, in the ID/Relay server
    section. **Copy all** copies them together, and **Show QR** is for phones.
-   Fill in the API server too: with it empty, the client doesn't send its
-   name, system or version, and can't sign in.
+   Fill in the API server too. Left empty, the client calls port 21114 of the
+   ID server. A Docker install answers there; on Linux and Windows the
+   installers keep 21114 closed, and such a client doesn't send its name,
+   system or version and can't sign in.
 
 The device then waits under **Join requests** until someone approves
 it, as every new install starts in the Managed join mode. See
@@ -179,6 +178,7 @@ it, as every new install starts in the Managed join mode. See
 |------|----------|
 | 3375 | Web console (HTTP; 5000 up to 3.6.0-rc.4). On a Linux or Windows install it sends browsers to 5443. |
 | 5443 | Web console over HTTPS, on Linux and Windows installs |
+| 21114 | API for RustDesk clients whose API server field is empty; Docker publishes it |
 | 21115 | NAT type test |
 | 21116, TCP and UDP | ID server |
 | 21117 | Relay server |
@@ -186,8 +186,9 @@ it, as every new install starts in the Managed join mode. See
 | 21121 | API server for RustDesk clients |
 | 21122 | CDAP gateway for device agents |
 
-Open 21115 to 21117 and 21121 to the networks your devices connect from, and
-21118, 21119 and 21122 only for clients and agents that use them. Keep 3375
+Open 21115 to 21117 and 21121 to the networks your devices connect from, on
+Docker also 21114 for clients that leave the API server empty, and 21118, 21119
+and 21122 only for clients and agents that use them. Keep 3375
 and 5443 behind a reverse proxy with TLS if the console is reachable from the
 internet.
 [Ports and firewall](https://neode.sk/docs/operations/ports) and
