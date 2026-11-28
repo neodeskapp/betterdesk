@@ -79,6 +79,11 @@ type Entry struct {
 	// what makes a relay pair complete.
 	RelayServer string
 
+	// Owner is "" for an entry this pod holds, and the owner pod's name for
+	// an entry read from the Directory. A remote entry has no TCPConn or
+	// WSConn; its UDPAddr is parsed from the stored address.
+	Owner string
+
 	// Enhanced status tracking
 	FirstSeen       time.Time // When the peer was first registered in this session
 	HeartbeatCount  int64     // Total heartbeats received in this session
@@ -221,6 +226,10 @@ type Map struct {
 	mu      sync.RWMutex
 	entries map[string]*Entry // Key: peer ID
 
+	// dir is the cluster-wide directory (SetDirectory), nil when the pod
+	// runs alone. Guarded by mu.
+	dir *dirState
+
 	// Counters (atomic for lock-free reads from metrics)
 	totalRegistrations atomic.Int64
 	totalExpired       atomic.Int64
@@ -236,7 +245,29 @@ func NewMap() *Map {
 // Get returns a copy of a peer entry by ID, or nil if not found. Writing
 // to the copy changes nothing in the map: the map's methods (SetBanned,
 // SetKeys, UpdateHeartbeat and the others) change an entry under the lock.
+// With a directory, a peer registered on another pod comes from there
+// (Entry.Owner set).
 func (m *Map) Get(id string) *Entry {
+	m.mu.RLock()
+	e, ok := m.entries[id]
+	if !ok {
+		ds := m.dir
+		m.mu.RUnlock()
+		if ds == nil {
+			return nil
+		}
+		return m.remote(ds, id)
+	}
+	c := *e
+	c.IPHistory = append([]string(nil), e.IPHistory...)
+	m.mu.RUnlock()
+	return &c
+}
+
+// GetLocal is Get without the directory: a copy of the entry this pod
+// holds for id, or nil. Registration uses it, so a peer that moved here
+// from another pod registers here.
+func (m *Map) GetLocal(id string) *Entry {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	e, ok := m.entries[id]
@@ -249,14 +280,18 @@ func (m *Map) Get(id string) *Entry {
 }
 
 // Put adds or updates a peer entry. Returns the previous entry (nil if new).
+// The entry is this pod's from now on: an Owner copied from a directory
+// entry is cleared.
 func (m *Map) Put(e *Entry) *Entry {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	e.Owner = ""
 	old := m.entries[e.ID]
 	m.entries[e.ID] = e
 	if old == nil {
 		m.totalRegistrations.Add(1)
 	}
+	m.markLocked(e.ID)
 	return old
 }
 
@@ -277,6 +312,7 @@ func (m *Map) SetPKIfEmpty(id string, pk []byte) bool {
 		return true
 	}
 	e.PK = append([]byte(nil), pk...)
+	m.markLocked(id)
 	return true
 }
 
@@ -291,7 +327,10 @@ func (m *Map) SetRelayServer(id, relay string) bool {
 	if !ok {
 		return false
 	}
-	e.RelayServer = relay
+	if e.RelayServer != relay {
+		e.RelayServer = relay
+		m.markLocked(id)
+	}
 	return true
 }
 
@@ -305,10 +344,12 @@ func (m *Map) UpdateHeartbeat(id string, addr *net.UDPAddr, serial int32) bool {
 		return false
 	}
 	e.LastReg = time.Now()
+	routed := e.Serial != serial
 	e.Serial = serial
 	e.MissedBeats = 0
 	e.HeartbeatCount++
 	if addr != nil {
+		oldAddr, oldIP, oldType := e.UDPAddr, e.IP, e.ConnType
 		newIP := addr.String()
 		// Track IP changes for roaming detection
 		if e.IP != "" && e.IP != newIP {
@@ -325,6 +366,12 @@ func (m *Map) UpdateHeartbeat(id string, addr *net.UDPAddr, serial int32) bool {
 		if e.ConnType != ConnWS {
 			e.ConnType = ConnUDP
 		}
+		routed = routed || e.ConnType != oldType || oldIP != newIP || oldAddr == nil || oldAddr.String() != newIP
+	}
+	if routed {
+		m.markLocked(id)
+	} else {
+		m.markBeatLocked(id)
 	}
 	return true
 }
@@ -335,19 +382,33 @@ func (m *Map) UpdateHeartbeat(id string, addr *net.UDPAddr, serial int32) bool {
 // nil when the entry holds no parseable address.
 func (m *Map) Endpoint(id string) (ip net.IP, connType ConnType, ok bool) {
 	m.mu.RLock()
-	defer m.mu.RUnlock()
 	e, ok := m.entries[id]
-	if !ok {
+	if ok {
+		ip, connType = entryEndpoint(e)
+		m.mu.RUnlock()
+		return ip, connType, true
+	}
+	ds := m.dir
+	m.mu.RUnlock()
+	if ds == nil {
 		return nil, 0, false
 	}
+	if r := m.remote(ds, id); r != nil {
+		ip, connType = entryEndpoint(r)
+		return ip, connType, true
+	}
+	return nil, 0, false
+}
+
+func entryEndpoint(e *Entry) (net.IP, ConnType) {
 	if e.ConnType != ConnWS && e.UDPAddr != nil {
-		return e.UDPAddr.IP, e.ConnType, true
+		return e.UDPAddr.IP, e.ConnType
 	}
 	host, _, err := net.SplitHostPort(e.IP)
 	if err != nil {
 		host = e.IP
 	}
-	return net.ParseIP(host), e.ConnType, true
+	return net.ParseIP(host), e.ConnType
 }
 
 // MoveToUDP points a peer at a new UDP address, after its RegisterPk over UDP
@@ -368,18 +429,28 @@ func (m *Map) MoveToUDP(id string, addr *net.UDPAddr) bool {
 	e.ConnType = ConnUDP
 	e.WSConn = nil
 	e.LastReg = time.Now()
+	m.markLocked(id)
 	return true
 }
 
 // Keys returns copies of a peer's uuid and public key.
 func (m *Map) Keys(id string) (uuid, pk []byte, ok bool) {
 	m.mu.RLock()
-	defer m.mu.RUnlock()
 	e, ok := m.entries[id]
-	if !ok {
+	if ok {
+		uuid, pk = append([]byte(nil), e.UUID...), append([]byte(nil), e.PK...)
+		m.mu.RUnlock()
+		return uuid, pk, true
+	}
+	ds := m.dir
+	m.mu.RUnlock()
+	if ds == nil {
 		return nil, nil, false
 	}
-	return append([]byte(nil), e.UUID...), append([]byte(nil), e.PK...), true
+	if r := m.remote(ds, id); r != nil {
+		return append([]byte(nil), r.UUID...), append([]byte(nil), r.PK...), true
+	}
+	return nil, nil, false
 }
 
 // SetKeys stores a peer's public key, and its uuid unless uuid is empty.
@@ -391,6 +462,7 @@ func (m *Map) SetKeys(id string, uuid, pk []byte) bool {
 		return false
 	}
 	setKeys(e, uuid, pk)
+	m.markLocked(id)
 	return true
 }
 
@@ -413,16 +485,29 @@ func (m *Map) RefuseKey(id string, ip net.IP) bool {
 	if !ok || ip == nil || !peerEntryMatchesIP(e, ip) {
 		return false
 	}
-	e.KeyRefused = true
+	if !e.KeyRefused {
+		e.KeyRefused = true
+		m.markLocked(id)
+	}
 	return true
 }
 
 // KeyRefused reports whether the live peer's key is refused (RefuseKey).
 func (m *Map) KeyRefused(id string) bool {
 	m.mu.RLock()
-	defer m.mu.RUnlock()
 	e, ok := m.entries[id]
-	return ok && e.KeyRefused
+	if ok {
+		refused := e.KeyRefused
+		m.mu.RUnlock()
+		return refused
+	}
+	ds := m.dir
+	m.mu.RUnlock()
+	if ds == nil {
+		return false
+	}
+	r := m.remote(ds, id)
+	return r != nil && r.KeyRefused
 }
 
 // RecordRegisterPk stores the keys of an accepted RegisterPk and binds the
@@ -447,6 +532,7 @@ func (m *Map) RecordRegisterPk(id string, uuid, pk []byte, addr string) {
 			e.ConnType = ConnTCP
 		}
 	}
+	m.markLocked(id)
 }
 
 // WSHeartbeat records a heartbeat of a WebSocket peer from addr. hasPK
@@ -459,9 +545,15 @@ func (m *Map) WSHeartbeat(id string, serial int32, addr string) (hasPK, ok bool)
 		return false, false
 	}
 	e.LastReg = time.Now()
+	routed := e.Serial != serial || e.ConnType != ConnWS || e.IP != addr
 	e.Serial = serial
 	e.ConnType = ConnWS
 	e.IP = addr
+	if routed {
+		m.markLocked(id)
+	} else {
+		m.markBeatLocked(id)
+	}
 	return len(e.PK) > 0, true
 }
 
@@ -475,6 +567,7 @@ func (m *Map) BindWS(id string, conn interface{}) bool {
 	}
 	e.ConnType = ConnWS
 	e.WSConn = conn
+	m.markLocked(id)
 	return true
 }
 
@@ -524,6 +617,7 @@ func (m *Map) UnbindWS(id string, conn interface{}) {
 	defer m.mu.Unlock()
 	if e, ok := m.entries[id]; ok && e.WSConn == conn {
 		e.WSConn = nil
+		m.markLocked(id)
 	}
 }
 
@@ -535,7 +629,10 @@ func (m *Map) SetBanned(id string, banned bool) bool {
 	if !ok {
 		return false
 	}
-	e.Banned = banned
+	if e.Banned != banned {
+		e.Banned = banned
+		m.markLocked(id)
+	}
 	return true
 }
 
@@ -566,8 +663,14 @@ func (m *Map) TouchHeartbeat(id string) bool {
 	}
 	e.LastReg = time.Now()
 	e.MissedBeats = 0
+	tierChanged := e.StatusTier != StatusOnline
 	e.StatusTier = StatusOnline
 	e.HeartbeatCount++
+	if tierChanged {
+		m.markLocked(id)
+	} else {
+		m.markBeatLocked(id)
+	}
 	return true
 }
 
@@ -582,6 +685,7 @@ func (m *Map) Remove(id string) *Entry {
 	}
 	e.CloseConnections()
 	delete(m.entries, id)
+	m.markRemovedLocked(id)
 	return e
 }
 
@@ -605,6 +709,8 @@ func (m *Map) Rename(oldID, newID string) (*Entry, bool) {
 	delete(m.entries, oldID)
 	e.ID = newID
 	m.entries[newID] = e
+	m.markRemovedLocked(oldID)
+	m.markLocked(newID)
 	return e, true
 }
 
@@ -622,8 +728,14 @@ func (m *Map) TouchWSHeartbeat(conn interface{}) bool {
 		}
 		e.LastReg = time.Now()
 		e.MissedBeats = 0
+		tierChanged := e.StatusTier != StatusOnline
 		e.StatusTier = StatusOnline
 		e.HeartbeatCount++
+		if tierChanged {
+			m.markLocked(e.ID)
+		} else {
+			m.markBeatLocked(e.ID)
+		}
 		return true
 	}
 	return false
@@ -688,9 +800,15 @@ func (m *Map) CheckHeartbeats(interval time.Duration, degradedThreshold, critica
 					critical = append(critical, e.ID)
 				}
 			}
+			if e.StatusTier != newStatus {
+				m.markLocked(id)
+			}
 			e.StatusTier = newStatus
 		} else {
 			e.MissedBeats = 0
+			if e.StatusTier != StatusOnline {
+				m.markLocked(id)
+			}
 			e.StatusTier = StatusOnline
 		}
 		m.mu.Unlock()
@@ -709,6 +827,7 @@ func (m *Map) CleanExpired(timeout time.Duration) []string {
 			expired = append(expired, id)
 			e.CloseConnections()
 			delete(m.entries, id)
+			m.markRemovedLocked(id)
 		}
 	}
 	if len(expired) > 0 {
@@ -721,12 +840,19 @@ func (m *Map) CleanExpired(timeout time.Duration) []string {
 // is not refused (Entry.Reachable).
 func (m *Map) IsOnline(id string, timeout time.Duration) bool {
 	m.mu.RLock()
-	defer m.mu.RUnlock()
 	e, ok := m.entries[id]
-	if !ok {
+	if ok {
+		online := e.Reachable(timeout)
+		m.mu.RUnlock()
+		return online
+	}
+	ds := m.dir
+	m.mu.RUnlock()
+	if ds == nil {
 		return false
 	}
-	return e.Reachable(timeout)
+	r := m.remote(ds, id)
+	return r != nil && r.Reachable(timeout)
 }
 
 // OnlineStates returns a bitmask of online states for the given peer IDs.
@@ -734,10 +860,11 @@ func (m *Map) IsOnline(id string, timeout time.Duration) bool {
 // Bit layout: byte[i/8] bit (7 - i%8) = 1 if peer i is online.
 func (m *Map) OnlineStates(ids []string, timeout time.Duration) []byte {
 	m.mu.RLock()
-	defer m.mu.RUnlock()
 
 	byteCount := (len(ids) + 7) / 8
 	states := make([]byte, byteCount)
+	ds := m.dir
+	var missing []int // indexes of ids this map doesn't hold, with a directory
 
 	for i, id := range ids {
 		e, ok := m.entries[id]
@@ -745,7 +872,34 @@ func (m *Map) OnlineStates(ids []string, timeout time.Duration) []byte {
 			statesIdx := i / 8
 			bitIdx := uint(7 - i%8)
 			states[statesIdx] |= 0x01 << bitIdx
+		} else if !ok && ds != nil {
+			missing = append(missing, i)
 		}
+	}
+	m.mu.RUnlock()
+	if len(missing) == 0 {
+		return states
+	}
+
+	want := make([]string, len(missing))
+	for j, i := range missing {
+		want[j] = ids[i]
+	}
+	found := lookupMany(ds.d, want)
+	if len(found) == 0 {
+		return states
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, i := range missing {
+		r := found[ids[i]]
+		if r == nil || !r.Reachable(timeout) {
+			continue
+		}
+		if _, local := m.entries[ids[i]]; local {
+			continue // registered here in the meantime; the local entry decides
+		}
+		states[i/8] |= 0x01 << uint(7-i%8)
 	}
 	return states
 }
@@ -866,16 +1020,30 @@ func (m *Map) FindByAddr(addr *net.UDPAddr) *Entry {
 	}
 	want := normalizePeerAddr(addr.String())
 	m.mu.RLock()
-	defer m.mu.RUnlock()
 	for _, e := range m.entries {
 		if e.UDPAddr != nil && normalizePeerAddr(e.UDPAddr.String()) == want {
+			m.mu.RUnlock()
 			return e
 		}
 		if e.IP != "" && normalizePeerAddr(e.IP) == want {
+			m.mu.RUnlock()
 			return e
 		}
 	}
-	return nil
+	ds := m.dir
+	m.mu.RUnlock()
+	if ds == nil {
+		return nil
+	}
+	r, ok := ds.d.LookupAddr(want)
+	if !ok || r == nil || m.hasLocal(r.ID) {
+		return nil
+	}
+	if (r.UDPAddr == nil || normalizePeerAddr(r.UDPAddr.String()) != want) &&
+		(r.IP == "" || normalizePeerAddr(r.IP) != want) {
+		return nil // the directory's address index is behind the entry
+	}
+	return r
 }
 
 // FindByIP returns the first peer whose public IP matches.
@@ -891,14 +1059,36 @@ func (m *Map) FindByIP(ip net.IP) *Entry {
 		return nil
 	}
 	m.mu.RLock()
-	defer m.mu.RUnlock()
-	for _, e := range m.entries {
+	if e := findByIP(m.entries, ip); e != nil {
+		m.mu.RUnlock()
+		return e
+	}
+	ds := m.dir
+	m.mu.RUnlock()
+	if ds == nil {
+		return nil
+	}
+	remote := m.remoteByIP(ds, ip)
+	if len(remote) == 0 {
+		return nil
+	}
+	byID := make(map[string]*Entry, len(remote))
+	for _, e := range remote {
+		byID[e.ID] = e
+	}
+	return findByIP(byID, ip)
+}
+
+// findByIP is FindByIP over entries: a peer whose UDP address has ip
+// first, then a WS/TCP peer whose IP field has it.
+func findByIP(entries map[string]*Entry, ip net.IP) *Entry {
+	for _, e := range entries {
 		if e.UDPAddr != nil && e.UDPAddr.IP.Equal(ip) {
 			return e
 		}
 	}
 	// Second pass: WS/TCP peers keyed by IP string only.
-	for _, e := range m.entries {
+	for _, e := range entries {
 		if e.UDPAddr != nil || e.IP == "" {
 			continue
 		}
@@ -926,14 +1116,18 @@ func (m *Map) FindAllByIP(ip net.IP) []*Entry {
 		return nil
 	}
 	m.mu.RLock()
-	defer m.mu.RUnlock()
 	var out []*Entry
 	for _, e := range m.entries {
 		if peerEntryMatchesIP(e, ip) {
 			out = append(out, e)
 		}
 	}
-	return out
+	ds := m.dir
+	m.mu.RUnlock()
+	if ds == nil {
+		return out
+	}
+	return append(out, m.remoteByIP(ds, ip)...)
 }
 
 // FindWSByIP returns the first WebSocket peer whose public IP matches.

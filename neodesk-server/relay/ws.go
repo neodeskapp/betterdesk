@@ -147,6 +147,19 @@ func (s *Server) handleWSRelayUpgrade(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uuid := rr.Uuid
+	if s.meet != nil && uuid != "" {
+		if !s.awaitTicket(uuid, remoteAddr) {
+			log.Printf("[relay] WS unauthorized relay UUID from %s (rejecting)", remoteAddr)
+			wsc.Close()
+			return
+		}
+		if pod := s.meetingPod(uuid); pod != "" {
+			if !s.forwardWSLeg(ws, uuid, remoteAddr, pod) {
+				wsc.Close()
+			}
+			return
+		}
+	}
 	if !s.claimRelayUUID(uuid, remoteAddr) {
 		log.Printf("[relay] WS unauthorized relay UUID from %s (rejecting)", remoteAddr)
 		wsc.Close()

@@ -10,6 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/neodeskapp/neodesk/neodesk-server/cluster"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
+	sigServer "github.com/neodeskapp/neodesk/neodesk-server/signal"
 )
 
 // clusterRuntime is what the server shares with the other instances of its
@@ -22,6 +24,13 @@ type clusterRuntime struct {
 	// draining is set on SIGTERM: the pod reports not ready and takes no
 	// new sessions while running ones finish.
 	draining atomic.Bool
+
+	// mesh and kv reach the other pods (nil alone); signal and relay are
+	// the servers drain hands over.
+	mesh   *cluster.Mesh
+	kv     cluster.KV
+	signal *sigServer.Server
+	relay  *relay.Server
 }
 
 // dialCluster reads the cluster settings and connects to Valkey when one
@@ -87,6 +96,41 @@ func (rt *clusterRuntime) startLeases(database db.Database) {
 	if pool := postgresPool(database); rt.valkey != nil && pool != nil {
 		rt.leases = cluster.NewPGLeases(pool, rt.cfg.Name)
 	}
+}
+
+// startMesh opens the cluster port other pods call.
+func (rt *clusterRuntime) startMesh() error {
+	mesh, err := cluster.NewMesh(rt.cfg, rt.valkey)
+	if err != nil {
+		return err
+	}
+	if err := mesh.Start(rt.cfg.Port); err != nil {
+		return err
+	}
+	rt.mesh = mesh
+	rt.kv = cluster.NewValkeyKV(rt.valkey)
+	return nil
+}
+
+// drain runs on SIGTERM in a cluster, before the servers stop: the pod
+// says it is not ready, leaves the pod registry and the peer directory,
+// stops taking relay connections and gives running relay sessions the
+// shutdown grace (DECISIONS M11). Alone it does nothing.
+func (rt *clusterRuntime) drain() {
+	if rt == nil || rt.mesh == nil {
+		return
+	}
+	rt.draining.Store(true)
+	log.Printf("[cluster] Pod %s drains: no new sessions, %s for running relay sessions", rt.cfg.Name, rt.cfg.ShutdownGrace)
+	rt.mesh.Leave()
+	if rt.signal != nil {
+		rt.signal.PeerMap().Leave()
+	}
+	if rt.relay != nil {
+		left := rt.relay.Drain(rt.cfg.ShutdownGrace)
+		log.Printf("[cluster] Pod %s drained (%d relay session(s) still running)", rt.cfg.Name, left)
+	}
+	rt.mesh.Stop()
 }
 
 // ready reports whether the pod should get traffic, and why not.

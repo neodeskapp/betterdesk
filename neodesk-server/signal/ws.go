@@ -507,7 +507,7 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) (
 		id = effectiveID
 	}
 
-	existing := s.peers.Get(id)
+	existing := s.peers.GetLocal(id)
 	knownPeer := existing != nil
 	var dbPeer *db.Peer
 	if !knownPeer {
@@ -603,7 +603,9 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) (
 		ConnType: peer.ConnWS,
 		LastReg:  time.Now(),
 	}
+	movedFrom := s.remotePeerOwner(entry.ID)
 	s.peers.Put(entry)
+	s.notePeerHere(entry.ID, movedFrom)
 
 	log.Printf("[signal] New WS peer registered: %s from %s", id, remoteAddr)
 	s.db.UpdatePeerStatus(id, "ONLINE", remoteAddr, "signal")
@@ -630,6 +632,16 @@ func (s *Server) sendToWSPeer(id string, msg *pb.RendezvousMessage) error {
 // sent UDP even when ConnType was stamped TCP by RegisterPk. Returns
 // true if a transport accepted the message.
 func (s *Server) sendToPeer(id string, msg *pb.RendezvousMessage) bool {
+	if _, local := s.peers.Route(id); !local {
+		if pod := s.remotePeerOwner(id); pod != "" {
+			return s.call(pod, "signal.send-peer", remoteMsg{ID: id, Msg: marshalMsg(msg)})
+		}
+	}
+	return s.sendToLocalPeer(id, msg)
+}
+
+// sendToLocalPeer is sendToPeer for a peer this pod holds.
+func (s *Server) sendToLocalPeer(id string, msg *pb.RendezvousMessage) bool {
 	entry, found := s.peers.Route(id)
 	if !found {
 		log.Printf("[signal] sendToPeer: peer %s not in map", id)

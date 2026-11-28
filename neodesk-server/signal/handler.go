@@ -291,7 +291,9 @@ func (s *Server) retainPendingSignalPeer(id, remoteAddr string, udpAddr *net.UDP
 	if entry.IP == "" && udpAddr != nil {
 		entry.IP = udpAddr.String()
 	}
+	movedFrom := s.remotePeerOwner(entry.ID)
 	s.peers.Put(entry)
+	s.notePeerHere(entry.ID, movedFrom)
 	return entry
 }
 
@@ -570,8 +572,9 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 		id = effectiveID
 	}
 
-	// Check if peer exists in memory map
-	existing := s.peers.Get(id)
+	// Check if peer exists in memory map (this pod's: a peer another pod
+	// held registers here as new)
+	existing := s.peers.GetLocal(id)
 	var dbPeer *db.Peer
 	knownPeer := existing != nil
 	if !knownPeer {
@@ -717,7 +720,9 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 	// refused until the peer registers with the stored key
 	entry.KeyRefused = len(entry.PK) > 0 && s.keyRefusedStored(id)
 
+	movedFrom := s.remotePeerOwner(entry.ID)
 	s.peers.Put(entry)
+	s.notePeerHere(entry.ID, movedFrom)
 	if entry.KeyRefused {
 		s.sendUDP(registerPeerResponse(true), raddr)
 		return

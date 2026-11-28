@@ -170,6 +170,7 @@ func (s *Server) beginLANExchange(
 		}
 		s.pendingLANs.Store(key, p)
 	}
+	s.noteLAN(key)
 
 	if !s.sendToPeer(targetID, fetch) {
 		s.cancelPendingLAN(key)
@@ -191,6 +192,27 @@ func isUsableLANEndpoint(addr *net.UDPAddr) bool {
 // The source-IP comparison is correlation, not authentication; the target key
 // remains server-signed in the resulting PunchHoleResponse.
 func (s *Server) completeLANAddr(msg *pb.LocalAddr, sender *net.UDPAddr) {
+	if s == nil || msg == nil || sender == nil || msg.Id == "" {
+		return
+	}
+	// The pod that asked for the address waits for it
+	if initiatorAddr, err := crypto.DecodeAddr(msg.SocketAddr); err == nil && initiatorAddr != nil {
+		key := pendingLANKey(msg.Id, initiatorAddr)
+		if _, local := s.pendingLANs.Load(key); !local {
+			if pod := s.ownerOf("sig:lan:" + key); pod != "" {
+				s.call(pod, "signal.local-addr", remoteMsg{
+					Addr: sender.String(),
+					Msg:  marshalMsg(&pb.RendezvousMessage{Union: &pb.RendezvousMessage_LocalAddr{LocalAddr: msg}}),
+				})
+				return
+			}
+		}
+	}
+	s.completeLocalLANAddr(msg, sender)
+}
+
+// completeLocalLANAddr is completeLANAddr for an exchange this pod started.
+func (s *Server) completeLocalLANAddr(msg *pb.LocalAddr, sender *net.UDPAddr) {
 	if s == nil || msg == nil || sender == nil || msg.Id == "" {
 		return
 	}
