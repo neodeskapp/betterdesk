@@ -7,6 +7,7 @@
  * signed in.
  */
 import { getClientConfig, getDeviceStats, getServerStatus } from '#lib/api/dashboard.ts';
+import { getDashboards } from '#lib/api/dashboards.ts';
 import { readClientHost } from '#lib/devices-area/dashboard.ts';
 import type { PageLoad } from './$types';
 
@@ -16,6 +17,7 @@ export const load: PageLoad = () => ({
 	early: {
 		stats: quiet(getDeviceStats()),
 		status: quiet(getServerStatus()),
-		config: quiet(getClientConfig(readClientHost()))
+		config: quiet(getClientConfig(readClientHost())),
+		dashboards: quiet(getDashboards())
 	}
 });

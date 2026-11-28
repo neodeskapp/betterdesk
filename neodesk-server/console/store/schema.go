@@ -286,6 +286,7 @@ func sqliteSteps() []step {
 	s = append(s, userDisabled("INTEGER NOT NULL DEFAULT 0"), deviceTokensHeldByNoAccount())
 	s = append(s, auditTargets("INTEGER DEFAULT NULL")...)
 	s = append(s, createTable("user_preferences"))
+	s = append(s, createTable("user_dashboards"))
 	return s
 }
 
@@ -374,6 +375,7 @@ func postgresSteps() []step {
 	s = append(s, userDisabled("BOOLEAN NOT NULL DEFAULT FALSE"), deviceTokensHeldByNoAccount())
 	s = append(s, auditTargets("BIGINT DEFAULT NULL")...)
 	s = append(s, createTable("user_preferences"))
+	s = append(s, createTable("user_dashboards"))
 	return s
 }
 

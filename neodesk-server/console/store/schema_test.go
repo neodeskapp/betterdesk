@@ -98,7 +98,7 @@ func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 		for run := 1; run <= 2; run++ {
 			out := captureLog(t, func() { mustMigrate(t, db) })
 			if run == 1 {
-				want := []string{"[DB] Migration: added access_tokens.token_kind", "[DB] Migration: kept 2 access tokens as their hash only", "[DB] Migration: added users.disabled", "[DB] Migration: added audit_log.target_user_id", "[DB] Migration: created 1 tables: user_preferences"}
+				want := []string{"[DB] Migration: added access_tokens.token_kind", "[DB] Migration: kept 2 access tokens as their hash only", "[DB] Migration: added users.disabled", "[DB] Migration: added audit_log.target_user_id", "[DB] Migration: created 2 tables: user_preferences, user_dashboards"}
 				if db.IsPostgres() {
 					want = append([]string{"[DB] Migration: widened alert_rules.condition_value to double precision"}, want...)
 				}

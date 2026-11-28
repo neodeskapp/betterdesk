@@ -1,232 +1,248 @@
 <!--
-  The overview (/), the first page after sign-in. The main column says what
-  needs someone (each line only while its count is above zero), how the
-  devices are doing, and the last two weeks of sessions and help requests;
-  the side column holds the values a RustDesk client needs and the
-  server's status.
+  The overview (/), the first page after sign-in: one or more dashboards
+  of widgets (lib/dashboard). Without anything saved, the account sees the
+  built-in dashboard: what needs someone, how the devices are doing, the
+  last two weeks, the values a RustDesk client needs and the server's
+  status. Customize opens the open dashboard for editing: add, move,
+  resize, set up and remove widgets, then Done saves. The dashboard menu
+  adds, renames, copies, deletes and hides dashboards, and lets people
+  with server.config publish one for every account or for some roles.
 
-  Data: /api/stats and /api/server/status on load, every 30 s while the tab
-  is visible (poll) and on Refresh; the attention counts with them, each
-  only for the people allowed to read it (enrollment.approve, chat.support).
-  The client values (/api/dashboard/client-config) on load, on Refresh and
-  when an address is typed into "Client server address" (kept for this
-  tab, as the old overview did). Trends (audit.view) load on their own.
+  Data: lib/dashboard/data.svelte.ts loads the counts and the server status
+  on load, every 30 s while the tab is visible (poll) and on Refresh, and
+  the client values once a widget shows them. GET /api/dashboards gives the
+  account's dashboards.
 
-  "Pair with code" (enrollment.approve) creates a one-time code for a
-  NeoDesk agent; the agent QR scanner opens from that dialog.
-  URL: ?activateAgent=1 opens "Pair with code" (enrollment.approve).
+  URL: ?board=<id> (own) or ?board=shared:<id> opens that dashboard.
+  ?activateAgent=1 opens "Pair with code" (enrollment.approve).
 -->
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import type { PageData } from './$types';
+	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
-	import {
-		countOpenHelpRequests,
-		countRegistrations,
-		getClientConfig,
-		getDeviceStats,
-		getServerStatus,
-		type ClientConfig,
-		type DeviceStats,
-		type ServerStatus
-	} from '#lib/api/dashboard.ts';
 	import { listFolders, type Folder } from '#lib/api/devices.ts';
-	import { addTabs } from '#lib/devices-area/add-computers.ts';
+	import AddWidgetDialog from '#lib/dashboard/AddWidgetDialog.svelte';
+	import BoardView from '#lib/dashboard/Board.svelte';
+	import BoardDialog from '#lib/dashboard/BoardDialog.svelte';
+	import { DashboardData } from '#lib/dashboard/data.svelte.ts';
+	import { Dashboards } from '#lib/dashboard/dashboards.svelte.ts';
 	import {
-		clientHostFixed,
-		configText,
-		deviceParts,
-		partLabelKey,
-		partState,
-		partTone,
-		portList,
-		readClientHost,
-		serverProblem,
-		writeClientHost,
-		type PartState
-	} from '#lib/devices-area/dashboard.ts';
-	import ExternalRow from '#lib/devices-area/ExternalRow.svelte';
+		addWidget,
+		moveTo,
+		moveWidget,
+		removeWidget,
+		updateWidget,
+		type Sharing,
+		type Tab,
+		type WidgetKind
+	} from '#lib/dashboard/model.ts';
+	import WidgetDialog from '#lib/dashboard/WidgetDialog.svelte';
+	import type { WidgetActions } from '#lib/dashboard/widgets/types.ts';
 	import SetupGuide from '#lib/guide/SetupGuide.svelte';
-	import { formatDuration } from '#lib/i18n/format.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { link } from '#lib/nav.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { onRefresh, setPageTitle } from '#lib/shell/page.svelte.ts';
 	import { poll } from '#lib/state/live.ts';
-	import { can, session } from '#lib/state/session.svelte.ts';
+	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
-	import { Copier } from '#lib/ui/clipboard.svelte.ts';
-	import CountLine from '#lib/ui/CountLine.svelte';
-	import Disclosure from '#lib/ui/Disclosure.svelte';
-	import Field from '#lib/ui/Field.svelte';
-	import Input from '#lib/ui/Input.svelte';
-	import ListRow from '#lib/ui/ListRow.svelte';
+	import LiveStatus from '#lib/ui/LiveStatus.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
+	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
-	import Notice from '#lib/ui/Notice.svelte';
-	import RowList from '#lib/ui/RowList.svelte';
-	import ShareBar from '#lib/ui/ShareBar.svelte';
 	import States from '#lib/ui/States.svelte';
-	import Status from '#lib/ui/Status.svelte';
-	import ValueField from '#lib/ui/ValueField.svelte';
+	import Tabs from '#lib/ui/Tabs.svelte';
+	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
 	import { lazy } from '#lib/util/lazy.ts';
-	import LiveStatus from '#lib/ui/LiveStatus.svelte';
 
-	let { data }: { data: PageData } = $props();
-
-	/* ── Who may see what (the server checks each request; this hides what would fail) ── */
+	let { data: pageData }: { data: PageData } = $props();
 
 	const canDevices = can('device.view');
 	const canApprove = can('enrollment.approve');
-	// The help request list needs Support chat (DECISIONS.md P17, A242)
-	const canHelp = canDevices && can('chat.support');
-	const canTrends = can('audit.view');
-	// Links go only where the menu goes: the server builds the menu from the same checks as its routes
-	const navPages = new Set(session.nav.flatMap((s) => s.pages.map((p) => p.page)));
-	const showServerLink = navPages.has('server-management:overview');
-	// Support agents and the server key are tabs of Devices, Add computers,
-	// each for the accounts that get the tab (its old page's permission)
-	const addComputerTabs = addTabs({ can, role: session.user?.role });
-	const showAgentsLink = addComputerTabs.includes('agents');
-	const showKeysLink = addComputerTabs.includes('manual');
 
-	/* ── The answers +page.ts asked for while the console started, each used once ── */
+	/* ── What the widgets show, loaded once for the page ── */
 
-	const early = untrack(() => new Map<string, Promise<unknown>>(Object.entries(data.early)));
-	function first<T>(name: keyof PageData['early'], fresh: () => Promise<T>): Promise<T> {
-		const p = early.get(name) as Promise<T | null> | undefined;
-		early.delete(name);
-		return p ? p.then((v) => v ?? fresh()) : fresh();
-	}
-	const orNull = <T,>(p: Promise<T>): Promise<T | null> => p.catch(() => null);
-
-	/* ── Overview: counts, server status, what needs someone ── */
-
-	let stats = $state.raw<DeviceStats | null>(null);
-	let statsFailed = $state(false);
-	let status = $state.raw<ServerStatus | null>(null);
-	/** false until the first status answer (or failure) */
-	let statusKnown = $state(false);
-	let registrations = $state(0);
-	let openHelp = $state(0);
-	let attentionKnown = $state(false);
-
-	async function loadOverview(): Promise<void> {
-		const counts = Promise.all([
-			canApprove ? orNull(countRegistrations()) : Promise.resolve(0),
-			canHelp ? orNull(countOpenHelpRequests()) : Promise.resolve(0)
-		]);
-		const [s, st] = await Promise.all([
-			orNull(first('stats', () => getDeviceStats())),
-			orNull(first('status', () => getServerStatus()))
-		]);
-		if (s) stats = s;
-		statsFailed = !s && !stats;
-		status = st;
-		statusKnown = true;
-		const [reg, help] = await counts;
-		registrations = reg ?? 0;
-		openHelp = help ?? 0;
-		attentionKnown = true;
-	}
+	const data = new DashboardData(
+		// The help request list needs Support chat (DECISIONS.md P17, A242)
+		{ devices: canDevices, approve: canApprove, help: canDevices && can('chat.support') },
+		untrack(() => pageData.early)
+	);
 
 	// Now, every 30 s while the tab is visible, once when it is shown again
-	$effect(() => poll(loadOverview, { every: 30_000 }));
+	$effect(() => poll(() => data.load(), { every: 30_000 }));
+	// The top bar's Refresh: everything again
+	$effect(() => onRefresh(() => data.refresh()));
 
-	const problem = $derived(statusKnown ? serverProblem(status) : null);
-	const parts = $derived(stats ? deviceParts(stats) : null);
-	const banned = $derived(canDevices && parts ? parts.banned : 0);
-	const attentionRows = $derived(
-		(problem ? 1 : 0) + (registrations > 0 ? 1 : 0) + (openHelp > 0 ? 1 : 0) + (banned > 0 ? 1 : 0)
+	/* ── The dashboards ── */
+
+	const boards = new Dashboards(() => t('nav.dashboard'));
+	boards.asked = page.url.searchParams.get('board');
+	$effect(() => {
+		untrack(() => void boards.load(pageData.early.dashboards));
+	});
+
+	const editing = $derived(boards.editing);
+	const current = $derived(boards.current);
+	const board = $derived(boards.board);
+	const tabItems = $derived(boards.tabs.map((x) => ({ id: x.key, label: x.board.name })));
+	const otherBoards = $derived(
+		boards.tabs.filter((x) => x.key !== current?.key).map((x) => ({ key: x.key, board: x.board }))
 	);
 
-	const signalState = $derived<PartState | 'checking'>(
-		statusKnown ? partState(status?.hbbs ?? null) : 'checking'
-	);
-	const relayState = $derived<PartState | 'checking'>(
-		statusKnown ? partState(status?.hbbr ?? null) : 'checking'
-	);
-	const ports = $derived(portList(status));
+	function showInUrl(key: string | null) {
+		const url = new URL(location.href);
+		if (key) url.searchParams.set('board', key);
+		else url.searchParams.delete('board');
+		// eslint-disable-next-line svelte/no-navigation-without-resolve -- this page's own URL with ?board=
+		replaceState(url, page.state);
+	}
 
-	/* ── Client values ── */
+	async function openBoard(key: string) {
+		if (editing) return;
+		showInUrl(key);
+		await boards.setActive(key);
+	}
 
-	let config = $state.raw<ClientConfig | null>(null);
-	let configFailed = $state(false);
-	let configLoaded = $state(false);
-	let host = $state(readClientHost());
-	let applying = $state(false);
-
-	async function loadConfig(persist = false): Promise<void> {
-		const typed = host.trim();
+	/** Runs a change that saves at once; a failure says so and leaves the page as it was */
+	async function saving(work: () => Promise<unknown>, done?: string) {
 		try {
-			const c = await first('config', () => getClientConfig(typed));
-			config = c;
-			configFailed = false;
-			// The field shows the address the values are for
-			if (!typed && c.client_server_host) host = c.client_server_host;
-			if (persist) writeClientHost(typed);
-		} catch {
-			config = null;
-			configFailed = true;
-		} finally {
-			configLoaded = true;
+			await work();
+			if (done) toast.success(done);
+		} catch (e) {
+			toast.error(e instanceof Error && e.message ? e.message : t('errors.server_error'));
 		}
 	}
 
-	async function applyHost(e?: SubmitEvent) {
-		e?.preventDefault();
-		if (applying || hostFixed) return;
-		applying = true;
-		// An empty field goes back to the server's own address
-		if (!host.trim()) writeClientHost('');
-		await loadConfig(true);
-		applying = false;
+	/* ── Editing a dashboard ── */
+
+	let adding = $state(false);
+	let configuring = $state<string | null>(null);
+
+	function change(fn: (b: NonNullable<typeof board>) => NonNullable<typeof board>) {
+		if (editing) boards.change(fn(editing.draft));
 	}
 
-	$effect(() => {
-		untrack(() => void loadConfig());
-	});
+	function add(kind: WidgetKind) {
+		adding = false;
+		if (!editing) return;
+		const next = addWidget(editing.draft, kind);
+		boards.change(next);
+		// A custom widget opens its settings right away: it shows nothing until they are filled in
+		if (kind.configurable) configuring = next.widgets.at(-1)?.id ?? null;
+	}
 
-	// The top bar's Refresh: everything again
-	$effect(() =>
-		onRefresh(() => {
-			void loadOverview();
-			void loadConfig();
-		})
+	async function done() {
+		await saving(() => boards.saveEdit(), tf('dashboard.saved', 'Dashboard saved.'));
+	}
+
+	async function cancel() {
+		if (editing && editing.draft !== current?.board) {
+			const drop = await confirm({
+				title: tf('dashboard.discard_title', 'Discard your changes?'),
+				message: tf(
+					'dashboard.discard_message',
+					'The dashboard stays as it was before you started customizing.'
+				),
+				confirmLabel: tf('dashboard.discard', 'Discard'),
+				danger: true
+			});
+			if (!drop) return;
+		}
+		boards.cancelEdit();
+	}
+
+	const configWidget = $derived(
+		editing && configuring ? editing.draft.widgets.find((w) => w.id === configuring) : undefined
 	);
 
-	// Only a public ID server in Settings fixes the address; a public relay
-	// or API address alone leaves the field for the rest
-	const hostFixed = $derived(clientHostFixed(config));
-	const fallbackHost = typeof location !== 'undefined' ? location.hostname : '';
+	/* ── The dashboard menu ── */
 
-	const copyAll = new Copier();
-	const copyDeploy = new Copier();
-	$effect(() => () => {
-		copyAll.dispose();
-		copyDeploy.dispose();
+	type BoardForm =
+		{ kind: 'new' } | { kind: 'rename'; tab: Tab } | { kind: 'copy'; tab: Tab } | { kind: 'share'; tab: Tab };
+	let boardForm = $state<BoardForm | null>(null);
+
+	const formTitle = $derived.by(() => {
+		switch (boardForm?.kind) {
+			case 'new':
+				return tf('dashboard.new_board', 'New dashboard');
+			case 'rename':
+				return boardForm.tab.shared
+					? tf('dashboard.shared_settings', 'Sharing settings')
+					: tf('dashboard.rename_board', 'Rename dashboard');
+			case 'copy':
+				return tf('dashboard.copy_board', 'Make a copy');
+			case 'share':
+				return tf('dashboard.share_board', 'Share with others');
+			default:
+				return '';
+		}
 	});
 
-	function copyConfig() {
-		if (!config) return void toast.warning(t('dashboard.config_not_ready'));
-		void copyAll.copy(configText(config, t));
+	async function submitBoard(name: string, sharing: Sharing | null) {
+		const form = boardForm;
+		boardForm = null;
+		if (!form) return;
+		if (form.kind === 'new') {
+			await saving(async () => showInUrl(await boards.addBoard(name)));
+		} else if (form.kind === 'rename') {
+			await saving(() => boards.rename(form.tab, name, sharing));
+		} else if (form.kind === 'copy') {
+			await saving(async () => showInUrl(await boards.duplicate(form.tab, name)));
+		} else if (form.kind === 'share' && sharing) {
+			await saving(
+				async () => showInUrl(await boards.share(form.tab, name, sharing)),
+				tf('dashboard.shared_done', 'Dashboard shared.')
+			);
+		}
 	}
 
-	function copyDeployString() {
-		const value = config?.deploy_config_string.trim();
-		if (!value) return void toast.warning(t('dashboard.deploy_string_not_ready'));
-		void copyDeploy.copy(value);
+	async function removeBoard(tab: Tab) {
+		const shared = !!tab.shared;
+		const ok = await confirm({
+			title: shared
+				? tf('dashboard.unshare_title', 'Stop sharing this dashboard?')
+				: tf('dashboard.delete_title', 'Delete this dashboard?'),
+			message: shared
+				? tf('dashboard.unshare_message', 'Nobody sees it any more. Copies people made stay.')
+				: tf('dashboard.delete_message', 'Its widgets and their settings are gone for good.'),
+			confirmLabel: shared ? tf('dashboard.unshare', 'Stop sharing') : t('common.delete'),
+			danger: true
+		});
+		if (!ok) return;
+		await saving(async () => {
+			await (shared ? boards.unshare(tab) : boards.remove(tab));
+			showInUrl(null);
+		});
 	}
 
-	/* ── Dialogs (their code loads on first use) ── */
+	async function resetAll() {
+		const ok = await confirm({
+			title: tf('dashboard.reset_title', 'Reset your dashboards?'),
+			message: tf(
+				'dashboard.reset_message',
+				'Your own dashboards are deleted and the overview is back as it came, with every shared dashboard shown.'
+			),
+			confirmLabel: tf('dashboard.reset', 'Reset'),
+			danger: true
+		});
+		if (!ok) return;
+		await saving(async () => {
+			await boards.reset();
+			showInUrl(null);
+		});
+	}
+
+	const isOwn = $derived(!!current && !current.shared);
+	const ownCount = $derived(boards.tabs.filter((x) => !x.shared).length);
+
+	/* ── Dialogs the widgets open (their code loads on first use) ── */
 
 	const qrDialog = lazy(() => import('#lib/devices-area/ConfigQrDialog.svelte'));
 	const scriptSheet = lazy(() => import('#lib/devices-area/InstallScriptSheet.svelte'));
 	const pairDialog = lazy(() => import('#lib/devices-area/PairCodeDialog.svelte'));
 	const addComputer = lazy(() => import('#lib/onboard/AddComputerDialog.svelte'));
 	const activation = lazy(() => import('#lib/devices-area/AgentActivation.svelte'));
-	const trends = lazy(() => import('#lib/people/Trends.svelte'));
 
 	let qrOpen = $state(false);
 	let scriptOpen = $state(false);
@@ -235,26 +251,28 @@
 	let addOpen = $state(false);
 	let folders = $state.raw<Folder[]>([]);
 
-	/** Add a computer opens here, as from the setup guide */
-	async function openAddComputer() {
-		folders = await listFolders().catch(() => []);
-		addOpen = true;
-	}
-
 	function closeAddComputer() {
 		addOpen = false;
-		void loadOverview();
+		void data.load();
 	}
 
-	function showQr() {
-		if (!config?.config_uri || !config.public_key) return void toast.warning(t('keys.no_qr'));
-		qrOpen = true;
-	}
-
-	function showScript() {
-		if (!config?.deploy_config_string) return void toast.warning(t('dashboard.deploy_string_not_ready'));
-		scriptOpen = true;
-	}
+	const actions: WidgetActions = {
+		openPair: () => (pairOpen = true),
+		openQr: () => {
+			if (!data.config?.config_uri || !data.config.public_key) return void toast.warning(t('keys.no_qr'));
+			qrOpen = true;
+		},
+		openScript: () => {
+			if (!data.config?.deploy_config_string)
+				return void toast.warning(t('dashboard.deploy_string_not_ready'));
+			scriptOpen = true;
+		},
+		openAddComputer: async () => {
+			folders = await listFolders().catch(() => []);
+			addOpen = true;
+		},
+		openBoard: (key) => void openBoard(key)
+	};
 
 	const activateParam = page.url.searchParams.get('activateAgent') === '1';
 	// The tab title and the breadcrumb name the task, as the old server did; the page stays the overview
@@ -263,8 +281,8 @@
 		if (activateParam && canApprove) pairOpen = true;
 	});
 
-	/** The address agents type: the client address the values above are for */
-	const pairHost = $derived(config?.client_server_host || host.trim());
+	/** The address agents type: the client address the values are for */
+	const pairHost = $derived(data.config?.client_server_host || data.host.trim());
 </script>
 
 <div class="page page-wide dashboard-page">
@@ -274,294 +292,171 @@
 		<LiveStatus />
 	</div>
 
-	<div class="page-cols">
-		<div class="page-main">
-			<!-- The first steps on a new server, while the guide is open for this account -->
-			<SetupGuide />
-			<!-- Attention and the device counts are short: side by side when the main column is wide -->
-			<div class="cols now">
-				<section class="section" aria-labelledby="attention-title">
-					<div class="section-head"><h2 id="attention-title">{t('dashboard.attention_panel')}</h2></div>
-					<div aria-live="polite">
-						<RowList>
-							{#if problem}
-								<ListRow
-									mark="danger"
-									title={t('dashboard.server_status')}
-									sub={t(problem)}
-									href={showServerLink ? link('/server-management?tab=overview') : undefined}
-								/>
-							{/if}
-							{#if registrations > 0}
-								<ListRow
-									mark="warning"
-									count={registrations}
-									title={t('nav.registrations')}
-									href={link('/registrations')}
-								/>
-							{/if}
-							{#if openHelp > 0}
-								<ListRow
-									mark="warning"
-									count={openHelp}
-									title={t('nav.help_requests')}
-									href={link('/help-requests')}
-								/>
-							{/if}
-							{#if banned > 0}
-								<ListRow
-									mark="danger"
-									count={banned}
-									title={t('dashboard.banned')}
-									href={link('/devices?status=banned')}
-								/>
-							{/if}
-							{#if !attentionRows}
-								<ListRow
-									empty
-									title={attentionKnown && statusKnown ? t('dashboard.attention_none') : t('status.checking')}
-								/>
-							{/if}
-						</RowList>
-					</div>
-				</section>
+	<!-- The first steps on a new server, while the guide is open for this account -->
+	<SetupGuide />
 
-				{#if canDevices}
-					<!-- How the devices are doing right now: the total and the parts of the whole -->
-					<section class="section devices-now" aria-labelledby="devices-now-title">
-						<div class="section-head">
-							<h2 id="devices-now-title">{t('nav.devices')}</h2>
-							<a href={link('/devices')}>{t('dashboard.open_device_list')}</a>
-						</div>
-						<div class="devices-body" aria-live="polite">
-							{#if stats && stats.total === 0}
-								<!-- A new server: say what comes next instead of an empty bar -->
-								<p class="devices-none">{t('devices.empty_none')}</p>
-								{#if canApprove}
-									<div class="devices-none-actions">
-										<Button variant="primary" icon={ICONS.add} onclick={() => void openAddComputer()}
-											>{t('onboard.invite.button')}</Button
-										>
-										<a href={link('/registrations')}>{t('devices.empty_join_requests')}</a>
-									</div>
-								{/if}
-							{:else if stats && parts}
-								<CountLine text={t('dashboard.devices_total_line')} values={{ total: stats.total }} />
-								<ShareBar
-									label={t('nav.devices')}
-									parts={[
-										{
-											value: parts.online,
-											label: t('dashboard.devices_now_online'),
-											tone: 'ok',
-											href: link('/devices?status=online')
-										},
-										{
-											value: parts.offline,
-											label: t('dashboard.devices_now_offline'),
-											tone: 'muted',
-											href: link('/devices?status=offline')
-										},
-										{
-											value: parts.banned,
-											label: t('dashboard.devices_now_banned'),
-											tone: 'danger',
-											href: link('/devices?status=banned')
-										}
-									]}
-								/>
-							{:else if statsFailed}
-								<States
-									kind="error"
-									message={t('errors.load_devices_failed')}
-									onretry={() => void loadOverview()}
-								/>
-							{:else}
-								<States kind="loading" message={t('status.checking')} />
-							{/if}
-						</div>
-					</section>
+	<div class={['board-bar', editing && 'is-editing']}>
+		{#if editing}
+			<p class="edit-hint" role="status">
+				{tf(
+					'dashboard.edit_hint',
+					'Drag widgets by their bar or use the arrows. Changes are saved when you click Done.'
+				)}
+			</p>
+			<div class="page-actions">
+				<Button icon={ICONS.add} onclick={() => (adding = true)}
+					>{tf('dashboard.add_widget', 'Add widget')}</Button
+				>
+				<Button onclick={() => void cancel()}>{t('common.cancel')}</Button>
+				<Button variant="primary" icon="check" busy={boards.saving} onclick={() => void done()}
+					>{tf('dashboard.done', 'Done')}</Button
+				>
+			</div>
+		{:else}
+			{#if tabItems.length > 1}
+				<Tabs
+					class="board-tabs"
+					tabs={tabItems}
+					value={current?.key}
+					label={tf('dashboard.boards_label', 'Dashboards')}
+					onchange={(key) => void openBoard(key)}
+				/>
+			{/if}
+			<div class="page-actions board-actions">
+				{#if boards.canEdit()}
+					<Button icon={ICONS.edit} onclick={() => boards.startEdit()}
+						>{tf('dashboard.customize', 'Customize')}</Button
+					>
+				{/if}
+				{#if current}
+					<MenuButton kebab label={tf('dashboard.board_menu', 'Dashboard options')} align="end">
+						<MenuItem icon={ICONS.add} onselect={() => (boardForm = { kind: 'new' })}
+							>{tf('dashboard.new_board', 'New dashboard')}</MenuItem
+						>
+						{#if isOwn || boards.canPublish}
+							<MenuItem icon={ICONS.rename} onselect={() => (boardForm = { kind: 'rename', tab: current })}
+								>{current.shared
+									? tf('dashboard.shared_settings', 'Sharing settings')
+									: tf('dashboard.rename_board', 'Rename dashboard')}</MenuItem
+							>
+						{/if}
+						<MenuItem icon={ICONS.duplicate} onselect={() => (boardForm = { kind: 'copy', tab: current })}
+							>{tf('dashboard.copy_board', 'Make a copy')}</MenuItem
+						>
+						{#if boards.canPublish && isOwn}
+							<MenuItem icon={ICONS.guest_link} onselect={() => (boardForm = { kind: 'share', tab: current })}
+								>{tf('dashboard.share_board', 'Share with others')}</MenuItem
+							>
+						{/if}
+						{#if current.shared && !current.shared.locked}
+							<MenuItem icon={ICONS.hide} onselect={() => void saving(() => boards.hide(current))}
+								>{tf('dashboard.hide_board', 'Hide for me')}</MenuItem
+							>
+						{/if}
+						{#if boards.hiddenShared.length}
+							<MenuItem icon={ICONS.view} onselect={() => void saving(() => boards.unhideAll())}
+								>{tf('dashboard.unhide_boards', 'Show hidden dashboards')}</MenuItem
+							>
+						{/if}
+						{#if (isOwn && (ownCount > 1 || boards.own)) || (current.shared && boards.canPublish)}
+							<MenuDivider />
+							<MenuItem icon={ICONS.delete} onselect={() => void removeBoard(current)}
+								>{current.shared
+									? tf('dashboard.unshare', 'Stop sharing')
+									: tf('dashboard.delete_board', 'Delete dashboard')}</MenuItem
+							>
+						{/if}
+						{#if boards.own}
+							<MenuItem icon={ICONS.reset} onselect={() => void resetAll()}
+								>{tf('dashboard.reset_all', 'Reset my dashboards')}</MenuItem
+							>
+						{/if}
+					</MenuButton>
 				{/if}
 			</div>
-
-			{#if canTrends}
-				<!-- Two weeks of remote sessions and help requests, as on the reports page -->
-				{#await trends.optional() then { default: Trends }}<Trends />{/await}
-			{/if}
-		</div>
-
-		<aside class="page-side" aria-label={t('dashboard.client_config_title')}>
-			<!-- Drawn once the client values are in (or failed): whether the "only this computer"
-			     notice shows is known then, so nothing in this column moves after it appears -->
-			{#if configLoaded}
-				<!-- Values to type into RustDesk -->
-				<section class="section client-setup" aria-labelledby="client-config-title">
-					<div class="section-head">
-						<h2 id="client-config-title">{t('dashboard.client_config_title')}</h2>
-					</div>
-					<p class="section-note">{t('dashboard.client_config_hint')}</p>
-					{#if config?.phone_unreachable_host}
-						<Notice tone="warning" message={t('dashboard.client_config_local_warning')} />
-					{/if}
-
-					<form class="host-form" onsubmit={applyHost}>
-						<Field
-							label={t('dashboard.client_server_host_label')}
-							hint={hostFixed
-								? t('dashboard.client_server_host_env_hint')
-								: t('dashboard.client_server_host_hint')}
-						>
-							{#snippet children(f)}
-								<div class="host-controls">
-									<Input
-										{...f}
-										class="host-input"
-										placeholder={t('dashboard.client_server_host_placeholder')}
-										autocomplete="off"
-										spellcheck={false}
-										disabled={hostFixed}
-										bind:value={host}
-									/>
-									<Button type="submit" busy={applying} disabled={hostFixed}
-										>{t('dashboard.apply_client_host')}</Button
-									>
-								</div>
-							{/snippet}
-						</Field>
-						{#if hostFixed}
-							<p class="env-link">
-								<a href={link('/settings#public-endpoints')}>{t('dashboard.client_host_settings_link')}</a>
-							</p>
-						{/if}
-					</form>
-
-					<dl class="facts values" aria-busy={!configLoaded}>
-						<dt>{t('dashboard.config_server_id')}</dt>
-						<dd>
-							<ValueField
-								label={t('dashboard.config_server_id')}
-								value={configFailed ? fallbackHost : config?.server_id}
-								empty={configLoaded ? undefined : '…'}
-							/>
-						</dd>
-						<dt>{t('dashboard.config_relay_server')}</dt>
-						<dd>
-							<ValueField
-								label={t('dashboard.config_relay_server')}
-								value={configFailed ? fallbackHost : config?.relay_server}
-								empty={configLoaded ? undefined : '…'}
-							/>
-						</dd>
-						<dt>{t('dashboard.config_api_server')}</dt>
-						<dd>
-							<ValueField
-								label={t('dashboard.config_api_server')}
-								value={config?.api_url}
-								empty={configLoaded ? undefined : '…'}
-							/>
-						</dd>
-						<dt>{t('dashboard.config_key')}</dt>
-						<dd>
-							{#if configFailed}
-								<span class="text-danger">{t('errors.load_key_failed')}</span>
-							{:else}
-								<ValueField
-									hidden
-									label={t('dashboard.config_key')}
-									value={config?.public_key}
-									empty={configLoaded ? t('keys.no_key') : '…'}
-								/>
-							{/if}
-						</dd>
-					</dl>
-
-					<div class="page-actions setup-actions">
-						{#if canApprove}
-							<Button variant="primary" icon="pin" onclick={() => (pairOpen = true)}
-								>{t('dashboard.pair_with_code')}</Button
-							>
-						{/if}
-						<Button icon={copyAll.copied ? 'check' : ICONS.copy} onclick={copyConfig}
-							>{t('dashboard.copy_all_config')}</Button
-						>
-						<Button icon={ICONS.qr} onclick={showQr}>{t('dashboard.show_config_qr')}</Button>
-						<MenuButton label={t('mobile_nav.more')}>
-							<MenuItem icon={copyDeploy.copied ? 'check' : ICONS.copy} onselect={copyDeployString}
-								>{t('dashboard.copy_deploy_string')}</MenuItem
-							>
-							<MenuItem icon={ICONS.terminal} onselect={showScript}
-								>{t('dashboard.show_intune_script')}</MenuItem
-							>
-						</MenuButton>
-					</div>
-
-					<RowList>
-						{#if canApprove}
-							<ListRow
-								title={t('onboard.invite.button')}
-								sub={t('setup_guide.steps.computer.hint')}
-								onclick={() => void openAddComputer()}
-							/>
-						{/if}
-						<ExternalRow
-							href="https://github.com/rustdesk/rustdesk/releases/latest"
-							title={t('dashboard.get_rustdesk')}
-							sub={t('dashboard.get_rustdesk_hint')}
-						/>
-						{#if showAgentsLink}
-							<ListRow
-								title={t('dashboard.open_agents')}
-								sub={t('dashboard.agents_hint')}
-								href={link('/devices/add?tab=agents')}
-							/>
-						{/if}
-						{#if showKeysLink}
-							<ListRow title={t('dashboard.open_keys')} href={link('/devices/add?tab=manual')} />
-						{/if}
-					</RowList>
-				</section>
-
-				<!-- Server processes at a glance; ports are rarely needed and stay folded -->
-				<section class="section server-details" aria-labelledby="server-details-title">
-					<div class="section-head">
-						<h2 id="server-details-title">{t('dashboard.server_status')}</h2>
-						{#if showServerLink}
-							<a href={link('/server-management?tab=overview')}>{t('dashboard.open_server_status')}</a>
-						{/if}
-					</div>
-					<dl class="facts">
-						<dt>{t('dashboard.signal_server')}</dt>
-						<dd><Status tone={partTone(signalState)} label={t(partLabelKey(signalState))} /></dd>
-						<dt>{t('dashboard.relay_server_label')}</dt>
-						<dd><Status tone={partTone(relayState)} label={t(partLabelKey(relayState))} /></dd>
-						<dt>{t('dashboard.web_console')}</dt>
-						<dd><Status tone="good" label={t('status.running')} /></dd>
-						<dt>{t('dashboard.server_uptime')}</dt>
-						<dd class="num">{status?.uptime ? formatDuration(status.uptime) : '–'}</dd>
-					</dl>
-					<Disclosure title={t('dashboard.ports_title')} level={3}>
-						<dl class="facts">
-							{#each ports as p (p.key)}
-								<dt>{t(p.key)}</dt>
-								<dd class="num">{p.value ?? '–'}</dd>
-							{/each}
-						</dl>
-					</Disclosure>
-				</section>
-			{/if}
-		</aside>
+		{/if}
 	</div>
+
+	{#if editing?.shared}
+		<p class="shared-note">
+			{tf(
+				'dashboard.editing_shared',
+				'You are changing a shared dashboard. Everyone who sees it gets your changes when you click Done.'
+			)}
+		</p>
+	{/if}
+
+	<!-- Drawn once the account's dashboards are known (or failed, then the built-in one),
+	     so the built-in dashboard doesn't flash before a saved one -->
+	{#if !boards.loaded}
+		<States kind="loading" message={t('status.checking')} />
+	{:else if board}
+		<BoardView
+			{board}
+			editing={!!editing}
+			{data}
+			{actions}
+			boards={otherBoards}
+			onmove={(id, steps) => change((b) => moveWidget(b, id, steps))}
+			ondrop={(id, to) => change((b) => moveTo(b, id, to))}
+			onresize={(id, size) => change((b) => updateWidget(b, id, { size }))}
+			onconfigure={(id) => (configuring = id)}
+			onremove={(id) => change((b) => removeWidget(b, id))}
+		/>
+	{/if}
 </div>
 
-{#if qrOpen && config}
+{#if adding && editing}
+	<AddWidgetDialog board={editing.draft} onadd={add} onclose={() => (adding = false)} />
+{/if}
+
+{#if configWidget}
+	<WidgetDialog
+		widget={configWidget}
+		boards={otherBoards.map((b) => ({ key: b.key, name: b.board.name }))}
+		onapply={(c) => {
+			change((b) => updateWidget(b, configWidget.id, c));
+			configuring = null;
+		}}
+		onclose={() => {
+			// A custom widget added and closed without settings stays; its empty state says what to do
+			configuring = null;
+		}}
+	/>
+{/if}
+
+{#if boardForm}
+	<BoardDialog
+		title={formTitle}
+		name={boardForm.kind === 'new'
+			? ''
+			: boardForm.kind === 'copy'
+				? tf('dashboard.copy_name', 'Copy of {name}', { name: boardForm.tab.board.name })
+				: boardForm.tab.board.name}
+		sharing={boardForm.kind === 'share'
+			? { roles: [], locked: false, home: false }
+			: boardForm.kind === 'rename' && boardForm.tab.shared
+				? boardForm.tab.shared
+				: null}
+		confirmLabel={boardForm.kind === 'share'
+			? tf('dashboard.share', 'Share')
+			: boardForm.kind === 'new'
+				? tf('dashboard.create', 'Create')
+				: t('common.save')}
+		onsave={(name, sharing) => void submitBoard(name, sharing)}
+		onclose={() => (boardForm = null)}
+	/>
+{/if}
+
+{#if qrOpen && data.config}
 	{#await qrDialog.open(() => (qrOpen = false)) then { default: ConfigQrDialog }}
-		<ConfigQrDialog {config} onclose={() => (qrOpen = false)} />
+		<ConfigQrDialog config={data.config} onclose={() => (qrOpen = false)} />
 	{/await}
 {/if}
 
-{#if scriptOpen && config}
+{#if scriptOpen && data.config}
 	{#await scriptSheet.open(() => (scriptOpen = false)) then { default: InstallScriptSheet }}
-		<InstallScriptSheet {config} onclose={() => (scriptOpen = false)} />
+		<InstallScriptSheet config={data.config} onclose={() => (scriptOpen = false)} />
 	{/await}
 {/if}
 
@@ -591,76 +486,42 @@
 {/if}
 
 <style>
-	/* The counts keep their place while they load */
-	.devices-body {
+	.dashboard-page {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-3);
-		min-height: 5.5rem;
+		gap: var(--space-5);
 	}
-	.devices-body :global(.share) {
-		max-width: var(--measure);
-	}
-	.devices-none {
-		margin: 0;
-	}
-	.devices-none-actions {
+
+	/* Tabs on the left, Customize and the menu at the end of the same line */
+	.board-bar {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-2) var(--space-4);
 	}
-
-	/* Client setup: the address field with its button on one line */
-	.host-form :global(.form-group) {
-		margin-bottom: 0;
-	}
-	.host-controls {
-		display: flex;
-		gap: var(--space-2);
-	}
-	.host-controls > :global(.host-input) {
+	.board-bar > :global(.board-tabs) {
 		flex: 1;
 		min-width: 0;
 	}
-	.env-link {
-		margin: var(--space-1) 0 0;
-		font-size: var(--text-sm);
+	.board-actions {
+		margin-inline-start: auto;
 	}
-
-	/* Values read top to bottom in the side column: label above value */
-	.values {
-		grid-template-columns: minmax(0, 1fr);
+	.board-bar.is-editing {
+		position: sticky;
+		top: var(--topbar-h);
+		z-index: var(--layer-sticky);
+		padding-block: var(--space-2);
+		background: var(--bg);
+		border-bottom: 1px solid var(--rule);
 	}
-	.values > dt {
-		min-height: 0;
-		padding-bottom: 0;
-		border-bottom: 0;
-		font-size: var(--text-sm);
+	.edit-hint {
+		flex: 1;
+		min-width: 0;
+		margin: 0;
+		color: var(--text-muted);
 	}
-	.values > dd {
-		padding-top: var(--space-1);
-	}
-
-	/* Server status: the state at the end of its row, on phones too */
-	.server-details > .facts {
-		grid-template-columns: minmax(0, 1fr) auto;
-	}
-	.server-details > .facts > dd {
-		justify-content: flex-end;
-	}
-	@media (max-width: 640px) {
-		.server-details > .facts > dt {
-			min-height: var(--row-h);
-			padding-bottom: var(--row-pad-y);
-			border-bottom: 1px solid var(--rule);
-			font-size: inherit;
-		}
-		.server-details > .facts > dd {
-			padding-top: var(--row-pad-y);
-		}
-	}
-	.num {
-		font-variant-numeric: tabular-nums;
+	.shared-note {
+		margin: 0;
+		color: var(--warning);
 	}
 </style>

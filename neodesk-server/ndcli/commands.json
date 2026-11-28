@@ -10595,6 +10595,22 @@
    "reason": "The signed-in account's own accessibility settings for the web console (motion, contrast, links, font, shortcuts, live updates): they only change how the console looks in a browser."
   },
   {
+   "route": "GET /api/dashboards",
+   "reason": "The overview's dashboard layout of the web console: it only changes what the console's overview shows in a browser."
+  },
+  {
+   "route": "PUT /api/dashboards",
+   "reason": "The overview's dashboard layout of the web console: it only changes what the console's overview shows in a browser."
+  },
+  {
+   "route": "DELETE /api/dashboards",
+   "reason": "The overview's dashboard layout of the web console: it only changes what the console's overview shows in a browser."
+  },
+  {
+   "route": "PUT /api/dashboards/shared",
+   "reason": "The overview's dashboard layout of the web console: it only changes what the console's overview shows in a browser."
+  },
+  {
    "route": "GET /api/support/session/feedback",
    "reason": "Used by the person who got a link or the device that joins with it, not by an admin."
   },

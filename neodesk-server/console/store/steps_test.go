@@ -683,7 +683,7 @@ func captureLog(t *testing.T, fn func()) string {
 func TestMigrateReportsWhatItDid(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		first := captureLog(t, func() { mustMigrate(t, db) })
-		if want := "[DB] Migration: created 56 tables: peer, "; !strings.Contains(first, want) {
+		if want := "[DB] Migration: created 57 tables: peer, "; !strings.Contains(first, want) {
 			t.Errorf("log of the first Migrate lacks %q:\n%s", want, first)
 		}
 		// Setting up a new database logs the tables, not each column and

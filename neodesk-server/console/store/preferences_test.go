@@ -10,7 +10,7 @@ import (
 )
 
 // goTables are the tables the Go console adds on top of what Node set up.
-var goTables = []string{"user_preferences"}
+var goTables = []string{"user_preferences", "user_dashboards"}
 
 // createGoTables creates the tables the Go console adds on a reference
 // database, from the same schema files Migrate runs, so that its catalog
@@ -62,6 +62,26 @@ func TestMigrateAddsUserPreferences(t *testing.T) {
 		}
 		mustExec(t, db, `DELETE FROM users WHERE id = 41`)
 		if rows := queryStrings(t, db, `SELECT user_id FROM user_preferences`); len(rows) != 0 {
+			t.Errorf("the row stays after its account went: %v", rows)
+		}
+	})
+}
+
+// Migrate makes user_dashboards, on a new database and on one the Node
+// console set up. A row goes with its account.
+func TestMigrateAddsUserDashboards(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		storetest.NodeSchema(t, db)
+		mustMigrate(t, db)
+		mustExec(t, db, `INSERT INTO users (id, username, password_hash, role) VALUES (42, 'boards', 'x', 'viewer')`)
+		mustExec(t, db, `INSERT INTO user_dashboards (user_id) VALUES (42)`)
+		mustExec(t, db, `UPDATE user_dashboards SET boards = '{"boards":[]}' WHERE user_id = 42`)
+		rows := queryStrings(t, db, `SELECT user_id, boards FROM user_dashboards`)
+		if len(rows) != 1 || rows[0][1] != `{"boards":[]}` {
+			t.Fatalf("user_dashboards = %v", rows)
+		}
+		mustExec(t, db, `DELETE FROM users WHERE id = 42`)
+		if rows := queryStrings(t, db, `SELECT user_id FROM user_dashboards`); len(rows) != 0 {
 			t.Errorf("the row stays after its account went: %v", rows)
 		}
 	})
