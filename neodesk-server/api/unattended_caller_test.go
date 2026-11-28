@@ -138,3 +138,27 @@ func TestRelayEndedReachesTheHook(t *testing.T) {
 		t.Fatalf("the hook heard %v, want one", got)
 	}
 }
+
+// TestUnattendedCallerFindsASessionOnARelayNode: a session a site's relay
+// node carries is found like one of the central relay, with the account
+// its ticket names.
+func TestUnattendedCallerFindsASessionOnARelayNode(t *testing.T) {
+	srv, _ := newInternalServer(t, nil)
+	now := time.Unix(1_800_000_000, 0)
+	srv.now = func() time.Time { return now }
+	ask := func() (int, string) {
+		return asConsole(t, srv, http.MethodPost, "/api/unattended/caller", `{"device_id":"PEERAAA1","session":"on-a-node"}`)
+	}
+	if status, body := ask(); status != http.StatusConflict || !strings.Contains(body, "session_not_open") {
+		t.Fatalf("without relay nodes: %d %s, want 409 session_not_open", status, body)
+	}
+	srv.SetNodeLive(func(uuid string) (relay.LivePair, bool) {
+		if uuid != "on-a-node" {
+			return relay.LivePair{}, false
+		}
+		return relay.LivePair{Initiator: "session-user-5", Target: "PEERAAA1", Account: 5, Since: now.Add(-5 * time.Second)}, true
+	})
+	if status, body := ask(); status != http.StatusOK || !strings.Contains(body, `"via":"desktop"`) || !strings.Contains(body, `"account":5`) {
+		t.Fatalf("on a relay node: %d %s, want 200 via desktop for account 5", status, body)
+	}
+}

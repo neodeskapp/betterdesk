@@ -731,6 +731,12 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 
 		apiSrv := api.New(cfg, database, sig.PeerMap(), relaySrv, Version)
 		relayEndedTo.Store(apiSrv)
+		// A session a site's relay node carries counts like one of the
+		// central relay: the caller checks find it, its end is heard
+		if relayNodes != nil {
+			apiSrv.SetNodeLive(relayNodes.Live)
+			relayNodes.OnSessionEnded(apiSrv.RelayEnded)
+		}
 		// Short-lived sign-in state (2FA steps, OIDC, sign-in codes, nonces)
 		// is shared when several pods serve the installation
 		if clusterRT.kv != nil {

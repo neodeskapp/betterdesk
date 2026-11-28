@@ -312,12 +312,30 @@ func (s *Server) handleClearSignin(w http.ResponseWriter, r *http.Request) {
 	}{st, gone})
 }
 
-// signinLive is the relay session of uuid while it runs.
+// signinLive is the relay session of uuid while it runs: on the central
+// relay, else on the relay node signal sent it through (SetNodeLive).
 func (s *Server) signinLive(uuid string) (relay.LivePair, bool) {
 	if s.signinLiveFn != nil {
 		return s.signinLiveFn(uuid)
 	}
-	return s.relay.Live(uuid)
+	if pair, ok := s.relay.Live(uuid); ok {
+		return pair, true
+	}
+	if fn := s.nodeLive.Load(); fn != nil {
+		return (*fn)(uuid)
+	}
+	return relay.LivePair{}, false
+}
+
+// SetNodeLive names where the sessions of relay nodes are found (the relay
+// node glue's Live); nil for none. The saved sign-in and the caller checks
+// then see a session a site's node relays like one of the central relay.
+func (s *Server) SetNodeLive(fn func(uuid string) (relay.LivePair, bool)) {
+	if fn == nil {
+		s.nodeLive.Store(nil)
+		return
+	}
+	s.nodeLive.Store(&fn)
 }
 
 func (s *Server) signinNow() time.Time {

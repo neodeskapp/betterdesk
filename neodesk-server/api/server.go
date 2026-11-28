@@ -183,6 +183,8 @@ type Server struct {
 	callerUses signinUses
 	// relayEnded hears of the relay's session ends (unattended_caller.go)
 	relayEnded relayEndedHook
+	// nodeLive finds the sessions of relay nodes (SetNodeLive)
+	nodeLive atomic.Pointer[func(uuid string) (relay.LivePair, bool)]
 	// consoleLogins are the desktop sign-ins through the web console
 	// (console_device_login.go)
 	consoleLogins consoleLogins

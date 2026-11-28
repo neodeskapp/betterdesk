@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 	"github.com/neodeskapp/neodesk/neodesk-server/relaynode/hub"
 	"github.com/neodeskapp/neodesk/neodesk-server/relaynode/wire"
 	"github.com/neodeskapp/neodesk/neodesk-server/signal"
@@ -38,6 +39,33 @@ type Glue struct {
 	// node that reports one of those as its own address loses it, so no
 	// session meant for the central relay can be routed to it.
 	OwnRelay func(addr string) bool
+	// sessionEnded hears of a node session's end (OnSessionEnded)
+	sessionEnded atomic.Pointer[func(uuid string)]
+}
+
+// OnSessionEnded names who hears that a node ended a session, as the
+// central relay's session reporter tells it: the console, which writes the
+// end of an unattended session it vouched for. nil for nobody.
+func (g *Glue) OnSessionEnded(fn func(uuid string)) {
+	if fn == nil {
+		g.sessionEnded.Store(nil)
+		return
+	}
+	g.sessionEnded.Store(&fn)
+}
+
+// Live is the session uuid while it runs on a relay node that signal
+// sent it through, with the account and console session the ticket names.
+func (g *Glue) Live(uuid string) (relay.LivePair, bool) {
+	if g == nil || g.Hub == nil || uuid == "" {
+		return relay.LivePair{}, false
+	}
+	for _, id := range viaNodes(signal.RelayVia(uuid)) {
+		if pair, ok := g.Hub.Tickets(id).Live(uuid); ok {
+			return pair, true
+		}
+	}
+	return relay.LivePair{}, false
 }
 
 // nodeAddr is addr unless it is one of the server's own relay addresses.
@@ -148,6 +176,9 @@ func (g *Glue) NodeSessionEnded(nodeID, uuid string, up, down int64) {
 		log.Printf("[relay-node] end connection session for relay %s on node %s: %v", uuid, nodeID, err)
 	}
 	signal.ForgetRelayVia(uuid)
+	if fn := g.sessionEnded.Load(); fn != nil {
+		(*fn)(uuid)
+	}
 }
 
 // NodeRelayedSession reports whether signal sent the session uuid through
@@ -162,6 +193,24 @@ func (g *Glue) NodeRelayedSession(nodeID, uuid string) bool {
 		}
 	}
 	return viaHasNode(via, nodeID)
+}
+
+// viaNodes are the nodes a relay_via value ("node:<id>", "nodes:<a>,<b>")
+// names, none for any other value.
+func viaNodes(via string) []string {
+	if id, ok := strings.CutPrefix(via, "node:"); ok && id != "" {
+		return []string{id}
+	}
+	if ids, ok := strings.CutPrefix(via, "nodes:"); ok {
+		var out []string
+		for _, id := range strings.Split(ids, ",") {
+			if id != "" {
+				out = append(out, id)
+			}
+		}
+		return out
+	}
+	return nil
 }
 
 // viaHasNode reports whether a relay_via value ("node:<id>",
