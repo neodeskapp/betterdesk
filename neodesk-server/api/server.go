@@ -23,6 +23,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/billing"
 	"github.com/neodeskapp/neodesk/neodesk-server/cdap"
+	"github.com/neodeskapp/neodesk/neodesk-server/cluster"
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
 	"github.com/neodeskapp/neodesk/neodesk-server/crypto/devicevault"
@@ -151,9 +152,18 @@ type Server struct {
 	clientTFASessions *tfaSessionStore
 	panelStore        db.PanelSyncStore // device groups, folders, ACL (PostgreSQL or legacy auth.db)
 	panelTrustSecret  []byte            // HMAC key for panel-originated requests (nil = bridge off)
-	panelNonces       *panelNonceCache  // replay window for verified panel statements
-	timeSync          *timesync.Service
-	billing           *billing.Service
+	panelNonces       *onceKeys         // replay window for verified panel statements
+	// mgmtNonces and enrollmentNonces are the replay windows of the
+	// signed management requests and of the enrollment proofs
+	mgmtNonces       *onceKeys
+	enrollmentNonces *onceKeys
+	// nonceInit makes the nonce stores of a Server built without New
+	nonceInit sync.Once
+	// sharedKV is the KV of SetSharedKV, nil while each store keeps its
+	// values in memory
+	sharedKV cluster.KV
+	timeSync *timesync.Service
+	billing  *billing.Service
 	// peerVault is the old key of organizations' device passwords, derived
 	// from ORG_PEER_VAULT_KEY or the JWT secret: it only opens rows sealed
 	// before the key file (key id v1), which MigrateOrgPeerCredentials
@@ -226,7 +236,11 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		oidcStartLimiter:  ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute),
 		clientTFASessions: newTFASessionStore(),
 		secureClientKeys:  make(map[string][32]byte),
-		panelNonces:       newPanelNonceCache(),
+		panelNonces:       newPanelNonces(),
+		mgmtNonces:        newMgmtNonces(),
+		enrollmentNonces:  newEnrollmentNonces(),
+		signinUses:        signinUses{prefix: "signin:use:"},
+		callerUses:        signinUses{prefix: "signin:caller:"},
 		now:               time.Now,
 	}
 	s.fleet.init()
@@ -416,6 +430,9 @@ func (s *Server) InitLDAP() {
 func (s *Server) InitOIDC() {
 	cfg := s.loadOIDCConfigFromDB()
 	s.oidcProvider = auth.NewOIDCProvider(cfg)
+	if s.sharedKV != nil {
+		s.oidcProvider.SetKV(s.sharedKV)
+	}
 	if cfg.Enabled {
 		log.Printf("[OIDC] Provider initialized (issuer=%s, client_id=%s)", cfg.IssuerURL, cfg.ClientID)
 	}

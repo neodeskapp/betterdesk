@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/cluster"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/alerts"
@@ -128,6 +129,11 @@ type Options struct {
 	// instances (VALKEY_URL): LAN discovery and the mDNS announcement,
 	// which would announce one pod, stay off.
 	Clustered bool
+	// KV is the store of short-lived values the instances share
+	// (cluster.NewValkeyKV): the steps of used second-factor codes, the
+	// pending second steps of the client API and the nonces of device
+	// proofs. nil keeps them in memory, as a lone server does.
+	KV cluster.KV
 	// updaterOptions changes the updater's options before it is built:
 	// tests give it a GitHub and a binary of their own.
 	updaterOptions func(*updater.Options)
@@ -318,6 +324,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 
 		Leases:    opts.Leases,
 		Clustered: opts.Clustered,
+		KV:        opts.KV,
 	}
 	s.deps.ServerInfo = serverinfo.New(serverinfo.Options{
 		PubKeyPath: cfg.PubKeyPath,
@@ -476,6 +483,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 			return qr.PNGDataURL(text, qr.Options{Width: 256, Margin: 2})
 		},
 		Log: s.deps.Log.Child("AUTH"),
+		KV:  opts.KV,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("sign-in service: %w", err)

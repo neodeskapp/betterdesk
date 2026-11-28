@@ -712,6 +712,11 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		defer relaySrv.Stop()
 
 		apiSrv := api.New(cfg, database, sig.PeerMap(), relaySrv, Version)
+		// Short-lived sign-in state (2FA steps, OIDC, sign-in codes, nonces)
+		// is shared when several pods serve the installation
+		if clusterRT.kv != nil {
+			apiSrv.SetSharedKV(clusterRT.kv)
+		}
 		defer attachPanelSync(apiSrv, billingSvc, database, cfg.DBPath, cfg.AuthDBPath)()
 		attachPanelTrust(apiSrv)
 		apiSrv.SetBlocklist(blocklist)
