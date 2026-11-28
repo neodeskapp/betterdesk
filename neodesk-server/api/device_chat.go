@@ -15,7 +15,8 @@ import (
 // version 2 (/ws/chat/<id>?v=2) and the computer's chat files
 // (/api/chat/device/files, /api/chat/device/files/<id>) and the picture
 // of the person who helps (/api/chat/device/helper/picture), and the
-// computer's tickets (/api/tickets/nd and below, A277). The API's
+// computer's tickets (/api/tickets/nd and below, A277), and the policy
+// the receiver app applies (/api/nd/device-policy, A277). The API's
 // listener hands exactly these requests to the console in this process,
 // before its own credential check, which knows no device tokens and
 // refused them with 401. The console checks them as on its own port: the
@@ -63,6 +64,7 @@ const (
 	deviceChatFiles  = "/api/chat/device/files"
 	deviceChatHelper = "/api/chat/device/helper/picture"
 	deviceTickets    = "/api/tickets/nd"
+	devicePolicy     = "/api/nd/device-policy"
 )
 
 // deviceTicketUploadTime is how long reading a computer's new ticket or
@@ -120,7 +122,7 @@ func deviceChatRequest(r *http.Request) (chat, socket bool) {
 	if rest, ok := strings.CutPrefix(path, deviceChatSocket); ok && oneSegment(rest) {
 		return true, true
 	}
-	if path == deviceChatFiles || path == deviceChatHelper || deviceTicketPath(path) {
+	if path == deviceChatFiles || path == deviceChatHelper || path == devicePolicy || deviceTicketPath(path) {
 		return true, false
 	}
 	if rest, ok := strings.CutPrefix(path, deviceChatFiles+"/"); ok && oneSegment(rest) {
