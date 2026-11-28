@@ -2445,7 +2445,8 @@
     "action_site_deleted": "Site deleted",
     "action_site_networks_updated": "Site networks changed",
     "action_relay_node_address_refused": "Relänodens adress avvisad",
-    "action_relay_node_unknown_session": "Sessionsrapport från relänod ignorerad"
+    "action_relay_node_unknown_session": "Sessionsrapport från relänod ignorerad",
+    "action_relay_node_legs": "Relänodens anslutningar mellan platser räknade"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

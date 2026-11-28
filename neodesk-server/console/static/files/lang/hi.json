@@ -2445,7 +2445,8 @@
     "action_site_deleted": "Site deleted",
     "action_site_networks_updated": "Site networks changed",
     "action_relay_node_address_refused": "रिले नोड का पता अस्वीकार किया गया",
-    "action_relay_node_unknown_session": "रिले नोड की सत्र रिपोर्ट अनदेखी की गई"
+    "action_relay_node_unknown_session": "रिले नोड की सत्र रिपोर्ट अनदेखी की गई",
+    "action_relay_node_legs": "रिले नोड के साइट से साइट कनेक्शन गिने गए"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

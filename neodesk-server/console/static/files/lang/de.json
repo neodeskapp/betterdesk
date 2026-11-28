@@ -2439,7 +2439,8 @@
     "action_site_deleted": "Standort gelöscht",
     "action_site_networks_updated": "Netze des Standorts geändert",
     "action_relay_node_address_refused": "Adresse des Relay-Knotens abgewiesen",
-    "action_relay_node_unknown_session": "Sitzungsmeldung des Relay-Knotens ignoriert"
+    "action_relay_node_unknown_session": "Sitzungsmeldung des Relay-Knotens ignoriert",
+    "action_relay_node_legs": "Verbindungen des Relay-Knotens zu anderen Standorten gezählt"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

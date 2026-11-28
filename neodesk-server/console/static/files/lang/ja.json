@@ -2439,7 +2439,8 @@
     "action_site_deleted": "Site deleted",
     "action_site_networks_updated": "Site networks changed",
     "action_relay_node_address_refused": "リレーノードのアドレスを拒否しました",
-    "action_relay_node_unknown_session": "リレーノードのセッション報告を無視しました"
+    "action_relay_node_unknown_session": "リレーノードのセッション報告を無視しました",
+    "action_relay_node_legs": "リレーノードの拠点間接続を集計しました"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

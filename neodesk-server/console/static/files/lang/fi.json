@@ -2445,7 +2445,8 @@
     "action_site_deleted": "Site deleted",
     "action_site_networks_updated": "Site networks changed",
     "action_relay_node_address_refused": "Välityssolmun osoite hylätty",
-    "action_relay_node_unknown_session": "Välityssolmun istuntoilmoitus ohitettu"
+    "action_relay_node_unknown_session": "Välityssolmun istuntoilmoitus ohitettu",
+    "action_relay_node_legs": "Välityssolmun toimipaikkojen väliset yhteydet laskettu"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
