@@ -640,6 +640,7 @@
       "action_relay_node_address_refused": "Adresse des Relay-Knotens abgewiesen",
       "action_relay_node_auth_failed": "Relay-Knoten abgewiesen",
       "action_relay_node_enrolled": "Relay-Knoten beigetreten",
+      "action_relay_node_legs": "Verbindungen des Relay-Knotens zu anderen Standorten gezählt",
       "action_relay_node_renamed": "Relay-Knoten umbenannt",
       "action_relay_node_revoked": "Relay-Knoten widerrufen",
       "action_relay_node_tickets": "Sitzungen des Relay-Knotens gezählt",
