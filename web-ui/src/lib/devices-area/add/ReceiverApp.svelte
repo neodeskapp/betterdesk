@@ -1,8 +1,9 @@
 <!--
   Devices › Add computers › Receiver app (/devices/add?tab=receiver;
   enrollment.manage): install the NeoDesk app on a computer without anyone
-  clicking through it. The admin gives a device token (pasted, or made here
-  with the token dialog, which also picks the folder and the policies) and
+  clicking through it. The admin gives a token (pasted, or made here with
+  the token dialog, which starts on a rollout token for many computers,
+  A278, and also picks the folder and the policies) and
   optionally a folder, and gets the silent msiexec command and a download:
   the generic Support Agent release's MSI as neodesk-support.msi with an
   install.cmd that runs the command (console/routes/receiverapp). The MSI
@@ -143,7 +144,7 @@
 					</Field>
 					<div class="form-actions">
 						<Button icon="add" class="receiver-new-token" onclick={() => (creating = true)}
-							>{t('tokens.create')}</Button
+							>{t('receiver_app.create_rollout')}</Button
 						>
 					</div>
 					{#if places.folders.length}
@@ -212,7 +213,7 @@
 </div>
 
 {#if creating}
-	<TokenDialog token={null} onclose={() => (creating = false)} onsaved={created} />
+	<TokenDialog token={null} kind="rollout" onclose={() => (creating = false)} onsaved={created} />
 {/if}
 
 <style>

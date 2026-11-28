@@ -252,6 +252,28 @@ type DeviceToken struct {
 	// OrgID is the organization a device that enrolls with the token
 	// joins, so that its policies apply to the device; "" for none.
 	OrgID string `json:"org_id,omitempty"`
+	// Kind is TokenKindDevice (one computer: the first device that joins
+	// binds it) or TokenKindRollout (many computers until it expires or
+	// MaxUses computers joined; never bound, never a device's credential).
+	// "" reads as TokenKindDevice.
+	Kind string `json:"kind,omitempty"`
+}
+
+// The kinds of a device token (A278).
+const (
+	TokenKindDevice  = "device"
+	TokenKindRollout = "rollout"
+)
+
+// IsRollout reports whether the token is a rollout token.
+func (t *DeviceToken) IsRollout() bool { return t != nil && t.Kind == TokenKindRollout }
+
+// kindOrDevice is the kind to store: TokenKindDevice when none is set.
+func (t *DeviceToken) kindOrDevice() string {
+	if t.Kind == "" {
+		return TokenKindDevice
+	}
+	return t.Kind
 }
 
 // DeviceTokenStatus constants
@@ -720,6 +742,11 @@ type Database interface {
 	EndDeviceTokensExcept(peerID string, keep int64) error
 	BindTokenToPeer(tokenHash, peerID string) error
 	IncrementTokenUse(tokenHash string) error
+	// ClaimRolloutJoin takes one place of a rollout token atomically
+	// (false: revoked, expired or used up); ReleaseRolloutJoin gives it
+	// back when the join fails after the claim.
+	ClaimRolloutJoin(id int64) (bool, error)
+	ReleaseRolloutJoin(id int64) error
 	ValidateToken(tokenHash string) (*DeviceToken, error) // Returns token if valid, nil if invalid/expired/revoked
 	CleanupExpiredTokens() (int64, error)
 

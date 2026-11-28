@@ -108,7 +108,7 @@
     "kind": "json",
     "json": {
      "code": "invalid_token",
-     "error": "Enter a device token.",
+     "error": "Enter a token.",
      "success": false
     }
    }

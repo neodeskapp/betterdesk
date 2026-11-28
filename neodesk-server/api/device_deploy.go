@@ -253,7 +253,19 @@ func (s *Server) handleDeviceDeploy(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if tok.PeerID == "" {
+	if tok.IsRollout() {
+		// A rollout token takes a place instead of binding (A278)
+		claimed, err := s.db.ClaimRolloutJoin(tok.ID)
+		if err != nil {
+			internalError("rollout place for", err)
+			return
+		}
+		if !claimed {
+			s.auditDeployRefusal(clientIP, id, "deploy_token_rejected", tok)
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "The device token is invalid, expired, revoked or used up"})
+			return
+		}
+	} else if tok.PeerID == "" {
 		if err := s.db.BindTokenToPeer(tok.TokenHash, deployTokenPeer(id)); err != nil {
 			log.Printf("[API] deploy: bind token %d to %s: %v", tok.ID, id, err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
@@ -268,8 +280,10 @@ func (s *Server) handleDeviceDeploy(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if err := s.db.IncrementTokenUse(tok.TokenHash); err != nil {
-		log.Printf("[API] deploy: count the use of token %d: %v", tok.ID, err)
+	if !tok.IsRollout() {
+		if err := s.db.IncrementTokenUse(tok.TokenHash); err != nil {
+			log.Printf("[API] deploy: count the use of token %d: %v", tok.ID, err)
+		}
 	}
 
 	deviceType := strings.TrimSpace(pending.DeviceType)
@@ -287,6 +301,9 @@ func (s *Server) handleDeviceDeploy(w http.ResponseWriter, r *http.Request) {
 		RendezvousPK: pk,
 	}
 	if err := s.createPeerFromEnrollment(enrollment, clientIP, true); err != nil {
+		if tok.IsRollout() {
+			_ = s.db.ReleaseRolloutJoin(tok.ID)
+		}
 		log.Printf("[API] deploy: create peer %s: %v", id, err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal server error"})
 		return

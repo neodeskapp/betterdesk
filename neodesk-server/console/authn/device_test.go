@@ -51,6 +51,33 @@ func TestDeviceSocketRefusesAnUnboundTokenForAKnownDevice(t *testing.T) {
 	})
 }
 
+// TestARolloutTokenOpensNoDeviceSocket: a rollout token (A278) admits many
+// computers at registration, each with its own device token; it opens no
+// device socket itself, not even for a device id the signal server has
+// no row for, where an unbound token of one computer would.
+func TestARolloutTokenOpensNoDeviceSocket(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.GoServerFirst)
+		ctx := context.Background()
+		s, _, _ := testService(t, db, nil)
+		mustExec(t, db, `INSERT INTO device_tokens (token_hash, peer_id, status, max_uses, use_count, kind) VALUES (?, '', 'active', 100, 3, 'rollout')`,
+			HashDeviceToken("rollout-token-1"))
+		mustExec(t, db, `INSERT INTO device_tokens (token_hash, peer_id, status, max_uses, use_count) VALUES (?, '', 'pending', 1, 0)`,
+			HashDeviceToken("one-computer-1"))
+		for _, c := range []struct {
+			token string
+			want  bool
+		}{{"rollout-token-1", false}, {"one-computer-1", true}} {
+			if ok, err := s.VerifyDeviceWSAuth(ctx, "new-device", c.token); err != nil || ok != c.want {
+				t.Errorf("socket with %s: %v, %v; want %v", c.token, ok, err, c.want)
+			}
+			if ok, err := s.VerifyEnrollmentToken(ctx, "new-device", c.token); err != nil || ok != c.want {
+				t.Errorf("enrollment check with %s: %v, %v; want %v", c.token, ok, err, c.want)
+			}
+		}
+	})
+}
+
 // TestABannedOrDeletedDeviceProvesNothing: a device token of a device the
 // signal server holds as banned or soft-deleted is refused on the device
 // routes and the device sockets, whichever port banned or deleted it; a

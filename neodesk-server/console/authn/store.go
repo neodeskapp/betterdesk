@@ -484,12 +484,15 @@ func cleanupOldLoginAttempts(ctx context.Context, q store.Querier) error {
 // ---- Enrollment tokens (a table of the signal server) ----
 
 // enrollmentToken is the part of a device_tokens row the check reads.
+// kind is "rollout" for a token of many computers (A278), which admits
+// computers at registration and is never a device's credential.
 type enrollmentToken struct {
 	peerID    nullText
 	status    nullText
 	maxUses   sql.NullInt64
 	useCount  sql.NullInt64
 	expiresAt store.Time
+	kind      nullText
 }
 
 // lookupEnrollmentToken returns the enrollment token with this hash, or
@@ -498,8 +501,16 @@ type enrollmentToken struct {
 func lookupEnrollmentToken(ctx context.Context, q store.Querier, tokenHash string) (*enrollmentToken, error) {
 	var t enrollmentToken
 	err := store.SelectRow(ctx, q,
-		`SELECT peer_id, status, max_uses, use_count, expires_at FROM device_tokens WHERE token_hash = ?`, tokenHash).
-		Scan(&t.peerID, &t.status, &t.maxUses, &t.useCount, &t.expiresAt)
+		`SELECT peer_id, status, max_uses, use_count, expires_at, kind FROM device_tokens WHERE token_hash = ?`, tokenHash).
+		Scan(&t.peerID, &t.status, &t.maxUses, &t.useCount, &t.expiresAt, &t.kind)
+	if err != nil && strings.Contains(err.Error(), "kind") && strings.Contains(err.Error(), q.Pick("no such column", "does not exist")) {
+		// A table from before rollout tokens (a signal server that hasn't
+		// migrated yet) holds only tokens of one computer
+		t = enrollmentToken{}
+		err = store.SelectRow(ctx, q,
+			`SELECT peer_id, status, max_uses, use_count, expires_at FROM device_tokens WHERE token_hash = ?`, tokenHash).
+			Scan(&t.peerID, &t.status, &t.maxUses, &t.useCount, &t.expiresAt)
+	}
 	switch {
 	case err == nil:
 		return &t, nil

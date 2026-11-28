@@ -5838,7 +5838,20 @@
     "folder_hint": "A computer that joins with this token goes into this folder.",
     "policies": "Policies",
     "policies_hint": "A computer that joins with this token gets the policies of this organization.",
-    "no_policies": "None"
+    "no_policies": "None",
+    "kind": "Computers",
+    "kind_one": "For one computer",
+    "kind_one_desc": "Works only for the first computer that joins with it.",
+    "kind_many": "For many computers",
+    "kind_many_desc": "A rollout token, for example for the receiver app's installer: computers join with it until it expires or the limit is reached. Each one gets its own access.",
+    "rollout_limit": "Computers allowed",
+    "rollout_limit_hint": "How many computers can join with this token in total.",
+    "rollout_limit_edit_hint": "How many computers can join with this token in total. The expiry date can't be changed afterwards.",
+    "rollout_limit_invalid": "Enter a whole number from 1 to {max}.",
+    "rollout_expires_hint": "After this, no more computers can join with it. Computers that already joined keep working.",
+    "rollout_uses": "{count} joined, {left} left",
+    "expires_90d": "90 days",
+    "expires_1y": "1 year"
   },
   "api_tokens": {
     "title": "API-tokens",
@@ -6853,7 +6866,8 @@
     "server_value_short": "Server value",
     "devices_none": "No device is in this organization yet, so these policies reach none.",
     "allow_uninstall": "People can remove the app",
-    "help_allow_uninstall": "Off: people at these computers cannot remove the NeoDesk app. Not set allows it."
+    "help_allow_uninstall": "Off: people at these computers cannot remove the NeoDesk app. Not set allows it.",
+    "receiver_applies_some": "So far only the receiver app applies part of this group: {settings}. The NeoDesk desktop app doesn't apply this group yet. The other settings are saved and handed to devices that ask."
   },
   "attestation": {
     "title": "Enhedsattest",
@@ -11021,12 +11035,12 @@
   },
   "receiver_app": {
     "tab": "Receiver app",
-    "page_description": "Install the NeoDesk app on a computer without anyone clicking through it. The computer joins this server with a device token.",
+    "page_description": "Install the NeoDesk app on computers without anyone clicking through it. The computers join this server with a token.",
     "token_title": "Token",
-    "token_note": "A token adds one computer. Paste one from Device tokens, or create one here. The token decides the folder and the policies.",
-    "token": "Device token",
+    "token_note": "For many computers, use a rollout token: computers join with it until it expires or reaches its limit. A token from Device tokens for one computer adds just that computer. The token decides the folder and the policies.",
+    "token": "Token",
     "token_hint": "It is shown once, when the token is created.",
-    "token_invalid": "This is not a device token. A token has 16 to 128 letters and digits.",
+    "token_invalid": "This is not a token. A token has 16 to 128 letters and digits.",
     "token_filled": "The new token is filled in.",
     "folder_hint": "Used when the token has no folder of its own.",
     "arch": "Processor",
@@ -11039,18 +11053,20 @@
     "downloading": "Preparing the download…",
     "downloaded": "Downloaded.",
     "command": "Silent install",
-    "command_needs_token": "Enter a device token to see the command.",
+    "command_needs_token": "Enter a token to see the command.",
     "properties_title": "MSI properties",
     "properties_note": "The values the installer needs for this server. TOKEN is needed when new computers need a token or approval.",
     "errors": {
       "invalid_body": "The request could not be read.",
-      "invalid_token": "Enter a device token.",
+      "invalid_token": "Enter a token.",
       "token_unknown": "This token does not exist, was revoked or has expired.",
-      "token_used": "A computer has already joined with this token. Create a new one.",
+      "token_used": "A computer has already joined with this token. Create a new one, or a rollout token for many computers.",
       "invalid_group": "This folder does not exist.",
       "no_release": "There is no installer for this processor. Import the Support Agent release under Support agents.",
-      "server_error": "Something went wrong on the server. Try again."
-    }
+      "server_error": "Something went wrong on the server. Try again.",
+      "token_full": "All the computers this rollout token allows have joined. Raise its limit under Device tokens or create a new one."
+    },
+    "create_rollout": "Create rollout token"
   },
   "quick_support_receiver": {
     "title": "Keep NeoDesk on the computer",

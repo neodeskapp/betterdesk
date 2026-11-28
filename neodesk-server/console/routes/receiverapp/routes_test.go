@@ -36,6 +36,18 @@ func receiverWorld(t *testing.T, release bool, test func(t *testing.T, w *routet
 				t.Fatal(err)
 			}
 		}
+		// Rollout tokens (A278): one with places left, one used up, one past
+		// its expiry that no clean-up marked expired yet
+		for _, row := range [][]any{
+			{receiverapp.HashToken("rolloutrolloutrolloutrolloutroll"), "active", 100, 40, "2999-01-01T00:00:00Z"},
+			{receiverapp.HashToken("fullfullfullfullfullfullfullfull"), "active", 2, 2, "2999-01-01T00:00:00Z"},
+			{receiverapp.HashToken("pastpastpastpastpastpastpastpast"), "pending", 100, 0, "2001-01-01T00:00:00Z"},
+		} {
+			if _, err := sdb.Exec(ctx, `INSERT INTO device_tokens (token_hash, token_prefix, name, status, peer_id, max_uses, use_count, expires_at, kind)
+				VALUES (?, 'x', 'rollout', ?, '', ?, ?, ?, 'rollout')`, row...); err != nil {
+				t.Fatal(err)
+			}
+		}
 		if _, err := sdb.Exec(ctx, `INSERT INTO folders (id, name) VALUES (7, 'Front office')`); err != nil {
 			t.Fatal(err)
 		}
@@ -134,6 +146,20 @@ func TestReceiverInstallerCarriesTheProperties(t *testing.T) {
 	})
 }
 
+// A rollout token with places left gives an installer, although
+// computers joined with it already.
+func TestReceiverInstallerTakesARolloutToken(t *testing.T) {
+	receiverWorld(t, true, func(t *testing.T, w *routetest.World) {
+		got := w.As("admin").Do(http.MethodPost, "/api/panel/receiver/installer", `{"token":"rolloutrolloutrolloutrolloutroll"}`)
+		if got.Status != http.StatusOK {
+			t.Fatalf("download with a rollout token: %d %.300s", got.Status, got.Body)
+		}
+		if cmd := unzip(t, got.Body)["install.cmd"]; !strings.Contains(cmd, " TOKEN=rolloutrolloutrolloutrolloutroll") {
+			t.Errorf("install.cmd lacks the token:\n%s", cmd)
+		}
+	})
+}
+
 // What can't make a working install is refused before anything is sent.
 func TestReceiverInstallerRefusesWhatCantWork(t *testing.T) {
 	receiverWorld(t, true, func(t *testing.T, w *routetest.World) {
@@ -143,6 +169,8 @@ func TestReceiverInstallerRefusesWhatCantWork(t *testing.T) {
 			`{"token":"0123456789abcdef0123456789abcdee"}`:              "token_unknown",
 			`{"token":"revokedrevokedrevokedrevokedrevo"}`:              "token_unknown",
 			`{"token":"usedusedusedusedusedusedusedused"}`:              "token_used",
+			`{"token":"fullfullfullfullfullfullfullfull"}`:              "token_full",
+			`{"token":"pastpastpastpastpastpastpastpast"}`:              "token_unknown",
 			`{"token":"0123456789abcdef0123456789abcdef","group":99}`:   "invalid_group",
 			`{"token":"0123456789abcdef0123456789abcdef","group":"x"}`:  "invalid_group",
 			`{"token":"0123456789abcdef0123456789abcdef","arch":"arm"}`: "no_release",

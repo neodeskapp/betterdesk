@@ -51,6 +51,9 @@ const GROUP_FIELDS: Record<string, string[]> = {
 	update: ['auto_update', 'channel']
 };
 
+/** What the receiver app applies, as the server says (neodesk-client#28) */
+const RECEIVER_APPLIES: Record<string, string[]> = { connection: ['mode'], security: ['allow_uninstall'] };
+
 /** The resolved answer for what the organization stored */
 function resolvedFor(stored: Record<string, Record<string, unknown>>, deviceAppApplies = false) {
 	const out: Record<string, unknown> = {};
@@ -76,6 +79,7 @@ function resolvedFor(stored: Record<string, Record<string, unknown>>, deviceAppA
 			set: Object.keys(values).length > 0,
 			applied_by: group === 'network' ? 'server' : 'device',
 			device_app_applies: group === 'network' ? false : deviceAppApplies,
+			receiver_applies: RECEIVER_APPLIES[group] ?? [],
 			timing: group === 'network' ? 'server_minute' : 'device_next_check',
 			fields
 		};
@@ -233,13 +237,13 @@ describe('policies page', () => {
 	test('the device groups say once that no app applies them; the network group says when the server does', async () => {
 		signIn('global_admin', EDITOR);
 		await openPage();
-		for (const g of ['connection', 'features', 'security', 'update'])
+		for (const g of ['features', 'update'])
 			expect(within(group(`policies.${g}_title`)).getAllByText(NOTICE)).toHaveLength(1);
 		const network = group('policies.network_title');
 		expect(within(network).queryByText(NOTICE)).toBeNull();
 		expect(within(network).getByText('policies.effect_server')).toBeInTheDocument();
 		// "Devices get this" would contradict the notice: no app gets it yet
-		for (const g of ['connection', 'features', 'security', 'update'])
+		for (const g of ['features', 'update'])
 			expect(
 				within(group(`policies.${g}_title`)).queryByText(
 					'Devices get this when they next ask for their policy.'
@@ -252,6 +256,27 @@ describe('policies page', () => {
 		// Said on the group only, never again on each of its rows
 		expect(screen.queryByText('No NeoDesk app applies this yet.')).toBeNull();
 		expect(document.getElementById('pol-features-allow-audio')).not.toHaveTextContent(/applies this/);
+	});
+
+	test('connection and security name what the receiver app applies and say the desktop app applies none of it yet', async () => {
+		signIn('global_admin', EDITOR);
+		await openPage();
+		for (const [g, label] of [
+			['connection', 'policies.connection_mode'],
+			['security', 'policies.allow_uninstall']
+		] as const) {
+			const box = group(`policies.${g}_title`);
+			expect(within(box).queryByText(NOTICE)).toBeNull();
+			const notices = within(box).getAllByText(/only the receiver app applies part of this group/);
+			expect(notices).toHaveLength(1);
+			expect(notices[0]).toHaveTextContent(`group: ${label}.`);
+			expect(notices[0]).toHaveTextContent("The NeoDesk desktop app doesn't apply this group yet.");
+			// The receiver gets it at its next check, so the timing is said
+			expect(
+				within(box).getByText('Devices get this when they next ask for their policy.')
+			).toBeInTheDocument();
+		}
+		expect(within(group('policies.features_title')).queryByText(/receiver app/)).toBeNull();
 	});
 
 	test('once an app applies the device groups, the notice is gone', async () => {

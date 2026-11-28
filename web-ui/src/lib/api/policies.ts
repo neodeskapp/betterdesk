@@ -91,8 +91,10 @@ export const ResolvedGroup = v.looseObject({
 	set: v.boolean(),
 	/** Who applies the group: the server itself, or the device that asks for its policy */
 	applied_by: v.picklist(['server', 'device']),
-	/** A device app applies the group (false while no client release reads it) */
+	/** The full desktop app applies the group (false while no release of it reads it) */
 	device_app_applies: v.boolean(),
+	/** The group's settings the receiver app applies (session approval, removing the app) */
+	receiver_applies: v.optional(v.array(v.string()), []),
 	/** When a change takes effect: "server_minute" or "device_next_check" */
 	timing: v.string(),
 	fields: v.record(v.string(), ResolvedField)

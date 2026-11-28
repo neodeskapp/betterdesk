@@ -35,6 +35,9 @@ import {
 	copyAllText,
 	countTokens,
 	filterTokens,
+	isRollout,
+	rolloutLeft,
+	rolloutLimitOk,
 	tokenMenu,
 	tokenStatus,
 	usesOk,
@@ -99,6 +102,7 @@ const token = (over: Partial<DeviceToken> = {}): DeviceToken => ({
 	created_by: 'anna',
 	folder_id: 0,
 	org_id: '',
+	kind: '',
 	...over
 });
 
@@ -149,6 +153,26 @@ describe('device tokens', () => {
 		expect(ids('all', 'BATCH')).toEqual(['d']);
 		expect(ids('all', 'ABCD12')).toEqual(['a', 'b', 'c', 'd']);
 		expect(countTokens(list, NOW)).toEqual({ pending: 1, active: 1, expired: 1, revoked: 1 });
+	});
+
+	test('a rollout token counts joined and left computers, ends on its date once used, and needs 1 to 100,000 computers', () => {
+		const roll = (over: Partial<DeviceToken> = {}) =>
+			token({ kind: 'rollout', status: 'active', max_uses: 100, use_count: 12, ...over });
+		expect(isRollout(roll())).toBe(true);
+		expect(isRollout(token())).toBe(false);
+		expect(rolloutLeft(roll())).toBe(88);
+		expect(rolloutLeft(roll({ max_uses: 10, use_count: 12 }))).toBe(0);
+		expect(tokenStatus(roll(), NOW).label).toBe('status_used');
+		expect(tokenStatus(roll({ use_count: 100 }), NOW).label).toBe('status_used_up');
+		// Used and past its date: expired, before the server marks it
+		expect(tokenStatus(roll({ expires_at: '2026-11-08T00:00:00Z' }), NOW).key).toBe('expired');
+		// A used token of one computer past its date stays "used", as before
+		expect(tokenStatus(token({ status: 'active', expires_at: '2026-11-08T00:00:00Z' }), NOW).key).toBe(
+			'active'
+		);
+		expect(rolloutLimitOk('1')).toBe(true);
+		expect(rolloutLimitOk('100000')).toBe(true);
+		for (const bad of ['0', '100001', '', '2.5', '-1']) expect(rolloutLimitOk(bad)).toBe(false);
 	});
 
 	test('revoked tokens have no row menu', () => {

@@ -36,7 +36,12 @@ export const DeviceToken = v.object({
 	/** The folder (device group) a device that joins with it goes into; 0: none */
 	folder_id: Num,
 	/** The organization whose policies the device gets; '': none */
-	org_id: Text
+	org_id: Text,
+	/**
+	 * 'rollout': a token for many computers (A278), max_uses computers until
+	 * it expires; use_count is how many joined. '' or 'device': one computer
+	 */
+	kind: Text
 });
 export type DeviceToken = v.InferOutput<typeof DeviceToken>;
 
@@ -70,6 +75,8 @@ export interface TokenInput {
 	folder_id?: number;
 	/** The organization whose policies the device gets; '': none */
 	org_id?: string;
+	/** 'rollout' for many computers (needs max_uses of 1 or more and expires_in); left out: one computer. Only when creating */
+	kind?: 'rollout';
 }
 
 export async function createToken(body: TokenInput): Promise<NewToken | null> {

@@ -101,7 +101,7 @@ func TestNodeAgentAnswers(t *testing.T) {
 		// The server's enrollment tokens, which the token check reads first;
 		// on PostgreSQL a missing table fails the check.
 		if _, err := db.Exec(ctx, `CREATE TABLE IF NOT EXISTS device_tokens (token_hash TEXT, peer_id TEXT, status TEXT,
-			max_uses INTEGER, use_count INTEGER, expires_at TEXT)`); err != nil {
+			max_uses INTEGER, use_count INTEGER, expires_at TEXT, kind TEXT)`); err != nil {
 			t.Fatalf("device_tokens: %v", err)
 		}
 		sum := sha256.Sum256([]byte(agentToken))

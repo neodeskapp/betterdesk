@@ -25,6 +25,7 @@ function resolved(stored: Record<string, Record<string, unknown>> = {}): Resolve
 			set: Object.keys(values).length > 0,
 			applied_by: group === 'network' ? 'server' : 'device',
 			device_app_applies: false,
+			receiver_applies: [],
 			timing: group === 'network' ? 'server_minute' : 'device_next_check',
 			fields: {}
 		});

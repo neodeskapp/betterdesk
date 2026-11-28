@@ -11,11 +11,21 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
-// deviceAppReadsPolicies says whether a NeoDesk device app applies the
-// groups it gets at GET /api/nd/device-policy (connection, features,
-// security, update). No client release reads them yet; set it to true
-// with the release that does.
-const deviceAppReadsPolicies = false
+// desktopAppReadsPolicies says whether the full NeoDesk desktop app
+// applies the groups it gets at GET /api/nd/device-policy (connection,
+// features, security, update). No release of it reads them yet; set it to
+// true with the release that does.
+const desktopAppReadsPolicies = false
+
+// receiverApplies are the settings, per group, that the receiver app (the
+// NeoDesk app installed with the receiver MSI) applies from GET
+// /api/nd/device-policy since neodesk-client#28: session approval, and
+// whether people at the computer can remove the app. It checks every five
+// minutes. It applies no other setting.
+var receiverApplies = map[string][]string{
+	"connection": {"mode"},
+	"security":   {"allow_uninstall"},
+}
 
 // serverGroups are the groups the server applies itself (package policy,
 // signal routing, with a cache of a minute): the device app has nothing
@@ -39,11 +49,15 @@ var connectionStrategy = serverSetting{LabelKey: "settings.connection_mode_title
 // the value in force comes from:
 //
 //	{<group>: {set, applied_by: "server"|"device", device_app_applies,
+//	  receiver_applies: [<field>...],
 //	  timing: "server_minute"|"device_next_check",
 //	  fields: {<field>: {value, source: "organization"|"server"|"none",
 //	    server_value?, server_setting?: {label_key, href}}}}}
 //
-// "none" is a setting without a rule: each device keeps its own. Only
+// device_app_applies is whether the full desktop app applies the group;
+// receiver_applies names the group's settings the receiver app applies
+// (receiverApplies), [] for none. "none" is a setting without a rule:
+// each device keeps its own. Only
 // block_direct_p2p has a server-wide setting, the connection strategy:
 // with "Always through the relay" no connection goes direct.
 func (h *handlers) resolved(w http.ResponseWriter, r *http.Request) {
@@ -66,9 +80,13 @@ func (h *handlers) resolved(w http.ResponseWriter, r *http.Request) {
 	out := goapi.NewObject()
 	for _, group := range api.PolicyFields() {
 		values, _ := stored.Get(group.Group).(*goapi.Object)
-		appliedBy, timing, appApplies := "device", "device_next_check", deviceAppReadsPolicies
+		appliedBy, timing, appApplies := "device", "device_next_check", desktopAppReadsPolicies
+		receiver := []any{}
+		for _, name := range receiverApplies[group.Group] {
+			receiver = append(receiver, name)
+		}
 		if serverGroups[group.Group] {
-			appliedBy, timing, appApplies = "server", "server_minute", false
+			appliedBy, timing, appApplies, receiver = "server", "server_minute", false, []any{}
 		}
 		fields := goapi.NewObject()
 		for _, name := range group.Fields {
@@ -88,6 +106,7 @@ func (h *handlers) resolved(w http.ResponseWriter, r *http.Request) {
 			"set", values.Len() > 0,
 			"applied_by", appliedBy,
 			"device_app_applies", appApplies,
+			"receiver_applies", receiver,
 			"timing", timing,
 			"fields", fields,
 		))

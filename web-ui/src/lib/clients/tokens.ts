@@ -17,8 +17,19 @@ export interface TokenStatus {
 	label: 'status_pending' | 'status_used' | 'status_used_up' | 'status_expired' | 'status_revoked';
 }
 
+/** A token for many computers (A278) */
+export function isRollout(t: Pick<DeviceToken, 'kind'>): boolean {
+	return t.kind === 'rollout';
+}
+
+/** How many more computers a rollout token lets join */
+export function rolloutLeft(t: Pick<DeviceToken, 'max_uses' | 'use_count'>): number {
+	return Math.max(0, t.max_uses - t.use_count);
+}
+
 function expiredByDate(t: DeviceToken, now: number): boolean {
-	if (t.status !== 'pending' || !t.expires_at) return false;
+	// A rollout token is "active" once a computer joined and still ends on its date
+	if ((t.status !== 'pending' && !(isRollout(t) && t.status === 'active')) || !t.expires_at) return false;
 	const at = Date.parse(t.expires_at);
 	return Number.isFinite(at) && at < now;
 }
@@ -80,6 +91,24 @@ export const EXPIRY_LABELS: Record<number, string> = {
 	604800: 'expires_7d',
 	2592000: 'expires_30d'
 };
+
+/** A rollout token's expiry choices, in seconds: it always ends. 30 days first */
+export const ROLLOUT_EXPIRY_CHOICES = [2592000, 604800, 86400, 7776000, 31536000] as const;
+export const ROLLOUT_EXPIRY_LABELS: Record<number, string> = {
+	86400: 'expires_24h',
+	604800: 'expires_7d',
+	2592000: 'expires_30d',
+	7776000: 'expires_90d',
+	31536000: 'expires_1y'
+};
+/** A rollout token's computers: the default and the most the server takes */
+export const ROLLOUT_DEFAULT_COMPUTERS = 100;
+export const ROLLOUT_MAX_COMPUTERS = 100000;
+
+/** A rollout token's "Computers allowed": a whole number from 1 to 100,000 */
+export function rolloutLimitOk(raw: string | number | null | undefined): boolean {
+	return usesOk(raw) && usesValue(raw) >= 1 && usesValue(raw) <= ROLLOUT_MAX_COMPUTERS;
+}
 
 /** "Uses allowed" as typed: a whole number of 0 or more (0 means no limit) */
 export function usesOk(raw: string | number | null | undefined): boolean {

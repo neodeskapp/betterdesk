@@ -799,6 +799,9 @@ func (pg *PostgresDB) Migrate() error {
 		// apply) a device that enrolls with the token goes into, 0 and "" for none
 		`ALTER TABLE device_tokens ADD COLUMN IF NOT EXISTS folder_id BIGINT NOT NULL DEFAULT 0`,
 		`ALTER TABLE device_tokens ADD COLUMN IF NOT EXISTS org_id TEXT NOT NULL DEFAULT ''`,
+		// device_tokens: "device" admits one computer, "rollout" many
+		// (A278), each with its own device token
+		`ALTER TABLE device_tokens ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'device'`,
 		// peer_metrics: network rates of NeoDesk telemetry, and a value
 		// the device did not measure stays NULL (L480)
 		`ALTER TABLE peer_metrics ADD COLUMN IF NOT EXISTS net_rx_bps REAL`,
@@ -2313,32 +2316,56 @@ func (pg *PostgresDB) CreateDeviceToken(t *DeviceToken) error {
 	}
 
 	err := pg.pool.QueryRow(pg.ctx, `
-		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note, created_by_token, folder_id, org_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note, created_by_token, folder_id, org_id, kind)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id, created_at`,
-		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note, t.CreatedByToken, t.FolderID, t.OrgID,
+		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note, t.CreatedByToken, t.FolderID, t.OrgID, t.kindOrDevice(),
 	).Scan(&t.ID, &t.CreatedAt)
+	return err
+}
+
+// ClaimRolloutJoin takes one of the computers a rollout token allows, in
+// one statement: the token must be a rollout token, not revoked or
+// expired, not past its expiry and below its limit. It reports whether a
+// place was taken. The row lock of the UPDATE makes a second join at
+// once read the first one's count, so the limit is never passed.
+func (pg *PostgresDB) ClaimRolloutJoin(id int64) (bool, error) {
+	tag, err := pg.pool.Exec(pg.ctx, `
+		UPDATE device_tokens SET use_count = use_count + 1, status = 'active', last_used_at = NOW()
+		WHERE id = $1 AND kind = 'rollout' AND status NOT IN ('revoked', 'expired')
+		AND use_count < max_uses AND (expires_at IS NULL OR expires_at > NOW())`, id)
+	if err != nil {
+		return false, fmt.Errorf("db: ClaimRolloutJoin: %w", err)
+	}
+	return tag.RowsAffected() == 1, nil
+}
+
+// ReleaseRolloutJoin gives back a place ClaimRolloutJoin took, for a join
+// that failed after it.
+func (pg *PostgresDB) ReleaseRolloutJoin(id int64) error {
+	_, err := pg.pool.Exec(pg.ctx, `UPDATE device_tokens SET use_count = use_count - 1
+		WHERE id = $1 AND kind = 'rollout' AND use_count > 0`, id)
 	return err
 }
 
 // GetDeviceToken returns a device token by ID.
 func (pg *PostgresDB) GetDeviceToken(id int64) (*DeviceToken, error) {
 	return pg.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id, kind
 		FROM device_tokens WHERE id = $1`, id)
 }
 
 // GetDeviceTokenByHash returns a device token by its hash.
 func (pg *PostgresDB) GetDeviceTokenByHash(tokenHash string) (*DeviceToken, error) {
 	return pg.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id, kind
 		FROM device_tokens WHERE token_hash = $1`, tokenHash)
 }
 
 // GetDeviceTokenByPeerID returns the token bound to a peer.
 func (pg *PostgresDB) GetDeviceTokenByPeerID(peerID string) (*DeviceToken, error) {
 	return pg.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id, kind
 		FROM device_tokens WHERE peer_id = $1 AND status IN ('active', 'pending')`, peerID)
 }
 
@@ -2349,7 +2376,7 @@ func (pg *PostgresDB) getDeviceTokenByQuery(query string, args ...interface{}) (
 
 	err := pg.pool.QueryRow(pg.ctx, query, args...).Scan(
 		&t.ID, &t.TokenHash, &t.Token, &t.Name, &t.PeerID, &t.Status, &t.MaxUses, &t.UseCount,
-		&t.CreatedAt, &expiresAt, &revokedAt, &lastUsedAt, &t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID)
+		&t.CreatedAt, &expiresAt, &revokedAt, &lastUsedAt, &t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID, &t.Kind)
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
@@ -2366,7 +2393,7 @@ func (pg *PostgresDB) getDeviceTokenByQuery(query string, args ...interface{}) (
 // ListDeviceTokens returns all device tokens.
 func (pg *PostgresDB) ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, error) {
 	query := `SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id, kind
 		FROM device_tokens`
 	if !includeRevoked {
 		query += ` WHERE status != 'revoked'`
@@ -2386,7 +2413,7 @@ func (pg *PostgresDB) ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, err
 
 		if err := rows.Scan(&t.ID, &t.TokenHash, &t.Token, &t.Name, &t.PeerID, &t.Status,
 			&t.MaxUses, &t.UseCount, &t.CreatedAt, &expiresAt, &revokedAt, &lastUsedAt,
-			&t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID); err != nil {
+			&t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID, &t.Kind); err != nil {
 			return nil, err
 		}
 
@@ -2417,7 +2444,7 @@ func (pg *PostgresDB) RevokeDeviceToken(id int64) error {
 func (pg *PostgresDB) BindTokenToPeer(tokenHash, peerID string) error {
 	_, err := pg.pool.Exec(pg.ctx, `
 		UPDATE device_tokens SET peer_id=$1, status='active', last_used_at=NOW()
-		WHERE token_hash=$2 AND status='pending'`, peerID, tokenHash)
+		WHERE token_hash=$2 AND status='pending' AND kind <> 'rollout'`, peerID, tokenHash)
 	return err
 }
 
