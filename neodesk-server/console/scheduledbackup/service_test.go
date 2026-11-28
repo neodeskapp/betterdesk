@@ -415,6 +415,34 @@ func TestJobRunsOnItsTicker(t *testing.T) {
 	}
 }
 
+// With several instances only the one that holds the scheduled-backups
+// lease makes the due backup; the ticks of the others make none.
+func TestJobRunsOnlyOnTheLeaseHolder(t *testing.T) {
+	for _, held := range []bool{false, true} {
+		s, fb, _, _ := newTestService(t)
+		s.o.Lease = func() bool { return held }
+		tick := make(chan time.Time)
+		s.o.Ticker = func(time.Duration) (<-chan time.Time, func()) { return tick, func() {} }
+		if _, err := s.SaveConfig(context.Background(), mustParse(t, `{"enabled":true,"intervalHours":1}`)); err != nil {
+			t.Fatal(err)
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+		go func() { s.Run(ctx); close(done) }()
+		tick <- time.Now()
+		tick <- time.Now() // the second tick waits until the first check is through
+		cancel()
+		<-done
+		want := 0
+		if held {
+			want = 1
+		}
+		if fb.made != want {
+			t.Errorf("lease held %v: %d backups, want %d", held, fb.made, want)
+		}
+	}
+}
+
 func TestDestinationProbe(t *testing.T) {
 	s, _, _, data := newTestService(t)
 	dir := filepath.Join(data, "probe", "deep")

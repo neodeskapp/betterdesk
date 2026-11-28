@@ -129,6 +129,10 @@ type Options struct {
 	OperatorEmails func(ctx context.Context, deviceID string) ([]devicegroups.OperatorEmail, error)
 	// Logger takes what the service logs, under "HelpRequestEmail".
 	Logger Logger
+	// Lease reports whether this instance sends the mails for the
+	// installation: with several instances each one sees the event, and
+	// only the lease holder handles it. Nil always handles it.
+	Lease func() bool
 }
 
 // Service sends the help request mails.
@@ -166,6 +170,9 @@ func (s *Service) Run(ctx context.Context) {
 	s.opts.Logger.Info("Help request email service initialized")
 	for frame := range frames {
 		if kind, _ := frame.Get("type").(string); kind != eventType {
+			continue
+		}
+		if s.opts.Lease != nil && !s.opts.Lease() {
 			continue
 		}
 		data := frame.Get("data")

@@ -15,6 +15,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console"
 	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
@@ -35,7 +36,9 @@ import (
 // accounts from it through setFeatures (signal.Server.SetControllerFeatures),
 // and answers the clients' HttpProxyRequest with the handler of its client
 // API port when it has one (setAPIProxy, signal.Server.SetAPIProxy).
-func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, signalProof func(userID int64, consoleSession string) []byte, setFeatures func(signal.ControllerFeatures), setAPIProxy func(http.Handler), requestRestart func()) (func(), error) {
+// rt hands the console the installation's leases and whether it runs
+// clustered; nil runs it alone.
+func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, signalProof func(userID int64, consoleSession string) []byte, setFeatures func(signal.ControllerFeatures), setAPIProxy func(http.Handler), requestRestart func(), rt *clusterRuntime) (func(), error) {
 	// Until the console runs, a computer's chat at the API port answers
 	// "starting" (503); a server that ends up without one answers 404
 	// (L536)
@@ -76,6 +79,8 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 		ServerDB:    cfg.DBPath,
 		SignalProof: signalProof,
 		PublicRelay: cfg.SetPublicRelayServer,
+		Leases:      rt.consoleLeases(),
+		Clustered:   rt != nil && rt.cfg.Enabled(),
 	})
 	if err != nil {
 		_ = sdb.Close()
@@ -119,6 +124,15 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 		srv.Stop()
 		_ = sdb.Close()
 	}, nil
+}
+
+// consoleLeases are the leases the console's jobs ask, nil (every job
+// runs) without a runtime.
+func (rt *clusterRuntime) consoleLeases() kit.Leases {
+	if rt == nil || rt.leases == nil {
+		return nil
+	}
+	return rt.leases
 }
 
 // applySavedPublicRelay gives the signal server the relay the console's

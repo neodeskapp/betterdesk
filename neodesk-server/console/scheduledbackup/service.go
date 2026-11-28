@@ -78,6 +78,10 @@ type Options struct {
 	// Location is the server's time zone, in which a time of day is read;
 	// nil is time.Local.
 	Location *time.Location
+	// Lease reports whether this instance runs the schedule of Run for the
+	// installation; a minute while it is false runs nothing. Nil always
+	// runs it.
+	Lease func() bool
 }
 
 // Service is the scheduled backup.
@@ -791,6 +795,9 @@ func (s *Service) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-tick:
+			if s.o.Lease != nil && !s.o.Lease() {
+				continue
+			}
 			if _, _, err := s.RunIfDue(ctx); err != nil {
 				logging.Logf("backup", "Scheduled backup failed: %s", err.Error())
 			}

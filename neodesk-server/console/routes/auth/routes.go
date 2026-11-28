@@ -118,7 +118,8 @@ func passwordLinkLimit(d *kit.Deps) []kit.Middleware {
 }
 
 // housekeeping deletes access tokens that are expired or revoked and
-// sign-in attempts older than a day, once every interval until ctx ends.
+// sign-in attempts older than a day, once every interval until ctx ends,
+// on the instance that holds the lease.
 func (h *handlers) housekeeping(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -127,6 +128,9 @@ func (h *handlers) housekeeping(ctx context.Context, interval time.Duration) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			if !h.d.Held(kit.LeaseSignInHousekeeping) {
+				continue
+			}
 			h.authn.CleanupHousekeeping(ctx)
 		}
 	}

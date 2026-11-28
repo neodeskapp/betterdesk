@@ -423,8 +423,8 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 	}
 
 	// Periodic cleanup for optional availability history.
-	go runAvailabilityHistoryCleanup(database)
-	go runConnectionSessionCleanup(database)
+	go runAvailabilityHistoryCleanup(database, clusterRT.leases)
+	go runConnectionSessionCleanup(database, clusterRT.leases)
 
 	log.Printf("Database initialized successfully")
 
@@ -566,7 +566,7 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 	}
 
 	// Initialize audit logger
-	auditLogger := openAuditLog(cfg.AuditLogFile, database)
+	auditLogger := openAuditLog(cfg.AuditLogFile, database, clusterRT.leases)
 	defer auditLogger.Close()
 	auditLogger.Log(audit.ActionServerStart, "system", "", map[string]string{
 		"version": Version, "mode": cfg.Mode,
@@ -704,6 +704,7 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		apiSrv.SetEventBus(sig.EventBus())
 		apiSrv.SetMetrics(mc)
 		apiSrv.SetReadiness(clusterRT.ready)
+		apiSrv.SetFleetLease(func() bool { return clusterRT.leases.Held(leaseFleetScheduler) })
 		apiSrv.SetJWTManager(jwtManager)
 		apiSrv.SetKeyPair(kp)
 		apiSrv.SetTimeSyncService(timeSyncSvc)
@@ -821,7 +822,7 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		// HttpProxyRequest from clients without an API server setting: the
 		// API port's handler, the console's client API port when it runs
 		sig.SetAPIProxy(apiSrv.ListenerHandler())
-		stopConsole := withoutConsoleOnError(startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofForSession, sig.SetControllerFeatures, sig.SetAPIProxy, requestRestart))
+		stopConsole := withoutConsoleOnError(startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofForSession, sig.SetControllerFeatures, sig.SetAPIProxy, requestRestart, clusterRT))
 		defer stopConsole()
 
 	default:
@@ -907,10 +908,11 @@ func applyEnrollmentMode(cfg *config.Config, database db.Database) (string, erro
 
 // openAuditLog is the server's event log: it keeps the events in the
 // database for audit.RetentionDays, so the Server events tab has them
-// after a restart, and appends them to file when one is named.
-func openAuditLog(file string, database db.Database) *audit.Logger {
+// after a restart, and appends them to file when one is named. Only the
+// instance that holds the audit-prune lease deletes old events.
+func openAuditLog(file string, database db.Database, leases cluster.Leases) *audit.Logger {
 	l := audit.NewLogger(file)
-	l.UseStore(database)
+	l.UseStoreLeased(database, func() bool { return leases.Held(leaseAuditPrune) })
 	return l
 }
 
@@ -986,53 +988,66 @@ func initialAdminPassword(given string) string {
 }
 
 // runAvailabilityHistoryCleanup deletes expired peer_availability_events when
-// the optional feature is enabled.
-func runAvailabilityHistoryCleanup(database db.Database) {
+// the optional feature is enabled, at the start and every hour.
+func runAvailabilityHistoryCleanup(database db.Database, leases cluster.Leases) {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
-	runOnce := func() {
-		if !database.IsAvailabilityHistoryEnabled() {
-			return
-		}
-		days := database.AvailabilityHistoryRetentionDays()
-		if days <= 0 {
-			days = db.DefaultAvailabilityHistoryRetention
-		}
-		n, err := database.CleanupOldAvailabilityEvents(time.Duration(days) * 24 * time.Hour)
-		if err != nil {
-			log.Printf("WARN: availability history cleanup: %v", err)
-			return
-		}
-		if n > 0 {
-			log.Printf("Availability history cleanup: removed %d events older than %d days", n, days)
-		}
-	}
-	runOnce()
+	cleanupAvailabilityHistory(database, leases)
 	for range ticker.C {
-		runOnce()
+		cleanupAvailabilityHistory(database, leases)
 	}
 }
 
-// runConnectionSessionCleanup deletes old Metrics connection-session rows.
-func runConnectionSessionCleanup(database db.Database) {
+// cleanupAvailabilityHistory is one run of runAvailabilityHistoryCleanup;
+// an instance that doesn't hold its lease skips it.
+func cleanupAvailabilityHistory(database db.Database, leases cluster.Leases) {
+	if !leases.Held(leaseAvailabilityCleanup) {
+		return
+	}
+	if !database.IsAvailabilityHistoryEnabled() {
+		return
+	}
+	days := database.AvailabilityHistoryRetentionDays()
+	if days <= 0 {
+		days = db.DefaultAvailabilityHistoryRetention
+	}
+	n, err := database.CleanupOldAvailabilityEvents(time.Duration(days) * 24 * time.Hour)
+	if err != nil {
+		log.Printf("WARN: availability history cleanup: %v", err)
+		return
+	}
+	if n > 0 {
+		log.Printf("Availability history cleanup: removed %d events older than %d days", n, days)
+	}
+}
+
+// runConnectionSessionCleanup deletes old Metrics connection-session rows,
+// at the start and every hour.
+func runConnectionSessionCleanup(database db.Database, leases cluster.Leases) {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
-	runOnce := func() {
-		n, err := database.CleanupOldPeerConnectionSessions(
-			time.Duration(db.DefaultConnectionSessionRetentionDays) * 24 * time.Hour,
-		)
-		if err != nil {
-			log.Printf("WARN: connection session cleanup: %v", err)
-			return
-		}
-		if n > 0 {
-			log.Printf("Connection session cleanup: removed %d rows older than %d days",
-				n, db.DefaultConnectionSessionRetentionDays)
-		}
-	}
-	runOnce()
+	cleanupConnectionSessions(database, leases)
 	for range ticker.C {
-		runOnce()
+		cleanupConnectionSessions(database, leases)
+	}
+}
+
+// cleanupConnectionSessions is one run of runConnectionSessionCleanup; an
+// instance that doesn't hold its lease skips it.
+func cleanupConnectionSessions(database db.Database, leases cluster.Leases) {
+	if !leases.Held(leaseConnectionSessionCleanup) {
+		return
+	}
+	n, err := database.CleanupOldPeerConnectionSessions(
+		time.Duration(db.DefaultConnectionSessionRetentionDays) * 24 * time.Hour,
+	)
+	if err != nil {
+		log.Printf("WARN: connection session cleanup: %v", err)
+		return
+	}
+	if n > 0 {
+		log.Printf("Connection session cleanup: removed %d rows older than %d days",
+			n, db.DefaultConnectionSessionRetentionDays)
 	}
 }
 

@@ -47,6 +47,7 @@ func RegisterWith(d *kit.Deps, backups *backup.Service) {
 		Backups: backups,
 		DataDir: cfg.DataDir,
 		AppDir:  cfg.ConsoleDir,
+		Lease:   d.LeaseFunc(kit.LeaseScheduledBackups),
 	})
 	register(d, backups, scheduled)
 }

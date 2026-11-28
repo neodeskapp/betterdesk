@@ -53,6 +53,9 @@ type fleetState struct {
 	fired map[string]string
 	// complianceAt is when the scheduler last looked for devices to scan
 	complianceAt time.Time
+	// lease reports whether this instance runs the scheduler for the
+	// installation (SetFleetLease); nil always does
+	lease func() bool
 
 	stop     chan struct{}
 	stopOnce sync.Once
@@ -656,9 +659,21 @@ func (s *Server) stopFleetScheduler() {
 	s.fleet.wg.Wait()
 }
 
+// SetFleetLease makes the fleet scheduler run its rounds only while held
+// reports true: with several instances on one database, only the one that
+// holds the lease queues due tasks and scans. Call it before Start; nil
+// runs every round, as a lone server does.
+func (s *Server) SetFleetLease(held func() bool) {
+	s.fleet.lease = held
+}
+
 // fleetTick is one round of the scheduler: due tasks, runs that can no
-// longer be answered, scheduled workflows, and the daily scans.
+// longer be answered, scheduled workflows, and the daily scans. An
+// instance that doesn't hold the scheduler's lease skips it.
 func (s *Server) fleetTick(now time.Time) {
+	if s.fleet.lease != nil && !s.fleet.lease() {
+		return
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("[fleet] scheduler: %v", r)

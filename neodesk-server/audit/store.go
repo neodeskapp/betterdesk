@@ -38,7 +38,13 @@ type queued struct {
 // queues them for a writer that stores them in batches and deletes those
 // older than RetentionDays at once and every hour, and the readers read
 // the store. Close stores what is queued. A second call changes nothing.
-func (l *Logger) UseStore(store Store) {
+func (l *Logger) UseStore(store Store) { l.UseStoreLeased(store, nil) }
+
+// UseStoreLeased is UseStore where the writer deletes old events only
+// while prune reports true: with several instances on one database, only
+// the one that holds the prune lease deletes. Every instance still writes
+// its own events. prune nil always deletes.
+func (l *Logger) UseStoreLeased(store Store, prune func() bool) {
 	l.qmu.Lock()
 	defer l.qmu.Unlock()
 	if l.store != nil || l.closed {
@@ -47,7 +53,7 @@ func (l *Logger) UseStore(store Store) {
 	l.store = store
 	l.queue = make(chan queued, queueSize)
 	l.writerDone = make(chan struct{})
-	go write(store, l.queue, l.writerDone)
+	go write(store, prune, l.queue, l.writerDone)
 }
 
 // enqueue hands the event to the writer and reports whether there is one.
@@ -93,12 +99,13 @@ func (l *Logger) stopWriter() {
 }
 
 // write stores what comes from queue, in batches, until it is closed, and
-// prunes the store at start and every hour.
-func write(store Store, queue <-chan queued, done chan<- struct{}) {
+// prunes the store at start and every hour while mayPrune (nil: always)
+// reports true.
+func write(store Store, mayPrune func() bool, queue <-chan queued, done chan<- struct{}) {
 	defer close(done)
 	prune := time.NewTicker(time.Hour)
 	defer prune.Stop()
-	pruneStore(store)
+	pruneStore(store, mayPrune)
 	for {
 		select {
 		case first, ok := <-queue:
@@ -109,7 +116,7 @@ func write(store Store, queue <-chan queued, done chan<- struct{}) {
 				return
 			}
 		case <-prune.C:
-			pruneStore(store)
+			pruneStore(store, mayPrune)
 		}
 	}
 }
@@ -152,7 +159,10 @@ more:
 	return open
 }
 
-func pruneStore(store Store) {
+func pruneStore(store Store, mayPrune func() bool) {
+	if mayPrune != nil && !mayPrune() {
+		return
+	}
 	n, err := store.PruneServerEvents(time.Now().AddDate(0, 0, -RetentionDays))
 	if err != nil {
 		log.Printf("[audit] WARN: pruning the server events: %v", err)

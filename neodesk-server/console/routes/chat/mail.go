@@ -43,7 +43,8 @@ type mailTexts interface {
 	Translate(lang, key string, vars i18n.Vars) string
 }
 
-// RunWaitMail checks every minute for people who wait, until ctx ends.
+// RunWaitMail checks every minute for people who wait, until ctx ends, on
+// the instance that holds the lease.
 func RunWaitMail(ctx context.Context, d *kit.Deps) {
 	hub := HubOf(d)
 	tick := time.NewTicker(time.Minute)
@@ -54,7 +55,7 @@ func RunWaitMail(ctx context.Context, d *kit.Deps) {
 			return
 		case <-tick.C:
 		}
-		if d.Mail == nil || d.I18n == nil || d.I18n.Bundle == nil {
+		if d.Mail == nil || d.I18n == nil || d.I18n.Bundle == nil || !d.Held(kit.LeaseChatWaitMail) {
 			continue
 		}
 		if err := hub.mailWaiting(ctx, d.Mail, brandmail.Of(d.Branding).Name(), d.I18n.Bundle, time.Now()); err != nil {

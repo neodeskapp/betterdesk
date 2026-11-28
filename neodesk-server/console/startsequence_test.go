@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"slices"
 	"testing"
+
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // quiet keeps the discovery jobs off the network in these tests: the
@@ -33,6 +35,35 @@ func TestMDNSOnlyWhenAsked(t *testing.T) {
 		if slices.Contains(w.s.Jobs().Names(), "mDNS announcement") {
 			t.Errorf("PANEL_MDNS=%q: the announcement runs, jobs = %q", value, w.s.Jobs().Names())
 		}
+	}
+}
+
+// TestClusteredConsoleAnnouncesNothing: a console that shares its
+// installation with other instances runs neither LAN discovery nor the
+// mDNS announcement, which would announce one pod.
+func TestClusteredConsoleAnnouncesNothing(t *testing.T) {
+	w := newWorld(t, setup{env: map[string]string{"PANEL_MDNS": "on"}, options: func(o *Options) { o.Clustered = true }})
+	for _, name := range []string{"LAN discovery", "mDNS announcement"} {
+		if slices.Contains(w.s.Jobs().Names(), name) {
+			t.Errorf("%q runs on a clustered console, jobs = %q", name, w.s.Jobs().Names())
+		}
+	}
+}
+
+// noLease is the lease set of an instance another one beats to every
+// lease.
+type noLease struct{}
+
+func (noLease) Held(string) bool { return false }
+
+// TestConsoleJobsAskTheLeases: the route groups' jobs get the lease set
+// the console was given.
+func TestConsoleJobsAskTheLeases(t *testing.T) {
+	if w := newWorld(t, setup{env: quiet}); !w.s.Deps().Held(kit.LeaseScheduledBackups) {
+		t.Error("a console without leases does not run its jobs")
+	}
+	if w := newWorld(t, setup{env: quiet, options: func(o *Options) { o.Leases = noLease{} }}); w.s.Deps().Held(kit.LeaseScheduledBackups) {
+		t.Error("a console without the lease runs the scheduled backups")
 	}
 }
 

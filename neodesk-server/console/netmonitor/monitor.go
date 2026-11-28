@@ -58,6 +58,10 @@ type Options struct {
 	Now func() time.Time
 	// Log takes the monitor's log lines. Default: none.
 	Log Logger
+	// Lease reports whether this instance polls for the installation; a
+	// poll that comes due while it is false checks nothing. Default:
+	// always polls.
+	Lease func() bool
 }
 
 // Logger is where the monitor writes its log lines. *kit.Logger is one.
@@ -78,6 +82,7 @@ type Monitor struct {
 	probe  prober
 	now    func() time.Time
 	log    Logger
+	lease  func() bool
 	wakeup chan struct{}
 
 	mu sync.Mutex
@@ -132,6 +137,7 @@ func New(opts Options) *Monitor {
 		},
 		now:      opts.Now,
 		log:      opts.Log,
+		lease:    opts.Lease,
 		wakeup:   make(chan struct{}, 1),
 		interval: DefaultPollIntervalMs,
 	}
@@ -258,7 +264,8 @@ func (m *Monitor) wake() {
 //
 // It follows the timers of the old monitor: Start polls at once unless a
 // poll is still under way; after a poll the next one is due one interval
-// later, with the interval of that moment; Stop drops the wait.
+// later, with the interval of that moment; Stop drops the wait. While
+// Options.Lease is false the polls check nothing.
 func (m *Monitor) Run(ctx context.Context) {
 	for {
 		m.mu.Lock()
@@ -275,7 +282,9 @@ func (m *Monitor) Run(ctx context.Context) {
 			continue
 		}
 
-		m.CheckAll(ctx)
+		if m.lease == nil || m.lease() {
+			m.CheckAll(ctx)
+		}
 
 		m.mu.Lock()
 		m.inFlight = false
