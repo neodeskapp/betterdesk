@@ -33,6 +33,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
 	"github.com/neodeskapp/neodesk/neodesk-server/metrics"
 	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/policy/unattended"
 	"github.com/neodeskapp/neodesk/neodesk-server/ratelimit"
 	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 	"github.com/neodeskapp/neodesk/neodesk-server/security"
@@ -2670,11 +2671,16 @@ func (s *Server) handleGetAccessPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The device's organization, "" for none: the console reads the
+	// organization's connection mode and operators from it to say what
+	// the receiver does
+	orgID, _ := s.db.GetDeviceOrgID(id)
 	policy, err := s.db.GetAccessPolicy(id)
 	if err != nil {
 		// No policy = defaults (all disabled)
 		writeJSON(w, http.StatusOK, map[string]any{
 			"peer_id":             id,
+			"org_id":              orgID,
 			"unattended_enabled":  false,
 			"password_set":        false,
 			"schedule_enabled":    false,
@@ -2689,7 +2695,10 @@ func (s *Server) handleGetAccessPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, policy)
+	writeJSON(w, http.StatusOK, struct {
+		*db.AccessPolicy
+		OrgID string `json:"org_id"`
+	}{policy, orgID})
 }
 
 func (s *Server) handleSaveAccessPolicy(w http.ResponseWriter, r *http.Request) {
@@ -2728,6 +2737,13 @@ func (s *Server) handleSaveAccessPolicy(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
+	// The schedule counts in an IANA time zone the caller check knows: a
+	// zone it does not know would refuse every unattended connection
+	if tz := strings.TrimSpace(body.ScheduleTimezone); tz != "" && unattended.Zone(tz) == nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "unknown schedule_timezone: " + tz})
+		return
+	}
+
 	// Validate schedule days
 	validDays := map[string]bool{"mon": true, "tue": true, "wed": true, "thu": true, "fri": true, "sat": true, "sun": true}
 	if body.ScheduleDays != "" {
@@ -2746,9 +2762,12 @@ func (s *Server) handleSaveAccessPolicy(w http.ResponseWriter, r *http.Request) 
 		ScheduleDays:      body.ScheduleDays,
 		ScheduleStartTime: body.ScheduleStartTime,
 		ScheduleEndTime:   body.ScheduleEndTime,
-		ScheduleTimezone:  body.ScheduleTimezone,
+		ScheduleTimezone:  strings.TrimSpace(body.ScheduleTimezone),
 		AllowedOperators:  body.AllowedOperators,
-		UpdatedBy:         s.remoteIP(r),
+		// Who changed it: the signed-in account (the console's account
+		// for a call through the console), and when
+		UpdatedBy: actorFromCtx(r),
+		UpdatedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
 	// Hash password if provided
