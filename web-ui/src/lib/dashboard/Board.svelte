@@ -253,15 +253,15 @@
 	   columns fill up independently and reading order stays the DOM order */
 	.board-grid {
 		display: grid;
-		grid-template-columns: repeat(12, minmax(0, 1fr));
+		/* Phones: one column. Twelve with their gaps would be wider than the screen. */
+		grid-template-columns: minmax(0, 1fr);
 		grid-auto-rows: 8px;
 		grid-auto-flow: row dense;
-		column-gap: var(--space-7);
 		align-items: start;
 	}
 
 	.board-item {
-		grid-column: span 12;
+		grid-column: 1 / -1;
 		min-width: 0;
 	}
 	/* The gap under each widget is part of its height, so the rows don't add their own */
@@ -270,12 +270,19 @@
 	}
 
 	@container (min-width: 640px) {
+		.board-grid {
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+			column-gap: var(--space-6);
+		}
 		.size-s,
 		.size-m {
 			grid-column: span 6;
 		}
 	}
 	@container (min-width: 1000px) {
+		.board-grid {
+			column-gap: var(--space-7);
+		}
 		.size-s {
 			grid-column: span 4;
 		}
