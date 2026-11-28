@@ -802,6 +802,12 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 			apiSrv.SetMeshGateway(meshGw)
 		}
 
+		// Device sockets stay on the pod they reach; requests for them
+		// from other pods are passed to it
+		if clusterRT.mesh != nil {
+			clusterRT.shareDevices(ctx, apiSrv, cdapGw, meshGw)
+		}
+
 		apiSrv.SetDerivedClientPort(startDerivedClientPort(cfg, os.Getenv))
 		if startConsoleClientAPI() {
 			apiSrv.LimitOutside()

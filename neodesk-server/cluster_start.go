@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/cdap"
 	"github.com/neodeskapp/neodesk/neodesk-server/cluster"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
 	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 	sigServer "github.com/neodeskapp/neodesk/neodesk-server/signal"
 )
@@ -177,3 +181,51 @@ func (s instanceStore) ListInstances(since time.Time) ([]cluster.Instance, error
 }
 
 func (s instanceStore) RemoveInstance(name string) error { return s.db.RemoveServerInstance(name) }
+
+// shareDevices records the CDAP devices and MeshCentral agents this pod
+// holds and answers the requests and calls other pods pass on for them.
+func (rt *clusterRuntime) shareDevices(ctx context.Context, apiSrv *api.Server, cdapGw *cdap.Gateway, meshGw *meshcentral.Gateway) {
+	devices := cluster.NewDevices(rt.kv, rt.cfg.Name)
+	go devices.Run(ctx)
+	if cdapGw != nil {
+		cdapGw.SetPresence(devices)
+	}
+	if meshGw != nil {
+		meshGw.SetPresence(devices)
+	}
+	apiSrv.SetDeviceRouting(deviceRouting{devices: devices, mesh: rt.mesh, kv: rt.kv})
+	rt.mesh.HandleStream(api.ForwardStream, apiSrv.ServeForwarded)
+	for name, h := range apiSrv.DeviceCalls() {
+		h := h
+		rt.mesh.Handle(name, func(ctx context.Context, _ string, body []byte) ([]byte, error) { return h(ctx, body) })
+	}
+}
+
+// deviceRouting is api.DeviceRouting on the cluster.
+type deviceRouting struct {
+	devices *cluster.Devices
+	mesh    *cluster.Mesh
+	kv      cluster.KV
+}
+
+func (d deviceRouting) Owner(ctx context.Context, kind, id string) string {
+	return d.devices.Owner(ctx, kind, id)
+}
+
+func (d deviceRouting) Stream(ctx context.Context, pod, name string, meta map[string]string) (net.Conn, error) {
+	return d.mesh.Stream(ctx, pod, name, meta)
+}
+
+func (d deviceRouting) Call(ctx context.Context, pod, name string, body []byte) ([]byte, error) {
+	return d.mesh.Call(ctx, pod, name, body)
+}
+
+// ClaimOnce keeps each nonce for longer than a signature is valid, so a
+// replayed stream is refused.
+func (d deviceRouting) ClaimOnce(ctx context.Context, nonce string) bool {
+	if len(nonce) < 16 {
+		return false
+	}
+	_, set, err := d.kv.SetNX(ctx, "mesh:nonce:"+nonce, "1", 2*time.Minute)
+	return err == nil && set
+}

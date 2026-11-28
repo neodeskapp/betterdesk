@@ -26,11 +26,6 @@ func (s *Server) startPeerIDChangeListener() {
 				if !ok {
 					return
 				}
-				// The pod that published the change routes the notice to
-				// the peer's own pod; the others leave it alone
-				if ev.Remote {
-					continue
-				}
 				data := ev.Data
 				if data == nil || data["source"] != "panel" {
 					continue
@@ -38,6 +33,15 @@ func (s *Server) startPeerIDChangeListener() {
 				oldID := data["old_id"]
 				newID := data["new_id"]
 				if oldID == "" || newID == "" || oldID == newID {
+					continue
+				}
+				if ev.Remote {
+					// Another pod changed the id; the pod that holds the
+					// peer moves its entry, and the publishing pod routes
+					// the notice to it
+					if s.peers.GetLocal(oldID) != nil {
+						s.peers.Rename(oldID, newID)
+					}
 					continue
 				}
 				s.notifyPeerIDChange(oldID, newID)
