@@ -26,7 +26,9 @@ const none = `{"value":null,"source":"none"}`
 
 // TestResolvedPoliciesSayWhatIsInForce: each group says whether anything
 // is stored, who applies it (the server for network, the device for the
-// rest, which no device app reads yet) and when; each field its stored
+// rest, which the full desktop app doesn't read yet), which of its
+// settings the receiver app applies (session approval and removing the
+// app) and when; each field its stored
 // value and where the value in force comes from. block_direct_p2p is the
 // one field with a server-wide setting: the server's connection strategy
 // as the running server reports it.
@@ -45,18 +47,18 @@ func TestResolvedPoliciesSayWhatIsInForce(t *testing.T) {
 		}
 		answer := decode(t, got.Body)
 		want := decode(t, `{
-			"connection":{"set":true,"applied_by":"device","device_app_applies":false,"timing":"device_next_check","fields":{
+			"connection":{"set":true,"applied_by":"device","device_app_applies":false,"receiver_applies":["mode"],"timing":"device_next_check","fields":{
 				"idle_lock_timeout":`+none+`,"max_session_duration":`+none+`,"mode":{"value":"attended","source":"organization"},"wallpaper":`+none+`}},
-			"features":{"set":false,"applied_by":"device","device_app_applies":false,"timing":"device_next_check","fields":{
+			"features":{"set":false,"applied_by":"device","device_app_applies":false,"receiver_applies":[],"timing":"device_next_check","fields":{
 				"allow_audio":`+none+`,"allow_clipboard":`+none+`,"allow_file_transfer":`+none+`,"allow_recording":`+none+`}},
-			"security":{"set":false,"applied_by":"device","device_app_applies":false,"timing":"device_next_check","fields":{
+			"security":{"set":false,"applied_by":"device","device_app_applies":false,"receiver_applies":["allow_uninstall"],"timing":"device_next_check","fields":{
 				"allow_uninstall":`+none+`,"allowed_operators":`+none+`,"password_max_age_days":`+none+`,"password_min_length":`+none+`,"password_require_special":`+none+`,"require_2fa":`+none+`}},
-			"network":{"set":true,"applied_by":"server","device_app_applies":false,"timing":"server_minute","fields":{
+			"network":{"set":true,"applied_by":"server","device_app_applies":false,"receiver_applies":[],"timing":"server_minute","fields":{
 				"allowed_relay_servers":`+none+`,
 				"block_direct_p2p":{"value":null,"source":"server","server_value":`+relay+`,
 					"server_setting":{"label_key":"settings.connection_mode_title","href":"/settings#connection-mode-section"}},
 				"ip_allowlist":{"value":["10.0.0.0/8"],"source":"organization"}}},
-			"update":{"set":false,"applied_by":"device","device_app_applies":false,"timing":"device_next_check","fields":{
+			"update":{"set":false,"applied_by":"device","device_app_applies":false,"receiver_applies":[],"timing":"device_next_check","fields":{
 				"auto_update":`+none+`,"channel":`+none+`}}
 		}`)
 		if !reflect.DeepEqual(answer, want) {
