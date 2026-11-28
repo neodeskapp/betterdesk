@@ -66,6 +66,8 @@ beforeEach(() => {
 		'/api/registrations/count': { success: true, count: 10 },
 		'/api/help/requests': { success: true, requests: [{ status: 'pending' }, { status: 'resolved' }] },
 		'/api/reports/trends': { success: true, data: { sessions: [], help: [] } },
+		// Nothing saved: the built-in dashboard
+		'/api/dashboards': { success: true, data: { own: null, shared: [], canPublish: false } },
 		'POST /api/panel/pairing/codes': {
 			success: true,
 			code: 'K7Q2M9',
@@ -132,7 +134,12 @@ function as(permissions: string[], navPages: string[] = []) {
 
 const early = () => ({
 	data: {
-		early: { stats: Promise.resolve(null), status: Promise.resolve(null), config: Promise.resolve(null) }
+		early: {
+			stats: Promise.resolve(null),
+			status: Promise.resolve(null),
+			config: Promise.resolve(null),
+			dashboards: Promise.resolve(null)
+		}
 	}
 });
 const settle = () => vi.waitFor(() => expect(screen.queryByText('status.checking')).toBeNull());
