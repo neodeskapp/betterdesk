@@ -50,7 +50,7 @@
 	}
 	@media (max-width: 767px) {
 		.reach {
-			padding-inline: var(--space-3);
+			padding-inline: var(--space-4);
 		}
 	}
 </style>

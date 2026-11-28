@@ -91,11 +91,21 @@
 	.chat-frame > :global(.chat-view) {
 		border-top: 0;
 	}
+	/* A phone: no box, the chat runs from edge to edge and down to the tab bar,
+	   like a messaging app; only the title keeps the page's margin */
 	@media (max-width: 767px) {
 		.chat-page {
-			height: calc(100dvh - var(--topbar-h) - 56px - env(safe-area-inset-bottom, 0px) - var(--space-4));
+			height: calc(100dvh - var(--topbar-h) - 56px - env(safe-area-inset-bottom, 0px));
 			min-height: 420px;
+			margin: calc(-1 * var(--page-pad));
 			gap: var(--space-2);
+		}
+		.chat-page .page-head {
+			padding: var(--page-pad) var(--page-pad) 0;
+		}
+		.chat-frame {
+			border: 0;
+			border-radius: 0;
 		}
 		/* Reading on a phone: the conversation takes the page, its head says where one is */
 		.chat-page.is-reading .page-head {

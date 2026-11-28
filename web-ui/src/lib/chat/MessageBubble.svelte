@@ -464,6 +464,11 @@
 		text-decoration: underline;
 		cursor: pointer;
 	}
+	@media (max-width: 767px) {
+		.chat-msg-row {
+			max-width: 92%;
+		}
+	}
 	@media (pointer: coarse) {
 		.chat-reaction {
 			min-height: 36px;

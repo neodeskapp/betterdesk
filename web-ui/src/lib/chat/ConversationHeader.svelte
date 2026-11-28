@@ -367,7 +367,7 @@
 		.conv-head {
 			display: grid;
 			grid-template-columns: auto minmax(0, 1fr);
-			padding-inline: var(--space-3);
+			padding-inline: var(--space-4);
 		}
 		.conv-head :global(.conv-back) {
 			display: inline-flex;
