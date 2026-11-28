@@ -297,6 +297,7 @@ func (pg *PostgresDB) Migrate() error {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_device_telemetry_commands_device_status
 			ON device_telemetry_commands(device_id, status, created_at)`,
+		serverInstancesPostgres,
 		`CREATE TABLE IF NOT EXISTS device_connection_policies (
 			device_id TEXT PRIMARY KEY,
 			device_uuid TEXT NOT NULL,

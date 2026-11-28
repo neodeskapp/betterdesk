@@ -134,6 +134,10 @@ type Options struct {
 	// Logf gets the warnings about settings out of range; nil writes to
 	// the console's log.
 	Logf func(format string, args ...any)
+	// IntegrationLease and StatusSyncLease report whether this instance
+	// runs RunIntegration and RunStatusSync for the installation; a tick
+	// while one is false runs nothing. Nil always runs.
+	IntegrationLease, StatusSyncLease func() bool
 }
 
 // The longest stale threshold the sweep takes: a larger one (or one below
@@ -191,7 +195,7 @@ func (j *Jobs) StaleThreshold() float64 { return j.threshold }
 // RunIntegration runs Integration once an hour, first an hour after the
 // start, until ctx ends.
 func (j *Jobs) RunIntegration(ctx context.Context) {
-	j.every(ctx, IntegrationInterval, func() { _ = Integration(ctx, j.opts.DB) })
+	j.every(ctx, IntegrationInterval, j.opts.IntegrationLease, func() { _ = Integration(ctx, j.opts.DB) })
 }
 
 // RunStatusSync sets stale devices offline every StatusSyncInterval,
@@ -203,12 +207,13 @@ func (j *Jobs) RunIntegration(ctx context.Context) {
 // nothing (neodeskApi.syncOnlineStatus answered {synced: 0}), so there
 // is nothing to run for it here.
 func (j *Jobs) RunStatusSync(ctx context.Context) {
-	j.every(ctx, j.interval, func() { _, _ = j.opts.StalePeers(ctx, j.threshold) })
+	j.every(ctx, j.interval, j.opts.StatusSyncLease, func() { _, _ = j.opts.StalePeers(ctx, j.threshold) })
 }
 
 // every calls fn at each tick of a ticker with the interval until ctx
-// ends. A run that is still going when the next tick comes delays it.
-func (j *Jobs) every(ctx context.Context, interval time.Duration, fn func()) {
+// ends, but not while lease (nil: never) is false. A run that is still
+// going when the next tick comes delays it.
+func (j *Jobs) every(ctx context.Context, interval time.Duration, lease func() bool, fn func()) {
 	ticks, stop := j.opts.NewTicker(interval)
 	defer stop()
 	for {
@@ -218,6 +223,9 @@ func (j *Jobs) every(ctx context.Context, interval time.Duration, fn func()) {
 		case <-ticks:
 			if ctx.Err() != nil {
 				return
+			}
+			if lease != nil && !lease() {
+				continue
 			}
 			fn()
 		}

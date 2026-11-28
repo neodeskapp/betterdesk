@@ -116,6 +116,14 @@ type Options struct {
 	// gives devices that relay (config.Config.SetPublicRelayServer). nil
 	// tells nobody.
 	PublicRelay func(relay string)
+	// Leases says which of the once-per-installation jobs this instance
+	// runs when several share the database (cluster.Leases; names in
+	// kit/leases.go). nil runs them all, as a lone server does.
+	Leases kit.Leases
+	// Clustered is set when the server shares its installation with other
+	// instances (VALKEY_URL): LAN discovery and the mDNS announcement,
+	// which would announce one pod, stay off.
+	Clustered bool
 	// updaterOptions changes the updater's options before it is built:
 	// tests give it a GitHub and a binary of their own.
 	updaterOptions func(*updater.Options)
@@ -165,6 +173,18 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		getenv = func(string) string { return "" }
 	}
 	s := &Server{cfg: cfg, early: kit.NewRouter(), router: kit.NewRouter(), jobs: jobs.New(), apiListener: opts.APIListener}
+	// lease is the Held check of one job, for the services that take one
+	lease := func(name string) func() bool {
+		return func() bool { return opts.Leases == nil || opts.Leases.Held(name) }
+	}
+	// The start steps below create tables and rows once (the chat's and
+	// the tokens' tables, the old chat history, the sessions' columns):
+	// instances that start together take turns
+	unlock, err := opts.Store.LockInstallation(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
 
 	if err := os.MkdirAll(cfg.UploadsDir, 0o755); err != nil {
 		logging.Logf("console", "WARN: cannot create the uploads folder %s: %v", cfg.UploadsDir, err)
@@ -224,6 +244,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		OnError: func(w http.ResponseWriter, r *http.Request, err error) {
 			host.ServerError(w, r, err, http.StatusInternalServerError)
 		},
+		CleanupLease: lease(kit.LeasePanelSessionCleanup),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("session store: %w", err)
@@ -285,6 +306,9 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Audit: audit,
 		Log:   kit.NewLogger(cfg.LogLevel, cfg.Production),
 		Jobs:  s.jobs,
+
+		Leases:    opts.Leases,
+		Clustered: opts.Clustered,
 	}
 	s.deps.ServerInfo = serverinfo.New(serverinfo.Options{
 		PubKeyPath: cfg.PubKeyPath,
@@ -402,6 +426,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		},
 		Logger:  s.deps.Log.Child("AlertEngine"),
 		Context: alertWork,
+		Lease:   lease(kit.LeaseAlertSweep),
 	})
 	s.jobs.Add("alert engine", func(ctx context.Context) {
 		<-ctx.Done()
@@ -417,6 +442,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.jobs.Add("chat wait mail", func(ctx context.Context) { chat.RunWaitMail(ctx, s.deps) })
 	s.jobs.Add("help request mail", helpmail.New(helpmail.Options{
 		DB: opts.Store, Mail: s.deps.Mail, Events: api.Events, Logger: s.deps.Log.Child("HelpRequestEmail"),
+		Lease: lease(kit.LeaseHelpRequestMail),
 	}).Run)
 	badParam := func(w http.ResponseWriter, r *http.Request, err error) {
 		host.ServerError(w, r, err, http.StatusBadRequest)
@@ -477,7 +503,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		logging.Logf("console", "[Chat] moved the history of version 1: %d direct, %d in groups, %d to their computers, %d to old messages", r.Direct, r.Groups, r.Devices, r.Old)
 	}
 
-	s.tokens, err = admintoken.New(ctx, admintoken.Options{DB: opts.Store})
+	s.tokens, err = admintoken.New(ctx, admintoken.Options{DB: opts.Store, Lease: lease(kit.LeaseAPITokenEnds)})
 	if err != nil {
 		return nil, fmt.Errorf("API tokens: %w", err)
 	}
@@ -545,17 +571,22 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	// the stale device sweep, LAN discovery and the mDNS announcement.
 	s.authImport = authimport.FromEnv(getenv, cfg.DataDir)
 	sweeps := housekeeping.New(housekeeping.Options{DB: opts.Store, StalePeers: s.deps.DeviceGroups.CleanupStaleOnlinePeers,
-		StatusSyncInterval: getenv("STATUS_SYNC_INTERVAL"), HeartbeatStaleThreshold: getenv("HEARTBEAT_STALE_THRESHOLD")})
+		StatusSyncInterval: getenv("STATUS_SYNC_INTERVAL"), HeartbeatStaleThreshold: getenv("HEARTBEAT_STALE_THRESHOLD"),
+		IntegrationLease: lease(kit.LeaseRetention), StatusSyncLease: lease(kit.LeaseStalePeerSync)})
 	s.jobs.Add("integration housekeeping", sweeps.RunIntegration)
 	s.jobs.Add("online status sync", sweeps.RunStatusSync)
 	// The jobs start after the listeners and announce the port and scheme
-	// of the one that serves the console (listeners.go)
+	// of the one that serves the console (listeners.go). A clustered
+	// server announces nothing: a pod's own address is not where people
+	// reach the installation.
 	lan := discovery.FromEnv(getenv, discovery.Settings{PubKeyPath: cfg.PubKeyPath, APIPort: float64(cfg.APIPort), Version: cfg.Version})
-	s.jobs.Add("LAN discovery", func(ctx context.Context) { discovery.NewLAN(s.announced(lan)).Run(ctx) })
+	if !opts.Clustered {
+		s.jobs.Add("LAN discovery", func(ctx context.Context) { discovery.NewLAN(s.announced(lan)).Run(ctx) })
+	}
 	// The old console announced itself over mDNS only where someone had
 	// installed bonjour-service by hand; no installer or image did. So the
 	// announcement runs only when PANEL_MDNS asks for it.
-	if mdns := getenv("PANEL_MDNS"); mdns != "" && envvar.SwitchOr(mdns, true) {
+	if mdns := getenv("PANEL_MDNS"); mdns != "" && envvar.SwitchOr(mdns, true) && !opts.Clustered {
 		s.jobs.Add("mDNS announcement", func(ctx context.Context) { discovery.NewMDNS(s.announced(lan)).Run(ctx) })
 	}
 	registerRoutes(s.deps, backups)
@@ -647,20 +678,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // setup guide for that account; an install whose accounts came from
 // auth.db is not new.
 func (s *Server) Start(ctx context.Context) error {
-	imported, err := authimport.Run(ctx, s.deps.Store, s.authImport)
-	if err != nil {
-		return fmt.Errorf("auth.db import: %w", err)
+	if err := s.firstSteps(ctx); err != nil {
+		return err
 	}
-	s.deps.Branding.LoadBranding(ctx)
-	if _, err := s.deps.Authn.EnsureDefaultAdmin(ctx); err != nil {
-		return fmt.Errorf("first account: %w", err)
-	}
-	if imported == nil {
-		if err := s.deps.SetupGuide.Begin(ctx); err != nil {
-			logging.Logf("console", "WARN: the setup guide could not be opened for the first admin: %v", err)
-		}
-	}
-	err = s.openListeners(ctx)
+	err := s.openListeners(ctx)
 	if err == nil {
 		err = s.startClientAPI(ctx)
 	}
@@ -674,6 +695,32 @@ func (s *Server) Start(ctx context.Context) error {
 	}
 	s.jobs.Start(ctx)
 	logging.Logf("console", "listening on %s, %d routes", s.net.addr, len(s.early.Routes())+len(s.router.Routes()))
+	return nil
+}
+
+// firstSteps are the steps of Start before it listens: the auth.db import,
+// the branding, the first account and the setup guide. Instances that
+// start together take turns (store.DB.LockInstallation), so only one
+// imports and makes the first account.
+func (s *Server) firstSteps(ctx context.Context) error {
+	unlock, err := s.deps.Store.LockInstallation(ctx)
+	if err != nil {
+		return err
+	}
+	defer unlock()
+	imported, err := authimport.Run(ctx, s.deps.Store, s.authImport)
+	if err != nil {
+		return fmt.Errorf("auth.db import: %w", err)
+	}
+	s.deps.Branding.LoadBranding(ctx)
+	if _, err := s.deps.Authn.EnsureDefaultAdmin(ctx); err != nil {
+		return fmt.Errorf("first account: %w", err)
+	}
+	if imported == nil {
+		if err := s.deps.SetupGuide.Begin(ctx); err != nil {
+			logging.Logf("console", "WARN: the setup guide could not be opened for the first admin: %v", err)
+		}
+	}
 	return nil
 }
 

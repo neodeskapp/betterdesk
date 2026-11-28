@@ -12,6 +12,7 @@ import (
 
 	"github.com/neodeskapp/neodesk/neodesk-server/api"
 	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/cluster"
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	"github.com/neodeskapp/neodesk/neodesk-server/peer"
@@ -342,12 +343,12 @@ func TestServerEventsOutliveARestart(t *testing.T) {
 	if err := database.Migrate(); err != nil {
 		t.Fatal(err)
 	}
-	first := openAuditLog("", database)
+	first := openAuditLog("", database, cluster.Solo{})
 	first.Log(audit.ActionAuthLoginFailed, "203.0.113.7", "alice", nil)
 	if err := first.Close(); err != nil {
 		t.Fatal(err)
 	}
-	next := openAuditLog("", database)
+	next := openAuditLog("", database, cluster.Solo{})
 	defer next.Close()
 	if events := next.Recent(5); len(events) != 1 || events[0].Target != "alice" {
 		t.Fatalf("after a restart: %+v", events)

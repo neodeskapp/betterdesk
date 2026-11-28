@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/audit"
@@ -83,6 +84,9 @@ type ldapAuthProvider interface {
 
 // Server is the HTTP API server.
 type Server struct {
+	// readiness says whether the pod takes traffic (SetReadiness); nil
+	// means always
+	readiness atomic.Pointer[func() (bool, string)]
 	// deviceChat is the console's handler of a computer's support chat
 	// (device_chat.go, L526)
 	deviceChat deviceChatHandler
@@ -321,6 +325,15 @@ func (s *Server) SetAuditLogger(al *audit.Logger) {
 // SetEventBus sets the event bus for real-time WebSocket push.
 func (s *Server) SetEventBus(eb *eventsModule.Bus) {
 	s.eventBus = eb
+}
+
+// SetReadiness sets what /api/health asks before it answers ok: a pod
+// whose Valkey is gone or that is shutting down answers 503 with the
+// reason, so a load balancer stops sending it traffic.
+func (s *Server) SetReadiness(ready func() (bool, string)) {
+	if ready != nil {
+		s.readiness.Store(&ready)
+	}
 }
 
 // SetMetrics sets the Prometheus metrics collector.
@@ -996,6 +1009,16 @@ func (s *Server) Stop() {
 // `{status, version}` only; the operational detail moved to `/api/server/stats`,
 // which is gated by `metricsGuard` (IP allowlist or a valid API key).
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	if ready := s.readiness.Load(); ready != nil {
+		if ok, reason := (*ready)(); !ok {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]any{
+				"status":  "not ready",
+				"reason":  reason,
+				"version": s.version,
+			})
+			return
+		}
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"status":  "ok",
 		"version": s.version,

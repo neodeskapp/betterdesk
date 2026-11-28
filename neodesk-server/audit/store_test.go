@@ -78,3 +78,32 @@ func TestWriterPrunesOldEvents(t *testing.T) {
 		t.Fatalf("after the start: %+v", events)
 	}
 }
+
+// TestOnlyTheLeaseHolderPrunes: with several instances on one database,
+// the writer of an instance without the prune lease keeps old events and
+// still stores its own; the lease holder deletes them.
+func TestOnlyTheLeaseHolderPrunes(t *testing.T) {
+	database := storeForTest(t)
+	old := time.Now().AddDate(0, 0, -RetentionDays-1)
+	if err := database.AddServerEvents([]*db.ServerEvent{
+		{Time: old, Action: string(ActionConfigChanged), Actor: "alice", Target: "old"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	other := NewLogger("")
+	other.UseStoreLeased(database, func() bool { return false })
+	other.Log(ActionConfigChanged, "bob", "new", nil)
+	if events := other.Recent(10); len(events) != 2 {
+		t.Fatalf("without the lease: %+v, want the old event kept and the new one stored", events)
+	}
+	if err := other.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	holder := NewLogger("")
+	holder.UseStoreLeased(database, func() bool { return true })
+	defer holder.Close()
+	if events := holder.Recent(10); len(events) != 1 || events[0].Target != "new" {
+		t.Fatalf("with the lease: %+v, want only the new event", events)
+	}
+}

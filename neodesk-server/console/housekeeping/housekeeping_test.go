@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -759,5 +760,41 @@ func TestJobsRunAtTheirTicksAndEndWithTheContext(t *testing.T) {
 	case got := <-calls:
 		t.Errorf("an extra stale clean-up ran (%v)", got)
 	default:
+	}
+}
+
+// TestStaleSyncRunsOnlyOnTheLeaseHolder: with several instances, the
+// ticks of one that doesn't hold the stale-peer-sync lease set no device
+// offline; once it holds the lease, the next tick does.
+func TestStaleSyncRunsOnlyOnTheLeaseHolder(t *testing.T) {
+	clock := newFakeTicker()
+	calls := make(chan float64, 10)
+	var held atomic.Bool
+	jobs := housekeeping.New(housekeeping.Options{
+		StalePeers: func(ctx context.Context, threshold float64) (int64, error) {
+			calls <- threshold
+			return 0, nil
+		},
+		NewTicker:       clock.New,
+		StatusSyncLease: held.Load,
+	})
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() { defer close(done); jobs.RunStatusSync(ctx) }()
+	defer func() { cancel(); <-done }()
+
+	clock.tick(0)
+	clock.tick(0) // taken only after the first tick was handled
+	select {
+	case <-calls:
+		t.Fatal("the stale clean-up ran without the lease")
+	default:
+	}
+	held.Store(true)
+	clock.tick(0)
+	select {
+	case <-calls:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the stale clean-up did not run with the lease")
 	}
 }

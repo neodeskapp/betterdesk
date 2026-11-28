@@ -134,6 +134,13 @@ type Deps struct {
 	Log *Logger
 	// Jobs takes background work that stops with the console.
 	Jobs Jobs
+	// Leases says which of the once-per-installation jobs this instance
+	// runs (leases.go); a job asks d.Held before each run. nil runs them
+	// all, as a lone console does.
+	Leases Leases
+	// Clustered is set when the console shares its installation with
+	// other instances (VALKEY_URL).
+	Clustered bool
 	// Sockets is the registry of the console's websockets: a service adds
 	// a socket path with d.Sockets.Handle (package console/ws). An upgrade
 	// to a path nobody registered passes the request pipeline like a plain

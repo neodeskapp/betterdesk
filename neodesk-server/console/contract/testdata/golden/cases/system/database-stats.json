@@ -530,6 +530,10 @@
       },
       {
        "count": 0,
+       "name": "server_instances"
+      },
+      {
+       "count": 0,
        "name": "settings"
       },
       {

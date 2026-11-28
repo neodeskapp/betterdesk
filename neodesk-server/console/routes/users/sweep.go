@@ -27,7 +27,8 @@ const sweepInterval = 5 * time.Minute
 // ExpiryNotice is how long before its end date the admins hear of it.
 const ExpiryNotice = 7 * 24 * time.Hour
 
-// runSweeps runs Sweep every interval until ctx ends.
+// runSweeps runs Sweep every interval until ctx ends, on the instance
+// that holds the lease.
 func runSweeps(ctx context.Context, d *kit.Deps) {
 	tick := time.NewTicker(sweepInterval)
 	defer tick.Stop()
@@ -36,6 +37,9 @@ func runSweeps(ctx context.Context, d *kit.Deps) {
 		case <-ctx.Done():
 			return
 		case <-tick.C:
+		}
+		if !d.Held(kit.LeaseAccountLifeCycle) {
+			continue
 		}
 		if err := Sweep(ctx, d, time.Now()); err != nil && ctx.Err() == nil {
 			d.Log.Error("Account life cycle:", err.Error())

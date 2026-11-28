@@ -33,6 +33,7 @@ func Register(d *kit.Deps) {
 	opts := netmonitor.Options{
 		Store:                d.Store,
 		AllowSelfSignedCerts: d.Config != nil && d.Config.AllowSelfSignedCerts,
+		Lease:                d.LeaseFunc(kit.LeaseNetworkMonitor),
 	}
 	if d.Log != nil {
 		opts.Log = d.Log
@@ -45,6 +46,9 @@ func register(d *kit.Deps, monitor *netmonitor.Monitor) {
 	if d.Jobs != nil {
 		d.Jobs.Add("network monitor", monitor.Run)
 		h.resumeMonitor()
+		if d.Clustered {
+			d.Jobs.Add("network monitor state", func(ctx context.Context) { h.followMonitor(ctx, d.LeaseFunc(kit.LeaseNetworkMonitor)) })
+		}
 	}
 	view := d.RequirePermission("device.view")
 	connect := d.RequirePermission("device.connect")

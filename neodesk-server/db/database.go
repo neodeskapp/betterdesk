@@ -599,6 +599,13 @@ type Database interface {
 	// does NOT write availability events (avoids restart downtime floods).
 	SetAllOffline() error
 
+	// TouchServerInstance writes or refreshes the row of a running server
+	// instance; ListServerInstances returns those seen at or after since;
+	// RemoveServerInstance deletes one (cluster.InstanceStore).
+	TouchServerInstance(inst ServerInstance) error
+	ListServerInstances(since time.Time) ([]ServerInstance, error)
+	RemoveServerInstance(name string) error
+
 	// Availability history — optional, gated by server_config.
 	GetPeerAvailabilityEvents(peerID string, from, to time.Time) ([]*PeerAvailabilityEvent, error)
 	CleanupOldAvailabilityEvents(maxAge time.Duration) (int64, error)

@@ -38,7 +38,7 @@ func TestAServerWithoutConsoleHasNoChat(t *testing.T) {
 		t.Errorf("before the console starts: %d, want 503", status)
 	}
 	stop, err := startConsole(context.Background(), config.DefaultConfig(), database, apiSrv, nil, nil,
-		func(signal.ControllerFeatures) {}, func(http.Handler) {}, func() {})
+		func(signal.ControllerFeatures) {}, func(http.Handler) {}, func() {}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

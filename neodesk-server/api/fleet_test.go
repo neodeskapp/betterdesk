@@ -365,6 +365,31 @@ func TestFleetTaskSkipsSupportAgentsAndBusyDevices(t *testing.T) {
 	}
 }
 
+// With several instances, a round of the scheduler on one that doesn't
+// hold its lease queues nothing; the lease holder's round queues the due
+// task.
+func TestFleetSchedulerRunsOnlyOnTheLeaseHolder(t *testing.T) {
+	srv, database := fleetServer(t)
+	status, out := createTask(t, srv, map[string]any{"name": "Every minute", "type": "update", "targets": "PEERAAA1",
+		"schedule_type": "cron", "schedule_value": "* * * * *"})
+	if status != http.StatusCreated {
+		t.Fatalf("create: %d %v", status, out)
+	}
+	task, _ := database.Fleet().GetFleetTask(int64(out["id"].(float64)))
+	next, _ := time.Parse(time.RFC3339, task.NextRun)
+
+	srv.SetFleetLease(func() bool { return false })
+	srv.fleetTick(next)
+	if got := commandsNamed(t, database, "PEERAAA1", fleetRunCommand); len(got) != 0 {
+		t.Fatalf("without the lease the round queued %d commands", len(got))
+	}
+	srv.SetFleetLease(func() bool { return true })
+	srv.fleetTick(next)
+	if got := commandsNamed(t, database, "PEERAAA1", fleetRunCommand); len(got) != 1 {
+		t.Errorf("with the lease the round queued %d commands, want 1", len(got))
+	}
+}
+
 // The scheduler closes a run its device can no longer answer as timed
 // out.
 func TestFleetSchedulerClosesStaleRuns(t *testing.T) {

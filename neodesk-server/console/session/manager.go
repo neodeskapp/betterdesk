@@ -55,6 +55,9 @@ type Options struct {
 	OnError func(w http.ResponseWriter, r *http.Request, err error)
 	// Now is the clock. nil means time.Now.
 	Now func() time.Time
+	// CleanupLease reports whether this instance runs the clean-up of
+	// RunCleanup for the installation; nil always does.
+	CleanupLease func() bool
 }
 
 // Manager loads and stores sessions.
@@ -69,6 +72,7 @@ type Manager struct {
 	audit         func(ctx context.Context, userID int64, action, details, ip string)
 	onError       func(w http.ResponseWriter, r *http.Request, err error)
 	now           func() time.Time
+	cleanupLease  func() bool
 	endHooks
 }
 
@@ -92,6 +96,7 @@ func New(ctx context.Context, opts Options) (*Manager, error) {
 		audit:         opts.Audit,
 		onError:       opts.OnError,
 		now:           opts.Now,
+		cleanupLease:  opts.CleanupLease,
 	}
 	if opts.HTTPS {
 		m.cookieName = cookieNameHTTPS
@@ -690,6 +695,9 @@ func (m *Manager) RunCleanup(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			if m.cleanupLease != nil && !m.cleanupLease() {
+				continue
+			}
 			if err := m.Cleanup(ctx); err != nil && ctx.Err() == nil {
 				logging.Logf("session", "WARN: cleanup failed: %v", err)
 			}

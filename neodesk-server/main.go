@@ -24,6 +24,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/billing"
 	"github.com/neodeskapp/neodesk/neodesk-server/cdap"
+	"github.com/neodeskapp/neodesk/neodesk-server/cluster"
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
@@ -345,6 +346,15 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 	}
 	log.Printf("Server public key: %s", kp.PublicKeyBase64())
 
+	// Valkey before the database: an instance that should share the
+	// installation but can't reach Valkey must not touch it
+	clusterRT, err := dialCluster(context.Background(), os.Getenv)
+	if err != nil {
+		logging.Fatalf("The start stops: %v", err)
+	}
+	defer clusterRT.close()
+	startedAt := time.Now()
+
 	// Initialize database
 	swapRestoredDatabase(cfg.DBPath)
 	moveAsideRustDeskDatabase(cfg.DBPath)
@@ -354,12 +364,19 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 	}
 	defer database.Close()
 
-	if err := migrateSaying(database.Migrate, migrateNoteAfter); err != nil {
-		logging.Fatalf("Failed to run migrations: %v", err)
-	}
-	// Defensive: ensure client_sessions exists even if an older binary never created it.
-	if err := database.EnsureClientSessionsSchema(); err != nil {
-		logging.Fatalf("Failed to ensure client_sessions schema: %v", err)
+	// Instances that start together migrate one after the other
+	// (PostgreSQL advisory lock; SQLite has one instance)
+	if err := cluster.WithMigrationLock(context.Background(), postgresPool(database), func() error {
+		if err := migrateSaying(database.Migrate, migrateNoteAfter); err != nil {
+			return fmt.Errorf("Failed to run migrations: %w", err)
+		}
+		// Defensive: ensure client_sessions exists even if an older binary never created it.
+		if err := database.EnsureClientSessionsSchema(); err != nil {
+			return fmt.Errorf("Failed to ensure client_sessions schema: %w", err)
+		}
+		return nil
+	}); err != nil {
+		logging.Fatalf("%v", err)
 	}
 	applyPersistedTimeSyncConfig(cfg, database)
 	applyPersistedConnectionSettings(cfg, database)
@@ -377,16 +394,37 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 	// even when the server is started without the ALL-IN-ONE install script.
 	loadAPIKey(cfg, database)
 
+	// Record this instance; a second one without PostgreSQL and Valkey
+	// stops here with what it lacks
+	otherInstances, err := clusterRT.join(database, cfg.DBPath, startedAt)
+	if err != nil {
+		logging.Fatalf("The start stops: %v", err)
+	}
+	heartbeatCtx, stopHeartbeat := context.WithCancel(context.Background())
+	heartbeatDone := make(chan struct{})
+	go func() {
+		defer close(heartbeatDone)
+		cluster.Heartbeat(heartbeatCtx, instanceStore{database}, clusterRT.cfg, startedAt)
+	}()
+	defer func() { stopHeartbeat(); <-heartbeatDone }()
+	clusterRT.startLeases(database)
+
 	// Reset all peers to offline on startup (clean slate).
 	// Intentionally does NOT write availability_history events so a
-	// restart does not flood every device as downtime.
-	if err := database.SetAllOffline(); err != nil {
-		log.Printf("WARN: Failed to reset peers to offline: %v", err)
+	// restart does not flood every device as downtime. Peers that other
+	// running instances hold stay as they are; the stale-peer sync
+	// clears the ones whose instance died.
+	if otherInstances == 0 {
+		if err := database.SetAllOffline(); err != nil {
+			log.Printf("WARN: Failed to reset peers to offline: %v", err)
+		}
+	} else {
+		log.Printf("[cluster] %d other instance(s) run on this database; peers keep their status", otherInstances)
 	}
 
 	// Periodic cleanup for optional availability history.
-	go runAvailabilityHistoryCleanup(database)
-	go runConnectionSessionCleanup(database)
+	go runAvailabilityHistoryCleanup(database, clusterRT.leases)
+	go runConnectionSessionCleanup(database, clusterRT.leases)
 
 	log.Printf("Database initialized successfully")
 
@@ -528,7 +566,7 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 	}
 
 	// Initialize audit logger
-	auditLogger := openAuditLog(cfg.AuditLogFile, database)
+	auditLogger := openAuditLog(cfg.AuditLogFile, database, clusterRT.leases)
 	defer auditLogger.Close()
 	auditLogger.Log(audit.ActionServerStart, "system", "", map[string]string{
 		"version": Version, "mode": cfg.Mode,
@@ -619,12 +657,23 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		sig.SetRateLimiter(ipLimiter)
 		sig.SetAuditLogger(auditLogger)
 		sig.SetBillingService(billingSvc)
+		// Several instances share their relay tickets through Valkey, so a
+		// ticket issued here can be claimed by the relay of another pod
+		var sharedTickets *relay.ValkeyTickets
+		if clusterRT.valkey != nil {
+			sharedTickets = relay.NewValkeyTickets(clusterRT.valkey.Client, clusterRT.valkey.Prefix())
+			defer sharedTickets.Close()
+			sig.SetTickets(sharedTickets)
+		}
 		if err := sig.Start(ctx); err != nil {
 			logging.Fatalf("Failed to start signal server: %v", err)
 		}
 		defer sig.Stop()
 
 		relaySrv := relay.New(cfg)
+		if sharedTickets != nil {
+			relaySrv.SetTicketClaims(sharedTickets)
+		}
 		relaySrv.SetBandwidthLimiter(bwLimiter)
 		if connLimiter != nil {
 			relaySrv.SetConnLimiter(connLimiter)
@@ -654,6 +703,8 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		apiSrv.SetAuditLogger(auditLogger)
 		apiSrv.SetEventBus(sig.EventBus())
 		apiSrv.SetMetrics(mc)
+		apiSrv.SetReadiness(clusterRT.ready)
+		apiSrv.SetFleetLease(func() bool { return clusterRT.leases.Held(leaseFleetScheduler) })
 		apiSrv.SetJWTManager(jwtManager)
 		apiSrv.SetKeyPair(kp)
 		apiSrv.SetTimeSyncService(timeSyncSvc)
@@ -771,7 +822,7 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		// HttpProxyRequest from clients without an API server setting: the
 		// API port's handler, the console's client API port when it runs
 		sig.SetAPIProxy(apiSrv.ListenerHandler())
-		stopConsole := withoutConsoleOnError(startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofForSession, sig.SetControllerFeatures, sig.SetAPIProxy, requestRestart))
+		stopConsole := withoutConsoleOnError(startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofForSession, sig.SetControllerFeatures, sig.SetAPIProxy, requestRestart, clusterRT))
 		defer stopConsole()
 
 	default:
@@ -857,10 +908,11 @@ func applyEnrollmentMode(cfg *config.Config, database db.Database) (string, erro
 
 // openAuditLog is the server's event log: it keeps the events in the
 // database for audit.RetentionDays, so the Server events tab has them
-// after a restart, and appends them to file when one is named.
-func openAuditLog(file string, database db.Database) *audit.Logger {
+// after a restart, and appends them to file when one is named. Only the
+// instance that holds the audit-prune lease deletes old events.
+func openAuditLog(file string, database db.Database, leases cluster.Leases) *audit.Logger {
 	l := audit.NewLogger(file)
-	l.UseStore(database)
+	l.UseStoreLeased(database, func() bool { return leases.Held(leaseAuditPrune) })
 	return l
 }
 
@@ -936,53 +988,66 @@ func initialAdminPassword(given string) string {
 }
 
 // runAvailabilityHistoryCleanup deletes expired peer_availability_events when
-// the optional feature is enabled.
-func runAvailabilityHistoryCleanup(database db.Database) {
+// the optional feature is enabled, at the start and every hour.
+func runAvailabilityHistoryCleanup(database db.Database, leases cluster.Leases) {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
-	runOnce := func() {
-		if !database.IsAvailabilityHistoryEnabled() {
-			return
-		}
-		days := database.AvailabilityHistoryRetentionDays()
-		if days <= 0 {
-			days = db.DefaultAvailabilityHistoryRetention
-		}
-		n, err := database.CleanupOldAvailabilityEvents(time.Duration(days) * 24 * time.Hour)
-		if err != nil {
-			log.Printf("WARN: availability history cleanup: %v", err)
-			return
-		}
-		if n > 0 {
-			log.Printf("Availability history cleanup: removed %d events older than %d days", n, days)
-		}
-	}
-	runOnce()
+	cleanupAvailabilityHistory(database, leases)
 	for range ticker.C {
-		runOnce()
+		cleanupAvailabilityHistory(database, leases)
 	}
 }
 
-// runConnectionSessionCleanup deletes old Metrics connection-session rows.
-func runConnectionSessionCleanup(database db.Database) {
+// cleanupAvailabilityHistory is one run of runAvailabilityHistoryCleanup;
+// an instance that doesn't hold its lease skips it.
+func cleanupAvailabilityHistory(database db.Database, leases cluster.Leases) {
+	if !leases.Held(leaseAvailabilityCleanup) {
+		return
+	}
+	if !database.IsAvailabilityHistoryEnabled() {
+		return
+	}
+	days := database.AvailabilityHistoryRetentionDays()
+	if days <= 0 {
+		days = db.DefaultAvailabilityHistoryRetention
+	}
+	n, err := database.CleanupOldAvailabilityEvents(time.Duration(days) * 24 * time.Hour)
+	if err != nil {
+		log.Printf("WARN: availability history cleanup: %v", err)
+		return
+	}
+	if n > 0 {
+		log.Printf("Availability history cleanup: removed %d events older than %d days", n, days)
+	}
+}
+
+// runConnectionSessionCleanup deletes old Metrics connection-session rows,
+// at the start and every hour.
+func runConnectionSessionCleanup(database db.Database, leases cluster.Leases) {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
-	runOnce := func() {
-		n, err := database.CleanupOldPeerConnectionSessions(
-			time.Duration(db.DefaultConnectionSessionRetentionDays) * 24 * time.Hour,
-		)
-		if err != nil {
-			log.Printf("WARN: connection session cleanup: %v", err)
-			return
-		}
-		if n > 0 {
-			log.Printf("Connection session cleanup: removed %d rows older than %d days",
-				n, db.DefaultConnectionSessionRetentionDays)
-		}
-	}
-	runOnce()
+	cleanupConnectionSessions(database, leases)
 	for range ticker.C {
-		runOnce()
+		cleanupConnectionSessions(database, leases)
+	}
+}
+
+// cleanupConnectionSessions is one run of runConnectionSessionCleanup; an
+// instance that doesn't hold its lease skips it.
+func cleanupConnectionSessions(database db.Database, leases cluster.Leases) {
+	if !leases.Held(leaseConnectionSessionCleanup) {
+		return
+	}
+	n, err := database.CleanupOldPeerConnectionSessions(
+		time.Duration(db.DefaultConnectionSessionRetentionDays) * 24 * time.Hour,
+	)
+	if err != nil {
+		log.Printf("WARN: connection session cleanup: %v", err)
+		return
+	}
+	if n > 0 {
+		log.Printf("Connection session cleanup: removed %d rows older than %d days",
+			n, db.DefaultConnectionSessionRetentionDays)
 	}
 }
 

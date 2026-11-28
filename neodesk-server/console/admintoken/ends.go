@@ -283,24 +283,31 @@ const sweepEvery = time.Minute
 
 // Run sweeps until ctx ends: at the next expiry of a token, right after a
 // token is made, and at least once a minute. report gets every ending and
-// every error.
+// every error. While Options.Lease is false it waits without sweeping:
+// another instance sweeps for the installation.
 func (s *Service) Run(ctx context.Context, report func(e *Ending, err error)) {
 	for {
-		endings, err := s.Sweep(ctx)
-		if ctx.Err() != nil {
-			return
+		held := s.lease == nil || s.lease()
+		if held {
+			endings, err := s.Sweep(ctx)
+			if ctx.Err() != nil {
+				return
+			}
+			for _, e := range endings {
+				report(e, nil)
+			}
+			if err != nil {
+				report(nil, err)
+			}
 		}
-		for _, e := range endings {
-			report(e, nil)
-		}
-		if err != nil {
-			report(nil, err)
-		}
+		// An instance without the lease asks for it again in a minute
 		wait := sweepEvery
 		var next sql.NullInt64
-		if err := s.db.QueryRow(ctx, `SELECT MIN(expires_at) FROM admin_tokens WHERE ended_at IS NULL AND revoked_at IS NULL`).Scan(&next); err == nil && next.Valid {
-			if until := time.UnixMilli(next.Int64).Sub(s.now()); until < wait {
-				wait = until
+		if held {
+			if err := s.db.QueryRow(ctx, `SELECT MIN(expires_at) FROM admin_tokens WHERE ended_at IS NULL AND revoked_at IS NULL`).Scan(&next); err == nil && next.Valid {
+				if until := time.UnixMilli(next.Int64).Sub(s.now()); until < wait {
+					wait = until
+				}
 			}
 		}
 		// A token whose end failed is tried again in a second, not at once

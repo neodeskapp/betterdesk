@@ -154,6 +154,9 @@ type Options struct {
 	// RequestLimit is how many requests one token may make per minute.
 	// Zero means 1200.
 	RequestLimit int
+	// Lease reports whether this instance runs the sweeps of Run for the
+	// installation; nil always does.
+	Lease func() bool
 }
 
 // Service keeps the tokens. It is safe for concurrent use.
@@ -170,6 +173,8 @@ type Service struct {
 	onEnd []func(context.Context, *Ending)
 	// wake tells Run that a token was made, whose expiry may come first
 	wake chan struct{}
+	// lease is Options.Lease
+	lease func() bool
 }
 
 // New returns a Service and creates its table when it is missing.
@@ -197,6 +202,7 @@ func New(ctx context.Context, opts Options) (*Service, error) {
 		requests: newWindow(opts.RequestLimit, time.Minute, now),
 		touched:  map[string]time.Time{},
 		wake:     make(chan struct{}, 1),
+		lease:    opts.Lease,
 	}
 	if err := s.ensureSchema(ctx); err != nil {
 		return nil, err

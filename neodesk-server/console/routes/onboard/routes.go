@@ -280,7 +280,7 @@ func (h *handlers) personName(ctx context.Context, userID int64, fallback string
 
 // sweepLoop ends sessions, removes the temporary devices of ended ones,
 // prunes old records and expired codes, every SweepInterval until ctx
-// ends.
+// ends, on the instance that holds the lease.
 func (h *handlers) sweepLoop(ctx context.Context) {
 	ticker := time.NewTicker(SweepInterval)
 	defer ticker.Stop()
@@ -289,6 +289,9 @@ func (h *handlers) sweepLoop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			if !h.d.Held(kit.LeaseOnboardSweep) {
+				continue
+			}
 			h.sweep(ctx)
 		}
 	}

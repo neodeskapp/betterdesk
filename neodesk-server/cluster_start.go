@@ -1,0 +1,135 @@
+package main
+
+import (
+	"context"
+	"log"
+	"strings"
+	"sync/atomic"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/neodeskapp/neodesk/neodesk-server/cluster"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+)
+
+// clusterRuntime is what the server shares with the other instances of its
+// installation. Without VALKEY_URL it is the solo runtime: no Valkey, every
+// lease held, and the server behaves as before.
+type clusterRuntime struct {
+	cfg    cluster.Config
+	valkey *cluster.Valkey // nil when alone
+	leases cluster.Leases
+	// draining is set on SIGTERM: the pod reports not ready and takes no
+	// new sessions while running ones finish.
+	draining atomic.Bool
+}
+
+// dialCluster reads the cluster settings and connects to Valkey when one
+// is set. An unreachable Valkey stops the start: an instance that should
+// share state but can't would split the installation.
+func dialCluster(ctx context.Context, getenv func(string) string) (*clusterRuntime, error) {
+	cfg, err := cluster.FromEnv(getenv)
+	if err != nil {
+		return nil, err
+	}
+	rt := &clusterRuntime{cfg: cfg, leases: cluster.Solo{}}
+	if !cfg.Enabled() {
+		return rt, nil
+	}
+	v, err := cluster.Dial(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	rt.valkey = v
+	log.Printf("[cluster] Instance %s shares this installation through Valkey at %s (key prefix %q)",
+		cfg.Name, cluster.RedactURL(cfg.ValkeyURL), cfg.KeyPrefix)
+	return rt, nil
+}
+
+// postgresPool is the PostgreSQL pool of database, nil for SQLite.
+func postgresPool(database db.Database) *pgxpool.Pool {
+	if pg, ok := database.(*db.PostgresDB); ok {
+		return pg.Pool()
+	}
+	return nil
+}
+
+// isSQLiteDSN reports whether dsn names a SQLite file.
+func isSQLiteDSN(dsn string) bool {
+	lower := strings.ToLower(strings.TrimSpace(dsn))
+	return !strings.HasPrefix(lower, "postgres://") && !strings.HasPrefix(lower, "postgresql://")
+}
+
+// join records this instance in the database and checks it may run next
+// to the others; it returns the number of other live instances. The row is
+// written before the check, so two instances that start together both see
+// each other and a wrong setup refuses on both.
+func (rt *clusterRuntime) join(database db.Database, dsn string, started time.Time) (int, error) {
+	store := instanceStore{database}
+	self := cluster.Instance{Name: rt.cfg.Name, Clustered: rt.cfg.Enabled(), StartedAt: started, LastSeen: started}
+	if err := store.TouchInstance(self); err != nil {
+		log.Printf("[cluster] WARN: could not record this instance: %v", err)
+	}
+	if err := cluster.CheckStart(store, rt.cfg, isSQLiteDSN(dsn), started); err != nil {
+		_ = store.RemoveInstance(rt.cfg.Name)
+		return 0, err
+	}
+	others, err := cluster.ListOthers(store, rt.cfg.Name, started)
+	if err != nil {
+		return 0, err
+	}
+	return len(others), nil
+}
+
+// startLeases picks the lease set: PostgreSQL advisory locks when the
+// installation is shared, every lease held when the instance runs alone.
+func (rt *clusterRuntime) startLeases(database db.Database) {
+	if pool := postgresPool(database); rt.valkey != nil && pool != nil {
+		rt.leases = cluster.NewPGLeases(pool, rt.cfg.Name)
+	}
+}
+
+// ready reports whether the pod should get traffic, and why not.
+func (rt *clusterRuntime) ready() (bool, string) {
+	if rt == nil {
+		return true, ""
+	}
+	if rt.draining.Load() {
+		return false, "shutting down"
+	}
+	if rt.valkey != nil && !rt.valkey.Healthy() {
+		return false, "Valkey does not answer"
+	}
+	return true, ""
+}
+
+func (rt *clusterRuntime) close() {
+	if rt == nil {
+		return
+	}
+	rt.leases.Close()
+	if rt.valkey != nil {
+		_ = rt.valkey.Close()
+	}
+}
+
+// instanceStore adapts db.Database to cluster.InstanceStore.
+type instanceStore struct{ db db.Database }
+
+func (s instanceStore) TouchInstance(inst cluster.Instance) error {
+	return s.db.TouchServerInstance(db.ServerInstance(inst))
+}
+
+func (s instanceStore) ListInstances(since time.Time) ([]cluster.Instance, error) {
+	rows, err := s.db.ListServerInstances(since)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]cluster.Instance, len(rows))
+	for i, r := range rows {
+		out[i] = cluster.Instance(r)
+	}
+	return out, nil
+}
+
+func (s instanceStore) RemoveInstance(name string) error { return s.db.RemoveServerInstance(name) }

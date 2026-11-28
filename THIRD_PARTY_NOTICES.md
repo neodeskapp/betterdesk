@@ -41,6 +41,14 @@ directly before:
   console always has, also for names that are not in Latin script. The module
   was already part of the server through its database driver.
 
+Several server instances that share one installation talk to Valkey or Redis
+through:
+
+- `github.com/redis/go-redis/v9`, copyright The github.com/redis/go-redis
+  Authors, BSD 2-Clause License. It speaks the Redis protocol, which Valkey
+  and Redis both serve. It brings in `github.com/cespare/xxhash/v2` (MIT
+  License) and `go.uber.org/atomic` (MIT License).
+
 `neodesk-server/console/branding/idna_table.go` holds a table of how
 host names outside ASCII are mapped (Unicode 17.0 IDNA mapping, as Node.js
 22 applies it). It is data derived from the Unicode Character Database,

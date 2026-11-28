@@ -109,6 +109,10 @@ type Options struct {
 	// SweepEvery is the time between two sweeps of Run. Zero means
 	// SweepInterval.
 	SweepEvery time.Duration
+	// Lease reports whether this instance runs the sweep of Run for the
+	// installation; a tick while it is false sweeps nothing. Nil always
+	// sweeps.
+	Lease func() bool
 }
 
 // Engine evaluates alert rules. It is safe for concurrent use.
@@ -566,6 +570,9 @@ func (e *Engine) sweepOn(ctx context.Context, ticks <-chan time.Time) {
 		case <-ctx.Done():
 			return
 		case <-ticks:
+			if e.opts.Lease != nil && !e.opts.Lease() {
+				continue
+			}
 			e.Sweep(ctx)
 			// A run that came due during the sweep is dropped
 			select {
