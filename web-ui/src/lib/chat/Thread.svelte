@@ -11,7 +11,8 @@
   (it would read every button of a new message): a new message from
   someone else is announced once as "<sender>: <text>". While a page of
   history loads the log is aria-busy, and older messages say nothing.
-  The typing line is plain text.
+  The typing line is plain text; it shows only while someone types, over
+  the bottom edge of the messages, so nothing moves when it comes and goes.
 -->
 <script lang="ts">
 	import { tick, untrack, type Snippet } from 'svelte';
@@ -22,6 +23,7 @@
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Menu from '#lib/ui/Menu.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
+	import States from '#lib/ui/States.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import { announce } from '#lib/ui/announce.svelte.ts';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
@@ -52,6 +54,8 @@
 		autofocus?: boolean;
 		/** A message to show and mark: older pages load until it is there */
 		focus?: string | null;
+		/** A new message was sent from the composer (not an edit) */
+		onsend?: () => void;
 	}
 
 	let {
@@ -63,7 +67,8 @@
 		empty,
 		onmanagecanned,
 		autofocus = false,
-		focus = null
+		focus = null,
+		onsend
 	}: Props = $props();
 
 	const thread = $derived(chat.thread(conv));
@@ -301,63 +306,69 @@
 	{ondrop}
 >
 	{@render header?.()}
-	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-	<div
-		class="thread-scroll"
-		bind:this={scroller}
-		{onscroll}
-		tabindex="0"
-		role="group"
-		aria-label={t('chat.messages')}
-	>
-		{#if thread.more}
-			<div class="thread-more"><Button size="sm" onclick={earlier}>{t('chat.earlier')}</Button></div>
-		{/if}
-		{#if !thread.loaded && !slow}
-			<!-- nothing yet -->
-		{:else if !thread.loaded && chat.status !== 'open'}
-			<p class="thread-state">{t('chat.connecting')}</p>
-		{:else if !thread.loaded}
-			<p class="thread-state">{t('common.loading')}</p>
-		{:else if !messages.length}
-			{#if empty}{@render empty()}{:else}<p class="thread-state">{t('chat.no_messages')}</p>{/if}
-		{/if}
-		<div class="thread-inner" role="log" aria-live="off" aria-busy={!thread.loaded || loadingEarlier}>
-			{#each messages as m, i (m.id)}
-				{@const prev = messages[i - 1]}
-				{#if !prev || dayKey(prev.created_at) !== dayKey(m.created_at)}
-					<p class="thread-day"><span>{dayLabel(m.created_at)}</span></p>
-				{/if}
-				<MessageBubble
-					msg={m}
-					mine={isMine(m, me)}
-					first={startsRun(prev, m)}
-					seen={m.id === lastMineId && seen(thread, m)}
-					marked={marked === m.id}
-					mayEdit={writable && mayEdit(m, me)}
-					mayDelete={writable && (isMine(m, me) || chat.may.delete_any)}
-					{mayTrail}
-					{meKey}
-					onreact={(msg, emoji, on) => chat.react(msg.id, emoji, on)}
-					onpicker={(msg, anchor) => (picker = { msg, anchor })}
-					onreply={(msg) => {
-						editing = null;
-						replyTo = msg;
-						void tick().then(() => field?.focus());
-					}}
-					onedit={(msg) => {
-						replyTo = null;
-						editing = msg;
-					}}
-					ondelete={(msg) => void remove(msg)}
-					ontrail={(msg) => void showTrail(msg)}
-					onquote={(id) => void showQuoted(id)}
-					onretry={retry}
-				/>
-			{/each}
+	<div class="thread-body">
+		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+		<div
+			class="thread-scroll"
+			bind:this={scroller}
+			{onscroll}
+			tabindex="0"
+			role="group"
+			aria-label={t('chat.messages')}
+		>
+			{#if thread.more}
+				<div class="thread-more"><Button size="sm" onclick={earlier}>{t('chat.earlier')}</Button></div>
+			{/if}
+			{#if !thread.loaded && !slow}
+				<!-- nothing yet -->
+			{:else if !thread.loaded && chat.status !== 'open'}
+				<!-- Plain lines, not States: the log is aria-busy, so loading is not announced -->
+				<p class="thread-state">{t('chat.connecting')}</p>
+			{:else if !thread.loaded}
+				<p class="thread-state">{t('common.loading')}</p>
+			{:else if !messages.length}
+				{#if empty}{@render empty()}{:else}<States
+						message={t('chat.no_messages')}
+						class="thread-state"
+					/>{/if}
+			{/if}
+			<div class="thread-inner" role="log" aria-live="off" aria-busy={!thread.loaded || loadingEarlier}>
+				{#each messages as m, i (m.id)}
+					{@const prev = messages[i - 1]}
+					{#if !prev || dayKey(prev.created_at) !== dayKey(m.created_at)}
+						<p class="thread-day"><span>{dayLabel(m.created_at)}</span></p>
+					{/if}
+					<MessageBubble
+						msg={m}
+						mine={isMine(m, me)}
+						first={startsRun(prev, m)}
+						seen={m.id === lastMineId && seen(thread, m)}
+						marked={marked === m.id}
+						mayEdit={writable && mayEdit(m, me)}
+						mayDelete={writable && (isMine(m, me) || chat.may.delete_any)}
+						{mayTrail}
+						{meKey}
+						onreact={(msg, emoji, on) => chat.react(msg.id, emoji, on)}
+						onpicker={(msg, anchor) => (picker = { msg, anchor })}
+						onreply={(msg) => {
+							editing = null;
+							replyTo = msg;
+							void tick().then(() => field?.focus());
+						}}
+						onedit={(msg) => {
+							replyTo = null;
+							editing = msg;
+						}}
+						ondelete={(msg) => void remove(msg)}
+						ontrail={(msg) => void showTrail(msg)}
+						onquote={(id) => void showQuoted(id)}
+						onretry={retry}
+					/>
+				{/each}
+			</div>
 		</div>
+		{#if typing}<p class="thread-typing">{t('chat.typing_name', { name: typing })}</p>{/if}
 	</div>
-	<p class="thread-typing">{typing ? t('chat.typing_name', { name: typing }) : ''}</p>
 	{@render notice?.()}
 	{#if writable}
 		<Composer
@@ -367,6 +378,7 @@
 			{editing}
 			{dropped}
 			{onmanagecanned}
+			{onsend}
 			bind:element={field}
 			oncancel={() => {
 				replyTo = null;
@@ -437,11 +449,20 @@
 		min-height: 0;
 		height: 100%;
 	}
+	/* The messages and, over their bottom edge, who is typing */
+	.thread-body {
+		position: relative;
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		min-height: 0;
+	}
 	.thread-scroll {
 		flex: 1;
 		min-height: 0;
 		overflow-y: auto;
-		padding: var(--space-2) var(--space-4) var(--space-3);
+		/* Room at the end for the typing line, so it never covers a message */
+		padding: var(--space-2) var(--space-4) calc(var(--text-sm) * var(--leading) + var(--space-2));
 		overscroll-behavior: contain;
 	}
 	.thread-scroll:focus-visible {
@@ -452,16 +473,22 @@
 		justify-content: center;
 		padding: var(--space-2) 0;
 	}
-	.thread-state,
-	.thread-readonly {
-		margin: var(--space-4) 0;
+	/* The loading lines look like the kit's States, which the empty line is */
+	p.thread-state {
+		margin: 0;
+		padding: var(--space-4) 0;
 		color: var(--text-muted);
+	}
+	.thread-scroll :global(.thread-state) {
+		justify-content: center;
 		text-align: center;
 	}
 	.thread-readonly {
 		margin: 0;
 		padding: var(--space-3);
 		border-top: 1px solid var(--rule);
+		color: var(--text-muted);
+		text-align: center;
 	}
 	.thread-day {
 		display: flex;
@@ -480,11 +507,16 @@
 		content: '';
 	}
 	.thread-typing {
-		min-height: 1.4em;
+		position: absolute;
+		inset-inline: 0;
+		bottom: 0;
 		margin: 0;
-		padding: 0 var(--space-4);
+		padding: 2px var(--space-4);
+		background: var(--bg);
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+		line-height: var(--leading);
+		pointer-events: none;
 	}
 	.thread-drop {
 		position: absolute;

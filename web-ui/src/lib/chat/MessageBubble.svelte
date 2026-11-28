@@ -7,21 +7,21 @@
   (links open in a new tab and are shown as they are, never previewed),
   "edited", or "Message deleted" in its place. Under it the reactions,
   and on my newest message whether it was seen. The actions (react,
-  reply, edit, delete, copy, the edit history) show on hover and focus,
-  and stay on touch screens. Everything from a message is text, never
-  markup.
+  reply, and in the menu copy, edit, the edit history, delete) show on
+  hover and focus; on a touch screen a tap on the message focuses it and
+  shows them. Everything from a message is text, never markup.
 -->
 <script lang="ts">
 	import { formatBytes } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import Avatar from '#lib/ui/Avatar.svelte';
+	import Button from '#lib/ui/Button.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import ChatEmoji from './ChatEmoji.svelte';
-	import { QUICK } from './emoji.ts';
 	import { eventText, isPicture, linkParts, reactors } from './logic.ts';
 	import type { Message } from './types.ts';
 
@@ -98,6 +98,7 @@
 		class={['chat-msg', mine ? 'is-mine' : 'is-theirs', first && 'is-first', marked && 'is-marked']}
 		data-id={msg.id}
 		role="group"
+		tabindex="-1"
 		aria-label={t('chat.message_from', { name: msg.from.name || '?' })}
 	>
 		{#if first && !mine}
@@ -173,12 +174,6 @@
 					/>
 					<IconButton icon="reply" label={t('chat.reply')} onclick={() => onreply(msg)} />
 					<MenuButton kebab label={t('chat.more_actions')} align={mine ? 'end' : 'start'}>
-						{#each QUICK.slice(0, 3) as e (e)}
-							<MenuItem onselect={() => onreact(msg, e, true)}>
-								{#snippet lead()}<ChatEmoji emoji={e} />{/snippet}
-								{t('chat.react_with', { emoji: e })}
-							</MenuItem>
-						{/each}
 						{#if msg.text}<MenuItem icon="content_copy" onselect={copy}>{t('chat.copy_text')}</MenuItem>{/if}
 						{#if mayEdit}<MenuItem icon="edit" onselect={() => onedit(msg)}>{t('chat.edit')}</MenuItem>{/if}
 						{#if mayTrail && msg.edited_at}<MenuItem icon="history" onselect={() => ontrail(msg)}
@@ -215,7 +210,7 @@
 		{:else if msg.pending === 'failed'}
 			<p class="chat-msg-state is-error">
 				{t('chat.not_sent')}
-				<button type="button" class="chat-link-btn" onclick={() => onretry(msg)}>{t('actions.retry')}</button>
+				<Button variant="link" onclick={() => onretry(msg)}>{t('actions.retry')}</Button>
 			</p>
 		{:else if mine && seen}
 			<p class="chat-msg-state">{t('chat.seen')}</p>
@@ -224,7 +219,7 @@
 {/if}
 
 <style>
-	/* A line of the system: one centred, muted pill */
+	/* A line of the system: centred and muted, like the day lines */
 	.chat-system {
 		display: flex;
 		justify-content: center;
@@ -236,9 +231,6 @@
 		justify-content: center;
 		gap: 0 var(--space-2);
 		max-width: 100%;
-		padding: 2px var(--space-3);
-		border-radius: 999px;
-		background: var(--bg-subtle);
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 		text-align: center;
@@ -252,6 +244,10 @@
 		padding-inline-start: calc(24px + var(--space-2));
 		border-radius: var(--radius);
 		transition: background-color var(--motion);
+	}
+	/* Focused by a tap or from the thread: no ring, the actions show instead */
+	.chat-msg:focus {
+		outline: none;
 	}
 	.chat-msg.is-first {
 		margin-top: var(--space-3);
@@ -285,7 +281,7 @@
 		gap: var(--space-1);
 		margin: 4px 0 -2px var(--space-3);
 		color: var(--text-muted);
-		font-size: 11px;
+		font-size: var(--text-xs);
 		line-height: 1.6;
 		white-space: nowrap;
 	}
@@ -301,8 +297,8 @@
 		justify-content: center;
 		width: 24px;
 		height: 24px;
-		border-radius: 50%;
-		background: var(--surface-2, var(--hover));
+		border-radius: var(--radius);
+		background: var(--tag-bg);
 		color: var(--text-muted);
 		font-size: 16px;
 	}
@@ -320,19 +316,13 @@
 		min-width: 0;
 		padding: 6px var(--space-3);
 		border: 1px solid var(--rule);
-		border-radius: calc(var(--radius) * 3);
+		border-radius: var(--radius);
 		background: var(--bg-subtle);
 		overflow-wrap: anywhere;
 	}
 	.is-mine .chat-bubble {
 		border-color: transparent;
 		background: var(--accent-tint);
-	}
-	.is-theirs.is-first .chat-bubble {
-		border-start-start-radius: var(--radius);
-	}
-	.is-mine.is-first .chat-bubble {
-		border-start-end-radius: var(--radius);
 	}
 	.chat-bubble.is-pending {
 		opacity: 0.7;
@@ -351,7 +341,7 @@
 		white-space: pre-wrap;
 	}
 	.chat-text a {
-		color: var(--link, var(--accent));
+		color: var(--accent);
 		text-decoration: underline;
 	}
 	.chat-quote {
@@ -423,9 +413,15 @@
 		flex: none;
 		align-items: center;
 	}
+	/* With a mouse they show on hover and focus; on a touch screen once the message is tapped */
 	@media (hover: hover) {
 		.chat-msg:not(:hover):not(:focus-within) .chat-actions {
 			opacity: 0;
+		}
+	}
+	@media (hover: none) {
+		.chat-msg:not(:focus-within) .chat-actions {
+			display: none;
 		}
 	}
 	.chat-reactions {
@@ -440,8 +436,8 @@
 		gap: 4px;
 		min-height: var(--control-h-sm);
 		padding: 0 var(--space-2);
-		border: 1px solid var(--rule);
-		border-radius: 999px;
+		border: 1px solid var(--border);
+		border-radius: var(--control-radius);
 		background: var(--bg);
 		color: var(--text);
 		font: inherit;
@@ -454,15 +450,6 @@
 	}
 	.chat-reaction:hover {
 		background: var(--hover);
-	}
-	.chat-link-btn {
-		padding: 0;
-		border: 0;
-		background: none;
-		color: var(--link, var(--accent));
-		font: inherit;
-		text-decoration: underline;
-		cursor: pointer;
 	}
 	@media (max-width: 767px) {
 		.chat-msg-row {

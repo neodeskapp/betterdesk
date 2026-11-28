@@ -9,8 +9,8 @@
 	import { tick, untrack } from 'svelte';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { can, canWrite } from '#lib/state/session.svelte.ts';
-	import Button from '#lib/ui/Button.svelte';
-	import Icon from '#lib/ui/Icon.svelte';
+	import States from '#lib/ui/States.svelte';
+	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import * as api from './api.ts';
 	import CannedReplies from './CannedReplies.svelte';
 	import { chat } from './client.svelte.ts';
@@ -85,6 +85,20 @@
 		void reload(c.id);
 	}
 
+	/** The first answer to a support conversation nobody has takes it, for those who may assign */
+	async function takeOnReply(c: string) {
+		const d = chat.details[c];
+		const me = chat.me;
+		if (!d || !me || !chat.may.assign) return;
+		const it = d.conversation;
+		if (it.kind !== 'support' || it.state !== 'open' || it.assignee_id) return;
+		try {
+			changed(await api.assign(c, me.id));
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('chat.action_failed'));
+		}
+	}
+
 	function open(c: string, row: HTMLElement | null, message?: string) {
 		lastRow = row;
 		focus = message ? { conv: c, message } : null;
@@ -156,6 +170,7 @@
 					focus={focus?.conv === conv ? focus.message : null}
 					autofocus={!compact && !focus}
 					onmanagecanned={() => (managing = true)}
+					onsend={() => void takeOnReply(conv)}
 				>
 					{#snippet header()}
 						<ConversationHeader
@@ -174,23 +189,17 @@
 						{/if}
 					{/snippet}
 					{#snippet empty()}
-						<div class="chat-empty-thread">
-							<Icon name="forum" />
-							<p>
-								{kind === 'support'
-									? t('chat.empty_thread_support', { name: target })
-									: t('chat.empty_thread_team', { name: target })}
-							</p>
-						</div>
+						<States
+							class="chat-empty-thread"
+							message={kind === 'support'
+								? t('chat.empty_thread_support', { name: target })
+								: t('chat.empty_thread_team', { name: target })}
+						/>
 					{/snippet}
 				</Thread>
 			{/key}
 		{:else}
-			<div class="chat-pick">
-				<Icon name="forum" />
-				<p>{t('chat.pick_conversation')}</p>
-				<Button icon="edit_square" onclick={() => (creating = true)}>{t('chat.new')}</Button>
-			</div>
+			<States class="chat-pick" message={t('chat.pick_conversation')} />
 		{/if}
 	</div>
 </div>
@@ -260,26 +269,15 @@
 		min-width: 0;
 		min-height: 0;
 	}
-	.chat-pick,
-	.chat-empty-thread {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
-		align-items: center;
+	/* One muted line, centred: in the middle of the empty pane, or at the
+	   top of a conversation without messages */
+	.chat-pane-thread :global(:is(.chat-pick, .chat-empty-thread)) {
 		justify-content: center;
-		gap: var(--space-3);
-		padding: var(--space-5);
-		color: var(--text-muted);
 		text-align: center;
 	}
-	.chat-pick > :global(.material-icons),
-	.chat-empty-thread > :global(.material-icons) {
-		font-size: 48px;
-	}
-	.chat-pick p,
-	.chat-empty-thread p {
-		max-width: 36ch;
-		margin: 0;
+	.chat-pane-thread :global(.chat-pick) {
+		flex: 1;
+		padding-inline: var(--space-5);
 	}
 	.is-compact {
 		grid-template-columns: minmax(0, 1fr);

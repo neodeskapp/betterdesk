@@ -1,56 +1,28 @@
 <!--
-  Whom a support message reaches (A242), in one line above the composer:
-  the person in the NeoDesk app, the agent's window, or nobody right now.
-  The last one is tinted as a warning.
+  Whether a support message reaches the person (A242), above the composer.
+  It shows only when it doesn't: neither the NeoDesk app's chat nor an
+  agent that takes chat is connected, as a warning notice. When the person
+  can be reached it shows nothing.
 -->
 <script lang="ts">
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import Icon from '#lib/ui/Icon.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
 	import { chat } from './client.svelte.ts';
 	import type { Device } from './types.ts';
 
 	let { device }: { device: Device } = $props();
 
-	const reach = $derived.by(() => {
-		if (chat.deviceChat[device.id] ?? device.chat_connected) return 'app';
-		if (device.agent_chat) return 'agent';
-		return 'none';
-	});
+	const reachable = $derived(!!(chat.deviceChat[device.id] ?? device.chat_connected) || device.agent_chat);
 </script>
 
-<p class={['reach', reach === 'none' && 'is-off']} role="status">
-	<Icon name={reach === 'none' ? 'cloud_off' : 'check_circle'} />
-	{#if reach === 'app'}
-		{t('chat.reach_app')}
-	{:else if reach === 'agent'}
-		{t('chat.reach_agent')}
-	{:else}
-		{t('chat.reach_none')}
-	{/if}
-</p>
+{#if !reachable}
+	<Notice tone="warning" class="chat-reach" role="status" message={t('chat.reach_none')} />
+{/if}
 
 <style>
-	.reach {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		margin: 0;
-		padding: var(--space-1) var(--space-4);
-		color: var(--text-muted);
+	/* Small text, lined up with the messages and the composer */
+	:global(.notice.chat-reach) {
 		font-size: var(--text-sm);
-	}
-	.reach :global(.material-icons) {
-		font-size: 16px;
-	}
-	.reach.is-off {
-		padding-block: var(--space-2);
-		border-top: 1px solid var(--rule);
-		background: var(--warning-tint, var(--hover));
-		color: var(--text);
-	}
-	@media (max-width: 767px) {
-		.reach {
-			padding-inline: var(--space-4);
-		}
+		padding-inline: var(--space-4);
 	}
 </style>

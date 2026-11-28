@@ -15,6 +15,7 @@
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Notice from '#lib/ui/Notice.svelte';
+	import Status from '#lib/ui/Status.svelte';
 	import ChatSettingsMenu from '#lib/chat/ChatSettingsMenu.svelte';
 	import ChatView from '#lib/chat/ChatView.svelte';
 	import { chat } from '#lib/chat/client.svelte.ts';
@@ -48,8 +49,9 @@
 		<h1>{t('nav.chat')}</h1>
 		{#if allowed}
 			<div class="page-actions">
-				{#if chat.status === 'closed'}<span class="chat-offline" role="status">{t('chat.not_connected')}</span
-					>{/if}
+				<span role="status"
+					>{#if chat.status === 'closed'}<Status tone="danger" label={t('chat.not_connected')} />{/if}</span
+				>
 				<ChatSettingsMenu />
 			</div>
 		{/if}
@@ -58,14 +60,14 @@
 	{#if !allowed}
 		<Notice tone="info" message={t('chat.needs_access')} />
 	{:else}
-		<div class="chat-frame">
-			<ChatView {section} {filter} {conv} onchange={go} />
-		</div>
+		<ChatView {section} {filter} {conv} onchange={go} />
 	{/if}
 </div>
 
 <style>
-	/* The chat fills the window below the top bar; its parts scroll on their own */
+	/* The chat fills the window below the top bar; its parts scroll on their
+	   own. The list and the conversation sit on the page under a rule, with a
+	   rule between them (ChatView, like the kit's Split). */
 	.chat-page {
 		height: calc(100dvh - var(--topbar-h) - var(--page-pad) - var(--space-5));
 		min-height: 480px;
@@ -74,38 +76,17 @@
 	.chat-page .page-head {
 		align-items: center;
 	}
-	.chat-offline {
-		color: var(--danger);
-		font-size: var(--text-sm);
-	}
-	/* One framed box: the list and the conversation share its edges */
-	.chat-frame {
-		display: flex;
-		flex: 1;
-		min-height: 0;
-		overflow: hidden;
-		border: 1px solid var(--rule);
-		border-radius: calc(var(--radius) * 2);
-		background: var(--bg);
-	}
-	.chat-frame > :global(.chat-view) {
-		border-top: 0;
-	}
-	/* A phone: no box, the chat runs from edge to edge and down to the tab bar,
+	/* A phone: the chat runs from edge to edge and down to the tab bar,
 	   like a messaging app; only the title keeps the page's margin */
 	@media (max-width: 767px) {
 		.chat-page {
-			height: calc(100dvh - var(--topbar-h) - 56px - env(safe-area-inset-bottom, 0px));
+			height: calc(100dvh - var(--topbar-h) - var(--bottom-nav-h) - env(safe-area-inset-bottom, 0px));
 			min-height: 420px;
 			margin: calc(-1 * var(--page-pad));
 			gap: var(--space-2);
 		}
 		.chat-page .page-head {
 			padding: var(--page-pad) var(--page-pad) 0;
-		}
-		.chat-frame {
-			border: 0;
-			border-radius: 0;
 		}
 		/* Reading on a phone: the conversation takes the page, its head says where one is */
 		.chat-page.is-reading .page-head {
