@@ -110,10 +110,13 @@ spec:
             periodSeconds: 5
             failureThreshold: 120
           readinessProbe:
-            # 503 while the pod drains or Valkey does not answer
+            # 503 while the pod drains or Valkey does not answer. Asked
+            # often, so a stopping pod stops serving within seconds and
+            # kube-proxy moves its peers' UDP flows to the other pods
             httpGet: { path: /api/health, port: api }
-            periodSeconds: 5
-            failureThreshold: 2
+            periodSeconds: 2
+            failureThreshold: 1
+            successThreshold: 1
           livenessProbe:
             # The process, not its dependencies: a Valkey outage must not
             # restart every pod
@@ -124,7 +127,7 @@ spec:
             preStop:
               # The Service drops the pod before it stops listening
               exec:
-                command: ["sleep", "5"]
+                command: ["sleep", "2"]
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
