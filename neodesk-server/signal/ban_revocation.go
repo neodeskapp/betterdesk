@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
-	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 )
 
 // revokeBannedPeerAccess removes the access state that this package can revoke
@@ -15,7 +14,7 @@ func (s *Server) revokeBannedPeerAccess(peerID string, session *db.ClientSession
 		return
 	}
 
-	relay.RevokeRelayPairsForPeer(peerID)
+	s.ticketStore().RevokeForPeer(peerID)
 	if s.peers != nil {
 		s.peers.Remove(peerID)
 	}

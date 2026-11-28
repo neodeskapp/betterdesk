@@ -240,7 +240,7 @@ func TestRelayAcceptsTargetBeforeLateAuthorization(t *testing.T) {
 
 	registry := NewAuthorizationRegistry()
 	srv := New(cfg)
-	srv.SetAuthorizationRegistry(registry)
+	srv.SetTicketClaims(registry)
 	if err := srv.Start(t.Context()); err != nil {
 		t.Fatal(err)
 	}
@@ -274,7 +274,7 @@ func TestRelayAcceptsTargetBeforeLateAuthorization(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 	}
 
-	if !registry.Authorize(relayUUID, "INIT-LATE", "TARGET-LATE") {
+	if !registry.AuthorizeFor(relayUUID, "INIT-LATE", "TARGET-LATE", 0) {
 		t.Fatal("late signal authorization failed")
 	}
 

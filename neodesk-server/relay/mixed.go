@@ -47,9 +47,7 @@ func (s *Server) startMixedRelay(tcpConn net.Conn, ws *websocket.Conn, tcpAddr, 
 	log.Printf("[relay] Pair established: %s <-> %s (UUID: %s, transport=mixed)",
 		tcpAddr, wsAddr, relayUUIDLogID(uuid))
 
-	if s.onRelayStart != nil {
-		s.onRelayStart(uuid)
-	}
+	s.reportStarted(uuid)
 
 	var paceTCP, paceWS io.Writer
 	if s.bwLimiter != nil {
@@ -58,6 +56,8 @@ func (s *Server) startMixedRelay(tcpConn net.Conn, ws *websocket.Conn, tcpAddr, 
 		paceTCP = s.bwLimiter.WrapWriter(io.Discard)
 		paceWS = s.bwLimiter.WrapWriter(io.Discard)
 	}
+	// fromTCP counts what the TCP side sends, fromWS what the WS side sends
+	fromTCP, fromWS := &byteMeter{next: paceWS}, &byteMeter{next: paceTCP}
 
 	idle := config.RelayIdleTimeout
 	ws.SetReadLimit(MaxWSRelayMessage)
@@ -66,19 +66,17 @@ func (s *Server) startMixedRelay(tcpConn net.Conn, ws *websocket.Conn, tcpAddr, 
 	var once sync.Once
 
 	go func() {
-		copyTCPFramesToWS(s.ctx, tcpConn, ws, paceWS, idle)
+		copyTCPFramesToWS(s.ctx, tcpConn, ws, fromTCP, idle)
 		once.Do(func() { close(done) })
 	}()
 	go func() {
-		copyWSToTCPFrames(s.ctx, ws, tcpConn, paceTCP, idle)
+		copyWSToTCPFrames(s.ctx, ws, tcpConn, fromWS, idle)
 		once.Do(func() { close(done) })
 	}()
 
 	<-done
 
-	if s.onRelayEnd != nil {
-		s.onRelayEnd(uuid)
-	}
+	s.reportEnded(uuid, fromTCP, fromWS)
 
 	tcpConn.Close()
 	_ = ws.Close(websocket.StatusNormalClosure, "")

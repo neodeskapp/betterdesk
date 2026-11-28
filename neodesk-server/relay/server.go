@@ -30,7 +30,7 @@ type Server struct {
 	bwLimiter      *ratelimit.BandwidthLimiter
 	connLimiter    *ratelimit.ConnLimiter
 	sessionLimiter *ratelimit.ConnLimiter // active paired sessions per IP (post-pair)
-	authorizations *AuthorizationRegistry
+	authorizations TicketClaims
 	authWait       *relayAuthWaitLimiter
 	tcpLn          net.Listener
 	wsHTTP         *http.Server // WebSocket relay listener
@@ -45,8 +45,9 @@ type Server struct {
 	ActiveSessions atomic.Int64
 	TotalRelayed   atomic.Int64
 
-	onRelayStart func(uuid string)
-	onRelayEnd   func(uuid string)
+	// reporter hears of paired and parted sessions (billing, live
+	// sessions); nil for none
+	reporter SessionReporter
 }
 
 const (
@@ -196,11 +197,12 @@ func (s *Server) SetSessionLimiter(cl *ratelimit.ConnLimiter) {
 	s.sessionLimiter = cl
 }
 
-// SetAuthorizationRegistry overrides the signal-issued relay authorization
-// registry. It is primarily useful for isolated deployments and tests.
-func (s *Server) SetAuthorizationRegistry(registry *AuthorizationRegistry) {
-	if registry != nil {
-		s.authorizations = registry
+// SetTicketClaims sets the ticket store the relay claims from instead of
+// the in-process one (DefaultTickets). Signal must issue its tickets on
+// the same store.
+func (s *Server) SetTicketClaims(claims TicketClaims) {
+	if claims != nil {
+		s.authorizations = claims
 	}
 }
 
@@ -262,10 +264,22 @@ func (s *Server) Live(uuid string) (LivePair, bool) {
 	return s.authorizations.Live(uuid)
 }
 
-// SetBillingCallbacks registers hooks when relay sessions start/end (commercialization).
-func (s *Server) SetBillingCallbacks(onStart, onEnd func(uuid string)) {
-	s.onRelayStart = onStart
-	s.onRelayEnd = onEnd
+// SetSessionReporter sets who hears of paired and parted sessions (billing
+// and live sessions in the server, the control channel in other builds).
+func (s *Server) SetSessionReporter(r SessionReporter) {
+	s.reporter = r
+}
+
+func (s *Server) reportStarted(uuid string) {
+	if s.reporter != nil {
+		s.reporter.RelayStarted(uuid)
+	}
+}
+
+func (s *Server) reportEnded(uuid string, first, second *byteMeter) {
+	if s.reporter != nil {
+		s.reporter.RelayEnded(uuid, SessionStats{BytesFromFirst: first.n.Load(), BytesFromSecond: second.n.Load()})
+	}
 }
 
 // Start launches the relay TCP listener.
@@ -496,9 +510,7 @@ func (s *Server) startRelay(conn1, conn2 net.Conn, uuid string) {
 	log.Printf("[relay] Pair established: %s <-> %s (UUID: %s)",
 		conn1.RemoteAddr(), conn2.RemoteAddr(), relayUUIDLogID(uuid))
 
-	if s.onRelayStart != nil {
-		s.onRelayStart(uuid)
-	}
+	s.reportStarted(uuid)
 
 	// NOTE: Do NOT send RelayResponse confirmation to clients here.
 	// The RustDesk client's create_relay() does not read any response from
@@ -535,6 +547,9 @@ func (s *Server) startRelay(conn1, conn2 net.Conn, uuid string) {
 
 	done := make(chan struct{})
 	var once sync.Once
+	from1, from2 := &byteMeter{}, &byteMeter{}
+	r1 = io.TeeReader(r1, from1)
+	r2 = io.TeeReader(r2, from2)
 
 	// Bidirectional copy — raw bytes, no protobuf parsing
 	go func() {
@@ -550,9 +565,7 @@ func (s *Server) startRelay(conn1, conn2 net.Conn, uuid string) {
 	// Wait for one direction to finish, then clean up both
 	<-done
 
-	if s.onRelayEnd != nil {
-		s.onRelayEnd(uuid)
-	}
+	s.reportEnded(uuid, from1, from2)
 
 	conn1.Close()
 	conn2.Close()

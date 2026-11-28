@@ -27,6 +27,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/policy"
 	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 	"github.com/neodeskapp/neodesk/neodesk-server/ratelimit"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 	"github.com/neodeskapp/neodesk/neodesk-server/security"
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
@@ -176,6 +177,10 @@ type Server struct {
 	networkPolicy *policy.NetworkResolver
 
 	billing *billing.Service
+
+	// tickets is the relay ticket store sessions are admitted on (see
+	// SetTickets); nil means relay.DefaultTickets.
+	tickets relay.Tickets
 
 	// wsConns and natConns count the open connections of the WebSocket
 	// signal port and the NAT test port.
