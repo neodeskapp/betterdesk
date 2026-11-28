@@ -90,6 +90,9 @@ type Server struct {
 	// deviceRouting passes device requests to the instance that holds the
 	// device (SetDeviceRouting); nil keeps them here.
 	deviceRouting DeviceRouting
+	// settingsBus carries which settings this instance changed to the
+	// others (SetSettingsBus); nil alone.
+	settingsBus *eventsModule.Bus
 	// deviceChat is the console's handler of a computer's support chat
 	// (device_chat.go, L526)
 	deviceChat deviceChatHandler
@@ -552,9 +555,9 @@ func (s *Server) routes() *http.ServeMux {
 
 	// Config (server.config permission)
 	mux.HandleFunc("GET /api/config/{key}", s.requirePermission(auth.PermServerConfig, s.handleGetConfig))
-	mux.HandleFunc("PUT /api/config/{key}", s.requirePermission(auth.PermServerConfig, s.handleSetConfig))
+	mux.HandleFunc("PUT /api/config/{key}", s.broadcasts(eventsModule.SettingsConfig, s.requirePermission(auth.PermServerConfig, s.handleSetConfig)))
 	mux.HandleFunc("GET /api/connection/config", s.requirePermission(auth.PermServerConfig, s.handleGetConnectionConfig))
-	mux.HandleFunc("PUT /api/connection/config", s.requirePermission(auth.PermServerConfig, s.handleSetConnectionConfig))
+	mux.HandleFunc("PUT /api/connection/config", s.broadcasts(eventsModule.SettingsConfig, s.requirePermission(auth.PermServerConfig, s.handleSetConnectionConfig)))
 
 	// Auth (public — no auth required, handled by middleware exclusion)
 	mux.HandleFunc("POST /api/auth/login", s.handleLogin)
@@ -664,7 +667,7 @@ func (s *Server) routes() *http.ServeMux {
 
 	// Enrollment mode management (Dual Key System - admin only)
 	mux.HandleFunc("GET /api/enrollment/mode", s.requireRole(auth.RoleAdmin, s.handleGetEnrollmentMode))
-	mux.HandleFunc("PUT /api/enrollment/mode", s.requireRole(auth.RoleAdmin, s.handleSetEnrollmentMode))
+	mux.HandleFunc("PUT /api/enrollment/mode", s.broadcasts(eventsModule.SettingsConfig, s.requireRole(auth.RoleAdmin, s.handleSetEnrollmentMode)))
 
 	// Enrollment — device self-registration (public, no auth, rate-limited via M-07)
 	mux.HandleFunc("POST /api/devices/register", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceRegister))
@@ -696,7 +699,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/timesync/status", s.requirePermission(auth.PermBillingView, s.handleTimeSyncStatus))
 	mux.HandleFunc("POST /api/timesync/check", s.requirePermission(auth.PermServerConfig, s.handleTimeSyncCheck))
 	mux.HandleFunc("GET /api/timesync/config", s.requirePermission(auth.PermServerConfig, s.handleGetTimeSyncConfig))
-	mux.HandleFunc("PUT /api/timesync/config", s.requirePermission(auth.PermServerConfig, s.handleSetTimeSyncConfig))
+	mux.HandleFunc("PUT /api/timesync/config", s.broadcasts(eventsModule.SettingsConfig, s.requirePermission(auth.PermServerConfig, s.handleSetTimeSyncConfig)))
 	mux.HandleFunc("GET /api/billing/check", s.requirePermission(auth.PermDeviceConnect, s.handleBillingConnectionCheck))
 	mux.HandleFunc("GET /api/billing/packages", s.requirePermission(auth.PermBillingView, s.handleListBillingPackages))
 	mux.HandleFunc("GET /api/billing/packages/{id}/preview", s.requirePermission(auth.PermBillingView, s.handleBillingPackagePreview))
@@ -727,13 +730,13 @@ func (s *Server) routes() *http.ServeMux {
 
 	// LDAP configuration (server.config permission)
 	mux.HandleFunc("GET /api/auth/ldap/config", s.requirePermission(auth.PermServerConfig, s.handleGetLDAPConfig))
-	mux.HandleFunc("PUT /api/auth/ldap/config", s.requirePermission(auth.PermServerConfig, s.handleSaveLDAPConfig))
+	mux.HandleFunc("PUT /api/auth/ldap/config", s.broadcasts(eventsModule.SettingsLDAP, s.requirePermission(auth.PermServerConfig, s.handleSaveLDAPConfig)))
 	mux.HandleFunc("POST /api/auth/ldap/test", s.requirePermission(auth.PermServerConfig, s.handleTestLDAPConnection))
 	mux.HandleFunc("POST /api/auth/ldap/verify", s.requireConsoleCaller(s.handleLDAPVerifyCredentials))
 
 	// OIDC/OAuth2 configuration (server.config permission)
 	mux.HandleFunc("GET /api/auth/oidc/config", s.requirePermission(auth.PermServerConfig, s.handleGetOIDCConfig))
-	mux.HandleFunc("PUT /api/auth/oidc/config", s.requirePermission(auth.PermServerConfig, s.handleSaveOIDCConfig))
+	mux.HandleFunc("PUT /api/auth/oidc/config", s.broadcasts(eventsModule.SettingsOIDC, s.requirePermission(auth.PermServerConfig, s.handleSaveOIDCConfig)))
 	mux.HandleFunc("POST /api/auth/oidc/test", s.requirePermission(auth.PermServerConfig, s.handleTestOIDCDiscovery))
 	// OIDC public endpoints (no auth — used by login page and IdP callback)
 	mux.HandleFunc("GET /api/auth/oidc/status", s.handleOIDCLoginStatus)
@@ -749,13 +752,13 @@ func (s *Server) routes() *http.ServeMux {
 
 	// Branding (GET is public for desktop clients, POST is admin)
 	mux.HandleFunc("GET /api/branding", s.rateLimitPublic(s.brandingLimiter, s.handleGetBranding))
-	mux.HandleFunc("POST /api/branding", s.requireRole(auth.RoleAdmin, s.handleSaveBranding))
+	mux.HandleFunc("POST /api/branding", s.broadcasts(eventsModule.SettingsBranding, s.requireRole(auth.RoleAdmin, s.handleSaveBranding)))
 
 	// Short-code pairing (host + 6 characters).
 	// Redeem/preview are public because the client has no credentials yet; they are
 	// rate-limited and a valid code is required. Minting, listing and revoking ask enrollment.approve.
 	mux.HandleFunc("POST /api/pairing/redeem", s.rateLimitPublic(s.pairingLimiter, s.handlePairingRedeem))
-	mux.HandleFunc("POST /api/pairing/config", s.rateLimitPublic(s.pairingLimiter, s.handlePairingConfigPreview))
+	mux.HandleFunc("POST /api/pairing/config", s.broadcasts(eventsModule.SettingsConfig, s.rateLimitPublic(s.pairingLimiter, s.handlePairingConfigPreview)))
 	mux.HandleFunc("POST /api/pairing/codes", s.requirePermission(auth.PermEnrollmentApprove, s.handleCreatePairingCode))
 	mux.HandleFunc("GET /api/pairing/codes", s.requirePermission(auth.PermEnrollmentApprove, s.handleListPairingCodes))
 	mux.HandleFunc("DELETE /api/pairing/codes/{id}", s.requirePermission(auth.PermEnrollmentApprove, s.handleDeletePairingCode))

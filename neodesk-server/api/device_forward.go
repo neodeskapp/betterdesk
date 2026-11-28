@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	eventsModule "github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 // When several instances share the installation, a CDAP device or a
@@ -55,6 +57,48 @@ type forwardedCaller struct {
 	Actor    string `json:"a,omitempty"`
 	Token    string `json:"t,omitempty"`
 	Remote   string `json:"ra,omitempty"`
+}
+
+// SetSettingsBus sets where the server says which settings it changed, so
+// the other instances read them again (cluster mode).
+func (s *Server) SetSettingsBus(bus *eventsModule.Bus) { s.settingsBus = bus }
+
+// statusRecorder notes the status a handler answered with.
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	if r.status == 0 {
+		r.status = code
+	}
+	r.ResponseWriter.WriteHeader(code)
+}
+
+func (r *statusRecorder) Write(p []byte) (int, error) {
+	if r.status == 0 {
+		r.status = http.StatusOK
+	}
+	return r.ResponseWriter.Write(p)
+}
+
+func (r *statusRecorder) Unwrap() http.ResponseWriter { return r.ResponseWriter }
+
+// broadcasts tells the other instances that what changed once handler has
+// answered with success. Alone it is handler.
+func (s *Server) broadcasts(what string, handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if s.settingsBus == nil {
+			handler(w, r)
+			return
+		}
+		rec := &statusRecorder{ResponseWriter: w}
+		handler(rec, r)
+		if rec.status != 0 && rec.status < 400 {
+			eventsModule.SettingsChanged(s.settingsBus, what, nil)
+		}
+	}
 }
 
 // SetDeviceRouting turns passing device requests on (cluster mode).

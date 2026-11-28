@@ -31,6 +31,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
 	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 	"github.com/neodeskapp/neodesk/neodesk-server/internal/productversion"
 	"github.com/neodeskapp/neodesk/neodesk-server/logging"
@@ -806,6 +807,13 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		// from other pods are passed to it
 		if clusterRT.mesh != nil {
 			clusterRT.shareDevices(ctx, apiSrv, cdapGw, meshGw)
+			// Settings saved on one pod are read again on the others
+			clusterRT.shareSettings(ctx, apiSrv, blocklist, reloadHandler.Execute)
+			adminSrv.SetReloadFunc(func() error {
+				err := reloadHandler.Execute()
+				events.SettingsChanged(clusterRT.settings, events.SettingsConfig, nil)
+				return err
+			})
 		}
 
 		apiSrv.SetDerivedClientPort(startDerivedClientPort(cfg, os.Getenv))

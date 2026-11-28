@@ -13,8 +13,10 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/cdap"
 	"github.com/neodeskapp/neodesk/neodesk-server/cluster"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
 	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
 	"github.com/neodeskapp/neodesk/neodesk-server/relay"
+	"github.com/neodeskapp/neodesk/neodesk-server/security"
 	sigServer "github.com/neodeskapp/neodesk/neodesk-server/signal"
 )
 
@@ -35,6 +37,8 @@ type clusterRuntime struct {
 	kv     cluster.KV
 	signal *sigServer.Server
 	relay  *relay.Server
+	// settings says which settings an instance changed (nil alone).
+	settings *events.Bus
 }
 
 // dialCluster reads the cluster settings and connects to Valkey when one
@@ -113,6 +117,7 @@ func (rt *clusterRuntime) startMesh() error {
 	}
 	rt.mesh = mesh
 	rt.kv = cluster.NewValkeyKV(rt.valkey)
+	rt.settings = events.NewBus()
 	return nil
 }
 
@@ -228,4 +233,42 @@ func (d deviceRouting) ClaimOnce(ctx context.Context, nonce string) bool {
 	}
 	_, set, err := d.kv.SetNX(ctx, "mesh:nonce:"+nonce, "1", 2*time.Minute)
 	return err == nil && set
+}
+
+// settingsBus is the settings bus, nil when the server runs alone.
+func (rt *clusterRuntime) settingsBus() *events.Bus {
+	if rt == nil {
+		return nil
+	}
+	return rt.settings
+}
+
+// shareSettings joins the settings bus and reads again what another
+// instance changed: the configuration (the same reload as SIGHUP), LDAP,
+// OIDC and the blocklist. A change here is published for the others.
+func (rt *clusterRuntime) shareSettings(ctx context.Context, apiSrv *api.Server, blocklist *security.Blocklist, reload func() error) {
+	bus := rt.settings
+	bus.Join(ctx, rt.cfg.Name, cluster.NewSettingsLink(rt.valkey))
+	apiSrv.SetSettingsBus(bus)
+	blocklist.OnChange(func() { events.SettingsChanged(bus, events.SettingsBlocklist, nil) })
+	events.OnSettingsChanged(ctx, bus, func(what string, _ map[string]string) {
+		var err error
+		switch what {
+		case events.SettingsConfig:
+			err = reload()
+		case events.SettingsLDAP:
+			apiSrv.InitLDAP()
+		case events.SettingsOIDC:
+			apiSrv.InitOIDC()
+		case events.SettingsBlocklist:
+			err = blocklist.Reload()
+		default:
+			return
+		}
+		if err != nil {
+			log.Printf("[cluster] Reading the %s settings again failed: %v", what, err)
+		} else {
+			log.Printf("[cluster] Read the %s settings again: another instance changed them", what)
+		}
+	})
 }

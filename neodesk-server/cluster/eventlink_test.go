@@ -71,3 +71,33 @@ func TestValkeyEventLink(t *testing.T) {
 		return l.Ready(ctx, 2)
 	})
 }
+
+// TestSettingsReachOnlyTheOtherInstance: a change published on one
+// instance's settings bus is acted on by the other, not by itself.
+func TestSettingsReachOnlyTheOtherInstance(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	hub := events.NewMemHub()
+	a, b := events.NewBus(), events.NewBus()
+	a.Join(ctx, "pod-a", hub)
+	b.Join(ctx, "pod-b", hub)
+	heardA, heardB := make(chan string, 4), make(chan string, 4)
+	events.OnSettingsChanged(ctx, a, func(what string, _ map[string]string) { heardA <- what })
+	events.OnSettingsChanged(ctx, b, func(what string, d map[string]string) { heardB <- what + ":" + d["code"] })
+	time.Sleep(50 * time.Millisecond)
+
+	events.SettingsChanged(a, events.SettingsI18n, map[string]string{"code": "de"})
+	select {
+	case got := <-heardB:
+		if got != "i18n:de" {
+			t.Fatalf("pod b heard %q", got)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("pod b did not hear the change")
+	}
+	select {
+	case got := <-heardA:
+		t.Fatalf("pod a acted on its own change: %q", got)
+	case <-time.After(200 * time.Millisecond):
+	}
+}

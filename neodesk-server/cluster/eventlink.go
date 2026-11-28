@@ -19,6 +19,14 @@ type EventLink struct {
 // NewEventLink returns the link on v's channel.
 func NewEventLink(v *Valkey) *EventLink { return NewEventLinkOn(v.Client, v.Prefix()) }
 
+// NewSettingsLink returns the link of the settings bus (<prefix>settings):
+// which settings another instance changed, so this one reads them again.
+// It is a bus of its own, so these signals never reach the console's
+// event sockets.
+func NewSettingsLink(v *Valkey) *EventLink {
+	return &EventLink{rdb: v.Client, channel: v.Prefix() + "settings"}
+}
+
 // NewEventLinkOn returns the link on client with key prefix prefix.
 func NewEventLinkOn(client redis.UniversalClient, prefix string) *EventLink {
 	return &EventLink{rdb: client, channel: prefix + "events"}
