@@ -229,6 +229,8 @@ type Map struct {
 	// dir is the cluster-wide directory (SetDirectory), nil when the pod
 	// runs alone. Guarded by mu.
 	dir *dirState
+	// onMoved hears of peers that moved here from another pod
+	onMoved func(id, from string)
 
 	// Counters (atomic for lock-free reads from metrics)
 	totalRegistrations atomic.Int64

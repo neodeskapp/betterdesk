@@ -264,3 +264,24 @@ func TestTwoMapsSeeEachOthersPeers(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 	}
 }
+
+// TestPublishSaysWhoHadThePeerAndRefusesAStaleOne: the pod that takes a
+// peer over learns the old owner; the old pod's later publish of its
+// older entry is refused and reported.
+func TestPublishSaysWhoHadThePeerAndRefusesAStaleOne(t *testing.T) {
+	client, prefix := testClient(t)
+	a := New(client, prefix, "pod-a")
+	b := New(client, prefix, "pod-b")
+
+	old := entry("MOVED2", "198.51.100.21:5000")
+	if res := a.Publish([]*peer.Entry{old}); len(res.Took) != 0 || len(res.Refused) != 0 {
+		t.Fatalf("first publish: %+v", res)
+	}
+	time.Sleep(5 * time.Millisecond)
+	if res := b.Publish([]*peer.Entry{entry("MOVED2", "198.51.100.21:5000")}); res.Took["MOVED2"] != "pod-a" {
+		t.Fatalf("takeover publish: %+v, want Took MOVED2 from pod-a", res)
+	}
+	if res := a.Publish([]*peer.Entry{old}); len(res.Refused) != 1 || res.Refused[0] != "MOVED2" {
+		t.Fatalf("stale publish: %+v, want MOVED2 refused", res)
+	}
+}

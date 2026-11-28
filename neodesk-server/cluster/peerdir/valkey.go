@@ -53,16 +53,23 @@ const logEvery = 10 * time.Second
 // moved (it still republishes on a status change) can't overwrite the new
 // owner. ARGV: record, owner, LastReg ms, TTL ms. Every script touches one
 // key only, so the layout works on Redis Cluster too.
+//
+// It answers {1, previous owner} when it wrote (previous owner "" unless
+// the record belonged to another pod) and {0, owner} when it refused.
 var publishScript = redis.NewScript(`
 local v = redis.call('GET', KEYS[1])
+local prev = ''
 if v then
   local ok, d = pcall(cjson.decode, v)
-  if ok and type(d) == 'table' and d['owner'] ~= ARGV[2] and (tonumber(d['last_reg']) or 0) > tonumber(ARGV[3]) then
-    return 0
+  if ok and type(d) == 'table' and d['owner'] and d['owner'] ~= ARGV[2] then
+    if (tonumber(d['last_reg']) or 0) > tonumber(ARGV[3]) then
+      return {0, d['owner']}
+    end
+    prev = d['owner']
   end
 end
 redis.call('SET', KEYS[1], ARGV[1], 'PX', ARGV[4])
-return 1
+return {1, prev}
 `)
 
 // withdrawScript deletes peer:<id> only while this pod owns it, and
@@ -272,9 +279,10 @@ func (d *Directory) usable(r *record) bool {
 }
 
 // Publish writes entries as owned by this pod, in one pipeline.
-func (d *Directory) Publish(entries []*peer.Entry) {
+func (d *Directory) Publish(entries []*peer.Entry) peer.PublishResult {
+	var res peer.PublishResult
 	if len(entries) == 0 {
-		return
+		return res
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
 	defer cancel()
@@ -282,6 +290,11 @@ func (d *Directory) Publish(entries []*peer.Entry) {
 	ttlMs := strconv.FormatInt(ttl.Milliseconds(), 10)
 	stale := strconv.FormatInt(time.Now().Add(-ttl).UnixMilli(), 10)
 	pipe := d.client.Pipeline()
+	type pending struct {
+		id  string
+		cmd *redis.Cmd
+	}
+	var cmds []pending
 	for _, e := range entries {
 		if e == nil || e.ID == "" {
 			continue
@@ -291,7 +304,7 @@ func (d *Directory) Publish(entries []*peer.Entry) {
 		if err != nil {
 			continue
 		}
-		publishScript.Eval(ctx, pipe, []string{d.key(keyPeer, r.ID)}, string(b), d.self, r.LastReg, ttlMs)
+		cmds = append(cmds, pending{r.ID, publishScript.Eval(ctx, pipe, []string{d.key(keyPeer, r.ID)}, string(b), d.self, r.LastReg, ttlMs)})
 		// The indexes are written even when the record was not: readers
 		// check every index hit against the record, and GT keeps a stale
 		// publish from lowering a newer score.
@@ -307,7 +320,26 @@ func (d *Directory) Publish(entries []*peer.Entry) {
 	}
 	if _, err := pipe.Exec(ctx); err != nil {
 		d.fail("publish", err)
+		return res
 	}
+	for _, c := range cmds {
+		out, err := c.cmd.Slice()
+		if err != nil || len(out) != 2 {
+			continue
+		}
+		wrote, _ := out[0].(int64)
+		owner, _ := out[1].(string)
+		switch {
+		case wrote == 0:
+			res.Refused = append(res.Refused, c.id)
+		case owner != "":
+			if res.Took == nil {
+				res.Took = map[string]string{}
+			}
+			res.Took[c.id] = owner
+		}
+	}
+	return res
 }
 
 // Withdraw removes the entries of ids this pod still owns, with their

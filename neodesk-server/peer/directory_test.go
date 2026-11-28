@@ -15,6 +15,8 @@ type fakeDir struct {
 	remote    map[string]*Entry
 	published [][]*Entry
 	withdrawn [][]string
+	// result is what the next Publish answers
+	result PublishResult
 }
 
 func newFakeDir() *fakeDir { return &fakeDir{remote: map[string]*Entry{}} }
@@ -25,15 +27,18 @@ func (f *fakeDir) put(e *Entry) {
 	f.remote[e.ID] = e
 }
 
-func (f *fakeDir) Publish(entries []*Entry) {
+func (f *fakeDir) Publish(entries []*Entry) PublishResult {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	res := f.result
+	f.result = PublishResult{}
 	for _, e := range entries {
 		if e.TCPConn != nil || e.WSConn != nil {
 			panic("published entry carries a connection")
 		}
 	}
 	f.published = append(f.published, entries)
+	return res
 }
 
 func (f *fakeDir) Withdraw(ids []string) {
@@ -390,4 +395,44 @@ func (f *fakeDir) wasWithdrawn(id string) bool {
 		}
 	}
 	return false
+}
+
+// TestARefusedPublishDropsTheStaleEntryAndATakeoverIsReported: a peer
+// another pod registered later is dropped here; a peer taken over from
+// another pod reaches the moved handler.
+func TestARefusedPublishDropsTheStaleEntryAndATakeoverIsReported(t *testing.T) {
+	dir := newFakeDir()
+	m := NewMap()
+	moved := make(chan string, 1)
+	m.SetMovedHandler(func(id, from string) { moved <- id + "<" + from })
+	m.SetDirectory(dir, "pod-a")
+	defer m.Close()
+
+	dir.mu.Lock()
+	dir.result = PublishResult{Refused: []string{"STALE1"}}
+	dir.mu.Unlock()
+	m.Put(&Entry{ID: "STALE1", LastReg: time.Now()})
+	deadline := time.Now().Add(time.Second)
+	for m.GetLocal("STALE1") != nil {
+		if time.Now().After(deadline) {
+			t.Fatal("refused entry kept")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	dir.mu.Lock()
+	dir.result = PublishResult{Took: map[string]string{"TOOK1": "pod-b"}}
+	dir.mu.Unlock()
+	m.Put(&Entry{ID: "TOOK1", LastReg: time.Now()})
+	select {
+	case got := <-moved:
+		if got != "TOOK1<pod-b" {
+			t.Fatalf("moved handler got %q", got)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("moved handler not called")
+	}
+	if m.GetLocal("TOOK1") == nil {
+		t.Fatal("taken-over entry dropped")
+	}
 }

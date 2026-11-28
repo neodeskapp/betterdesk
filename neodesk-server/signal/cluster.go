@@ -76,6 +76,13 @@ func (s *Server) SetCluster(mesh Mesh, kv cluster.KV) {
 	mesh.Handle("signal.cancel-punch", s.serveCancelPunch)
 	mesh.Handle("signal.local-addr", s.serveLocalAddr)
 	mesh.Handle("signal.peer-moved", s.servePeerMoved)
+	// A publish that replaced another pod's entry tells that pod too, for
+	// a move faster than that pod's own publish
+	s.peers.SetMovedHandler(func(id, from string) {
+		if from != mesh.Self() {
+			go s.call(from, "signal.peer-moved", remoteMsg{ID: id})
+		}
+	})
 	go link.writeUDPIndex(s)
 }
 

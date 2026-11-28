@@ -10,11 +10,20 @@ import (
 
 // Directory is the cluster-wide view of peers registered on other pods.
 type Directory interface {
-	Publish(entries []*Entry)              // owner pod writes its entries (copies, no conns)
+	Publish(entries []*Entry) PublishResult // owner pod writes its entries (copies, no conns)
 	Withdraw(ids []string)                 // owner pod removes them
 	Lookup(id string) (*Entry, bool)       // entry of a peer registered on another pod
 	LookupAddr(addr string) (*Entry, bool) // by "ip:port" (UDPAddr.String())
 	ByIP(ip string) []*Entry               // live peers whose address has this IP
+}
+
+// PublishResult says what a Publish found about peers that moved between
+// pods: Took names, per id, the pod whose older entry this one replaced;
+// Refused lists ids another pod holds a newer registration of, so the
+// local entry is stale.
+type PublishResult struct {
+	Took    map[string]string
+	Refused []string
 }
 
 // BatchLookup is implemented by a Directory that can look up many ids in
@@ -241,9 +250,53 @@ func (m *Map) flushDirectory(ds *dirState, final bool) (next time.Time) {
 		ds.d.Withdraw(gone)
 	}
 	if len(pub) > 0 {
-		ds.d.Publish(pub)
+		res := ds.d.Publish(pub)
+		for _, id := range res.Refused {
+			// Another pod registered the peer after this one: the local
+			// entry is stale, so this pod stops answering for it
+			m.dropStale(id)
+		}
+		if h := m.movedHandler(); h != nil {
+			for id, from := range res.Took {
+				h(id, from)
+			}
+		}
 	}
 	return next
+}
+
+// SetMovedHandler sets who hears that a peer this pod holds now was
+// registered on pod from before (the signal server tells that pod).
+func (m *Map) SetMovedHandler(h func(id, from string)) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.onMoved = h
+}
+
+func (m *Map) movedHandler() func(id, from string) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.onMoved
+}
+
+// dropStale removes the local entry of id, which another pod holds a newer
+// registration of, without withdrawing it (the record is that pod's).
+func (m *Map) dropStale(id string) {
+	m.mu.Lock()
+	e, ok := m.entries[id]
+	if ok {
+		delete(m.entries, id)
+		if ds := m.dir; ds != nil {
+			delete(ds.full, id)
+			delete(ds.beat, id)
+			delete(ds.removed, id)
+			delete(ds.lastPub, id)
+		}
+	}
+	m.mu.Unlock()
+	if ok {
+		e.CloseConnections()
+	}
 }
 
 // publishCopy is the copy of e a directory gets: no connections, own
