@@ -14,7 +14,8 @@ import (
 // download with a working token is 409 no_release. The switch is put back
 // on at the end of each turn; the token the turn makes is revoked. The
 // group runs after "tokens" (groups run by name), so the token it leaves
-// behind does not move the ids the tokens group's answers carry.
+// behind does not move the ids the tokens group's answers carry. The
+// rollout token is revoked at the end of each turn too.
 func init() {
 	admins := contract.Roles("server_admin", "admin")
 	contract.Group("tokens-receiver-app",
@@ -38,6 +39,29 @@ func init() {
 		contract.Case{Name: "installer-unknown-folder", Method: "POST", Path: "/api/panel/receiver/installer", Body: map[string]any{"token": "{secret:receiver_token_value}", "group": 999999999}, Roles: admins},
 		contract.Case{Name: "installer-no-release", Method: "POST", Path: "/api/panel/receiver/installer", Body: map[string]any{"token": "{secret:receiver_token_value}"}, Roles: admins},
 		contract.Case{Name: "token-for-installer-revoke", Method: "DELETE", Path: "/api/panel/tokens/{receiver_token}", Roles: admins},
+		// A rollout token (A278): many computers, a limit and an expiry are
+		// required, it can't be bound to one device, and the installer takes it
+		contract.Case{
+			Name: "rollout-token", Method: "POST", Path: "/api/panel/tokens",
+			Body:          map[string]any{"name": "contract rollout", "kind": "rollout", "max_uses": 100, "expires_in": 2592000},
+			Capture:       map[string]string{"rollout_token": "data.id"},
+			CaptureSecret: map[string]string{"rollout_token_value": "data.token"},
+			Roles:         admins,
+		},
+		contract.Case{
+			Name: "rollout-token-no-limit", Method: "POST", Path: "/api/panel/tokens",
+			Body: map[string]any{"name": "never made", "kind": "rollout", "expires_in": 3600}, Roles: admins,
+		},
+		contract.Case{
+			Name: "rollout-token-no-expiry", Method: "POST", Path: "/api/panel/tokens",
+			Body: map[string]any{"name": "never made", "kind": "rollout", "max_uses": 10}, Roles: admins,
+		},
+		contract.Case{
+			Name: "rollout-token-bind", Method: "POST", Path: "/api/panel/tokens/{rollout_token}/bind",
+			Body: map[string]any{"peer_id": "PEERAAA1"}, Roles: admins,
+		},
+		contract.Case{Name: "installer-rollout-token", Method: "POST", Path: "/api/panel/receiver/installer", Body: map[string]any{"token": "{secret:rollout_token_value}"}, Roles: admins},
+		contract.Case{Name: "rollout-token-revoke", Method: "DELETE", Path: "/api/panel/tokens/{rollout_token}", Roles: admins},
 		contract.Case{
 			Name: "token-unknown-folder", Method: "POST", Path: "/api/panel/tokens",
 			Body: map[string]any{"name": "never made", "max_uses": 1, "folder_id": 999999999}, Roles: admins,

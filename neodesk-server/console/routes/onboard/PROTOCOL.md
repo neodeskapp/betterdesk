@@ -307,6 +307,41 @@ the computer and keeps quick support as it was.
 
 | Field | |
 |---|---|
-| `token` | An enrollment token (Devices, Add, Device tokens; the MSI's `TOKEN`). In open, managed and locked mode a valid one admits the computer; it lands in the token's folder and organization, whose policies then apply. A wrong one is refused in managed and locked mode and changes nothing in open mode. |
+| `token` | An enrollment token (Devices, Add, Device tokens; the MSI's `TOKEN`): a token for one computer or a rollout token for many (below). In open, managed and locked mode a valid one admits the computer; it lands in the token's folder and organization, whose policies then apply. A wrong one is refused in managed and locked mode and changes nothing in open mode. |
 | `group` | A folder (device group) by id or by name in any case (the MSI's `GROUP`), at most 128 bytes. It counts only when a valid `token` admits the computer, and a token with a folder of its own puts the computer there instead. An unknown group is ignored. |
 | `admission` | The redeem answer's admission, above. |
+
+### Rollout tokens
+
+A rollout token (`kind: "rollout"` in `POST /api/tokens`, "For many
+computers" in the console) admits computers until it expires, reaches
+its limit (`max_uses`, 1 to 100000) or is revoked. Both the limit and the
+expiry (`expires_in`, at most a year) are required. A token for one
+computer is unchanged: it binds to the first computer that joins with it.
+
+- Each computer that joins with a rollout token gets its own
+  `device_token`, bound to it, as with a token for one computer. The
+  rollout token is never bound to a computer and never works as a
+  device's credential.
+- Taking a place is atomic: of two registrations at once for the last
+  place, one gets it. A computer that is already on the server takes no
+  place when it registers again.
+- Revoking it stops new joins and leaves the computers that joined alone.
+- `rustdesk --deploy --token` takes places of it the same way.
+
+In managed and locked mode a rollout token that admits no more computers
+is refused in the shape of a refused enrollment token, with its own code:
+
+```
+403  {"status":"rejected","device_id":"523456781","error":"rollout_token_used_up",
+      "message":"All the computers the rollout token allows have joined",...}
+```
+
+| `error` | |
+|---|---|
+| `rollout_token_expired` | Its expiry has passed. |
+| `rollout_token_revoked` | An admin revoked it. |
+| `rollout_token_used_up` | As many computers as its limit joined. |
+
+In open mode it changes nothing, as any token that doesn't admit: the
+server takes the computer without the token's folder and organization.
