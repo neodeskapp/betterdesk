@@ -184,3 +184,29 @@ func WithMigrationLock(ctx context.Context, pool *pgxpool.Pool, fn func() error)
 	}()
 	return fn()
 }
+
+// LockInstallation takes the installation's migration lock and returns the
+// function that releases it, for a start whose one-time steps span more
+// than one call: instances that start together make the key pair, the
+// stored secrets and the first account one after the other, so all of
+// them end up with the same ones. Without PostgreSQL it takes nothing.
+func LockInstallation(ctx context.Context, pool *pgxpool.Pool) (func(), error) {
+	if pool == nil {
+		return func() {}, nil
+	}
+	conn, err := pool.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := conn.Exec(ctx, `SELECT pg_advisory_lock($1, 0)`, migrateLockClass); err != nil {
+		conn.Release()
+		return nil, err
+	}
+	var once sync.Once
+	return func() {
+		once.Do(func() {
+			_, _ = conn.Exec(context.WithoutCancel(ctx), `SELECT pg_advisory_unlock($1, 0)`, migrateLockClass)
+			conn.Release()
+		})
+	}, nil
+}

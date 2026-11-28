@@ -341,13 +341,6 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 	}
 	log.Printf("========================================")
 
-	// Load or generate Ed25519 keypair
-	kp, err := crypto.LoadOrGenerateKeyPair(cfg.KeyFile)
-	if err != nil {
-		logging.Fatalf("Failed to initialize keypair: %v", err)
-	}
-	log.Printf("Server public key: %s", kp.PublicKeyBase64())
-
 	// Valkey before the database: an instance that should share the
 	// installation but can't reach Valkey must not touch it
 	clusterRT, err := dialCluster(context.Background(), os.Getenv)
@@ -366,20 +359,30 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 	}
 	defer database.Close()
 
-	// Instances that start together migrate one after the other
-	// (PostgreSQL advisory lock; SQLite has one instance)
-	if err := cluster.WithMigrationLock(context.Background(), postgresPool(database), func() error {
-		if err := migrateSaying(database.Migrate, migrateNoteAfter); err != nil {
-			return fmt.Errorf("Failed to run migrations: %w", err)
-		}
-		// Defensive: ensure client_sessions exists even if an older binary never created it.
-		if err := database.EnsureClientSessionsSchema(); err != nil {
-			return fmt.Errorf("Failed to ensure client_sessions schema: %w", err)
-		}
-		return nil
-	}); err != nil {
-		logging.Fatalf("%v", err)
+	// Instances that start together run the one-time steps one after the
+	// other (PostgreSQL advisory lock; SQLite has one instance): the
+	// migrations, the key pair, the secrets the database stores and the
+	// first account. The lock is released before the console starts,
+	// which takes it for its own steps.
+	unlockStart, err := cluster.LockInstallation(context.Background(), postgresPool(database))
+	if err != nil {
+		logging.Fatalf("The start stops: the installation lock: %v", err)
 	}
+	defer unlockStart()
+	if err := migrateSaying(database.Migrate, migrateNoteAfter); err != nil {
+		logging.Fatalf("Failed to run migrations: %v", err)
+	}
+	// Defensive: ensure client_sessions exists even if an older binary never created it.
+	if err := database.EnsureClientSessionsSchema(); err != nil {
+		logging.Fatalf("Failed to ensure client_sessions schema: %v", err)
+	}
+
+	// Load or generate Ed25519 keypair
+	kp, err := crypto.LoadOrGenerateKeyPair(cfg.KeyFile)
+	if err != nil {
+		logging.Fatalf("Failed to initialize keypair: %v", err)
+	}
+	log.Printf("Server public key: %s", kp.PublicKeyBase64())
 	applyPersistedTimeSyncConfig(cfg, database)
 	applyPersistedConnectionSettings(cfg, database)
 	cdapBefore := cfg.CDAPEnabled
@@ -504,7 +507,7 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		adminPasswordGenerated := false
 		adminPasswordFromFile := false
 		if adminPass == "" {
-			dbDir := bootstrapCredentialsDir(cfg.DBPath, cfg.KeyFile)
+			dbDir := cfg.ServerDataDir()
 			if existingPass := readBootstrapAdminPassword(dbDir); existingPass != "" {
 				adminPass = existingPass
 				adminPasswordFromFile = true
@@ -529,7 +532,7 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		log.Printf("  INITIAL ADMIN CREDENTIALS")
 		log.Printf("  Username: %s", adminUser)
 		if adminPasswordGenerated {
-			dbDir := bootstrapCredentialsDir(cfg.DBPath, cfg.KeyFile)
+			dbDir := cfg.ServerDataDir()
 			credsFile, wrote, err := writeBootstrapAdminCredentials(dbDir, adminUser, adminPass)
 			if err != nil {
 				logging.Fatalf("Failed to write credentials file: %v", err)
@@ -542,7 +545,7 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		} else if adminPasswordFromFile {
 			log.Printf("  Password: loaded from existing bootstrap credentials file")
 		} else {
-			log.Print(givenAdminPasswordLine(bootstrapCredentialsDir(cfg.DBPath, cfg.KeyFile), adminPass))
+			log.Print(givenAdminPasswordLine(cfg.ServerDataDir(), adminPass))
 		}
 		adminPass = ""
 		log.Printf("  (change this password immediately!)")
@@ -856,6 +859,7 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		// HttpProxyRequest from clients without an API server setting: the
 		// API port's handler, the console's client API port when it runs
 		sig.SetAPIProxy(apiSrv.ListenerHandler())
+		unlockStart()
 		stopConsole := withoutConsoleOnError(startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofForSession, sig.SetControllerFeatures, sig.SetAPIProxy, requestRestart, clusterRT))
 		defer stopConsole()
 
@@ -1139,14 +1143,10 @@ func loadJWTSecret(database db.Database, configured string) (string, error) {
 }
 
 // bootstrapCredentialsDir is the folder of .admin_credentials: the SQLite
-// file's folder, or the key file's when the database is PostgreSQL, whose
-// DSN names no folder.
+// file's folder, or with PostgreSQL DATA_DIR, else the key file's folder
+// (config.ServerDataDir).
 func bootstrapCredentialsDir(dbPath, keyFile string) string {
-	lower := strings.ToLower(dbPath)
-	if strings.HasPrefix(lower, "postgres://") || strings.HasPrefix(lower, "postgresql://") {
-		return filepath.Dir(keyFile)
-	}
-	return filepath.Dir(dbPath)
+	return (&config.Config{DBPath: dbPath, KeyFile: keyFile}).ServerDataDir()
 }
 
 // writeBootstrapAdminCredentials stores the first admin's generated password
@@ -1274,11 +1274,7 @@ func loadAPIKey(cfg *config.Config, database db.Database) {
 
 	// 3. Check .api_key file in database directory as fallback
 	if apiKey == "" {
-		dbDir := filepath.Dir(cfg.DBPath)
-		if dbDir == "" || dbDir == "." {
-			dbDir = "."
-		}
-		apiKeyFile := filepath.Join(dbDir, ".api_key")
+		apiKeyFile := filepath.Join(cfg.ServerDataDir(), ".api_key")
 		if data, err := os.ReadFile(apiKeyFile); err == nil {
 			apiKey = strings.TrimSpace(string(data))
 			if apiKey != "" {

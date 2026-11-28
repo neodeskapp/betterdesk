@@ -3,7 +3,6 @@ package meshcentral
 import (
 	"context"
 	"log"
-	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -137,10 +136,7 @@ func (h *relayHub) startPipingLocked() {
 			h.sessionType = meta.SessionType
 		}
 		if recording && h.gateway.cfg != nil {
-			dataDir := filepath.Dir(h.gateway.cfg.DBPath)
-			if dataDir == "" || dataDir == "." {
-				dataDir = "."
-			}
+			dataDir := h.gateway.cfg.ServerDataDir()
 			if r, path, err := openRelayRecorder(dataDir, meta.PeerID, h.relayID, meta.SessionType); err == nil {
 				h.recorder = r
 				h.recPath = path

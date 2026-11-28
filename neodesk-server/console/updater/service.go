@@ -38,6 +38,10 @@ type Options struct {
 	// DataDir is the console's data folder (DATA_DIR): backups, the
 	// downloads and the updater's markers.
 	DataDir string
+	// Kubernetes is set when the server is one of several instances of an
+	// installation: the server never installs an update itself, the
+	// cluster rolls out a new image (ImageMode, DockerInstructions).
+	Kubernetes bool
 	// ConsoleDir is the console's folder (CONSOLE_DIR).
 	ConsoleDir string
 	// EnvFile is NEODESK_ENV_FILE. The channel is saved in it, else in
@@ -260,6 +264,9 @@ func Supervisor(getenv func(string) string) string {
 // NEODESK_UPDATE_MODE=image, or without "source" there and without the
 // server's sources beside the console.
 func (s *Service) ImageMode() bool {
+	if s.opts.Kubernetes {
+		return true
+	}
 	if !s.opts.Docker {
 		return false
 	}
@@ -293,6 +300,19 @@ type DockerUpdate struct {
 func (s *Service) DockerInstructions() DockerUpdate {
 	tag := firstNonEmpty(strings.TrimSpace(s.getenv("NEODESK_IMAGE_TAG")), "latest")
 	owner := strings.ToLower(s.Owner())
+	if s.opts.Kubernetes {
+		return DockerUpdate{
+			ChannelNote:   "Panel “Update channel” does not change the image. Set image.tag in the Helm values, then upgrade the release.",
+			SuggestedTags: map[string]string{"stable": "latest", "development": "dev"},
+			CurrentTag:    tag,
+			UpdateChannel: ChannelOf(s.Branch()),
+			Summary:       "Upgrade the Helm release with the new image tag; Kubernetes replaces the pods one at a time.",
+			Commands:      []string{"helm upgrade neodesk deploy/helm/neodesk --reuse-values --set image.tag=<version>"},
+			Images:        []string{"ghcr.io/" + owner + "/neodesk:" + tag},
+			ComposeHint:   "",
+			Layout:        "kubernetes",
+		}
+	}
 	return DockerUpdate{
 		ChannelNote:   "Panel “Update channel” does not change GHCR images. Use NEODESK_IMAGE_TAG=latest (stable) or NEODESK_IMAGE_TAG=dev (development), then pull/recreate.",
 		SuggestedTags: map[string]string{"stable": "latest", "development": "dev"},

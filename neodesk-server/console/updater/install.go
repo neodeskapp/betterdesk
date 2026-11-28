@@ -93,6 +93,9 @@ type InstallOptions struct {
 // The answer is *InstallResult, or *NoChange when the release is what
 // runs. Every failure before the swap leaves the install as it was.
 func (s *Service) Install(ctx context.Context, o InstallOptions) (any, error) {
+	if s.opts.Kubernetes {
+		return nil, errors.New("In-app updates are off when several instances share the installation. Upgrade the release instead: " + s.DockerHint())
+	}
 	if s.ImageMode() {
 		return nil, errors.New("In-app updates are disabled in Docker image deployments. Update containers instead: " + s.DockerHint())
 	}

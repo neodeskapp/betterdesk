@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -488,11 +487,8 @@ func usernameFromRequest(r *http.Request) string {
 }
 
 func (s *Server) meshDataDir() string {
-	if s.cfg != nil && s.cfg.DBPath != "" {
-		dir := filepath.Dir(s.cfg.DBPath)
-		if dir != "" && dir != "." {
-			return dir
-		}
+	if s.cfg != nil {
+		return s.cfg.ServerDataDir()
 	}
 	return "."
 }

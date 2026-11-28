@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -200,9 +201,12 @@ type Config struct {
 	MeshCentralEnabled bool   // MESH_ENABLED
 	MeshCoreVersion    string // MESH_CORE_VERSION pin
 	MeshAgentCertFile  string // MESH_AGENT_CERT_FILE RSA-3072 agent-server key
-	MeshWebCertFile    string // MESH_WEB_CERT_FILE public TLS cert agents see (proxy LE); overrides TLS_CERT for webHash
-	MeshAssetsDir      string // optional override for meshcore assets
-	MeshRateLimit      int    // WS upgrade rate limit per IP per minute
+	// DataDir is DATA_DIR, the folder of the server's own files when the
+	// database is PostgreSQL (ServerDataDir).
+	DataDir         string
+	MeshWebCertFile string // MESH_WEB_CERT_FILE public TLS cert agents see (proxy LE); overrides TLS_CERT for webHash
+	MeshAssetsDir   string // optional override for meshcore assets
+	MeshRateLimit   int    // WS upgrade rate limit per IP per minute
 
 	// Time sync / billing (commercialization module)
 	NTPServers                string // Comma-separated NTP servers
@@ -358,6 +362,9 @@ func readSwitch(name string, field *bool) {
 // LoadEnv overrides config values from environment variables.
 // Environment variables take precedence over CLI flags.
 func (c *Config) LoadEnv() {
+	if v := os.Getenv("DATA_DIR"); v != "" {
+		c.DataDir = v
+	}
 	connection := c.ConnectionSettings()
 
 	// The ID server's port is SIGNAL_PORT. PORT is the old console's port
@@ -923,4 +930,26 @@ func RedactedDBPath(dsn string) string {
 		}
 	}
 	return parsed.String()
+}
+
+// ServerDataDir is the folder of the server's own files (MeshCentral
+// recordings, the .api_key file): the SQLite file's folder, as always.
+// With PostgreSQL, whose DSN names no folder, it is DATA_DIR (the shared
+// volume of several instances), else the key file's folder.
+func (c *Config) ServerDataDir() string {
+	dir := ""
+	lower := strings.ToLower(strings.TrimSpace(c.DBPath))
+	switch {
+	case strings.HasPrefix(lower, "postgres://") || strings.HasPrefix(lower, "postgresql://"):
+		dir = c.DataDir
+		if dir == "" {
+			dir = filepath.Dir(c.KeyFile)
+		}
+	case c.DBPath != "":
+		dir = filepath.Dir(c.DBPath)
+	}
+	if dir == "" {
+		return "."
+	}
+	return dir
 }
