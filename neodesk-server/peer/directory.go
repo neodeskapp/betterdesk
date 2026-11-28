@@ -11,10 +11,10 @@ import (
 // Directory is the cluster-wide view of peers registered on other pods.
 type Directory interface {
 	Publish(entries []*Entry) PublishResult // owner pod writes its entries (copies, no conns)
-	Withdraw(ids []string)                 // owner pod removes them
-	Lookup(id string) (*Entry, bool)       // entry of a peer registered on another pod
-	LookupAddr(addr string) (*Entry, bool) // by "ip:port" (UDPAddr.String())
-	ByIP(ip string) []*Entry               // live peers whose address has this IP
+	Withdraw(ids []string)                  // owner pod removes them
+	Lookup(id string) (*Entry, bool)        // entry of a peer registered on another pod
+	LookupAddr(addr string) (*Entry, bool)  // by "ip:port" (UDPAddr.String())
+	ByIP(ip string) []*Entry                // live peers whose address has this IP
 }
 
 // PublishResult says what a Publish found about peers that moved between
