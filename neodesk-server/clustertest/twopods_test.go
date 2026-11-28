@@ -282,6 +282,9 @@ func uniqueID(prefix string) string {
 func relayedSession(t *testing.T, a, b *pod) error {
 	target := newPeer(t, uniqueID("CTTGT"), a.signal)
 	target.register(t)
+	// Pod A publishes a registration to the directory within 50 ms; a
+	// real target registered long before anyone connects to it
+	waitVisible(b, target.id)
 	initiator := newPeer(t, uniqueID("CTINI"), b.signal)
 	initiator.register(t)
 
@@ -426,5 +429,15 @@ func TestAPeerThatMovesIsReachedOnItsNewPod(t *testing.T) {
 	req := target.awaitOrNil(func(m *pb.RendezvousMessage) bool { return m.GetRequestRelay() != nil })
 	if req == nil || req.GetRequestRelay().GetUuid() != uuid {
 		t.Fatalf("moved target got %v", req)
+	}
+}
+
+// waitVisible waits up to a second until p sees peer id (locally or
+// through the directory). Without the cluster it never does, and the
+// session then fails as the control tests expect.
+func waitVisible(p *pod, id string) {
+	deadline := time.Now().Add(time.Second)
+	for p.sig.PeerMap().Get(id) == nil && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
 	}
 }
