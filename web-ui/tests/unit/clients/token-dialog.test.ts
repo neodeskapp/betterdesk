@@ -48,7 +48,10 @@ function recordPosts(): unknown[] {
 		if (init.method === 'POST' && typeof init.body === 'string') posted.push(JSON.parse(init.body));
 		if (init.method === 'PUT' && typeof init.body === 'string') bodies.push(JSON.parse(init.body));
 		return new Response(
-			JSON.stringify({ success: true, data: { id: 1, name: 'Fleet', token: '0123456789abcdef0123456789abcdef' } }),
+			JSON.stringify({
+				success: true,
+				data: { id: 1, name: 'Fleet', token: '0123456789abcdef0123456789abcdef' }
+			}),
 			{ status: 200, headers: { 'Content-Type': 'application/json' } }
 		);
 	});
@@ -108,7 +111,9 @@ describe('token dialog', () => {
 		await user.type(screen.getByLabelText('tokens.name'), 'Fleet');
 		await user.click(screen.getByRole('button', { name: 'tokens.create' }));
 		await vi.waitFor(() => expect(onsaved).toHaveBeenCalled());
-		expect(posted).toEqual([{ name: 'Fleet', max_uses: 100, note: '', kind: 'rollout', expires_in: 2592000 }]);
+		expect(posted).toEqual([
+			{ name: 'Fleet', max_uses: 100, note: '', kind: 'rollout', expires_in: 2592000 }
+		]);
 	});
 
 	test('the Receiver app tab opens it on many computers; 0 or more than 100,000 computers is refused', async () => {

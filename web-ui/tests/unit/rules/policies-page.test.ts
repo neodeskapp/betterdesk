@@ -272,7 +272,9 @@ describe('policies page', () => {
 			expect(notices[0]).toHaveTextContent(`group: ${label}.`);
 			expect(notices[0]).toHaveTextContent("The NeoDesk desktop app doesn't apply this group yet.");
 			// The receiver gets it at its next check, so the timing is said
-			expect(within(box).getByText('Devices get this when they next ask for their policy.')).toBeInTheDocument();
+			expect(
+				within(box).getByText('Devices get this when they next ask for their policy.')
+			).toBeInTheDocument();
 		}
 		expect(within(group('policies.features_title')).queryByText(/receiver app/)).toBeNull();
 	});

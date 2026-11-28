@@ -119,7 +119,10 @@
 		EXPIRY_CHOICES.map((s) => ({ value: s as number, label: t(`tokens.${EXPIRY_LABELS[s]}`) }))
 	);
 	const rolloutExpiryOptions = $derived(
-		ROLLOUT_EXPIRY_CHOICES.map((s) => ({ value: s as number, label: t(`tokens.${ROLLOUT_EXPIRY_LABELS[s]}`) }))
+		ROLLOUT_EXPIRY_CHOICES.map((s) => ({
+			value: s as number,
+			label: t(`tokens.${ROLLOUT_EXPIRY_LABELS[s]}`)
+		}))
 	);
 	const kindChoices = $derived([
 		{ value: 'device' as const, title: t('tokens.kind_one'), description: t('tokens.kind_one_desc') },
@@ -133,7 +136,12 @@
 		{#if !editing}
 			<fieldset class="token-kind">
 				<legend id="token-kind-label">{t('tokens.kind')}</legend>
-				<ChoiceList choices={kindChoices} labelledby="token-kind-label" name="token_kind" bind:value={form.values.kind} />
+				<ChoiceList
+					choices={kindChoices}
+					labelledby="token-kind-label"
+					name="token_kind"
+					bind:value={form.values.kind}
+				/>
 			</fieldset>
 		{/if}
 		<Field label={t('tokens.name')} hint={t('tokens.name_hint')} error={form.errors.name}>
@@ -171,7 +179,12 @@
 			{#if !editing}
 				<Field label={t('tokens.expires_in')} hint={t('tokens.rollout_expires_hint')}>
 					{#snippet children(f)}
-						<Select {...f} width="medium" options={rolloutExpiryOptions} bind:value={form.values.rollout_expires_in} />
+						<Select
+							{...f}
+							width="medium"
+							options={rolloutExpiryOptions}
+							bind:value={form.values.rollout_expires_in}
+						/>
 					{/snippet}
 				</Field>
 			{/if}
@@ -183,7 +196,14 @@
 				width="short"
 			>
 				{#snippet children(f)}
-					<Input {...f} type="number" min={0} step={1} inputmode="numeric" bind:value={form.values.max_uses} />
+					<Input
+						{...f}
+						type="number"
+						min={0}
+						step={1}
+						inputmode="numeric"
+						bind:value={form.values.max_uses}
+					/>
 				{/snippet}
 			</Field>
 			{#if !editing}

@@ -242,10 +242,14 @@
 		? t('tokens.rollout_uses', { count: formatNumber(tok.use_count), left: formatNumber(rolloutLeft(tok)) })
 		: tok.max_uses === 0
 			? t('tokens.uses_unlimited', { count: formatNumber(tok.use_count) })
-			: t('tokens.uses_of', { count: formatNumber(tok.use_count), max: formatNumber(tok.max_uses) })}{/snippet}
+			: t('tokens.uses_of', {
+					count: formatNumber(tok.use_count),
+					max: formatNumber(tok.max_uses)
+				})}{/snippet}
 
-{#snippet peerCell(tok: DeviceToken)}{#if isRollout(tok)}<span class="token-many">{t('tokens.kind_many')}</span
-	>{:else}<ValueCopy value={tok.peer_id} label={tok.peer_id} />{/if}{/snippet}
+{#snippet peerCell(tok: DeviceToken)}{#if isRollout(tok)}<span class="token-many"
+			>{t('tokens.kind_many')}</span
+		>{:else}<ValueCopy value={tok.peer_id} label={tok.peer_id} />{/if}{/snippet}
 
 {#snippet expiresCell(tok: DeviceToken)}<Time
 		value={tok.expires_at}

@@ -167,7 +167,9 @@ describe('device tokens', () => {
 		// Used and past its date: expired, before the server marks it
 		expect(tokenStatus(roll({ expires_at: '2026-11-08T00:00:00Z' }), NOW).key).toBe('expired');
 		// A used token of one computer past its date stays "used", as before
-		expect(tokenStatus(token({ status: 'active', expires_at: '2026-11-08T00:00:00Z' }), NOW).key).toBe('active');
+		expect(tokenStatus(token({ status: 'active', expires_at: '2026-11-08T00:00:00Z' }), NOW).key).toBe(
+			'active'
+		);
 		expect(rolloutLimitOk('1')).toBe(true);
 		expect(rolloutLimitOk('100000')).toBe(true);
 		for (const bad of ['0', '100001', '', '2.5', '-1']) expect(rolloutLimitOk(bad)).toBe(false);
