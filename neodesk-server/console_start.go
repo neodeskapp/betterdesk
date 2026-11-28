@@ -88,6 +88,7 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 		Clustered:   rt != nil && rt.cfg.Enabled(),
 		Settings:    rt.settingsBus(),
 		KV:          sharedKV,
+		Data:        database,
 	})
 	if err != nil {
 		_ = sdb.Close()

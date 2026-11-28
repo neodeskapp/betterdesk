@@ -62,11 +62,13 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/servermgmt"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/sitedata"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/statuspush"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/webui"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	"github.com/neodeskapp/neodesk/neodesk-server/events"
 	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 	"github.com/neodeskapp/neodesk/neodesk-server/logging"
@@ -134,6 +136,10 @@ type Options struct {
 	// pending second steps of the client API and the nonces of device
 	// proofs. nil keeps them in memory, as a lone server does.
 	KV cluster.KV
+	// Data is the server's database, for what the console reads and writes
+	// there without a store of its own: sites and relay nodes
+	// (kit.Deps.Sites). nil leaves those routes without data.
+	Data db.Database
 	// updaterOptions changes the updater's options before it is built:
 	// tests give it a GitHub and a binary of their own.
 	updaterOptions func(*updater.Options)
@@ -325,6 +331,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Leases:    opts.Leases,
 		Clustered: opts.Clustered,
 		KV:        opts.KV,
+		Sites:     sitedata.New(opts.Data),
 	}
 	s.deps.ServerInfo = serverinfo.New(serverinfo.Options{
 		PubKeyPath: cfg.PubKeyPath,
