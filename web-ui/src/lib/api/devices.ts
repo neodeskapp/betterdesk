@@ -361,6 +361,8 @@ export async function bulkDelete(ids: string[]): Promise<number> {
 }
 
 export const AccessPolicy = v.looseObject({
+	/** The device's organization, "" for none */
+	org_id: Str,
 	unattended_enabled: BoolLike,
 	password_set: BoolLike,
 	schedule_enabled: BoolLike,
