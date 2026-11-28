@@ -4,8 +4,10 @@
   first, with how many devices it holds: policies reach only devices in an
   organization. Then five groups (connection, features, security, network,
   updates), each saying whether the organization set anything, when a
-  change takes effect, and, for the four groups only devices apply, that no
-  NeoDesk app applies them yet (GET /api/panel/policies/<org>/resolved,
+  change takes effect, and, for the four groups only devices apply, which
+  of their settings the receiver app applies (session approval, removing
+  the app) and that the full desktop app applies none of them yet (GET
+  /api/panel/policies/<org>/resolved, receiver_applies and
   device_app_applies).
 
   Every setting's control is always there, with "not set" inside it
@@ -523,12 +525,17 @@
 
 	const deviceOnly = (g: Section) =>
 		resolved?.[g]?.applied_by === 'device' && !resolved?.[g]?.device_app_applies;
+	const RECEIVER_SOME =
+		"So far only the receiver app applies part of this group: {settings}. The NeoDesk desktop app doesn't apply this group yet. The other settings are saved and handed to devices that ask.";
+	/** The group's settings the receiver app applies, by their labels */
+	const receiverSettings = (g: Section) =>
+		(resolved?.[g]?.receiver_applies ?? []).map((f) => fieldLabel(`${g}.${f}`));
 
 	/** When a change takes effect; nothing while no app applies the group (its notice says so) */
 	const groupTiming = (g: Section) =>
 		resolved?.[g]?.timing === 'server_minute'
 			? t('policies.effect_server')
-			: deviceOnly(g)
+			: deviceOnly(g) && !receiverSettings(g).length
 				? undefined
 				: tf('policies.effect_device_next', 'Devices get this when they next ask for their policy.');
 
@@ -795,10 +802,16 @@
 					{#if deviceOnly(g)}
 						<Notice tone="warning" class="group-notice">
 							<p>
-								{tf(
-									'policies.not_applied_yet',
-									'No NeoDesk app applies this group yet. It is saved and handed to devices that ask.'
-								)}
+								{#if receiverSettings(g).length}
+									{tf('policies.receiver_applies_some', RECEIVER_SOME, {
+										settings: receiverSettings(g).join(', ')
+									})}
+								{:else}
+									{tf(
+										'policies.not_applied_yet',
+										'No NeoDesk app applies this group yet. It is saved and handed to devices that ask.'
+									)}
+								{/if}
 							</p>
 							{#if g === 'features'}
 								<p>
