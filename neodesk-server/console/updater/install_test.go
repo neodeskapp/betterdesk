@@ -423,6 +423,14 @@ func TestInstallRefusedInImageMode(t *testing.T) {
 	in.assertUntouched()
 }
 
+func TestInstallRefusedInACluster(t *testing.T) {
+	in := newInstall(t, func(o *Options) { o.Kubernetes = true })
+	if _, err := in.svc.Install(context.Background(), InstallOptions{SHA: newCommit}); err == nil || !strings.Contains(err.Error(), "helm upgrade neodesk") {
+		t.Fatalf("error %v", err)
+	}
+	in.assertUntouched()
+}
+
 // The real self-test runs the binary with -version, without the
 // process's environment.
 func TestRunVersionRunsTheBinary(t *testing.T) {

@@ -385,6 +385,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	if supervisor := updater.Supervisor(getenv); supervisor != "" && opts.Exit != nil {
 		restartServer, exit = restart.SupervisorRestart(supervisor), opts.Exit
 	}
+	if opts.Clustered {
+		// One pod restarting itself would leave the others on the old
+		// settings: the cluster restarts the pods
+		restartServer, exit = restart.ClusterRestart, nil
+	}
 	s.deps.Restart = restart.New(restart.Options{
 		DataDir:       cfg.DataDir,
 		GoAPI:         api,
@@ -415,6 +420,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		DataBackup: backups,
 		Setting:    readSetting(opts.Store),
 		Logger:     s.deps.Log.Child("UPDATE"),
+		Kubernetes: opts.Clustered,
 	}
 	if opts.updaterOptions != nil {
 		opts.updaterOptions(&updates)
