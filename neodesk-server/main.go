@@ -25,6 +25,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/billing"
 	"github.com/neodeskapp/neodesk/neodesk-server/cdap"
 	"github.com/neodeskapp/neodesk/neodesk-server/cluster"
+	"github.com/neodeskapp/neodesk/neodesk-server/cluster/peerdir"
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
@@ -664,6 +665,13 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 			sharedTickets = relay.NewValkeyTickets(clusterRT.valkey.Client, clusterRT.valkey.Prefix())
 			defer sharedTickets.Close()
 			sig.SetTickets(sharedTickets)
+			// Peers registered on other pods, and the calls that reach them
+			sig.PeerMap().SetDirectory(peerdir.New(clusterRT.valkey.Client, clusterRT.valkey.Prefix(), clusterRT.cfg.Name), clusterRT.cfg.Name)
+			defer sig.PeerMap().Leave()
+			if err := clusterRT.startMesh(); err != nil {
+				logging.Fatalf("The start stops: %v", err)
+			}
+			sig.SetCluster(clusterRT.mesh, clusterRT.kv)
 		}
 		if err := sig.Start(ctx); err != nil {
 			logging.Fatalf("Failed to start signal server: %v", err)
@@ -673,7 +681,10 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		relaySrv := relay.New(cfg)
 		if sharedTickets != nil {
 			relaySrv.SetTicketClaims(sharedTickets)
+			relaySrv.SetCluster(clusterRT.mesh, clusterRT.kv)
 		}
+		clusterRT.relay = relaySrv
+		clusterRT.signal = sig
 		relaySrv.SetBandwidthLimiter(bwLimiter)
 		if connLimiter != nil {
 			relaySrv.SetConnLimiter(connLimiter)
@@ -848,6 +859,7 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 			os.Exit(updater.ExitRestart)
 		})
 	}
+	clusterRT.drain()
 	cancel()
 	log.Printf("Server stopped")
 	return exitCode

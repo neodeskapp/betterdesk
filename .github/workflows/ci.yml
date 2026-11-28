@@ -272,7 +272,7 @@ jobs:
           NEODESK_TEST_VALKEY_URL: redis://127.0.0.1:6379/0
           NEODESK_TEST_REQUIRE_VALKEY: "1"
           NEODESK_TEST_POSTGRES_DSN: postgres://neodesk@127.0.0.1:5432/neodesk_test?sslmode=disable
-        run: go test -count=1 -timeout 10m ./cluster/... ./relay/...
+        run: go test -count=1 -timeout 10m ./cluster/... ./relay/... ./peer/... ./clustertest/...
 
   # .github/test-times.json holds how long each package and each long
   # test took in earlier runs, per set: go-sqlite and go-postgres for the

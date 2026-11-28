@@ -48,6 +48,9 @@ type Server struct {
 	// reporter hears of paired and parted sessions (billing, live
 	// sessions); nil for none
 	reporter SessionReporter
+
+	// meet pairs legs across the pods of a cluster (meet.go); nil alone
+	meet *meetLink
 }
 
 const (
@@ -409,6 +412,21 @@ func (s *Server) handleConn(conn net.Conn) {
 		log.Printf("[relay] Empty UUID in RequestRelay from %s (rejecting)", conn.RemoteAddr())
 		conn.Close()
 		return
+	}
+	if s.meet != nil {
+		// In a cluster the legs meet on the pod the first one reached
+		remote := conn.RemoteAddr().String()
+		if !s.awaitTicket(uuid, remote) {
+			log.Printf("[relay] Unauthorized relay UUID from %s (rejecting)", remote)
+			conn.Close()
+			return
+		}
+		if pod := s.meetingPod(uuid); pod != "" {
+			if !s.forwardTCPLeg(conn, uuid, remote, pod) {
+				conn.Close()
+			}
+			return
+		}
 	}
 	if !s.claimRelayUUID(uuid, conn.RemoteAddr().String()) {
 		log.Printf("[relay] Unauthorized relay UUID from %s (rejecting)", conn.RemoteAddr())

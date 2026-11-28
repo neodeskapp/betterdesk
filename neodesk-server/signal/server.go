@@ -209,6 +209,10 @@ type Server struct {
 	// apiProxy answers HttpProxyRequest (see http_proxy.go); nil until
 	// the API is set.
 	apiProxy atomic.Pointer[http.Handler]
+
+	// cl reaches peers and connections held by other pods (cluster.go);
+	// nil when the server runs alone.
+	cl *clusterLink
 }
 
 // New creates a new signal server instance.
@@ -510,6 +514,7 @@ func (s *Server) serveUDP() {
 			continue
 		}
 
+		s.noteUDPSource(raddr)
 		s.recoverMessagePanic("UDP", raddr.String(), func() { s.handleUDPMessage(msg, raddr) })
 	}
 }
@@ -649,6 +654,7 @@ func (s *Server) handleSecureTCPConn(sc *crypto.SecureTCPConn, addrKey string) {
 
 		if keepAlive && !registered {
 			s.tcpPunchConns.Store(addrKey, pc)
+			s.noteConn(addrKey)
 			registered = true
 			log.Printf("[signal] TCP punch conn registered: %s (secure)", addrKey)
 		}
@@ -705,6 +711,7 @@ func (s *Server) handlePlainTCPConn(conn net.Conn, addrKey string, firstMsg *pb.
 
 			if keepAlive && !registered {
 				s.tcpPunchConns.Store(addrKey, pc)
+				s.noteConn(addrKey)
 				registered = true
 				log.Printf("[signal] TCP punch conn registered: %s", addrKey)
 			}
@@ -744,6 +751,7 @@ func (s *Server) handlePlainTCPConn(conn net.Conn, addrKey string, firstMsg *pb.
 
 		if keepAlive && !registered {
 			s.tcpPunchConns.Store(addrKey, pc)
+			s.noteConn(addrKey)
 			registered = true
 			log.Printf("[signal] TCP punch conn registered: %s", addrKey)
 		}
@@ -888,17 +896,24 @@ func (s *Server) forwardToTCPInitiator(initiatorAddr string, msg *pb.RendezvousM
 // forwardToInitiator delivers an async punch/relay message to the initiator
 // over TCP (tcpPunchConns) or WebSocket (wsPunchConns / unique-IP fallback).
 // Required for WSS clients behind reverse proxies which are never registered
-// in tcpPunchConns.
+// in tcpPunchConns. In a cluster, a connection another pod holds gets the
+// message through that pod.
 func (s *Server) forwardToInitiator(initiatorAddr string, msg *pb.RendezvousMessage) bool {
-	if s.forwardToTCPInitiator(initiatorAddr, msg) {
+	if s.forwardToLocalInitiator(initiatorAddr, msg) {
 		return true
 	}
-	if s.forwardToWSInitiator(initiatorAddr, msg) {
-		return true
+	key := normalizeAddrKey(initiatorAddr)
+	if pod := s.ownerOf("sig:conn:" + key); pod != "" {
+		return s.call(pod, "signal.forward-initiator", remoteMsg{Key: key, Msg: marshalMsg(msg)})
 	}
 	log.Printf("[signal] initiator forwarding: no TCP/WS conn for key %q (raw=%q)",
 		normalizeAddrKey(initiatorAddr), initiatorAddr)
 	return false
+}
+
+// forwardToLocalInitiator is forwardToInitiator on this pod's connections.
+func (s *Server) forwardToLocalInitiator(initiatorAddr string, msg *pb.RendezvousMessage) bool {
+	return s.forwardToTCPInitiator(initiatorAddr, msg) || s.forwardToWSInitiator(initiatorAddr, msg)
 }
 
 // registerWSPunchConn stores a WebSocket connection under its full ip:port key
@@ -909,6 +924,7 @@ func (s *Server) registerWSPunchConn(addr string, wsc *codec.WSConn) {
 	}
 	key := normalizeAddrKey(addr)
 	s.wsPunchConns.Store(key, wsc)
+	s.noteConn(key)
 }
 
 // unregisterWSPunchConn removes the punch-map entry only if it still points at wsc.
@@ -1044,6 +1060,7 @@ func (s *Server) heartbeatCleaner() {
 		case <-s.ctx.Done():
 			return
 		case <-ticker.C:
+			s.pruneUDPSeen(time.Now())
 			// Phase 1: Check heartbeats and transition status tiers
 			degraded, critical := s.peers.CheckHeartbeats(
 				config.HeartbeatExpected,
@@ -1197,7 +1214,19 @@ func (s *Server) cleanupTCPPunchConns() {
 
 // sendUDP sends a protobuf message to a UDP address. Returns false when the
 // UDP socket is unavailable or the write fails (tests often have a nil udpConn).
+// In a cluster, an address that sends to another pod gets the message from
+// that pod's socket, the only one its NAT lets through.
 func (s *Server) sendUDP(msg *pb.RendezvousMessage, addr *net.UDPAddr) bool {
+	if s != nil && msg != nil && addr != nil {
+		if pod := s.remoteUDPOwner(addr); pod != "" {
+			return s.call(pod, "signal.send-udp", remoteMsg{Addr: addr.String(), Msg: marshalMsg(msg)})
+		}
+	}
+	return s.sendUDPLocal(msg, addr)
+}
+
+// sendUDPLocal is sendUDP from this pod's socket.
+func (s *Server) sendUDPLocal(msg *pb.RendezvousMessage, addr *net.UDPAddr) bool {
 	if s == nil || s.udpConn == nil || msg == nil || addr == nil {
 		return false
 	}
@@ -1298,16 +1327,19 @@ func (s *Server) storePendingRelay(targetID string, correlationAddr, advertisedA
 			entry,
 		)
 	}
+	// The target's RelayResponse can reach another pod
+	s.sharePending(key, entry)
 }
 
 // getPendingRelay returns the pending session for target + initiator endpoint.
 func (s *Server) getPendingRelay(targetID string, initiatorAddr *net.UDPAddr) *pendingUUID {
-	if val, ok := s.pendingRelayUUIDs.Load(pendingRelayKey(targetID, initiatorAddr)); ok {
+	key := pendingRelayKey(targetID, initiatorAddr)
+	if val, ok := s.pendingRelayUUIDs.Load(key); ok {
 		if pu, ok := val.(*pendingUUID); ok {
 			return pu
 		}
 	}
-	return nil
+	return s.sharedPendingAt("sig:pend:" + key)
 }
 
 // getPendingRelayByAdvertised looks up a legacy relay response using the
@@ -1317,14 +1349,13 @@ func (s *Server) getPendingRelayByAdvertised(targetID string, advertisedAddr *ne
 		return nil
 	}
 	if targetID != "" {
-		if val, ok := s.pendingRelayByAdvertised.Load(
-			pendingRelayAdvertisedKey(targetID, advertisedAddr.String()),
-		); ok {
+		key := pendingRelayAdvertisedKey(targetID, advertisedAddr.String())
+		if val, ok := s.pendingRelayByAdvertised.Load(key); ok {
 			if pu, ok := val.(*pendingUUID); ok {
 				return pu
 			}
 		}
-		return nil
+		return s.sharedPendingAt("sig:penda:" + key)
 	}
 
 	want := normalizeAddrKey(advertisedAddr.String())
@@ -1360,7 +1391,7 @@ func (s *Server) getPendingRelayByUUID(uuid string) *pendingUUID {
 			return pu
 		}
 	}
-	return nil
+	return s.sharedPendingAt("sig:pendu:" + uuid)
 }
 
 // maybeWarnSharedNATRelayDisabled logs when SAME_NAT_RELAY is off and several
@@ -1431,11 +1462,24 @@ func (s *Server) schedulePunchFallback(initiatorKey string, fallback func()) {
 			op.timer.Stop()
 		}
 	}
+	s.notePunch(initiatorKey, delay+5*time.Second)
 }
 
 // cancelPunchFallback cancels a scheduled P2P-first fallback for an initiator.
-// Returns true if the fallback was cancelled before it could fire.
+// Returns true if the fallback was cancelled before it could fire. In a
+// cluster the timer can be on the pod the initiator asked.
 func (s *Server) cancelPunchFallback(initiatorKey string) bool {
+	if s.cancelLocalPunchFallback(initiatorKey) {
+		return true
+	}
+	if pod := s.ownerOf("sig:punch:" + initiatorKey); pod != "" {
+		return s.call(pod, "signal.cancel-punch", remoteMsg{Key: initiatorKey})
+	}
+	return false
+}
+
+// cancelLocalPunchFallback is cancelPunchFallback on this pod's timers.
+func (s *Server) cancelLocalPunchFallback(initiatorKey string) bool {
 	val, ok := s.pendingPunches.LoadAndDelete(initiatorKey)
 	if !ok {
 		return false
