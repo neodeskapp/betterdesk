@@ -808,6 +808,9 @@ var serverTables = map[string]bool{
 	"org_devices": true, "org_invitations": true, "org_peer_credentials": true, "org_settings": true,
 	"org_users": true, "organizations": true, "peer_availability_events": true, "peer_connection_sessions": true,
 	"peers": true, "remote_targets": true, "role_permissions": true, "server_config": true, "server_events": true,
+	// server_instances rows of a restored dump are long past their last_seen,
+	// so the start check ignores them
+	"server_instances": true,
 }
 
 // dumpHasServerTables reports whether a dump holds any of the server's own
