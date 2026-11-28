@@ -26,6 +26,11 @@ func (s *Server) startPeerIDChangeListener() {
 				if !ok {
 					return
 				}
+				// The pod that published the change routes the notice to
+				// the peer's own pod; the others leave it alone
+				if ev.Remote {
+					continue
+				}
 				data := ev.Data
 				if data == nil || data["source"] != "panel" {
 					continue

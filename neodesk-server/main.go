@@ -672,6 +672,8 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 				logging.Fatalf("The start stops: %v", err)
 			}
 			sig.SetCluster(clusterRT.mesh, clusterRT.kv)
+			// Console events reach the sockets and services of every pod
+			sig.EventBus().Join(ctx, clusterRT.cfg.Name, cluster.NewEventLink(clusterRT.valkey))
 		}
 		if err := sig.Start(ctx); err != nil {
 			logging.Fatalf("Failed to start signal server: %v", err)

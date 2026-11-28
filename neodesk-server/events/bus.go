@@ -41,6 +41,10 @@ type Event struct {
 	Type      EventType         `json:"type"`
 	Timestamp time.Time         `json:"timestamp"`
 	Data      map[string]string `json:"data,omitempty"`
+	// Remote is set on an event another instance of the installation
+	// published (Bus.Join). A subscriber that acts on events, rather than
+	// showing them, acts on the instance that holds what the event names.
+	Remote bool `json:"-"`
 }
 
 // Subscriber is a channel that receives events.
@@ -55,6 +59,10 @@ type Bus struct {
 	mu          sync.RWMutex
 	subscribers map[int64]*Subscriber
 	nextID      int64
+	// origin and out are set by Join: events published here also go to
+	// the other instances.
+	origin string
+	out    chan []byte
 }
 
 // NewBus creates a new event bus.
@@ -96,7 +104,12 @@ func (b *Bus) Unsubscribe(sub *Subscriber) {
 // Non-blocking: if a subscriber's channel is full, the event is dropped for that subscriber.
 func (b *Bus) Publish(evt Event) {
 	evt.Timestamp = time.Now()
+	evt.Remote = false
+	b.deliver(evt)
+	b.forward(evt)
+}
 
+func (b *Bus) deliver(evt Event) {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 
