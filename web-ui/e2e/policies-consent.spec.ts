@@ -105,8 +105,8 @@ async function expectSaved(page: Page, id: string): Promise<void> {
 		connection.getByRole('button', { name: 'Remove all rules of this group: Connection' })
 	).toBeVisible();
 	await expect(page.locator('#pol-connection-mode')).toHaveClass(/is-set/);
-	// The rule is saved, and the page still says no app applies it yet
-	await expect(connection.getByText(NOT_APPLIED)).toBeVisible();
+	// The rule is saved, and the page still says only the receiver app applies it
+	await expect(connection.getByText(RECEIVER_SOME)).toBeVisible();
 	await expect(page.locator('.changes-bar')).toHaveCount(0);
 	await expect(page.locator('#pol-audit')).toContainText('Connection', LOAD);
 	// The group is plain text in the table, not a tag
