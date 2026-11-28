@@ -216,6 +216,64 @@ jobs:
         continue-on-error: true
         run: go test -tags=meshagent_live ./meshcentral/... -run TestMeshAgentLiveConnect -count=1 -timeout 10m
 
+  # The state several server instances share (relay tickets, leases,
+  # the instance check) against a real Valkey 8 and a real Redis 7, both
+  # officially supported, with PostgreSQL for the leases. The tests fail
+  # instead of skipping when the service is missing.
+  shared-state:
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
+    name: shared state (${{ matrix.store.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        store:
+          - { name: valkey 8, image: "valkey/valkey:8-alpine" }
+          - { name: redis 7, image: "redis:7-alpine" }
+    defaults:
+      run:
+        working-directory: neodesk-server
+    services:
+      valkey:
+        image: ${{ matrix.store.image }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping || valkey-cli ping"
+          --health-interval 2s --health-timeout 5s --health-retries 30
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: neodesk
+          POSTGRES_DB: neodesk_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U neodesk -d neodesk_test"
+          --health-interval 2s --health-timeout 5s --health-retries 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache: false
+
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
+
+      - name: go test (shared state)
+        env:
+          NEODESK_TEST_VALKEY_URL: redis://127.0.0.1:6379/0
+          NEODESK_TEST_REQUIRE_VALKEY: "1"
+          NEODESK_TEST_POSTGRES_DSN: postgres://neodesk@127.0.0.1:5432/neodesk_test?sslmode=disable
+        run: go test -count=1 -timeout 10m ./cluster/... ./relay/...
+
   # .github/test-times.json holds how long each package and each long
   # test took in earlier runs, per set: go-sqlite and go-postgres for the
   # quick tests of pull requests, go-race-sqlite and go-race-postgres for
@@ -800,7 +858,7 @@ jobs:
   # Green when every part that ran passed; parts the change did not touch
   # are skipped and count as passed
   passed:
-    needs: [changes, checks, go-checks, go-test, go-test-cache, web, build, contract, e2e, e2e-fresh, cdap]
+    needs: [changes, checks, go-checks, go-test, go-test-cache, shared-state, web, build, contract, e2e, e2e-fresh, cdap]
     if: always()
     name: CI passed
     runs-on: ubuntu-latest
