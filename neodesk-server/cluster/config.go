@@ -17,7 +17,7 @@ import (
 // Defaults of the cluster settings.
 const (
 	DefaultKeyPrefix     = "neodesk:"
-	DefaultClusterPort   = 21120
+	DefaultClusterPort   = 21124
 	DefaultShutdownGrace = 30 * time.Second
 )
 
