@@ -78,11 +78,18 @@
 		color: var(--danger);
 		font-size: var(--text-sm);
 	}
+	/* One framed box: the list and the conversation share its edges */
 	.chat-frame {
 		display: flex;
 		flex: 1;
 		min-height: 0;
-		border-bottom: 1px solid var(--rule);
+		overflow: hidden;
+		border: 1px solid var(--rule);
+		border-radius: calc(var(--radius) * 2);
+		background: var(--bg);
+	}
+	.chat-frame > :global(.chat-view) {
+		border-top: 0;
 	}
 	@media (max-width: 767px) {
 		.chat-page {

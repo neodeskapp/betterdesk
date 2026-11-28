@@ -17,6 +17,7 @@
 	import ConversationHeader from './ConversationHeader.svelte';
 	import ConversationList from './ConversationList.svelte';
 	import NewConversation from './NewConversation.svelte';
+	import ReachNote from './ReachNote.svelte';
 	import { sectionOf } from './panel.svelte.ts';
 	import TeamDialog from './TeamDialog.svelte';
 	import Thread from './Thread.svelte';
@@ -166,6 +167,11 @@
 							ongroup={() => (editingGroup = true)}
 							onteam={() => (editingTeam = conv)}
 						/>
+					{/snippet}
+					{#snippet notice()}
+						{#if kind === 'support' && detail?.device}
+							<ReachNote device={detail.device} />
+						{/if}
 					{/snippet}
 					{#snippet empty()}
 						<div class="chat-empty-thread">

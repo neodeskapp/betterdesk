@@ -323,11 +323,6 @@
 										<span class="row-name">{c.device.name}</span>
 										{#if c.last_message}<span class="row-time"><Time value={c.last_message.at} /></span>{/if}
 									</span>
-									<span class="row-meta">
-										{#if c.device.folder}<span>{c.device.folder}</span>{/if}
-										{#if c.device.owner}<span>{c.device.owner}</span>{/if}
-										<span class="sr-only">{c.device.online ? t('chat.online') : t('chat.offline')}</span>
-									</span>
 									<span class="row-bottom">
 										<span class="row-last">{lastLine(c.last_message, t)}</span>
 										{#if unread > 0}<span class="row-badge"
@@ -336,7 +331,16 @@
 												></span
 											>{/if}
 									</span>
-									<span class="row-tags">
+									<span class="row-meta is-split">
+										<span class="row-meta-text">
+											{#if c.device.owner}<span
+													><Icon name="person" /><span class="row-cut">{c.device.owner}</span></span
+												>{/if}
+											{#if c.device.folder}<span
+													><Icon name="folder" /><span class="row-cut">{c.device.folder}</span></span
+												>{/if}
+											<span class="sr-only">{c.device.online ? t('chat.online') : t('chat.offline')}</span>
+										</span>
 										{#if c.state === 'closed'}
 											<span class="row-tag">{t('chat.closed')}</span>
 										{:else if c.assignee_id}
@@ -393,11 +397,6 @@
 										<span class="row-name">{teamName(c)}</span>
 										{#if c.last_message}<span class="row-time"><Time value={c.last_message.at} /></span>{/if}
 									</span>
-									<span class="row-meta">
-										{#if person}<span>{t(`chat.presence_${status(person)}`)}</span><span
-												>{t(`users.role_${person.role}`)}</span
-											>{:else}<span>{t('chat.member_count', { count: c.people.length })}</span>{/if}
-									</span>
 									<span class="row-bottom">
 										<span class="row-last">{lastLine(c.last_message, t)}</span>
 										{#if unread > 0}<span class="row-badge"
@@ -405,6 +404,11 @@
 													aria-hidden="true">{unread > 99 ? '99+' : unread}</span
 												></span
 											>{/if}
+									</span>
+									<span class="row-meta">
+										{#if person}<span>{t(`chat.presence_${status(person)}`)}</span><span
+												>{t(`users.role_${person.role}`)}</span
+											>{:else}<span>{t('chat.member_count', { count: c.people.length })}</span>{/if}
 									</span>
 								</span>
 							</button>
@@ -465,8 +469,8 @@
 										<span class="row-name">{c.title || t('chat.old_messages')}</span>
 										{#if c.last_message}<span class="row-time"><Time value={c.last_message.at} /></span>{/if}
 									</span>
-									<span class="row-meta"><span>{t('chat.old_messages')}</span></span>
 									<span class="row-bottom"><span class="row-last">{lastLine(c.last_message, t)}</span></span>
+									<span class="row-meta"><span>{t('chat.old_messages')}</span></span>
 								</span>
 							</button>
 						</li>
@@ -567,9 +571,10 @@
 	}
 	.row {
 		display: flex;
+		align-items: flex-start;
 		gap: var(--space-3);
 		width: 100%;
-		padding: var(--space-2) var(--space-3);
+		padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) - 3px);
 		border: 0;
 		border-inline-start: 3px solid transparent;
 		background: transparent;
@@ -643,12 +648,39 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
-	.row-meta {
+	.row-meta,
+	.row-meta-text {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
 		gap: 0 var(--space-3);
+		min-width: 0;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+	}
+	/* Owner and folder, then who has it; the tag wraps to the next line rather than cut the names */
+	.row-meta.is-split {
+		gap: 2px var(--space-2);
+	}
+	.row-meta-text {
+		flex: 0 1 auto;
+		gap: 0 var(--space-2);
+	}
+	.row-meta-text > span {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		min-width: 0;
+		max-width: 100%;
+	}
+	.row-cut {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.row-meta-text :global(.material-icons) {
+		flex: none;
+		font-size: 14px;
 	}
 	.row-last {
 		flex: 1;
@@ -693,16 +725,15 @@
 		line-height: 20px;
 		text-align: center;
 	}
-	.row-tags {
-		display: flex;
-		gap: var(--space-1);
-		margin-top: 2px;
-	}
 	.row-tag {
 		display: inline-flex;
+		flex: none;
 		align-items: center;
 		gap: var(--space-1);
+		max-width: 100%;
 		padding: 0 var(--space-2);
+		overflow: hidden;
+		white-space: nowrap;
 		border: 1px solid var(--rule);
 		border-radius: var(--radius);
 		color: var(--text-muted);

@@ -1,8 +1,8 @@
 <!--
   One message of a conversation (A242). Mine on the end side, everyone
   else's on the start side; a line of the system in the middle, muted.
-  The first message of a run (one sender, a few minutes) names its sender
-  and time; the rest of the run only shows the time on hover. A bubble
+  The first message of someone else's run (one sender, a few minutes)
+  names its sender; every bubble ends in its time. A bubble
   holds the quoted message it answers, its pictures and files, the text
   (links open in a new tab and are shown as they are, never previewed),
   "edited", or "Message deleted" in its place. Under it the reactions,
@@ -90,8 +90,8 @@
 
 {#if msg.from.kind === 'system'}
 	<p class="chat-system" data-id={msg.id}>
-		<span>{eventText(msg.event, t)}</span>
-		<Time value={msg.created_at} />
+		<span class="chat-system-text"><span>{eventText(msg.event, t)}</span><Time value={msg.created_at} /></span
+		>
 	</p>
 {:else}
 	<div
@@ -100,29 +100,31 @@
 		role="group"
 		aria-label={t('chat.message_from', { name: msg.from.name || '?' })}
 	>
-		{#if first}
+		{#if first && !mine}
 			<div class="chat-msg-head">
-				{#if !mine}
-					{#if msg.from.kind === 'user'}
-						<Avatar user={{ id: Number(msg.from.id) || 0, username: msg.from.name }} size="sm" />
-					{:else}
-						<span class="chat-device-mark" aria-hidden="true"><Icon name="computer" /></span>
-					{/if}
-					<span class="chat-msg-name">{msg.from.name}</span>
+				{#if msg.from.kind === 'user'}
+					<Avatar user={{ id: Number(msg.from.id) || 0, username: msg.from.name }} size="sm" />
+				{:else}
+					<span class="chat-device-mark" aria-hidden="true"><Icon name="computer" /></span>
 				{/if}
-				<span class="chat-msg-time"
-					><Time
-						value={msg.created_at}
-						relative={false}
-						format={{ year: undefined, month: undefined, day: undefined, hour: '2-digit', minute: '2-digit' }}
-					/></span
-				>
+				<span class="chat-msg-name">{msg.from.name}</span>
 			</div>
 		{/if}
+		{#snippet meta()}
+			<span class="chat-meta">
+				{#if msg.edited_at && !msg.deleted}<span>{t('chat.edited')}</span>{/if}
+				<Time
+					value={msg.created_at}
+					relative={false}
+					format={{ year: undefined, month: undefined, day: undefined, hour: '2-digit', minute: '2-digit' }}
+				/>
+			</span>
+		{/snippet}
 		<div class="chat-msg-row">
 			<div class={['chat-bubble', msg.deleted && 'is-deleted', msg.pending && 'is-pending']}>
 				{#if msg.deleted}
 					<span class="chat-deleted"><Icon name="block" />{t('chat.message_deleted')}</span>
+					{@render meta()}
 				{:else}
 					{#if msg.reply_to}
 						<button type="button" class="chat-quote" onclick={() => msg.reply_to && onquote(msg.reply_to.id)}>
@@ -151,13 +153,13 @@
 						</a>
 					{/each}
 					{#if msg.text}
-						<div class="chat-text">
-							{#each parts as p, i (i)}{#if p.href}<a href={p.href} target="_blank" rel="noopener noreferrer"
+						<span class="chat-text"
+							>{#each parts as p, i (i)}{#if p.href}<a href={p.href} target="_blank" rel="noopener noreferrer"
 										>{p.text}</a
-									>{:else}{p.text}{/if}{/each}
-						</div>
+									>{:else}{p.text}{/if}{/each}</span
+						>
 					{/if}
-					{#if msg.edited_at}<span class="chat-edited">{t('chat.edited')}</span>{/if}
+					{@render meta()}
 				{/if}
 			</div>
 			{#if !msg.deleted && !msg.pending}
@@ -222,21 +224,32 @@
 {/if}
 
 <style>
+	/* A line of the system: one centred, muted pill */
 	.chat-system {
 		display: flex;
+		justify-content: center;
+		margin: var(--space-3) 0;
+	}
+	.chat-system-text {
+		display: inline-flex;
 		flex-wrap: wrap;
 		justify-content: center;
 		gap: 0 var(--space-2);
-		margin: var(--space-3) 0;
+		max-width: 100%;
+		padding: 2px var(--space-3);
+		border-radius: 999px;
+		background: var(--bg-subtle);
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 		text-align: center;
 	}
+	/* Someone else's messages sit under their name, past the avatar (24 px and the gap) */
 	.chat-msg {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
 		margin-top: 2px;
+		padding-inline-start: calc(24px + var(--space-2));
 		border-radius: var(--radius);
 		transition: background-color var(--motion);
 	}
@@ -245,6 +258,7 @@
 	}
 	.chat-msg.is-mine {
 		align-items: flex-end;
+		padding-inline-start: 0;
 	}
 	.chat-msg.is-marked {
 		background: var(--accent-tint);
@@ -253,16 +267,27 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
+		margin-inline-start: calc(-24px - var(--space-2));
 		margin-bottom: var(--space-1);
 		font-size: var(--text-sm);
 	}
 	.chat-msg-name {
 		font-weight: 600;
 	}
-	.chat-msg-time,
 	.chat-msg-state {
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+	}
+	/* Time (and "edited") at the end of the bubble's last line, or under it when the line is full */
+	.chat-meta {
+		display: inline-flex;
+		float: inline-end;
+		gap: var(--space-1);
+		margin: 4px 0 -2px var(--space-3);
+		color: var(--text-muted);
+		font-size: 11px;
+		line-height: 1.6;
+		white-space: nowrap;
 	}
 	.chat-msg-state {
 		margin: 2px 0 0;
@@ -291,16 +316,23 @@
 		flex-direction: row-reverse;
 	}
 	.chat-bubble {
+		display: flow-root;
 		min-width: 0;
-		padding: var(--space-2) var(--space-3);
+		padding: 6px var(--space-3);
 		border: 1px solid var(--rule);
-		border-radius: calc(var(--radius) * 2);
-		background: var(--surface);
+		border-radius: calc(var(--radius) * 3);
+		background: var(--bg-subtle);
 		overflow-wrap: anywhere;
 	}
 	.is-mine .chat-bubble {
 		border-color: transparent;
 		background: var(--accent-tint);
+	}
+	.is-theirs.is-first .chat-bubble {
+		border-start-start-radius: var(--radius);
+	}
+	.is-mine.is-first .chat-bubble {
+		border-start-end-radius: var(--radius);
 	}
 	.chat-bubble.is-pending {
 		opacity: 0.7;
@@ -321,11 +353,6 @@
 	.chat-text a {
 		color: var(--link, var(--accent));
 		text-decoration: underline;
-	}
-	.chat-edited {
-		margin-inline-start: var(--space-2);
-		color: var(--text-muted);
-		font-size: var(--text-sm);
 	}
 	.chat-quote {
 		display: flex;
@@ -375,7 +402,7 @@
 		padding: var(--space-2);
 		border: 1px solid var(--rule);
 		border-radius: var(--radius);
-		background: var(--surface);
+		background: var(--bg);
 		color: var(--text);
 		text-decoration: none;
 	}
@@ -415,7 +442,7 @@
 		padding: 0 var(--space-2);
 		border: 1px solid var(--rule);
 		border-radius: 999px;
-		background: var(--surface);
+		background: var(--bg);
 		color: var(--text);
 		font: inherit;
 		font-size: var(--text-sm);
