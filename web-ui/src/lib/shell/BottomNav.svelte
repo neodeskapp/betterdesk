@@ -29,11 +29,9 @@
 		>
 			<Icon name={item.icon} />
 			<span>{t(item.labelKey)}</span>
-			{#if item.id === 'chat' && chat.total}<span class="bottom-count"
-					><span class="sr-only">{t('chat.unread_count', { count: chat.total })}</span><span
-						aria-hidden="true">{chat.total > 99 ? '99+' : chat.total}</span
-					></span
-				>{/if}
+			{#if item.id === 'chat' && chat.total}<span class="sr-only"
+					>{t('chat.unread_count', { count: chat.total })}</span
+				><span class="bottom-count" aria-hidden="true"></span>{/if}
 		</a>
 	{/each}
 	<button
@@ -90,19 +88,16 @@
 	.bottom-item:focus-visible {
 		outline-offset: -2px;
 	}
+	/* Unread chat: a dot on the icon's end corner, as on the top bar's chat button and bell */
 	.bottom-count {
 		position: absolute;
-		top: 4px;
+		top: 6px;
 		inset-inline-start: calc(50% + 6px);
-		min-width: 18px;
-		padding: 0 4px;
-		border-radius: 999px;
-		background: var(--accent);
-		color: var(--on-accent, #fff);
-		font-size: 11px;
-		font-weight: 700;
-		line-height: 18px;
-		text-align: center;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--danger);
+		pointer-events: none;
 	}
 	.bottom-item.active {
 		border-top-color: var(--accent);

@@ -10,8 +10,10 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
+	import Field from '#lib/ui/Field.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
+	import States from '#lib/ui/States.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import * as api from './api.ts';
@@ -122,21 +124,19 @@
 
 <Dialog open size="large" title={id ? t('chat.edit_team') : t('chat.new_team_title')} {onclose}>
 	{#if !loaded}
-		<p class="td-state">{t('common.loading')}</p>
+		<States kind="loading" />
 	{:else}
-		<label class="td-label" for="chat-team-title">{t('chat.team_name')}</label>
-		<Input
-			id="chat-team-title"
-			maxlength={120}
-			placeholder={t('chat.team_name_placeholder')}
-			bind:value={title}
-		/>
+		<Field id="chat-team-title" label={t('chat.team_name')}>
+			{#snippet children(f)}
+				<Input {...f} maxlength={120} placeholder={t('chat.team_name_placeholder')} bind:value={title} />
+			{/snippet}
+		</Field>
 		<div class="dialog-cols td-cols">
 			<fieldset class="td-block">
 				<legend class="td-label">{t('chat.team_people')}</legend>
 				<SearchField label={t('chat.search_people')} autocomplete="off" bind:value={q} />
 				{#if !shownPeople.length}
-					<p class="td-state">{people.length ? t('chat.no_match') : t('chat.empty_team')}</p>
+					<States message={people.length ? t('chat.no_match') : t('chat.empty_team')} />
 				{:else}
 					<div class="td-list">
 						{#each shownPeople as p (p.id)}
@@ -155,7 +155,7 @@
 				<legend class="td-label">{t('chat.team_user_groups')}</legend>
 				<p class="td-hint">{t('chat.team_user_groups_hint')}</p>
 				{#if !userGroups.length}
-					<p class="td-state">{t('chat.team_no_user_groups')}</p>
+					<States message={t('chat.team_no_user_groups')} />
 				{:else}
 					<div class="td-list">
 						{#each userGroups as g (g.guid)}
@@ -194,7 +194,6 @@
 </Dialog>
 
 <style>
-	.td-state,
 	.td-hint,
 	.td-total {
 		margin: var(--space-1) 0;

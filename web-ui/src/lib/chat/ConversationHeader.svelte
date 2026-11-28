@@ -1,10 +1,11 @@
 <!--
   The head of an open conversation (A242).
-  Support: the computer by name, online or not, its owner, folder and
-  system, who has the conversation, and the actions: take it, hand it to
-  a colleague who sees the computer, close it with a note (and resolve
-  the computer's help request), open it again, connect, open the device,
-  a ticket. Team: the colleague with role and status, the group with its
+  Support: the computer by name and system, online or not, its owner,
+  folder and ID, who has the conversation, and the actions: take it, close
+  it with a note (and resolve the computer's help request when it has
+  one), open it again, connect while it is online; in the menu: hand it
+  to a colleague who sees the computer, open the device, a ticket, the
+  help request. Team: the colleague with role and status, the group with its
   members and a way to change them, or the team with its members and
   user groups (changed by people with Manage teams). On a phone a back
   button returns to the list.
@@ -19,14 +20,17 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
+	import Field from '#lib/ui/Field.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
-	import Presence from '#lib/ui/Presence.svelte';
+	import OsIcon from '#lib/ui/OsIcon.svelte';
+	import Status from '#lib/ui/Status.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import * as api from './api.ts';
 	import { goTo } from './nav.ts';
 	import { chat } from './client.svelte.ts';
@@ -81,7 +85,8 @@
 	async function close() {
 		busy = true;
 		try {
-			const r = await api.closeConversation(conv, note.trim(), resolveHelp);
+			// Only a conversation with a help request has one to resolve
+			const r = await api.closeConversation(conv, note.trim(), !!c?.help_request_id && resolveHelp);
 			onchanged(r.conversation);
 			closing = false;
 			note = '';
@@ -119,40 +124,40 @@
 		<IconButton class="conv-back" icon="arrow_back" label={t('chat.back_to_list')} onclick={onback} />
 	{/if}
 	{#if !c}
-		<div class="conv-who"><span class="conv-name">{slow ? t('common.loading') : ' '}</span></div>
+		<!-- Two lines like a loaded head, so it keeps its height -->
+		<div class="conv-who">
+			<p class="conv-name">{slow ? t('common.loading') : ' '}</p>
+			<p class="conv-sub" aria-hidden="true">&nbsp;</p>
+		</div>
 	{:else if c.kind === 'support'}
-		<span class="conv-icon" aria-hidden="true"><Icon name="computer" /></span>
+		<span class="conv-icon" aria-hidden="true"
+			>{#if device?.platform}<OsIcon platform={device.platform} />{:else}<Icon name="computer" />{/if}</span
+		>
 		<div class="conv-who">
 			<div class="conv-title">
 				<h2 class="conv-name">{device?.name ?? conv}</h2>
 				{#if c.state === 'closed'}
-					<span class="conv-tag">{t('chat.closed_by', { name: c.closed_by || '?' })}</span>
+					<Status tone="neutral" label={t('chat.closed_by', { name: c.closed_by || '?' })} />
 				{:else if c.assignee_id}
-					<span class="conv-tag is-person"
+					<span class="conv-assignee"
 						><Avatar user={{ id: c.assignee_id, username: c.assignee_name }} size="sm" />{mine
 							? t('chat.assigned_you')
 							: t('chat.assigned_to', { name: c.assignee_name ?? '?' })}</span
 					>
-				{:else}
-					<span class="conv-tag is-waiting">{t('chat.unassigned')}</span>
 				{/if}
 			</div>
 			<p class="conv-sub">
-				<span class="conv-state"
-					><Presence status={device?.online ? 'online' : 'offline'} />{device?.online
-						? t('chat.online')
-						: t('chat.offline')}</span
-				>
+				<Status
+					tone={device?.online ? 'good' : 'neutral'}
+					label={device?.online ? t('chat.online') : t('chat.offline')}
+				/>
 				{#if device?.owner}<span><Icon name="person" />{device.owner}</span>{/if}
 				{#if device?.folder}<span><Icon name="folder" />{device.folder}</span>{/if}
 				{#if device && device.hostname && device.hostname !== device.name}<span
 						><Icon name="dns" />{device.hostname}</span
 					>{/if}
-				<span class="conv-id">{t('chat.device_id', { id: conv })}</span>
-				{#if c.help_request_id}<a class="conv-link" href={link('/help-requests')}
-						>{t('chat.help_request_open')}</a
-					>{/if}
-				{#if c.ticket_id}<a class="conv-link" href={link(`/tickets?id=${c.ticket_id}`)}
+				<span class="conv-id"><ValueCopy value={conv} /></span>
+				{#if c.ticket_id}<a href={link(`/tickets?id=${c.ticket_id}`)}
 						>{t('chat.ticket_linked', { id: c.ticket_id })}</a
 					>{/if}
 			</p>
@@ -160,13 +165,21 @@
 		<div class="conv-actions">
 			{#if c.state === 'open' && chat.may.assign && !mine}
 				<Button size="sm" variant="primary" icon="pan_tool" onclick={() => me && void assignTo(me.id)}
-					>{compact ? t('chat.take') : t('chat.take_over')}</Button
+					>{c.assignee_id ? t('chat.take_over') : t('chat.take')}</Button
 				>
 			{/if}
 			{#if c.state === 'open' && mayClose}
 				<Button size="sm" icon="task_alt" onclick={() => (closing = true)}>{t('chat.close')}</Button>
 			{:else if c.state === 'closed'}
 				<Button size="sm" icon="replay" onclick={() => void reopen()}>{t('chat.reopen')}</Button>
+			{/if}
+			{#if device?.online && can('device.connect')}
+				<Button
+					size="sm"
+					icon="desktop_windows"
+					onclick={() => device && void act.connectInBrowser({ id: device.id, hostname: device.hostname })}
+					>{t('chat.connect')}</Button
+				>
 			{/if}
 			<MenuButton kebab label={t('chat.conversation_actions')} align="end">
 				{#if chat.may.assign && detail?.assignable?.length}
@@ -180,18 +193,16 @@
 					{/if}
 					<MenuDivider />
 				{/if}
-				{#if device && can('device.connect')}
-					<MenuItem
-						icon="desktop_windows"
-						onselect={() => device && void act.connectInBrowser({ id: device.id, hostname: device.hostname })}
-						>{t('chat.connect')}</MenuItem
-					>
-				{/if}
 				{#if can('device.view')}
 					<MenuItem icon="info" onselect={() => openDevice(conv)}>{t('chat.open_device')}</MenuItem>
 				{/if}
 				{#if can('device.edit')}
 					<MenuItem icon="confirmation_number" onselect={newTicket}>{t('chat.new_ticket')}</MenuItem>
+				{/if}
+				{#if c.help_request_id}
+					<MenuItem icon="support" onselect={() => goTo(link('/help-requests'))}
+						>{t('chat.help_request_open')}</MenuItem
+					>
 				{/if}
 			</MenuButton>
 		</div>
@@ -248,10 +259,12 @@
 		title={t('chat.close_title', { name: device?.name ?? conv })}
 		onclose={() => (closing = false)}
 	>
-		<label class="field-label" for="chat-close-note">{t('chat.close_note')}</label>
-		<Textarea id="chat-close-note" rows={3} maxlength={1000} bind:value={note} />
-		<p class="field-hint">{t('chat.close_note_hint')}</p>
-		<Checkbox bind:checked={resolveHelp} label={t('chat.close_resolve_help')} />
+		<Field label={t('chat.close_note')} hint={t('chat.close_note_hint')}>
+			{#snippet children(f)}<Textarea {...f} rows={3} maxlength={1000} bind:value={note} />{/snippet}
+		</Field>
+		{#if c?.help_request_id}
+			<Checkbox bind:checked={resolveHelp} label={t('chat.close_resolve_help')} />
+		{/if}
 		{#snippet footer()}
 			<Button onclick={() => (closing = false)}>{t('actions.cancel')}</Button>
 			<Button variant="primary" icon="task_alt" {busy} onclick={() => void close()}>{t('chat.close')}</Button>
@@ -266,30 +279,37 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-2) var(--space-3);
-		min-height: 72px;
 		padding: var(--space-3) var(--space-4);
 		border-bottom: 1px solid var(--rule);
 	}
 	.conv-title {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--space-1) var(--space-2);
+		align-items: baseline;
+		gap: var(--space-1) var(--space-3);
 		min-width: 0;
 	}
 	.conv-head :global(.conv-back) {
 		display: none;
 	}
+	/* The computer's system in a square box the size of a person's avatar */
 	.conv-icon {
 		display: inline-flex;
 		flex: none;
 		align-items: center;
 		justify-content: center;
-		width: 40px;
-		height: 40px;
-		border-radius: 50%;
-		background: var(--hover);
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius);
+		background: var(--tag-bg);
 		color: var(--text-muted);
+	}
+	.conv-icon :global(.os-icon) {
+		width: var(--icon-btn-glyph);
+		height: var(--icon-btn-glyph);
+	}
+	.conv-icon :global(.material-icons) {
+		font-size: var(--icon-btn-glyph);
 	}
 	.conv-who {
 		flex: 1;
@@ -300,50 +320,31 @@
 		font-size: var(--text-md);
 		overflow-wrap: anywhere;
 	}
+	.conv-assignee {
+		display: inline-flex;
+		align-items: center;
+		align-self: center;
+		gap: var(--space-2);
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+	}
 	.conv-sub {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-1) var(--space-3);
-		margin: 2px 0 0;
+		margin: var(--space-1) 0 0;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
 	.conv-sub > span {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--space-1);
+		min-width: 0;
 	}
-	.conv-sub :global(.material-icons) {
+	.conv-sub > span > :global(.material-icons) {
 		font-size: 16px;
-	}
-	.conv-state {
-		color: var(--text);
-	}
-	.conv-tag {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		min-height: 24px;
-		padding: 0 var(--space-2);
-		border: 1px solid var(--rule);
-		border-radius: 999px;
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-		white-space: nowrap;
-	}
-	.conv-tag.is-person {
-		padding-inline-start: 2px;
-		background: var(--hover);
-		border-color: transparent;
-		color: var(--text);
-	}
-	.conv-tag.is-waiting {
-		border-color: var(--warning, #b26a00);
-		color: var(--text);
-	}
-	.conv-link {
-		color: var(--link, var(--accent));
 	}
 	.conv-actions {
 		display: flex;
@@ -351,23 +352,12 @@
 		align-items: center;
 		gap: var(--space-2);
 	}
-	.field-label {
-		display: block;
-		margin-bottom: var(--space-1);
-		font-weight: 600;
-	}
-	.field-hint {
-		margin: var(--space-1) 0 var(--space-3);
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-	}
 	/* Narrow (a phone, the panel): the back button takes the icon's place,
 	   and the actions line up under the name */
 	@media (max-width: 767px) {
 		.conv-head {
 			display: grid;
 			grid-template-columns: auto minmax(0, 1fr);
-			padding-inline: var(--space-4);
 		}
 		.conv-head :global(.conv-back) {
 			display: inline-flex;

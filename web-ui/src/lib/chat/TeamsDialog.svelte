@@ -8,6 +8,9 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
+	import ListRow from '#lib/ui/ListRow.svelte';
+	import RowList from '#lib/ui/RowList.svelte';
+	import States from '#lib/ui/States.svelte';
 	import * as api from './api.ts';
 	import { chat } from './client.svelte.ts';
 	import TeamDialog from './TeamDialog.svelte';
@@ -22,6 +25,7 @@
 	let editing = $state<string | null>(null);
 
 	async function load() {
+		failed = false;
 		try {
 			const r = await api.loadTeams();
 			teams = r.teams;
@@ -52,30 +56,29 @@
 	<Dialog open title={t('chat.manage_teams')} {onclose}>
 		<p class="ts-intro">{t('chat.manage_teams_hint')}</p>
 		{#if failed}
-			<p class="ts-state">{t('chat.action_failed')}</p>
+			<States kind="error" message={t('chat.action_failed')} onretry={() => void load()} />
 		{:else if teams === null}
-			<p class="ts-state">{t('common.loading')}</p>
+			<States kind="loading" />
 		{:else if !teams.length}
-			<p class="ts-state">{t('chat.no_teams')}</p>
+			<States message={t('chat.no_teams')} />
 		{:else}
-			<ul class="ts-list">
+			<RowList>
 				{#each teams as team (team.id)}
 					{@const names = groupNames(team)}
-					<li>
-						<button type="button" class="ts-row" onclick={() => (editing = team.id)}>
+					<ListRow title={team.title} onclick={() => (editing = team.id)}>
+						{#snippet start()}
 							<span class="ts-icon" aria-hidden="true"><Icon name="workspaces" /></span>
-							<span class="ts-main">
-								<span class="ts-name">{team.title}</span>
-								<span class="ts-meta">
-									<span>{t('chat.team_people_count', { count: team.people.length })}</span>
-									{#if names}<span>{names}</span>{/if}
-								</span>
+						{/snippet}
+						{#snippet sub()}
+							<span class="ts-meta">
+								<span>{t('chat.team_people_count', { count: team.people.length })}</span>
+								{#if names}<span>{names}</span>{/if}
 							</span>
-							<Icon name="edit" />
-						</button>
-					</li>
+						{/snippet}
+						{#snippet end()}<Icon name="edit" />{/snippet}
+					</ListRow>
 				{/each}
-			</ul>
+			</RowList>
 		{/if}
 		{#snippet footer()}
 			<Button onclick={onclose}>{t('actions.close')}</Button>
@@ -87,33 +90,9 @@
 {/if}
 
 <style>
-	.ts-intro,
-	.ts-state {
+	.ts-intro {
 		margin: 0 0 var(--space-3);
 		color: var(--text-muted);
-	}
-	.ts-list {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-		border-top: 1px solid var(--rule);
-	}
-	.ts-row {
-		display: flex;
-		gap: var(--space-3);
-		align-items: center;
-		width: 100%;
-		padding: var(--space-2);
-		border: 0;
-		border-bottom: 1px solid var(--rule);
-		background: none;
-		color: var(--text);
-		font: inherit;
-		text-align: start;
-		cursor: pointer;
-	}
-	.ts-row:hover {
-		background: var(--hover);
 	}
 	.ts-icon {
 		display: inline-flex;
@@ -122,24 +101,16 @@
 		justify-content: center;
 		width: 32px;
 		height: 32px;
-		border-radius: 50%;
-		background: var(--hover);
+		border-radius: var(--radius);
+		background: var(--tag-bg);
 		color: var(--text-muted);
 	}
-	.ts-main {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
-		min-width: 0;
-	}
-	.ts-name {
-		font-weight: 600;
+	.ts-icon > :global(.material-icons) {
+		font-size: 20px;
 	}
 	.ts-meta {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0 var(--space-3);
-		color: var(--text-muted);
-		font-size: var(--text-sm);
 	}
 </style>

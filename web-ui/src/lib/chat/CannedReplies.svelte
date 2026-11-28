@@ -8,8 +8,13 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
+	import Field from '#lib/ui/Field.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
 	import Input from '#lib/ui/Input.svelte';
+	import ListRow from '#lib/ui/ListRow.svelte';
+	import RowList from '#lib/ui/RowList.svelte';
+	import States from '#lib/ui/States.svelte';
+	import Tag from '#lib/ui/Tag.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
@@ -71,43 +76,46 @@
 
 <Dialog open title={t('chat.manage_canned')} size="large" {onclose}>
 	{#if editing}
-		<label class="cr-label" for="cr-title">{t('chat.canned_title')}</label>
-		<Input id="cr-title" maxlength={80} bind:value={editing.title} />
-		<label class="cr-label" for="cr-body">{t('chat.canned_body')}</label>
-		<Textarea id="cr-body" rows={5} maxlength={4096} bind:value={editing.body} />
+		{@const reply = editing}
+		<Field id="cr-title" label={t('chat.canned_title')}>
+			{#snippet children(f)}<Input {...f} maxlength={80} bind:value={reply.title} />{/snippet}
+		</Field>
+		<Field id="cr-body" label={t('chat.canned_body')}>
+			{#snippet children(f)}<Textarea {...f} rows={5} maxlength={4096} bind:value={reply.body} />{/snippet}
+		</Field>
 		{#if editing.id === null && mayShared}
 			<Checkbox bind:checked={editing.shared} label={t('chat.canned_shared')} />
 		{/if}
 	{:else if replies === null}
-		<p>{t('common.loading')}</p>
+		<States kind="loading" />
 	{:else if !replies.length}
-		<p class="cr-empty">{t('chat.no_canned_long')}</p>
+		<States message={t('chat.no_canned_long')} />
 	{:else}
-		<ul class="cr-list">
+		<RowList>
 			{#each replies as c (c.id)}
-				<li class="cr-item">
-					<div class="cr-text">
-						<strong>{c.title}</strong>
-						<span class="cr-kind"
-							>{c.owner_id === 0 ? t('chat.canned_shared_label') : t('chat.canned_mine_label')}</span
-						>
-						<p class="cr-body">{c.body}</p>
-					</div>
-					{#if mayChange(c)}
-						<IconButton
-							icon="edit"
-							label={t('chat.canned_edit', { title: c.title })}
-							onclick={() => (editing = { id: c.id, title: c.title, body: c.body, shared: c.owner_id === 0 })}
-						/>
-						<IconButton
-							icon="delete"
-							label={t('chat.canned_delete', { title: c.title })}
-							onclick={() => void remove(c)}
-						/>
-					{/if}
-				</li>
+				<ListRow title={c.title}>
+					{#snippet sub()}<span class="cr-body">{c.body}</span>{/snippet}
+					{#snippet end()}
+						<Tag label={c.owner_id === 0 ? t('chat.canned_shared_label') : t('chat.canned_mine_label')} />
+					{/snippet}
+					{#snippet actions()}
+						{#if mayChange(c)}
+							<IconButton
+								icon="edit"
+								label={t('chat.canned_edit', { title: c.title })}
+								onclick={() =>
+									(editing = { id: c.id, title: c.title, body: c.body, shared: c.owner_id === 0 })}
+							/>
+							<IconButton
+								icon="delete"
+								label={t('chat.canned_delete', { title: c.title })}
+								onclick={() => void remove(c)}
+							/>
+						{/if}
+					{/snippet}
+				</ListRow>
 			{/each}
-		</ul>
+		</RowList>
 	{/if}
 	{#snippet footer()}
 		{#if editing}
@@ -131,38 +139,7 @@
 </Dialog>
 
 <style>
-	.cr-label {
-		display: block;
-		margin: var(--space-3) 0 var(--space-1);
-		font-weight: 600;
-	}
-	.cr-empty {
-		color: var(--text-muted);
-	}
-	.cr-list {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-	.cr-item {
-		display: flex;
-		align-items: flex-start;
-		gap: var(--space-2);
-		padding: var(--space-2) 0;
-		border-bottom: 1px solid var(--rule);
-	}
-	.cr-text {
-		flex: 1;
-		min-width: 0;
-	}
-	.cr-kind {
-		margin-inline-start: var(--space-2);
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-	}
 	.cr-body {
-		margin: var(--space-1) 0 0;
-		color: var(--text-muted);
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
 	}

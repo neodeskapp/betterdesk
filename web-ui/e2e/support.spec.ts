@@ -137,8 +137,8 @@ for (const role of ROLES) {
 			await page.keyboard.press('Escape');
 			if (has(p, 'chat.team') && has(p, 'chat.support')) {
 				await page
-					.getByRole('group', { name: 'Chat sections' })
-					.getByRole('button', { name: /^Team/ })
+					.getByRole('tablist', { name: 'Chat sections' })
+					.getByRole('tab', { name: /^Team/ })
 					.click();
 				await expect(page).toHaveURL(/s=team/);
 				await expect(list.locator('.rows, .chat-list-empty').first()).toBeVisible();

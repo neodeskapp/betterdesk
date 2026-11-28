@@ -3,7 +3,7 @@
  * computer's chat window is a socket of version 2 with the stack's device
  * token (/stack/secrets/device_token, bound to 900100001). Support: what
  * the computer writes reaches the inbox with an unread count, an answer
- * reaches the computer, taking over and closing work. Team: a direct
+ * reaches the computer and takes the conversation, closing works. Team: a direct
  * message reaches the colleague, whose unread count is exact across
  * reloads. The panel opens over another page. Every text is new per run,
  * so runs in both browsers and again on the same stack don't see each
@@ -103,10 +103,10 @@ test.describe('chat', () => {
 		device.send({ type: 'read' });
 		await expect(page.locator('.chat-msg.is-mine', { hasText: answer }).getByText('Seen')).toBeVisible();
 
-		// Take it and close it with a note
-		const take = page.getByRole('button', { name: 'Take over' });
-		if (await take.count()) await take.click();
+		// The answer took it (or it was ours from an earlier run): no Take button left
 		await expect(page.getByText('You have it').first()).toBeVisible();
+		await expect(page.getByRole('button', { name: /^Take/ })).toHaveCount(0);
+		// Close it with a note
 		await expect.poll(() => device.frames.filter((f) => f.type === 'helper').at(-1)?.name).toBeTruthy();
 		await page.getByRole('button', { name: 'Close', exact: true }).first().click();
 		await page.getByRole('dialog').getByRole('textbox').fill('driver reinstalled');

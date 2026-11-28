@@ -11,10 +11,18 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
+	import Field from '#lib/ui/Field.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
 	import Input from '#lib/ui/Input.svelte';
+	import ListRow from '#lib/ui/ListRow.svelte';
+	import OsIcon from '#lib/ui/OsIcon.svelte';
+	import RowList from '#lib/ui/RowList.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
+	import States from '#lib/ui/States.svelte';
+	import Status from '#lib/ui/Status.svelte';
+	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import { platformId } from '#lib/util/display.ts';
 	import * as api from './api.ts';
 	import { chat } from './client.svelte.ts';
 	import type { Device, Person, Section } from './types.ts';
@@ -107,41 +115,48 @@
 	/>
 	{#if section === 'support'}
 		{#if devices === null}
-			<p class="nc-state">{t('common.loading')}</p>
+			<States kind="loading" />
 		{:else if !devices.length}
-			<p class="nc-state">{t('chat.no_match')}</p>
+			<States message={t('chat.no_match')} />
 		{:else}
-			<ul class="nc-list">
-				{#each devices as d (d.id)}
-					<li>
-						<button
-							type="button"
-							class="nc-row"
+			<div class="nc-scroll">
+				<RowList>
+					{#each devices as d (d.id)}
+						<ListRow
+							title={d.name}
 							onclick={() => {
 								onopen(d.id);
 								onclose();
 							}}
 						>
-							<span class="nc-icon" aria-hidden="true"><Icon name="computer" /></span>
-							<span class="nc-main">
-								<span class="nc-name">{d.name}</span>
+							{#snippet start()}
+								<span class="nc-icon" aria-hidden="true"
+									>{#if platformId(d.platform)}<OsIcon platform={d.platform} />{:else}<Icon
+											name="computer"
+										/>{/if}</span
+								>
+							{/snippet}
+							{#snippet sub()}
 								<span class="nc-meta">
-									<span>{d.online ? t('chat.online') : t('chat.offline')}</span>
+									<Status
+										tone={d.online ? 'good' : 'neutral'}
+										label={d.online ? t('chat.online') : t('chat.offline')}
+									/>
 									{#if d.owner}<span>{d.owner}</span>{/if}
 									{#if d.folder}<span>{d.folder}</span>{/if}
-									<span>{d.id}</span>
+									<ValueCopy value={d.id} copy={false} />
 								</span>
-							</span>
-						</button>
-					</li>
-				{/each}
-			</ul>
+							{/snippet}
+						</ListRow>
+					{/each}
+				</RowList>
+			</div>
 		{/if}
 	{:else}
 		{#if people === null}
-			<p class="nc-state">{t('common.loading')}</p>
+			<States kind="loading" />
 		{:else if !shownPeople.length}
-			<p class="nc-state">{people.length ? t('chat.no_match') : t('chat.empty_team')}</p>
+			<States message={people.length ? t('chat.no_match') : t('chat.empty_team')} />
 		{:else}
 			<fieldset class="nc-people">
 				<legend class="sr-only">{t('chat.colleagues')}</legend>
@@ -158,8 +173,9 @@
 			</fieldset>
 		{/if}
 		{#if group || picked.length > 1}
-			<label class="nc-label" for="chat-group-title">{t('chat.group_name')}</label>
-			<Input id="chat-group-title" maxlength={120} bind:value={title} />
+			<Field id="chat-group-title" label={t('chat.group_name')}>
+				{#snippet children(f)}<Input {...f} maxlength={120} bind:value={title} />{/snippet}
+			</Field>
 		{/if}
 	{/if}
 	{#snippet footer()}
@@ -187,32 +203,12 @@
 </Dialog>
 
 <style>
-	.nc-state {
-		color: var(--text-muted);
-	}
-	.nc-list {
+	/* The rows scroll; the padding gives back the room the row list hangs outside its column */
+	.nc-scroll {
 		max-height: min(50vh, 420px);
-		margin: var(--space-3) 0 0;
-		padding: 0;
+		margin: var(--space-3) calc(-1 * var(--row-pad-x)) 0;
+		padding-inline: var(--row-pad-x);
 		overflow-y: auto;
-		list-style: none;
-		border-top: 1px solid var(--rule);
-	}
-	.nc-row {
-		display: flex;
-		gap: var(--space-3);
-		width: 100%;
-		padding: var(--space-2);
-		border: 0;
-		border-bottom: 1px solid var(--rule);
-		background: none;
-		color: var(--text);
-		font: inherit;
-		text-align: start;
-		cursor: pointer;
-	}
-	.nc-row:hover {
-		background: var(--hover);
 	}
 	.nc-icon {
 		display: inline-flex;
@@ -221,24 +217,18 @@
 		justify-content: center;
 		width: 32px;
 		height: 32px;
-		border-radius: 50%;
-		background: var(--hover);
+		border-radius: var(--radius);
+		background: var(--tag-bg);
 		color: var(--text-muted);
 	}
-	.nc-main {
-		display: flex;
-		flex-direction: column;
-		min-width: 0;
-	}
-	.nc-name {
-		font-weight: 600;
+	.nc-icon > :global(.material-icons) {
+		font-size: 20px;
 	}
 	.nc-meta {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
 		gap: 0 var(--space-3);
-		color: var(--text-muted);
-		font-size: var(--text-sm);
 	}
 	.nc-people {
 		max-height: min(45vh, 380px);
@@ -249,10 +239,5 @@
 	}
 	.nc-person {
 		padding: var(--space-1) 0;
-	}
-	.nc-label {
-		display: block;
-		margin: var(--space-2) 0 var(--space-1);
-		font-weight: 600;
 	}
 </style>

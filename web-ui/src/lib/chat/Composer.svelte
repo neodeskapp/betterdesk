@@ -1,11 +1,14 @@
 <!--
-  Where a message is written (A242). Enter sends, Shift+Enter adds a line.
+  Where a message is written (A242). Enter or Send sends, Shift+Enter adds
+  a line; the field says who reads it and grows with its text.
   Pictures and files come by the clip button, by pasting (a screenshot
   from the clipboard) or by dropping them on the conversation; each
   uploads at once and shows as a chip until it is sent. Above the field
   the message being answered or edited, with a way out (Escape). The
-  emoji button inserts an emoji, the canned replies button a reply's text.
-  A draft stays with its conversation while another one is open.
+  emoji button inserts an emoji (not on touch screens, whose keyboard has
+  them), the canned replies button a reply's text. After a new message
+  went out (not after an edit) it calls onsend. A draft stays with its
+  conversation while another one is open.
 -->
 <script lang="ts" module>
 	/** Drafts by conversation, for this tab */
@@ -17,11 +20,13 @@
 	import { tick } from 'svelte';
 	import { formatBytes } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import Button from '#lib/ui/Button.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
 	import Menu from '#lib/ui/Menu.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
+	import Textarea from '#lib/ui/Textarea.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { loadCanned, MAX_FILE, uploadFile } from './api.ts';
 	import ChatEmoji from './ChatEmoji.svelte';
@@ -37,6 +42,8 @@
 		target: string;
 		oncancel: () => void;
 		onmanagecanned: () => void;
+		/** A new message went out (not an edit) */
+		onsend?: () => void;
 		/** Files dropped on the conversation, to add */
 		dropped?: File[];
 		element?: HTMLTextAreaElement | null;
@@ -49,6 +56,7 @@
 		target,
 		oncancel,
 		onmanagecanned,
+		onsend,
 		dropped = [],
 		element = $bindable(null)
 	}: Props = $props();
@@ -155,6 +163,7 @@
 		draft = '';
 		drafts.delete(conv);
 		if (replyTo) oncancel();
+		if (ok) onsend?.();
 	}
 
 	function onkeydown(e: KeyboardEvent) {
@@ -172,13 +181,13 @@
 		chat.typingIn(conv);
 	}
 
-	// The field grows with its text up to 160 px
+	// The field grows with its text (and its border) up to 160 px
 	$effect(() => {
 		void draft;
 		const el = element;
 		if (!el) return;
 		el.style.height = 'auto';
-		el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+		el.style.height = `${Math.min(el.scrollHeight + el.offsetHeight - el.clientHeight, 160)}px`;
 	});
 
 	/* ── Emoji and canned replies ── */
@@ -270,18 +279,20 @@
 			onclick={() => fileInput?.click()}
 		/>
 		<label class="sr-only" for={`composer-${conv}`}>{t('chat.message_to', { name: target })}</label>
-		<textarea
-			bind:this={element}
+		<Textarea
+			bind:element
+			bind:value={draft}
 			id={`composer-${conv}`}
 			class="composer-field"
-			rows="1"
-			maxlength="4096"
-			placeholder={t('chat.message_placeholder')}
-			bind:value={draft}
+			rows={1}
+			maxlength={4096}
+			placeholder={t('chat.message_to', { name: target })}
 			{onkeydown}
-			{onpaste}></textarea>
+			{onpaste}
+		/>
 		<IconButton
 			bind:element={emojiBtn}
+			class="composer-emoji"
 			icon="mood"
 			label={t('chat.emoji')}
 			aria-haspopup="menu"
@@ -297,11 +308,13 @@
 			disabled={!!editing}
 			onclick={() => (cannedOpen ? (cannedOpen = false) : void openCanned())}
 		/>
-		<button type="button" class="composer-send" disabled={!editing && !canSend} onclick={send}>
-			<Icon name={editing ? 'check' : 'send'} /><span class="sr-only"
-				>{editing ? t('chat.save_edit') : t('chat.send')}</span
-			>
-		</button>
+		<Button
+			class="composer-send"
+			icon={editing ? 'check' : 'send'}
+			disabled={!editing && !canSend}
+			onclick={send}
+			><span class="composer-send-word">{editing ? t('chat.save_edit') : t('chat.send')}</span></Button
+		>
 	</div>
 	<input
 		bind:this={fileInput}
@@ -387,7 +400,7 @@
 		gap: var(--space-2);
 		padding: var(--space-2) var(--space-4) var(--space-3);
 		border-top: 1px solid var(--rule);
-		background: var(--bg, var(--surface));
+		background: var(--bg);
 	}
 	.composer-context {
 		display: flex;
@@ -459,44 +472,36 @@
 		align-items: flex-end;
 		gap: var(--space-1);
 	}
-	.composer-field {
+	/* The kit's text area, one line high to start, growing with its text */
+	.composer-row :global(textarea.composer-field) {
 		flex: 1;
+		width: auto;
 		min-width: 0;
 		min-height: var(--control-h);
 		max-height: 160px;
-		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--field-border, var(--rule));
-		border-radius: calc(var(--radius) * 2);
-		background: var(--field-bg, var(--surface));
-		color: var(--text);
-		font: inherit;
-		line-height: 1.4;
 		resize: none;
 	}
-	.composer-field:focus-visible {
-		outline: 2px solid var(--focus, var(--accent));
-		outline-offset: 1px;
+	/* "Message to <name>" stays on the one line the field starts with */
+	.composer-row :global(textarea.composer-field::placeholder) {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
-	.composer-send {
-		display: inline-flex;
-		flex: none;
-		align-items: center;
-		justify-content: center;
-		width: var(--control-h);
-		height: var(--control-h);
-		border: 0;
-		border-radius: 50%;
-		background: var(--accent);
-		color: var(--on-accent, #fff);
-		cursor: pointer;
-	}
-	.composer-send:disabled {
-		opacity: 0.45;
-		cursor: default;
-	}
-	.composer-send:focus-visible {
-		outline: 2px solid var(--focus, var(--accent));
-		outline-offset: 2px;
+	/* A phone: Send keeps its word for screen readers, the field gets the room */
+	@media (max-width: 767px) {
+		.composer-row :global(.composer-send .composer-send-word) {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
+		}
+		.composer-row :global(.composer-send) {
+			min-width: var(--control-h);
+			padding-inline: 0;
+			justify-content: center;
+		}
 	}
 	:global(.menu.chat-emoji-grid) {
 		display: grid;
@@ -513,6 +518,10 @@
 		max-width: min(360px, 90vw);
 	}
 	@media (pointer: coarse) {
+		/* A phone's keyboard has its own emoji */
+		.composer-row :global(.icon-btn.composer-emoji) {
+			display: none;
+		}
 		:global(.menu.chat-emoji-grid) {
 			grid-template-columns: repeat(6, 44px);
 		}

@@ -1,13 +1,16 @@
 <!--
-  The list side of the chat (A242): Support and Team as two sections of
-  equal weight, a search that finds computers by name, ID, host name,
-  owner and folder (Support) or people and groups by name (Team), and the
-  rows. Support has the inbox's three filters: Open (nobody's first),
-  Mine, Closed. A computer's row says its name, folder, whether it is
-  online, who has it and its newest line; a colleague's row the name,
-  role, status and newest line. Team lists the teams one is in first,
-  then the direct and group conversations, then the colleagues one has no
-  conversation with yet, so it is plain who can be written to.
+  The list side of the chat (A242): Support and Team as two tabs, a search
+  that finds computers by name, ID, host name, owner and folder (Support)
+  or people and groups by name (Team), and the rows. Support has the
+  inbox's three filters: Open (nobody's first), Mine, Closed. A computer's
+  row says its name, whether it is online, owner, folder, who has it and
+  its newest line; a colleague's row the name, role, status and newest
+  line. A Support search also lists the computers that match and have no
+  conversation yet ("Write to a computer"), and when Open or Mine finds
+  no conversation, the closed ones that match. Team lists the teams one
+  is in first, then the direct and group conversations, then the
+  colleagues one has no conversation with yet (a direct conversation
+  without a message counts as none), so it is plain who can be written to.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -15,13 +18,20 @@
 	import Avatar from '#lib/ui/Avatar.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
+	import OsIcon from '#lib/ui/OsIcon.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
+	import States from '#lib/ui/States.svelte';
+	import Status from '#lib/ui/Status.svelte';
+	import Tabs from '#lib/ui/Tabs.svelte';
 	import Time from '#lib/ui/Time.svelte';
-	import { loadInbox, loadServerSettings, loadTeam, searchMessages } from './api.ts';
+	import { platformId } from '#lib/util/display.ts';
+	import { findDevices, loadInbox, loadServerSettings, loadTeam, searchMessages } from './api.ts';
 	import { chat } from './client.svelte.ts';
 	import { lastLine, snippet } from './logic.ts';
 	import type {
+		Device,
 		FoundConversation,
 		InboxCounts,
 		InboxFilter,
@@ -69,8 +79,29 @@
 	let found = $state.raw<Message[]>([]);
 	let foundIn = $state.raw<Record<string, FoundConversation>>({});
 	let searching: AbortController | null = null;
+	/** Computers the search text matches (Support) */
+	let devices = $state.raw<Device[]>([]);
+	let lookingUp: AbortController | null = null;
+	/** Closed conversations with the search text, when Open or Mine has none */
+	let closedFound = $state.raw<InboxItem[]>([]);
 	/** "Chat with computers" is off (A259): computers can't open the chat */
 	let computersOff = $state(false);
+
+	async function findComputers(text: string) {
+		lookingUp?.abort();
+		if (section !== 'support' || !chat.may.support || text.length < 2) {
+			devices = [];
+			return;
+		}
+		const ctl = new AbortController();
+		lookingUp = ctl;
+		try {
+			const r = await findDevices(text, ctl.signal);
+			if (lookingUp === ctl) devices = r;
+		} catch {
+			if (lookingUp === ctl) devices = [];
+		}
+	}
 
 	async function findMessages(text: string) {
 		searching?.abort();
@@ -93,16 +124,24 @@
 
 	async function load() {
 		failed = false;
-		void findMessages(q.trim());
+		const text = q.trim();
+		void findMessages(text);
+		void findComputers(text);
 		try {
 			if (section === 'support' && chat.may.support) {
 				void loadServerSettings().then(
 					(s) => (computersOff = !s.computers),
 					() => undefined
 				);
-				const r = await loadInbox(filter, q.trim());
+				const r = await loadInbox(filter, text);
+				// Nothing open or mine with the text: the closed ones may have it
+				const closed =
+					text && filter !== 'closed' && !r.conversations.length
+						? (await loadInbox('closed', text)).conversations
+						: [];
 				support = r.conversations;
 				counts = r.counts;
+				closedFound = closed;
 			} else if (section === 'team' && chat.may.team) {
 				const r = await loadTeam();
 				team = r.conversations;
@@ -136,10 +175,12 @@
 		)
 	);
 	const teamsShown = $derived(matching.filter((c) => c.kind === 'team'));
-	const teamShown = $derived(matching.filter((c) => c.kind !== 'team'));
+	/** A direct conversation counts once it has a message, or while it is open */
+	const started = (c: TeamItem) => c.kind !== 'dm' || !!c.last_message || c.id === active;
+	const teamShown = $derived(matching.filter((c) => c.kind !== 'team' && started(c)));
 	const others = $derived.by(() => {
 		const withDirect = new Set(
-			(team ?? []).filter((c) => c.kind === 'dm').flatMap((c) => c.people.map((p) => p.id))
+			(team ?? []).filter((c) => c.kind === 'dm' && started(c)).flatMap((c) => c.people.map((p) => p.id))
 		);
 		return people
 			.filter((p) => !withDirect.has(p.id))
@@ -158,24 +199,28 @@
 		return c.people[0]?.name ?? t('chat.unknown_person');
 	}
 
+	/** The search's computers that have no row in the list yet */
+	const newDevices = $derived.by(() => {
+		const listed = new Set([...(support ?? []), ...closedFound].map((c) => c.device.id));
+		return devices.filter((d) => !listed.has(d.id));
+	});
+
+	/** A label with its count in brackets, or alone when the count is 0 */
+	const counted = (label: string, n: number) => (n ? `${label} (${n})` : label);
+
 	const sections = $derived(
 		[
 			chat.may.support && {
-				value: 'support' as const,
-				label: chat.supportUnread
-					? `${t('chat.section_support')} (${chat.supportUnread})`
-					: t('chat.section_support')
+				id: 'support',
+				label: counted(t('chat.section_support'), chat.supportUnread)
 			},
-			chat.may.team && {
-				value: 'team' as const,
-				label: chat.teamUnread ? `${t('chat.section_team')} (${chat.teamUnread})` : t('chat.section_team')
-			}
+			chat.may.team && { id: 'team', label: counted(t('chat.section_team'), chat.teamUnread) }
 		].filter((x) => !!x)
 	);
 
 	const filters = $derived([
-		{ value: 'open' as const, label: `${t('chat.filter_open')} (${counts.open})` },
-		{ value: 'mine' as const, label: `${t('chat.filter_mine')} (${counts.mine})` },
+		{ value: 'open' as const, label: counted(t('chat.filter_open'), counts.open) },
+		{ value: 'mine' as const, label: counted(t('chat.filter_mine'), counts.mine) },
 		{ value: 'closed' as const, label: t('chat.filter_closed') }
 	]);
 
@@ -202,11 +247,30 @@
 	$effect(() => () => {
 		if (resting) clearTimeout(resting);
 	});
-
-	function waiting(ms: number | undefined): boolean {
-		return !!ms && Date.now() - ms > 60_000;
-	}
 </script>
+
+{#snippet iconBox(name: string)}
+	<span class="row-icon" aria-hidden="true"><Icon {name} /></span>
+{/snippet}
+
+{#snippet deviceBox(platform: string)}
+	{#if platformId(platform)}<span class="row-icon" aria-hidden="true"><OsIcon {platform} /></span
+		>{:else}{@render iconBox('computer')}{/if}
+{/snippet}
+
+{#snippet unreadCount(unread: number)}
+	{#if unread > 0}<span class="row-badge"
+			><span class="sr-only">{t('chat.unread_count', { count: unread })}</span><span aria-hidden="true"
+				>{unread > 99 ? '99+' : unread}</span
+			></span
+		>{/if}
+{/snippet}
+
+{#snippet deviceMeta(d: Device)}
+	<Status tone={d.online ? 'good' : 'neutral'} label={d.online ? t('chat.online') : t('chat.offline')} />
+	{#if d.owner}<span><Icon name="person" /><span class="row-cut">{d.owner}</span></span>{/if}
+	{#if d.folder}<span><Icon name="folder" /><span class="row-cut">{d.folder}</span></span>{/if}
+{/snippet}
 
 {#snippet foundRows()}
 	{#if found.length}
@@ -221,11 +285,7 @@
 						onclick={(e) => onopen(m.conversation_id, e.currentTarget, m.id)}
 						{...ahead(m.conversation_id)}
 					>
-						<span class="row-avatar"
-							><span class="row-icon" aria-hidden="true"
-								><Icon name={foundIn[m.conversation_id]?.kind === 'support' ? 'computer' : 'forum'} /></span
-							></span
-						>
+						{@render iconBox(foundIn[m.conversation_id]?.kind === 'support' ? 'computer' : 'forum')}
 						<span class="row-main">
 							<span class="row-top">
 								<span class="row-name">{foundIn[m.conversation_id]?.name || m.conversation_id}</span>
@@ -244,15 +304,78 @@
 	{/if}
 {/snippet}
 
+{#snippet supportRows(rows: InboxItem[], label: string)}
+	<ul class="rows" aria-label={label}>
+		{#each rows as c (c.id)}
+			{@const unread = c.unread}
+			<li>
+				<button
+					type="button"
+					class={['row', active === c.id && 'is-current', unread > 0 && 'is-unread']}
+					aria-current={active === c.id ? 'true' : undefined}
+					onclick={(e) => onopen(c.id, e.currentTarget)}
+					{...ahead(c.id)}
+				>
+					{@render deviceBox(c.device.platform)}
+					<span class="row-main">
+						<span class="row-top">
+							<span class="row-name">{c.device.name}</span>
+							{#if c.last_message}<span class="row-time"><Time value={c.last_message.at} /></span>{/if}
+						</span>
+						<span class="row-bottom">
+							<span class="row-last">{lastLine(c.last_message, t)}</span>
+							{@render unreadCount(unread)}
+						</span>
+						<span class="row-meta is-split">
+							<span class="row-meta-text">{@render deviceMeta(c.device)}</span>
+							{#if c.state === 'closed'}
+								<Status tone="neutral" label={t('chat.closed')} />
+							{:else if c.assignee_id}
+								<span class="row-who"
+									><Avatar user={{ id: c.assignee_id, username: c.assignee_name }} size="sm" /><span
+										class="row-cut"
+										>{c.assignee_id === chat.me?.id ? t('chat.assigned_you') : c.assignee_name}</span
+									></span
+								>
+							{:else if c.waiting_since}
+								<Status tone="waiting" label={t('chat.unassigned')} />
+							{/if}
+						</span>
+					</span>
+				</button>
+			</li>
+		{/each}
+	</ul>
+{/snippet}
+
+{#snippet deviceRows()}
+	{#if newDevices.length}
+		<h3 class="rows-title">{t('chat.new_support')}</h3>
+		<ul class="rows" aria-label={t('chat.new_support')}>
+			{#each newDevices as d (d.id)}
+				<li>
+					<button type="button" class="row" onclick={(e) => onopen(d.id, e.currentTarget)}>
+						{@render deviceBox(d.platform)}
+						<span class="row-main">
+							<span class="row-top"><span class="row-name">{d.name}</span></span>
+							<span class="row-meta"><span class="row-meta-text">{@render deviceMeta(d)}</span></span>
+						</span>
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+{/snippet}
+
 <div class={['chat-list', compact && 'is-compact']}>
 	<div class="chat-list-top">
 		{#if sections.length > 1}
-			<SegmentedFilter
+			<Tabs
 				class="chat-sections"
 				label={t('chat.sections')}
-				options={sections}
+				tabs={sections}
 				value={section}
-				onchange={onsection}
+				onchange={(id) => onsection(id as Section)}
 			/>
 		{/if}
 		<div class="chat-find" role="search">
@@ -276,95 +399,42 @@
 
 	<div class="chat-rows">
 		{#if section === 'support' && computersOff}
-			<p class="chat-list-note" role="status">{t('chat.computers_off')}</p>
+			<Notice tone="info" class="chat-list-note" role="status" message={t('chat.computers_off')} />
 		{/if}
 		{#if failed}
-			<p class="chat-list-state is-error">
-				{t('chat.list_failed')}
-				<Button size="sm" onclick={() => void load()}>{t('actions.retry')}</Button>
-			</p>
+			<States
+				kind="error"
+				class="chat-list-state"
+				message={t('chat.list_failed')}
+				onretry={() => void load()}
+			/>
 		{:else if section === 'support'}
 			{#if support === null}
-				<p class="chat-list-state">{t('common.loading')}</p>
-			{:else if !support.length}
-				{#if !found.length}
-					<div class="chat-list-empty">
-						<Icon name="support_agent" />
-						<p>
-							{q.trim()
-								? t('chat.no_match')
-								: filter === 'mine'
-									? t('chat.empty_mine')
-									: filter === 'closed'
-										? t('chat.empty_closed')
-										: t('chat.empty_support')}
-						</p>
-					</div>
-				{/if}
-				{@render foundRows()}
+				<States kind="loading" class="chat-list-state" />
 			{:else}
-				<ul class="rows" aria-label={t('chat.section_support')}>
-					{#each support as c (c.id)}
-						{@const unread = c.unread}
-						<li>
-							<button
-								type="button"
-								class={['row', active === c.id && 'is-current', unread > 0 && 'is-unread']}
-								aria-current={active === c.id ? 'true' : undefined}
-								onclick={(e) => onopen(c.id, e.currentTarget)}
-								{...ahead(c.id)}
-							>
-								<span class="row-icon" aria-hidden="true">
-									<Icon name="computer" />
-									<span class={['row-dot', c.device.online && 'is-on']}></span>
-								</span>
-								<span class="row-main">
-									<span class="row-top">
-										<span class="row-name">{c.device.name}</span>
-										{#if c.last_message}<span class="row-time"><Time value={c.last_message.at} /></span>{/if}
-									</span>
-									<span class="row-bottom">
-										<span class="row-last">{lastLine(c.last_message, t)}</span>
-										{#if unread > 0}<span class="row-badge"
-												><span class="sr-only">{t('chat.unread_count', { count: unread })}</span><span
-													aria-hidden="true">{unread > 99 ? '99+' : unread}</span
-												></span
-											>{/if}
-									</span>
-									<span class="row-meta is-split">
-										<span class="row-meta-text">
-											{#if c.device.owner}<span
-													><Icon name="person" /><span class="row-cut">{c.device.owner}</span></span
-												>{/if}
-											{#if c.device.folder}<span
-													><Icon name="folder" /><span class="row-cut">{c.device.folder}</span></span
-												>{/if}
-											<span class="sr-only">{c.device.online ? t('chat.online') : t('chat.offline')}</span>
-										</span>
-										{#if c.state === 'closed'}
-											<span class="row-tag">{t('chat.closed')}</span>
-										{:else if c.assignee_id}
-											<span class="row-tag is-person"
-												><Avatar
-													user={{ id: c.assignee_id, username: c.assignee_name }}
-													size="sm"
-												/>{c.assignee_id === chat.me?.id ? t('chat.assigned_you') : c.assignee_name}</span
-											>
-										{:else}
-											<span class={['row-tag', waiting(c.waiting_since) && 'is-waiting']}
-												>{t('chat.unassigned')}</span
-											>
-										{/if}
-									</span>
-								</span>
-							</button>
-						</li>
-					{/each}
-				</ul>
+				{#if support.length}
+					{@render supportRows(support, t('chat.section_support'))}
+				{:else if closedFound.length}
+					<h3 class="rows-title">{t('chat.filter_closed')}</h3>
+					{@render supportRows(closedFound, t('chat.filter_closed'))}
+				{:else if !found.length && !newDevices.length}
+					<States
+						kind="empty"
+						class="chat-list-empty"
+						message={q.trim()
+							? t('chat.no_match')
+							: filter === 'mine'
+								? t('chat.empty_mine')
+								: filter === 'closed'
+									? t('chat.empty_closed')
+									: t('chat.empty_support')}
+					/>
+				{/if}
+				{@render deviceRows()}
 				{@render foundRows()}
 			{/if}
 		{:else if team === null}
-			<p class="chat-list-state">{t('common.loading')}</p>
+			<States kind="loading" class="chat-list-state" />
 		{:else}
 			{#snippet convRows(rows: TeamItem[], label: string)}
 				<ul class="rows" aria-label={label}>
@@ -379,19 +449,15 @@
 								onclick={(e) => onopen(c.id, e.currentTarget)}
 								{...ahead(c.id)}
 							>
-								<span class="row-avatar">
-									{#if person}
-										<Avatar
-											user={{ id: person.id, username: person.username, name: person.name }}
-											size="md"
-											presence={status(person)}
-										/>
-									{:else}
-										<span class="row-icon" aria-hidden="true"
-											><Icon name={c.kind === 'team' ? 'workspaces' : 'group'} /></span
-										>
-									{/if}
-								</span>
+								{#if person}
+									<Avatar
+										user={{ id: person.id, username: person.username, name: person.name }}
+										size="md"
+										presence={status(person)}
+									/>
+								{:else}
+									{@render iconBox(c.kind === 'team' ? 'workspaces' : 'group')}
+								{/if}
 								<span class="row-main">
 									<span class="row-top">
 										<span class="row-name">{teamName(c)}</span>
@@ -399,11 +465,7 @@
 									</span>
 									<span class="row-bottom">
 										<span class="row-last">{lastLine(c.last_message, t)}</span>
-										{#if unread > 0}<span class="row-badge"
-												><span class="sr-only">{t('chat.unread_count', { count: unread })}</span><span
-													aria-hidden="true">{unread > 99 ? '99+' : unread}</span
-												></span
-											>{/if}
+										{@render unreadCount(unread)}
 									</span>
 									<span class="row-meta">
 										{#if person}<span>{t(`chat.presence_${status(person)}`)}</span><span
@@ -430,13 +492,11 @@
 					{#each others as p (p.id)}
 						<li>
 							<button type="button" class="row" onclick={(e) => onperson(p, e.currentTarget)}>
-								<span class="row-avatar"
-									><Avatar
-										user={{ id: p.id, username: p.username, name: p.name }}
-										size="md"
-										presence={status(p)}
-									/></span
-								>
+								<Avatar
+									user={{ id: p.id, username: p.username, name: p.name }}
+									size="md"
+									presence={status(p)}
+								/>
 								<span class="row-main">
 									<span class="row-top"><span class="row-name">{p.name}</span></span>
 									<span class="row-meta"
@@ -461,9 +521,7 @@
 								onclick={(e) => onopen(c.id, e.currentTarget)}
 								{...ahead(c.id)}
 							>
-								<span class="row-avatar"
-									><span class="row-icon" aria-hidden="true"><Icon name="history" /></span></span
-								>
+								{@render iconBox('history')}
 								<span class="row-main">
 									<span class="row-top">
 										<span class="row-name">{c.title || t('chat.old_messages')}</span>
@@ -479,10 +537,11 @@
 			{/if}
 			{@render foundRows()}
 			{#if !teamsShown.length && !teamShown.length && !others.length && !oldShown.length && !found.length}
-				<div class="chat-list-empty">
-					<Icon name="group" />
-					<p>{q.trim() ? t('chat.no_match') : t('chat.empty_team')}</p>
-				</div>
+				<States
+					kind="empty"
+					class="chat-list-empty"
+					message={q.trim() ? t('chat.no_match') : t('chat.empty_team')}
+				/>
 			{/if}
 		{/if}
 	</div>
@@ -495,12 +554,8 @@
 		height: 100%;
 		min-height: 0;
 	}
-	.chat-list-note {
+	.chat-rows :global(.chat-list-note) {
 		margin: var(--space-2) var(--space-3);
-		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--rule);
-		border-radius: var(--radius);
-		color: var(--text-muted);
 	}
 	.chat-list-top {
 		display: flex;
@@ -510,13 +565,9 @@
 		padding: var(--space-3);
 		border-bottom: 1px solid var(--rule);
 	}
-	.chat-list-top :global(.chat-sections),
+	/* The filters keep their natural width */
 	.chat-list-top :global(.chat-filters) {
-		display: flex;
-	}
-	.chat-list-top :global(.chat-sections .filter-btn),
-	.chat-list-top :global(.chat-filters .filter-btn) {
-		flex: 1;
+		align-self: flex-start;
 	}
 	.chat-find {
 		display: flex;
@@ -533,29 +584,9 @@
 		min-height: 0;
 		overflow-y: auto;
 	}
-	.chat-list-state {
-		margin: 0;
-		padding: var(--space-4) var(--space-3);
-		color: var(--text-muted);
-	}
-	.chat-list-state.is-error {
-		color: var(--danger);
-	}
-	.chat-list-empty {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--space-2);
-		padding: var(--space-6, 48px) var(--space-4);
-		color: var(--text-muted);
-		text-align: center;
-	}
-	.chat-list-empty :global(.material-icons) {
-		font-size: 40px;
-	}
-	.chat-list-empty p {
-		margin: 0;
-		max-width: 28ch;
+	.chat-rows :global(.chat-list-state),
+	.chat-rows :global(.chat-list-empty) {
+		padding-inline: var(--row-pad-x);
 	}
 	.rows {
 		margin: 0;
@@ -564,63 +595,52 @@
 	}
 	.rows-title {
 		margin: 0;
-		padding: var(--space-3) var(--space-3) var(--space-1);
+		padding: var(--space-3) var(--row-pad-x) var(--space-1);
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 		font-weight: 600;
+	}
+	/* Rows on rules, as ListRow: a list under a heading starts with one */
+	.rows-title + .rows {
+		border-top: 1px solid var(--rule);
 	}
 	.row {
 		display: flex;
 		align-items: flex-start;
 		gap: var(--space-3);
 		width: 100%;
-		padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) - 3px);
+		min-height: var(--row-h);
+		padding: var(--row-pad-y) var(--row-pad-x);
 		border: 0;
-		border-inline-start: 3px solid transparent;
+		border-bottom: 1px solid var(--rule);
 		background: transparent;
 		color: var(--text);
 		font: inherit;
 		text-align: start;
 		cursor: pointer;
 	}
-	.row:hover {
-		background: var(--hover);
+	.row:hover,
+	.row.is-current {
+		background: var(--bg-subtle);
 	}
 	.row:focus-visible {
-		outline: 2px solid var(--focus, var(--accent));
-		outline-offset: -2px;
+		outline: var(--focus-ring);
+		outline-offset: calc(-1 * var(--focus-offset) - 2px);
 	}
-	.row.is-current {
-		border-inline-start-color: var(--accent);
-		background: var(--accent-tint);
-	}
+	/* A square box for a computer's system mark, a group or a found message, the size of a md avatar */
 	.row-icon {
-		position: relative;
 		display: inline-flex;
 		flex: none;
 		align-items: center;
 		justify-content: center;
-		width: 36px;
-		height: 36px;
-		border-radius: 50%;
-		background: var(--hover);
+		width: 32px;
+		height: 32px;
+		border-radius: var(--radius);
+		background: var(--tag-bg);
 		color: var(--text-muted);
 	}
-	.row-dot {
-		position: absolute;
-		inset-block-end: 0;
-		inset-inline-end: 0;
-		width: 10px;
-		height: 10px;
-		border: 2px solid var(--surface, var(--bg));
-		border-radius: 50%;
-		background: var(--text-muted);
-	}
-	.row-dot.is-on {
-		background: var(--ok, #2e7d32);
-	}
-	.row-avatar {
-		flex: none;
+	.row-icon > :global(.material-icons) {
+		font-size: 20px;
 	}
 	.row-main {
 		display: flex;
@@ -658,20 +678,24 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
-	/* Owner and folder, then who has it; the tag wraps to the next line rather than cut the names */
+	/* Online state, owner and folder, then who has it; that part wraps to the next line rather than cut the names */
 	.row-meta.is-split {
-		gap: 2px var(--space-2);
+		gap: 2px var(--space-3);
 	}
 	.row-meta-text {
 		flex: 0 1 auto;
 		gap: 0 var(--space-2);
 	}
-	.row-meta-text > span {
+	.row-meta-text > span,
+	.row-who {
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
 		min-width: 0;
 		max-width: 100%;
+	}
+	.row-who {
+		gap: var(--space-2);
 	}
 	.row-cut {
 		overflow: hidden;
@@ -700,7 +724,7 @@
 		overflow-wrap: anywhere;
 	}
 	.row-found mark {
-		border-radius: 2px;
+		border-radius: var(--radius-sm);
 		background: var(--accent-tint);
 		color: var(--text);
 		font-weight: 600;
@@ -713,50 +737,25 @@
 		color: var(--text);
 		font-weight: 600;
 	}
+	/* The unread count as the sidebar shows counts: a number, no box */
 	.row-badge {
 		flex: none;
-		min-width: 20px;
-		padding: 0 6px;
-		border-radius: 999px;
-		background: var(--accent);
-		color: var(--on-accent, #fff);
+		color: var(--text);
 		font-size: var(--text-sm);
-		font-weight: 700;
-		line-height: 20px;
-		text-align: center;
-	}
-	.row-tag {
-		display: inline-flex;
-		flex: none;
-		align-items: center;
-		gap: var(--space-1);
-		max-width: 100%;
-		padding: 0 var(--space-2);
-		overflow: hidden;
-		white-space: nowrap;
-		border: 1px solid var(--rule);
-		border-radius: var(--radius);
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-	}
-	.row-tag.is-person {
-		padding-inline-start: 2px;
-		border: 0;
-	}
-	.row-tag.is-waiting {
-		border-color: var(--warning, #b26a00);
-		color: var(--warning-text, var(--text));
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
 	}
 	/* A phone: the controls and rows line up with the page title */
 	@media (max-width: 767px) {
-		.chat-list:not(.is-compact) .chat-list-top {
+		.chat-list:not(.is-compact) .chat-list-top,
+		.chat-list:not(.is-compact) .row,
+		.chat-list:not(.is-compact) .rows-title,
+		.chat-list:not(.is-compact) :global(.chat-list-state),
+		.chat-list:not(.is-compact) :global(.chat-list-empty) {
 			padding-inline: var(--page-pad);
 		}
-		.chat-list:not(.is-compact) .row {
-			padding-inline: calc(var(--page-pad) - 3px) var(--page-pad);
-		}
-		.chat-list:not(.is-compact) .rows-title {
-			padding-inline: var(--page-pad);
+		.chat-list:not(.is-compact) :global(.chat-list-note) {
+			margin-inline: var(--page-pad);
 		}
 	}
 </style>

@@ -1,6 +1,7 @@
 <!--
-  The top bar's chat button (A242): opens the chat panel over the page,
-  with the number of unread conversations and messages on it.
+  The top bar's chat button (A242): opens the chat panel over the page.
+  Unread conversations and messages put a dot on it, as on the
+  notifications bell; the number is in the button's name.
 -->
 <script lang="ts">
 	import { t } from '#lib/i18n/i18n.svelte.ts';
@@ -24,7 +25,7 @@
 	onclick={() => (chatPanel.open ? closeChat() : openChat(null, button))}
 >
 	<Icon name="chat" />
-	{#if count}<span class="chat-btn-count" aria-hidden="true">{count > 99 ? '99+' : count}</span>{/if}
+	{#if count}<span class="chat-btn-count" aria-hidden="true"></span>{/if}
 </button>
 
 <style>
@@ -44,22 +45,15 @@
 	.chat-btn:hover {
 		background: var(--hover);
 	}
-	.chat-btn:focus-visible {
-		outline: 2px solid var(--focus, var(--accent));
-		outline-offset: 1px;
-	}
+	/* A dot, as on the notifications bell */
 	.chat-btn-count {
 		position: absolute;
-		top: 2px;
-		inset-inline-end: 0;
-		min-width: 18px;
-		padding: 0 4px;
-		border-radius: 999px;
-		background: var(--accent);
-		color: var(--on-accent, #fff);
-		font-size: 11px;
-		font-weight: 700;
-		line-height: 18px;
-		text-align: center;
+		top: 6px;
+		inset-inline-end: 6px;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--danger);
+		pointer-events: none;
 	}
 </style>
