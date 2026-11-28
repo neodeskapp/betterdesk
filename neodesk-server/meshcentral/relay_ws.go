@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -260,10 +259,7 @@ func (g *Gateway) pipeSession(ctx context.Context, relayID, proto string, peer1,
 
 	var recorder *relayRecorder
 	if recording && meta != nil && g.cfg != nil {
-		dataDir := filepath.Dir(g.cfg.DBPath)
-		if dataDir == "" || dataDir == "." {
-			dataDir = "."
-		}
+		dataDir := g.cfg.ServerDataDir()
 		if r, path, err := openRelayRecorder(dataDir, meta.PeerID, relayID, meta.SessionType); err == nil {
 			recorder = r
 			recPath = path
