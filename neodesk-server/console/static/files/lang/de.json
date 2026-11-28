@@ -2423,7 +2423,8 @@
     "action_fleet_scan_requested": "Compliance-Scan angefordert",
     "action_fleet_workflow_run": "Workflow ausgeführt",
     "action_quick_support_receiver_offer": "Installationsangebot nach der Schnellhilfe geändert",
-    "action_receiver_installer_downloaded": "Installationsprogramm der Empfänger-App heruntergeladen"
+    "action_receiver_installer_downloaded": "Installationsprogramm der Empfänger-App heruntergeladen",
+    "action_dashboards_shared_changed": "Geteilte Dashboards veröffentlicht"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

@@ -2429,7 +2429,8 @@
     "action_fleet_scan_requested": "Compliance scan requested",
     "action_fleet_workflow_run": "Workflow run",
     "action_quick_support_receiver_offer": "Offer to install after quick support changed",
-    "action_receiver_installer_downloaded": "Receiver app installer downloaded"
+    "action_receiver_installer_downloaded": "Receiver app installer downloaded",
+    "action_dashboards_shared_changed": "Tablourile de bord partajate au fost publicate"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
