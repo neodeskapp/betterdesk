@@ -376,7 +376,7 @@ func (l *legListener) allow(ip string) bool {
 
 // refuse counts and logs a refused leg; keys never appear.
 func (l *legListener) refuse(c net.Conn, ip, reason, uuid string) {
-	c.Close()
+	defer c.Close()
 	l.refusedM.Lock()
 	l.refused[reason]++
 	l.refusedM.Unlock()
