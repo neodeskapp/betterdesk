@@ -932,7 +932,7 @@ func TestAgentErrorsAreTheAgents(t *testing.T) {
 	w := routetest.New(t, routetest.Options{DB: db, API: api, Env: raisedLimits, Config: nodeLanguages})
 	ctx := context.Background()
 	if _, err := db.Exec(ctx, `CREATE TABLE IF NOT EXISTS device_tokens (token_hash TEXT, peer_id TEXT, status TEXT,
-		max_uses INTEGER, use_count INTEGER, expires_at TEXT)`); err != nil {
+		max_uses INTEGER, use_count INTEGER, expires_at TEXT, kind TEXT)`); err != nil {
 		t.Fatal(err)
 	}
 	sum := sha256.Sum256([]byte(agentToken))

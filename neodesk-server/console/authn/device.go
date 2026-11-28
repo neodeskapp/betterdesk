@@ -216,7 +216,9 @@ const minDeviceTokenLength = 8
 // uses left, and bound to this device. A token bound to no device passes
 // only for a device id the signal server has no device row for yet: an
 // enrolled device gets a token bound to it, so an unbound token is never
-// the credential of a device that exists.
+// the credential of a device that exists. A rollout token (A278) never
+// passes: it admits many computers at registration, each with its own
+// device token, and is the credential of none.
 func (s *Service) VerifyEnrollmentToken(ctx context.Context, deviceID, token string) (bool, error) {
 	row, err := lookupEnrollmentToken(ctx, s.db, HashDeviceToken(token))
 	if err != nil {
@@ -236,7 +238,7 @@ func (s *Service) VerifyEnrollmentToken(ctx context.Context, deviceID, token str
 }
 
 func (s *Service) enrollmentValid(row *enrollmentToken, deviceID string) bool {
-	if row == nil {
+	if row == nil || row.kind.String == "rollout" {
 		return false
 	}
 	if row.status.String == "revoked" || row.status.String == "expired" {

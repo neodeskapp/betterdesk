@@ -164,30 +164,47 @@ func fail(w http.ResponseWriter, r *http.Request, status int, code string) {
 // 32 hex digits; older and scripted ones may use base64url.
 var tokenPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{16,128}$`)
 
-// errTokenUnknown, errTokenUsed: a token no computer can join with.
+// errTokenUnknown, errTokenUsed, errTokenFull: a token no computer can
+// join with. errTokenFull is a rollout token (A278) all of whose computers
+// joined.
 var (
 	errTokenUnknown = errors.New("token_unknown")
 	errTokenUsed    = errors.New("token_used")
+	errTokenFull    = errors.New("token_full")
 )
 
+// tokenPast is 1 for a token whose expiry has passed, in each dialect: the
+// signal server writes RFC 3339 text on SQLite and timestamptz on
+// PostgreSQL.
+var tokenPast = [2]string{
+	`CASE WHEN expires_at IS NOT NULL AND datetime(expires_at) <= datetime('now') THEN 1 ELSE 0 END`,
+	`CASE WHEN expires_at IS NOT NULL AND expires_at <= NOW() THEN 1 ELSE 0 END`,
+}
+
 // checkToken reports whether a new computer can join with the token: it
-// exists, is not revoked or expired, no computer joined with it yet and it
-// has uses left.
+// exists, is not revoked or expired, and has uses left. A token of one
+// computer must not have a computer yet; a rollout token admits computers
+// until its limit.
 func (h *handlers) checkToken(ctx context.Context, token string) error {
-	var status, peer string
+	var status, peer, kind string
 	var maxUses, useCount sql.NullInt64
-	err := h.d.Store.QueryRow(ctx, `SELECT status, COALESCE(peer_id, ''), max_uses, use_count FROM device_tokens WHERE token_hash = ?`,
-		HashToken(token)).Scan(&status, &peer, &maxUses, &useCount)
+	var past int
+	err := h.d.Store.QueryRow(ctx, `SELECT status, COALESCE(peer_id, ''), max_uses, use_count, COALESCE(kind, 'device'), `+
+		h.d.Store.Pick(tokenPast[0], tokenPast[1])+` FROM device_tokens WHERE token_hash = ?`,
+		HashToken(token)).Scan(&status, &peer, &maxUses, &useCount, &kind, &past)
 	if errors.Is(err, sql.ErrNoRows) {
 		return errTokenUnknown
 	}
 	if err != nil {
 		return err
 	}
+	full := maxUses.Int64 > 0 && useCount.Int64 >= maxUses.Int64
 	switch {
-	case status == "revoked" || status == "expired":
+	case status == "revoked" || status == "expired" || past == 1:
 		return errTokenUnknown
-	case peer != "" || maxUses.Int64 > 0 && useCount.Int64 >= maxUses.Int64:
+	case kind == "rollout" && full:
+		return errTokenFull
+	case kind != "rollout" && (peer != "" || full):
 		return errTokenUsed
 	}
 	return nil
@@ -198,7 +215,7 @@ func (h *handlers) checkToken(ctx context.Context, token string) error {
 // folder id (GROUP), arch one of Archs (x86_64 when left out).
 //
 //	token missing or of the wrong form         400 invalid_token
-//	token no new computer can join with        400 token_unknown, token_used
+//	token no new computer can join with        400 token_unknown, token_used, token_full
 //	group that names no folder                 400 invalid_group
 //	no imported release with an MSI for arch   409 no_release
 func (h *handlers) installer(w http.ResponseWriter, r *http.Request) {
@@ -225,7 +242,7 @@ func (h *handlers) installer(w http.ResponseWriter, r *http.Request) {
 	if arch == "" {
 		arch = Archs[0]
 	}
-	if err := h.checkToken(r.Context(), token); errors.Is(err, errTokenUnknown) || errors.Is(err, errTokenUsed) {
+	if err := h.checkToken(r.Context(), token); errors.Is(err, errTokenUnknown) || errors.Is(err, errTokenUsed) || errors.Is(err, errTokenFull) {
 		fail(w, r, http.StatusBadRequest, err.Error())
 		return
 	} else if err != nil {

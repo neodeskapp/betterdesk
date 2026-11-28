@@ -725,7 +725,7 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 		// so it lands in the token's folder and organization. Any other
 		// token changes nothing here: open mode takes the device anyway.
 		if token := strings.TrimSpace(req.Token); token != "" {
-			if ok, deviceToken := s.admitByEnrollmentToken(&req, token, clientIP, "open"); ok {
+			if ok, deviceToken, _ := s.admitByEnrollmentToken(&req, token, clientIP, "open"); ok {
 				resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
 				resp.DeviceToken = deviceToken
 				w.Header().Set("Content-Type", "application/json")
@@ -769,11 +769,16 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 		// which made unattended installs (Docker images, MDM scripts) impossible
 		// in the most common enrollment mode.
 		if token := strings.TrimSpace(req.Token); token != "" {
-			if ok, deviceToken := s.admitByEnrollmentToken(&req, token, clientIP, "managed"); ok {
+			ok, deviceToken, refusal := s.admitByEnrollmentToken(&req, token, clientIP, "managed")
+			if ok {
 				resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
 				resp.DeviceToken = deviceToken
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(resp)
+				return
+			}
+			if refusal != "" {
+				s.refuseRolloutToken(w, &req, refusal, clientIP, "managed")
 				return
 			}
 			// An invalid token is not silently downgraded to the queue: that
@@ -851,11 +856,16 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 	case "locked":
 		// Only allow enrollment with a valid token
 		if req.Token != "" {
-			if ok, deviceToken := s.admitByEnrollmentToken(&req, req.Token, clientIP, "locked"); ok {
+			ok, deviceToken, refusal := s.admitByEnrollmentToken(&req, req.Token, clientIP, "locked")
+			if ok {
 				resp := s.buildEnrollmentResponse("approved", req.DeviceID, "standard", "")
 				resp.DeviceToken = deviceToken
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(resp)
+				return
+			}
+			if refusal != "" {
+				s.refuseRolloutToken(w, &req, refusal, clientIP, "locked")
 				return
 			}
 		}
@@ -882,18 +892,27 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 // the token must exist, be active, be unbound or bound to this exact device, and
 // must not be exhausted. A successful redemption creates the peer, binds the
 // token, records the use, puts the device where the token says
-// (placeEnrolledDevice) and issues the device credential.
+// (placeEnrolledDevice) and issues the device credential. A rollout token
+// goes through admitByRolloutToken instead.
 //
-// Returns the issued device token and whether admission succeeded.
-func (s *Server) admitByEnrollmentToken(req *EnrollmentRequest, rawToken, clientIP, mode string) (bool, string) {
+// Returns whether admission succeeded, the issued device token, and for a
+// rollout token that admits no more computers the error code of the
+// refusal (rolloutRefusal); "" otherwise.
+func (s *Server) admitByEnrollmentToken(req *EnrollmentRequest, rawToken, clientIP, mode string) (bool, string, string) {
 	tok, err := s.db.ValidateToken(hashToken(rawToken))
-	if err != nil || tok == nil {
-		return false, ""
+	if err != nil {
+		return false, "", ""
+	}
+	if tok == nil {
+		return false, "", s.rolloutRefusal(hashToken(rawToken))
+	}
+	if tok.IsRollout() {
+		return s.admitByRolloutToken(req, tok, clientIP, mode)
 	}
 	// A token already bound to a different device cannot admit this one; that
 	// is the property that keeps a leaked token from enrolling a second machine.
 	if tok.PeerID != "" && tok.PeerID != req.DeviceID {
-		return false, ""
+		return false, "", ""
 	}
 	if tok.Status == db.TokenStatusPending {
 		_ = s.db.BindTokenToPeer(tok.TokenHash, req.DeviceID)
@@ -901,7 +920,7 @@ func (s *Server) admitByEnrollmentToken(req *EnrollmentRequest, rawToken, client
 	_ = s.db.IncrementTokenUse(tok.TokenHash)
 	if err := s.createPeerFromEnrollment(req, clientIP, true); err != nil {
 		log.Printf("[API] Failed to enroll %s by token: %v", req.DeviceID, err)
-		return false, ""
+		return false, "", ""
 	}
 	s.placeEnrolledDevice(tok, req.DeviceID, req.Group)
 	deviceToken, err := s.issueEnrollmentDeviceToken(req.DeviceID)
@@ -916,7 +935,7 @@ func (s *Server) admitByEnrollmentToken(req *EnrollmentRequest, rawToken, client
 			"mode": mode, "method": "token", "hostname": req.Hostname,
 		})
 	}
-	return true, deviceToken
+	return true, deviceToken, ""
 }
 
 // handleDeviceRegisterStatus lets the client poll its enrollment status.

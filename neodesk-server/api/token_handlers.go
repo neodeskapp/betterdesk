@@ -42,6 +42,10 @@ type DeviceTokenRequest struct {
 	// then apply to it. 0 and "" are none.
 	FolderID int64  `json:"folder_id"`
 	OrgID    string `json:"org_id"`
+	// Kind is "device" (or left out) for a token of one computer, or
+	// "rollout" for one of many computers (A278), which needs max_uses
+	// (the number of computers) and expires_in.
+	Kind string `json:"kind"`
 }
 
 // DeviceTokenResponse is the JSON response for a device token.
@@ -63,6 +67,10 @@ type DeviceTokenResponse struct {
 	Note        string     `json:"note,omitempty"`
 	FolderID    int64      `json:"folder_id,omitempty"`
 	OrgID       string     `json:"org_id,omitempty"`
+	// Kind is "rollout" for a token of many computers, left out for a
+	// token of one computer: max_uses is then the number of computers
+	// that may join and use_count the number that joined.
+	Kind string `json:"kind,omitempty"`
 }
 
 // toResponse converts a db.DeviceToken to a DeviceTokenResponse.
@@ -83,6 +91,9 @@ func toDeviceTokenResponse(t *db.DeviceToken, includePlainToken bool) *DeviceTok
 		Note:        t.Note,
 		FolderID:    t.FolderID,
 		OrgID:       t.OrgID,
+	}
+	if t.IsRollout() {
+		resp.Kind = db.TokenKindRollout
 	}
 	if includePlainToken {
 		resp.Token = t.Token
@@ -134,6 +145,31 @@ func (s *Server) handleListDeviceTokens(w http.ResponseWriter, r *http.Request) 
 // negative limit means nothing.
 const errNegativeUses = "Uses allowed must be a whole number of 0 or more"
 
+// The bounds of a rollout token (A278): how many computers may join with
+// it, and how long it can be open. Both are required.
+const (
+	rolloutMaxComputers = 100000
+	rolloutMaxLifetime  = 365 * 24 * 60 * 60
+)
+
+var (
+	errRolloutLimit  = fmt.Sprintf("A rollout token needs max_uses, the number of computers that may join, from 1 to %d", rolloutMaxComputers)
+	errRolloutExpiry = fmt.Sprintf("A rollout token needs expires_in, in seconds, from 1 to %d (a year)", rolloutMaxLifetime)
+	errTokenKind     = `kind must be "device" or "rollout"`
+)
+
+// tokenKind reads the kind of a token to create: "" and "device" are a
+// token of one computer.
+func tokenKind(kind string) (string, bool) {
+	switch strings.TrimSpace(kind) {
+	case "", db.TokenKindDevice:
+		return db.TokenKindDevice, true
+	case db.TokenKindRollout:
+		return db.TokenKindRollout, true
+	}
+	return "", false
+}
+
 // handleCreateDeviceToken creates a new device enrollment token.
 // POST /api/tokens
 func (s *Server) handleCreateDeviceToken(w http.ResponseWriter, r *http.Request) {
@@ -148,6 +184,21 @@ func (s *Server) handleCreateDeviceToken(w http.ResponseWriter, r *http.Request)
 	if req.MaxUses < 0 {
 		http.Error(w, errNegativeUses, http.StatusBadRequest)
 		return
+	}
+	kind, ok := tokenKind(req.Kind)
+	if !ok {
+		http.Error(w, errTokenKind, http.StatusBadRequest)
+		return
+	}
+	if kind == db.TokenKindRollout {
+		if req.MaxUses < 1 || req.MaxUses > rolloutMaxComputers {
+			http.Error(w, errRolloutLimit, http.StatusBadRequest)
+			return
+		}
+		if req.ExpiresIn < 1 || req.ExpiresIn > rolloutMaxLifetime {
+			http.Error(w, errRolloutExpiry, http.StatusBadRequest)
+			return
+		}
 	}
 	req.OrgID = strings.TrimSpace(req.OrgID)
 	if !s.tokenPlacementOK(w, r, req.FolderID, req.OrgID) {
@@ -186,6 +237,7 @@ func (s *Server) handleCreateDeviceToken(w http.ResponseWriter, r *http.Request)
 		Note:      req.Note,
 		FolderID:  req.FolderID,
 		OrgID:     req.OrgID,
+		Kind:      kind,
 
 		CreatedByToken: tokenOf(r),
 	}
@@ -275,6 +327,11 @@ func (s *Server) handleUpdateDeviceToken(w http.ResponseWriter, r *http.Request)
 	}
 	if req.MaxUses != nil && *req.MaxUses < 0 {
 		http.Error(w, errNegativeUses, http.StatusBadRequest)
+		return
+	}
+	// A rollout token keeps a limit: 0 would make it endless
+	if req.MaxUses != nil && token.IsRollout() && (*req.MaxUses < 1 || *req.MaxUses > rolloutMaxComputers) {
+		http.Error(w, errRolloutLimit, http.StatusBadRequest)
 		return
 	}
 	if req.MaxUses != nil {
@@ -491,6 +548,10 @@ func (s *Server) handleBindTokenToPeer(w http.ResponseWriter, r *http.Request) {
 	}
 	if token.Status == db.TokenStatusRevoked {
 		http.Error(w, "Token has been revoked", http.StatusConflict)
+		return
+	}
+	if token.IsRollout() {
+		http.Error(w, "A rollout token is for many computers and can't be bound to one", http.StatusConflict)
 		return
 	}
 	if token.PeerID != "" && token.PeerID != req.PeerID {

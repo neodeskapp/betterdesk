@@ -773,6 +773,9 @@ func (s *SQLiteDB) migrateSchema() error {
 		// apply) a device that enrolls with the token goes into, 0 and "" for none
 		{"device_tokens", "folder_id", `ALTER TABLE device_tokens ADD COLUMN folder_id INTEGER NOT NULL DEFAULT 0`},
 		{"device_tokens", "org_id", `ALTER TABLE device_tokens ADD COLUMN org_id TEXT NOT NULL DEFAULT ''`},
+		// device_tokens: "device" admits one computer, "rollout" many
+		// (A278), each with its own device token
+		{"device_tokens", "kind", `ALTER TABLE device_tokens ADD COLUMN kind TEXT NOT NULL DEFAULT 'device'`},
 		// peer_metrics: network rates of NeoDesk telemetry (L480)
 		{"peer_metrics", "net_rx_bps", `ALTER TABLE peer_metrics ADD COLUMN net_rx_bps REAL DEFAULT NULL`},
 		{"peer_metrics", "net_tx_bps", `ALTER TABLE peer_metrics ADD COLUMN net_tx_bps REAL DEFAULT NULL`},
@@ -2633,9 +2636,9 @@ func (s *SQLiteDB) CreateDeviceToken(t *DeviceToken) error {
 	}
 
 	res, err := s.db.Exec(`
-		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note, created_by_token, folder_id, org_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note, t.CreatedByToken, t.FolderID, t.OrgID)
+		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note, created_by_token, folder_id, org_id, kind)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note, t.CreatedByToken, t.FolderID, t.OrgID, t.kindOrDevice())
 	if err != nil {
 		return fmt.Errorf("db: CreateDeviceToken: %w", err)
 	}
@@ -2644,12 +2647,40 @@ func (s *SQLiteDB) CreateDeviceToken(t *DeviceToken) error {
 	return nil
 }
 
+// ClaimRolloutJoin takes one of the computers a rollout token allows, in
+// one statement: the token must be a rollout token, not revoked or
+// expired, not past its expiry and below its limit. It reports whether a
+// place was taken; of two joins at once for the last place one gets it.
+func (s *SQLiteDB) ClaimRolloutJoin(id int64) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	res, err := s.db.Exec(`
+		UPDATE device_tokens SET use_count = use_count + 1, status = 'active', last_used_at = datetime('now')
+		WHERE id = ? AND kind = 'rollout' AND status NOT IN ('revoked', 'expired')
+		AND use_count < max_uses AND (expires_at IS NULL OR datetime(expires_at) > datetime('now'))`, id)
+	if err != nil {
+		return false, fmt.Errorf("db: ClaimRolloutJoin: %w", err)
+	}
+	n, err := res.RowsAffected()
+	return n == 1, err
+}
+
+// ReleaseRolloutJoin gives back a place ClaimRolloutJoin took, for a join
+// that failed after it.
+func (s *SQLiteDB) ReleaseRolloutJoin(id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, err := s.db.Exec(`UPDATE device_tokens SET use_count = use_count - 1
+		WHERE id = ? AND kind = 'rollout' AND use_count > 0`, id)
+	return err
+}
+
 // GetDeviceToken returns a device token by ID.
 func (s *SQLiteDB) GetDeviceToken(id int64) (*DeviceToken, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id, kind
 		FROM device_tokens WHERE id = ?`, id)
 }
 
@@ -2658,7 +2689,7 @@ func (s *SQLiteDB) GetDeviceTokenByHash(tokenHash string) (*DeviceToken, error) 
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id, kind
 		FROM device_tokens WHERE token_hash = ?`, tokenHash)
 }
 
@@ -2667,7 +2698,7 @@ func (s *SQLiteDB) GetDeviceTokenByPeerID(peerID string) (*DeviceToken, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.getDeviceTokenByQuery(`SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id, kind
 		FROM device_tokens WHERE peer_id = ? AND status IN ('active', 'pending')`, peerID)
 }
 
@@ -2678,7 +2709,7 @@ func (s *SQLiteDB) getDeviceTokenByQuery(query string, args ...interface{}) (*De
 
 	err := s.db.QueryRow(query, args...).Scan(
 		&t.ID, &t.TokenHash, &t.Token, &t.Name, &t.PeerID, &t.Status, &t.MaxUses, &t.UseCount,
-		&createdAt, &expiresAt, &revokedAt, &lastUsedAt, &t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID)
+		&createdAt, &expiresAt, &revokedAt, &lastUsedAt, &t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID, &t.Kind)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -2720,7 +2751,7 @@ func (s *SQLiteDB) ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, error)
 	defer s.mu.RUnlock()
 
 	query := `SELECT id, token_hash, token_prefix, name, peer_id, status, max_uses, use_count, 
-		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id
+		created_at, expires_at, revoked_at, last_used_at, created_by, note, folder_id, org_id, kind
 		FROM device_tokens`
 	if !includeRevoked {
 		query += ` WHERE status != 'revoked'`
@@ -2740,7 +2771,7 @@ func (s *SQLiteDB) ListDeviceTokens(includeRevoked bool) ([]*DeviceToken, error)
 
 		if err := rows.Scan(&t.ID, &t.TokenHash, &t.Token, &t.Name, &t.PeerID, &t.Status,
 			&t.MaxUses, &t.UseCount, &createdAt, &expiresAt, &revokedAt, &lastUsedAt,
-			&t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID); err != nil {
+			&t.CreatedBy, &t.Note, &t.FolderID, &t.OrgID, &t.Kind); err != nil {
 			return nil, err
 		}
 
@@ -2781,7 +2812,7 @@ func (s *SQLiteDB) BindTokenToPeer(tokenHash, peerID string) error {
 	defer s.mu.Unlock()
 	_, err := s.db.Exec(`
 		UPDATE device_tokens SET peer_id=?, status='active', last_used_at=datetime('now')
-		WHERE token_hash=? AND status='pending'`, peerID, tokenHash)
+		WHERE token_hash=? AND status='pending' AND kind <> 'rollout'`, peerID, tokenHash)
 	return err
 }
 

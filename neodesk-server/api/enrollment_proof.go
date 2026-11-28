@@ -212,7 +212,8 @@ func enrollmentProofProvided(r *http.Request) bool {
 func (s *Server) hasEnrollmentCredential(deviceID string, candidates []string, requireBound bool) bool {
 	for _, candidate := range candidates {
 		token, err := s.db.ValidateToken(hashToken(candidate))
-		if err != nil || token == nil {
+		if err != nil || token == nil || token.IsRollout() {
+			// A rollout token admits computers but is no one's credential
 			continue
 		}
 		if requireBound {
