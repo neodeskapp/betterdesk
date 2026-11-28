@@ -41,6 +41,9 @@ type clusterRuntime struct {
 	settings *events.Bus
 }
 
+// valkeyStartWait is how long a start waits for Valkey to answer.
+var valkeyStartWait = 30 * time.Second
+
 // dialCluster reads the cluster settings and connects to Valkey when one
 // is set. An unreachable Valkey stops the start: an instance that should
 // share state but can't would split the installation.
@@ -53,7 +56,18 @@ func dialCluster(ctx context.Context, getenv func(string) string) (*clusterRunti
 	if !cfg.Enabled() {
 		return rt, nil
 	}
-	v, err := cluster.Dial(ctx, cfg)
+	// Valkey may start after the server (a fresh cluster, a restart of
+	// both): wait for it a while before the start stops
+	var v *cluster.Valkey
+	deadline := time.Now().Add(valkeyStartWait)
+	for {
+		v, err = cluster.Dial(ctx, cfg)
+		if err == nil || time.Now().After(deadline) {
+			break
+		}
+		log.Printf("[cluster] Waiting for Valkey: %v", err)
+		time.Sleep(2 * time.Second)
+	}
 	if err != nil {
 		return nil, err
 	}
