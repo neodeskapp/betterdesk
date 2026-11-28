@@ -447,10 +447,6 @@
 	.thread-scroll:focus-visible {
 		outline-offset: -2px;
 	}
-	.thread-inner {
-		max-width: 920px;
-		margin-inline: auto;
-	}
 	.thread-more {
 		display: flex;
 		justify-content: center;

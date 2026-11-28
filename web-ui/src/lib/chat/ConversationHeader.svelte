@@ -112,13 +112,6 @@
 			)
 		);
 	}
-
-	const reach = $derived.by(() => {
-		if (!device) return '';
-		if (chat.deviceChat[device.id] ?? device.chat_connected) return 'app';
-		if (device.agent_chat) return 'agent';
-		return 'none';
-	});
 </script>
 
 <header class={['conv-head', compact && 'is-compact']}>
@@ -130,19 +123,8 @@
 	{:else if c.kind === 'support'}
 		<span class="conv-icon" aria-hidden="true"><Icon name="computer" /></span>
 		<div class="conv-who">
-			<h2 class="conv-name">{device?.name ?? conv}</h2>
-			<p class="conv-sub">
-				<span class="conv-state"
-					><Presence status={device?.online ? 'online' : 'offline'} />{device?.online
-						? t('chat.online')
-						: t('chat.offline')}</span
-				>
-				{#if device?.owner}<span><Icon name="person" />{device.owner}</span>{/if}
-				{#if device?.folder}<span><Icon name="folder" />{device.folder}</span>{/if}
-				{#if device && device.hostname && device.hostname !== device.name}<span>{device.hostname}</span>{/if}
-				<span class="conv-id">{t('chat.device_id', { id: conv })}</span>
-			</p>
-			<p class="conv-sub">
+			<div class="conv-title">
+				<h2 class="conv-name">{device?.name ?? conv}</h2>
 				{#if c.state === 'closed'}
 					<span class="conv-tag">{t('chat.closed_by', { name: c.closed_by || '?' })}</span>
 				{:else if c.assignee_id}
@@ -154,6 +136,19 @@
 				{:else}
 					<span class="conv-tag is-waiting">{t('chat.unassigned')}</span>
 				{/if}
+			</div>
+			<p class="conv-sub">
+				<span class="conv-state"
+					><Presence status={device?.online ? 'online' : 'offline'} />{device?.online
+						? t('chat.online')
+						: t('chat.offline')}</span
+				>
+				{#if device?.owner}<span><Icon name="person" />{device.owner}</span>{/if}
+				{#if device?.folder}<span><Icon name="folder" />{device.folder}</span>{/if}
+				{#if device && device.hostname && device.hostname !== device.name}<span
+						><Icon name="dns" />{device.hostname}</span
+					>{/if}
+				<span class="conv-id">{t('chat.device_id', { id: conv })}</span>
 				{#if c.help_request_id}<a class="conv-link" href={link('/help-requests')}
 						>{t('chat.help_request_open')}</a
 					>{/if}
@@ -247,19 +242,6 @@
 	{/if}
 </header>
 
-{#if c?.kind === 'support' && reach}
-	<p class={['conv-reach', reach === 'none' && 'is-off']} role="status">
-		<Icon name={reach === 'none' ? 'cloud_off' : 'check_circle'} />
-		{#if reach === 'app'}
-			{t('chat.reach_app')}
-		{:else if reach === 'agent'}
-			{t('chat.reach_agent')}
-		{:else}
-			{t('chat.reach_none')}
-		{/if}
-	</p>
-{/if}
-
 {#if closing}
 	<Dialog
 		open
@@ -284,8 +266,16 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-2) var(--space-3);
+		min-height: 72px;
 		padding: var(--space-3) var(--space-4);
 		border-bottom: 1px solid var(--rule);
+	}
+	.conv-title {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-1) var(--space-2);
+		min-width: 0;
 	}
 	.conv-head :global(.conv-back) {
 		display: none;
@@ -331,13 +321,21 @@
 		color: var(--text);
 	}
 	.conv-tag {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 24px;
 		padding: 0 var(--space-2);
 		border: 1px solid var(--rule);
-		border-radius: var(--radius);
+		border-radius: 999px;
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+		white-space: nowrap;
 	}
 	.conv-tag.is-person {
 		padding-inline-start: 2px;
-		border: 0;
+		background: var(--hover);
+		border-color: transparent;
 		color: var(--text);
 	}
 	.conv-tag.is-waiting {
@@ -353,20 +351,6 @@
 		align-items: center;
 		gap: var(--space-2);
 	}
-	.conv-reach {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		margin: 0;
-		padding: var(--space-2) var(--space-4);
-		border-bottom: 1px solid var(--rule);
-		background: var(--hover);
-		color: var(--text);
-		font-size: var(--text-sm);
-	}
-	.conv-reach.is-off {
-		background: var(--warning-tint, var(--hover));
-	}
 	.field-label {
 		display: block;
 		margin-bottom: var(--space-1);
@@ -377,21 +361,43 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
+	/* Narrow (a phone, the panel): the back button takes the icon's place,
+	   and the actions line up under the name */
 	@media (max-width: 767px) {
 		.conv-head {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr);
 			padding-inline: var(--space-3);
 		}
 		.conv-head :global(.conv-back) {
 			display: inline-flex;
 		}
+		.conv-icon,
+		.conv-head > :global(.avatar),
+		.conv-head > :global(.avatar-presence) {
+			display: none;
+		}
+		.conv-actions {
+			grid-column: 2;
+		}
 		.conv-id {
 			display: none !important;
 		}
 	}
+	.is-compact {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		padding-inline: var(--space-3);
+	}
 	.is-compact :global(.conv-back) {
 		display: inline-flex;
 	}
-	.is-compact {
-		padding-inline: var(--space-3);
+	.is-compact .conv-icon,
+	.is-compact > :global(.avatar),
+	.is-compact > :global(.avatar-presence) {
+		display: none;
+	}
+	.is-compact .conv-actions {
+		grid-column: 2;
 	}
 </style>
