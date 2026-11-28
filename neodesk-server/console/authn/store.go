@@ -503,6 +503,14 @@ func lookupEnrollmentToken(ctx context.Context, q store.Querier, tokenHash strin
 	err := store.SelectRow(ctx, q,
 		`SELECT peer_id, status, max_uses, use_count, expires_at, kind FROM device_tokens WHERE token_hash = ?`, tokenHash).
 		Scan(&t.peerID, &t.status, &t.maxUses, &t.useCount, &t.expiresAt, &t.kind)
+	if err != nil && strings.Contains(err.Error(), "kind") && strings.Contains(err.Error(), q.Pick("no such column", "does not exist")) {
+		// A table from before rollout tokens (a signal server that hasn't
+		// migrated yet) holds only tokens of one computer
+		t = enrollmentToken{}
+		err = store.SelectRow(ctx, q,
+			`SELECT peer_id, status, max_uses, use_count, expires_at FROM device_tokens WHERE token_hash = ?`, tokenHash).
+			Scan(&t.peerID, &t.status, &t.maxUses, &t.useCount, &t.expiresAt)
+	}
 	switch {
 	case err == nil:
 		return &t, nil

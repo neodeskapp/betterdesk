@@ -55,10 +55,12 @@ describe('getResolvedPolicies', () => {
 			server_setting: setting
 		});
 		expect(out.network?.fields.ip_allowlist?.value).toEqual(['10.0.0.0/8']);
+		// An answer without receiver_applies (an older server) reads as none
 		expect(out.update).toEqual({
 			set: false,
 			applied_by: 'device',
 			device_app_applies: false,
+			receiver_applies: [],
 			timing: 'device_next_check',
 			fields: { channel: { value: null, source: 'none' } }
 		});

@@ -16,6 +16,8 @@ test.use({ role: 'super_admin' });
 
 const LOAD = { timeout: 30_000 };
 const NOT_APPLIED = 'No NeoDesk app applies this group yet. It is saved and handed to devices that ask.';
+const RECEIVER_SOME =
+	"So far only the receiver app applies part of this group: Session approval. The NeoDesk desktop app doesn't apply this group yet. The other settings are saved and handed to devices that ask.";
 const ATTENDED = 'Attended: the person at the device must accept';
 
 async function csrf(page: Page): Promise<string> {
@@ -66,17 +68,18 @@ async function tabTo(page: Page, target: Locator, max = 250): Promise<void> {
 
 const group = (page: Page, name: string) => page.locator(`#pol-${name}`);
 
-/** Before: no rule, the notice that no app applies Connection, none on Network */
+/** Before: no rule, the notice that only the receiver app applies part of Connection, none on Network */
 async function expectNoRuleYet(page: Page): Promise<void> {
 	const connection = group(page, 'connection');
 	await expect(page.getByLabel('Session approval', { exact: true })).toHaveValue('', LOAD);
 	// Nothing to remove yet
 	await expect(connection.getByRole('button', { name: /^Remove all rules of this group/ })).toHaveCount(0);
-	// Said once, on the group
-	await expect(connection.getByText(NOT_APPLIED)).toHaveCount(1);
+	// Said once, on the group: the receiver app applies Session approval, the desktop app nothing
+	await expect(connection.getByText(RECEIVER_SOME)).toHaveCount(1);
+	await expect(connection.getByText(NOT_APPLIED)).toHaveCount(0);
 	await expect(connection.getByText('No NeoDesk app applies this yet.')).toHaveCount(0);
-	// No "Devices get this when they next ask" beside it: no app gets it yet
-	await expect(connection.getByText('Devices get this when they next ask for their policy.')).toHaveCount(0);
+	// The receiver app gets it at its next check
+	await expect(connection.getByText('Devices get this when they next ask for their policy.')).toHaveCount(1);
 	await expect(group(page, 'network').getByText(NOT_APPLIED)).toHaveCount(0);
 	await expect(
 		group(page, 'network').getByText('The server applies this to new connections within a minute.')
