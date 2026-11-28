@@ -251,9 +251,7 @@ func (s *Server) startWSRelay(ws1, ws2 *websocket.Conn, addr1, addr2, uuid strin
 	log.Printf("[relay] Pair established: %s <-> %s (UUID: %s, transport=ws)",
 		addr1, addr2, relayUUIDLogID(uuid))
 
-	if s.onRelayStart != nil {
-		s.onRelayStart(uuid)
-	}
+	s.reportStarted(uuid)
 
 	// Register bandwidth sessions (same accounting as TCP WrapReader x2).
 	var pace1, pace2 io.Writer
@@ -263,25 +261,25 @@ func (s *Server) startWSRelay(ws1, ws2 *websocket.Conn, addr1, addr2, uuid strin
 		pace1 = s.bwLimiter.WrapWriter(io.Discard)
 		pace2 = s.bwLimiter.WrapWriter(io.Discard)
 	}
+	// from1 counts what ws1 sends, from2 what ws2 sends
+	from1, from2 := &byteMeter{next: pace1}, &byteMeter{next: pace2}
 
 	idle := config.RelayIdleTimeout
 	done := make(chan struct{})
 	var once sync.Once
 
 	go func() {
-		copyWSMessages(s.ctx, ws1, ws2, pace2, idle)
+		copyWSMessages(s.ctx, ws1, ws2, from2, idle)
 		once.Do(func() { close(done) })
 	}()
 	go func() {
-		copyWSMessages(s.ctx, ws2, ws1, pace1, idle)
+		copyWSMessages(s.ctx, ws2, ws1, from1, idle)
 		once.Do(func() { close(done) })
 	}()
 
 	<-done
 
-	if s.onRelayEnd != nil {
-		s.onRelayEnd(uuid)
-	}
+	s.reportEnded(uuid, from1, from2)
 
 	_ = ws1.Close(websocket.StatusNormalClosure, "")
 	_ = ws2.Close(websocket.StatusNormalClosure, "")

@@ -2,6 +2,7 @@ package signal
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -1133,13 +1134,16 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		return
 	}
 
-	if refuse := s.admitSession("", initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
+	if refuse := s.admitSession(nil, "", initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
 		s.sendUDP(punchHoleOfflineResponse(), raddr)
 		return
 	}
 
-	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(s.getRelayServer(), raddr, target.UDPAddr)
-	relayServer = s.applyNetworkRelayPolicy(relayServer, initiatorID, targetID)
+	route := s.chooseRelay(relayRouteRequest{
+		base: s.getRelayServer(), a: raddr, b: target.UDPAddr, target: target,
+		policyPeers: []string{initiatorID, targetID},
+	})
+	relayServer, sameNetwork, hairpin := route.Addr, route.SameNetwork, route.Hairpin
 	if sameNetwork {
 		log.Printf("[signal] LAN detected: %s and %s on same network, relay=%s", raddr.IP, target.UDPAddr.IP, relayServer)
 	}
@@ -1162,7 +1166,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		s.shouldForceRelayForPeers(initiatorID, targetID) ||
 		s.requiresRelayOnlyCompatibility(targetID) {
 		log.Printf("[signal] PunchHole: force relay for %s", targetID)
-		s.sendRelayResponse(target, raddr, msg, relayServer, initiatorID, policy)
+		s.sendRelayResponse(target, raddr, msg, route, initiatorID, policy)
 		return
 	}
 
@@ -1349,12 +1353,15 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 		log.Printf("[signal] PunchHole (TCP): target %s is unavailable, rejecting", targetID)
 		return punchHoleOfflineResponse()
 	}
-	if refuse := s.admitSession("", initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
+	if refuse := s.admitSession(nil, "", initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
 		return punchHoleOfflineResponse()
 	}
 
-	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(s.getRelayServer(), raddr, target.UDPAddr)
-	relayServer = s.applyNetworkRelayPolicy(relayServer, initiatorID, targetID)
+	route := s.chooseRelay(relayRouteRequest{
+		base: s.getRelayServer(), a: raddr, b: target.UDPAddr, target: target,
+		policyPeers: []string{initiatorID, targetID},
+	})
+	relayServer, sameNetwork, hairpin := route.Addr, route.SameNetwork, route.Hairpin
 	if sameNetwork {
 		log.Printf("[signal] LAN detected (TCP): %s and %s on same network, relay=%s", raddr.IP, target.UDPAddr.IP, relayServer)
 	}
@@ -1606,8 +1613,10 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	// socket_addr = target's (sender's) address, pk = SIGNED target's public key.
 	// LAN detection: set is_local only for genuine LAN cases. Shared public IP
 	// peers keep the public relay to avoid NAT hairpin failures.
-	relayServer := s.sanitizeClientRelayAddress(phs.RelayServer)
-	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(relayServer, senderAddr, initiatorAddr)
+	route := s.chooseRelay(relayRouteRequest{
+		base: s.sanitizeClientRelayAddress(phs.RelayServer), a: senderAddr, b: initiatorAddr,
+	})
+	relayServer, sameNetwork, hairpin := route.Addr, route.SameNetwork, route.Hairpin
 	if sameNetwork {
 		log.Printf("[signal] PunchHoleSent LAN detected: %s and %s on same network, relay=%s", senderAddr.IP, initiatorAddr.IP, relayServer)
 	}
@@ -1747,15 +1756,17 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		return
 	}
 
-	if refuse := s.admitSession(relayUUID, initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
+	// LAN detection: use server's LAN IP only for genuine LAN cases. Shared
+	// public IP peers keep the public relay to avoid NAT hairpin failures.
+	route := s.chooseRelay(relayRouteRequest{
+		base: relayServer, a: raddr, b: target.UDPAddr, target: target,
+		policyPeers: []string{initiatorID, targetID},
+	})
+	if refuse := s.admitSession(route.Tickets, relayUUID, initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
 		s.sendUDP(relayRefusedResponse(refuse, relayServer), raddr)
 		return
 	}
-
-	// LAN detection: use server's LAN IP only for genuine LAN cases. Shared
-	// public IP peers keep the public relay to avoid NAT hairpin failures.
-	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(relayServer, raddr, target.UDPAddr)
-	relayServer = s.applyNetworkRelayPolicy(relayServer, initiatorID, targetID)
+	relayServer, sameNetwork, hairpin := route.Addr, route.SameNetwork, route.Hairpin
 	if sameNetwork {
 		log.Printf("[signal] RequestRelay LAN detected: %s and %s on same network, relay=%s", raddr.IP, target.UDPAddr.IP, relayServer)
 	}
@@ -1779,7 +1790,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 				Id:         msg.Id,
 				// Target validates this against its own relay (see
 				// relayAdvertisedToTarget); prefer what it reported.
-				RelayServer:        relayAdvertisedToTarget(target, relayServer),
+				RelayServer:        route.TargetAddr,
 				ControlledContext:  msg.ControlledContext,
 				SwitchCode:         msg.SwitchCode,
 				Secure:             msg.Secure,
@@ -1916,17 +1927,19 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 		log.Printf("[signal] RequestRelay (TCP): mixed transport initiator=%s target=%s (%s vs %s) — relay will bridge framing",
 			initiatorID, targetID, initiatorType, target.ConnType)
 	}
-	if refuse := s.admitSession(relayUUID, initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
+	// LAN detection: use server's LAN IP only for genuine LAN cases. Shared
+	// public IP peers keep the public relay to avoid NAT hairpin failures.
+	// Only applicable when target has a known UDP address for comparison.
+	route := s.chooseRelay(relayRouteRequest{
+		base: relayServer, a: raddr, b: target.UDPAddr, target: target,
+	})
+	if refuse := s.admitSession(route.Tickets, relayUUID, initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
 		return relayRefusedResponse(refuse, relayServer)
 	}
 
 	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "request_relay", relayUUID)
 
-	// LAN detection: use server's LAN IP only for genuine LAN cases. Shared
-	// public IP peers keep the public relay to avoid NAT hairpin failures.
-	// Only applicable when target has a known UDP address for comparison.
-	var sameNetwork, hairpin bool
-	relayServer, sameNetwork, hairpin = s.selectPeerRelayServer(relayServer, raddr, target.UDPAddr)
+	relayServer, sameNetwork, hairpin := route.Addr, route.SameNetwork, route.Hairpin
 	if sameNetwork {
 		log.Printf("[signal] RequestRelay (TCP) LAN detected: %s and %s on same network, relay=%s", raddr.IP, target.UDPAddr.IP, relayServer)
 	} else if hairpin {
@@ -1960,7 +1973,7 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 				// The target validates this against the relay it configured and
 				// silently drops a mismatch, so prefer the endpoint the target
 				// itself reported before falling back to the server's value.
-				RelayServer:        relayAdvertisedToTarget(target, relayServer),
+				RelayServer:        route.TargetAddr,
 				ControlledContext:  msg.ControlledContext,
 				SwitchCode:         msg.SwitchCode,
 				Secure:             msg.Secure,
@@ -2171,9 +2184,12 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	// client gets its ticket from RequestRelay and closes its socket before
 	// the device answers): admitting it again would name no account, which
 	// the registry refuses, and register it with billing a second time
-	if relay.RelayPairAdmitted(rr.Uuid, initiatorID, targetID) {
+	// LAN detection: use LAN relay only for genuine LAN cases. Shared public IP
+	// peers keep the public relay to avoid NAT hairpin failures.
+	route := s.chooseRelay(relayRouteRequest{base: s.getRelayServer(), a: senderAddr, b: initiatorAddr})
+	if route.Tickets.Admitted(rr.Uuid, initiatorID, targetID) {
 		log.Printf("[signal] RelayResponse forward: uuid=%q initiator=%q target=%q was admitted already", rr.Uuid, initiatorID, targetID)
-	} else if refuse := s.admitSession(rr.Uuid, initiatorID, targetID, s.panelAccount(initiatorAddr), s.panelSession(initiatorAddr)); refuse != "" {
+	} else if refuse := s.admitSession(route.Tickets, rr.Uuid, initiatorID, targetID, s.panelAccount(initiatorAddr), s.panelSession(initiatorAddr)); refuse != "" {
 		log.Printf("[signal] RelayResponse forward: %s (uuid=%q initiator=%q target=%q) — not forwarding",
 			refuse, rr.Uuid, initiatorID, targetID)
 		return
@@ -2204,10 +2220,7 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	rr.SocketAddr = encodeRelayResponsePeerSocketAddr(target)
 	rr.SocketAddrV6 = nil
 
-	// LAN detection: use LAN relay only for genuine LAN cases. Shared public IP
-	// peers keep the public relay to avoid NAT hairpin failures.
-	relayServer := s.getRelayServer()
-	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(relayServer, senderAddr, initiatorAddr)
+	relayServer, sameNetwork, hairpin := route.Addr, route.SameNetwork, route.Hairpin
 	if sameNetwork {
 		log.Printf("[signal] RelayResponse LAN detected: %s and %s on same network, relay=%s", senderAddr.IP, initiatorAddr.IP, relayServer)
 	}
@@ -2478,11 +2491,12 @@ func (s *Server) handleOnlineRequest(msg *pb.OnlineRequest) *pb.RendezvousMessag
 // The target's public key is signed with the server's Ed25519 key (NaCl combined format)
 // so the initiator can verify the target's identity for E2E encryption.
 // The target's RequestRelay carries permissions (sessionPermissions).
-func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *pb.PunchHoleRequest, relay, initiatorID string, policy sessionPolicy) {
+func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *pb.PunchHoleRequest, route RelayRoute, initiatorID string, policy sessionPolicy) {
 	permissions := policy.permissions
+	relay := route.Addr
 	// Generate a relay session UUID for pairing both peers at hbbr.
 	relayUUID := uuid.New().String()
-	if refuse := s.admitSession(relayUUID, initiatorID, target.ID, policy.account, policy.consoleSession); refuse != "" {
+	if refuse := s.admitSession(route.Tickets, relayUUID, initiatorID, target.ID, policy.account, policy.consoleSession); refuse != "" {
 		s.sendUDP(relayRefusedResponse(refuse, relay), raddr)
 		return
 	}
@@ -2491,7 +2505,7 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 	// Keep the initiator's reachable server-selected relay separate from the
 	// target's peer-offered value; sending the former to the target can make
 	// newer clients silently drop the request and leave a relay timeout.
-	targetRelay := relayAdvertisedToTarget(target, relay)
+	targetRelay := route.TargetAddr
 
 	// Sign the target's PK with server's Ed25519 key for E2E verification.
 	// Format: [64-byte Ed25519 signature][serialized IdPk protobuf] — NaCl combined mode.
@@ -2626,7 +2640,20 @@ const (
 	refuseBillingSuspended    = "Billing suspended"
 	refuseBillingBlocked      = "Billing blocked"
 	refuseRelayTicketRejected = "Relay authorization rejected"
+	refuseRelayUnavailable    = "Relay temporarily unavailable"
 )
+
+// ticketIssueTimeout bounds how long admitSession waits for a ticket store
+// that is not in this process.
+const ticketIssueTimeout = 2 * time.Second
+
+// baseContext is the server's run context, or Background before Start.
+func (s *Server) baseContext() context.Context {
+	if s.ctx != nil {
+		return s.ctx
+	}
+	return context.Background()
+}
 
 // admitSession decides whether a session from initiatorID to targetID may
 // start, on every path that signals one (UDP, TCP and WebSocket, punch and
@@ -2638,7 +2665,7 @@ const (
 // session (consoleSession, a handle; "" for none) whose viewer asked. It
 // returns "" when the session may start, otherwise the reason it is
 // refused.
-func (s *Server) admitSession(relayUUID, initiatorID, targetID string, account int64, consoleSession string) string {
+func (s *Server) admitSession(tickets relay.Tickets, relayUUID, initiatorID, targetID string, account int64, consoleSession string) string {
 	if s.billing != nil {
 		if check := s.billing.CheckConnection(targetID); !check.Allowed {
 			log.Printf("[signal] Billing denied session to %s: %s", targetID, check.Reason)
@@ -2657,12 +2684,27 @@ func (s *Server) admitSession(relayUUID, initiatorID, targetID string, account i
 	// The account and its console session ride along so the live session
 	// names who opened it (saved sign-in binds its use to that browser's
 	// own session)
-	if !relay.AuthorizeRelayPairForSession(relayUUID, initiatorID, targetID, max(account, 0), consoleSession) {
+	if tickets == nil {
+		tickets = s.ticketStore()
+	}
+	ctx, cancel := context.WithTimeout(s.baseContext(), ticketIssueTimeout)
+	defer cancel()
+	err := tickets.Authorize(ctx, relay.Ticket{
+		UUID: relayUUID, Initiator: initiatorID, Target: targetID,
+		Account: max(account, 0), ConsoleSession: consoleSession,
+	})
+	switch {
+	case err == nil:
+		return ""
+	case errors.Is(err, relay.ErrTicketsUnavailable):
+		log.Printf("[signal] Relay ticket store unavailable (uuid=%q initiator=%q target=%q): %v",
+			relayUUID, initiatorID, targetID, err)
+		return refuseRelayUnavailable
+	default:
 		log.Printf("[signal] Rejected relay authorization (uuid=%q initiator=%q target=%q)",
 			relayUUID, initiatorID, targetID)
 		return refuseRelayTicketRejected
 	}
-	return ""
 }
 
 // accountName is the user name of the console account with the id, "" for

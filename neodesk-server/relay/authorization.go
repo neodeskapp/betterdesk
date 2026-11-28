@@ -66,16 +66,16 @@ func NewAuthorizationRegistry() *AuthorizationRegistry {
 	}
 }
 
-// defaultAuthorizationRegistry is shared by the signal and relay packages in
-// the all-in-one process. Keeping it package-owned avoids adding a token field
-// to RustDesk's RequestRelay framing.
+// defaultAuthorizationRegistry is the store that the signal and relay
+// servers of one process share unless they are given another
+// (DefaultTickets). The package helpers below act on it.
 var defaultAuthorizationRegistry = NewAuthorizationRegistry()
 
 // AuthorizeRelayPair records an authorized initiator/target pair for uuid.
 // An active ticket may be retried only by the same pair. A consumed UUID cannot
 // be re-authorized until its short expiry passes, preventing relay replay.
 func AuthorizeRelayPair(uuid, initiatorID, targetID string) bool {
-	return defaultAuthorizationRegistry.Authorize(uuid, initiatorID, targetID)
+	return defaultAuthorizationRegistry.AuthorizeFor(uuid, initiatorID, targetID, 0)
 }
 
 // AuthorizeRelayPairFor is AuthorizeRelayPair for a session that a console
@@ -109,8 +109,18 @@ func RevokeRelayPairsForPeer(peerID string) {
 	defaultAuthorizationRegistry.RevokeForPeer(peerID)
 }
 
-func (r *AuthorizationRegistry) Authorize(uuid, initiatorID, targetID string) bool {
-	return r.AuthorizeFor(uuid, initiatorID, targetID, 0)
+var (
+	_ Tickets      = (*AuthorizationRegistry)(nil)
+	_ TicketClaims = (*AuthorizationRegistry)(nil)
+)
+
+// Authorize issues t (Tickets). The in-process store answers at once and
+// never returns ErrTicketsUnavailable.
+func (r *AuthorizationRegistry) Authorize(_ context.Context, t Ticket) error {
+	if !r.authorize(t) {
+		return ErrTicketRejected
+	}
+	return nil
 }
 
 // AuthorizeFor is Authorize with the console account behind the session.
@@ -122,6 +132,11 @@ func (r *AuthorizationRegistry) AuthorizeFor(uuid, initiatorID, targetID string,
 // AuthorizeForSession is AuthorizeFor with the console session behind the
 // session; a retry must name the same one too.
 func (r *AuthorizationRegistry) AuthorizeForSession(uuid, initiatorID, targetID string, account int64, session string) bool {
+	return r.authorize(Ticket{UUID: uuid, Initiator: initiatorID, Target: targetID, Account: account, ConsoleSession: session})
+}
+
+func (r *AuthorizationRegistry) authorize(t Ticket) bool {
+	uuid, initiatorID, targetID, account, session := t.UUID, t.Initiator, t.Target, t.Account, t.ConsoleSession
 	if uuid == "" || initiatorID == "" || targetID == "" {
 		return false
 	}
@@ -137,12 +152,16 @@ func (r *AuthorizationRegistry) AuthorizeForSession(uuid, initiatorID, targetID 
 	if ticket, exists := r.tickets[uuid]; exists {
 		return ticket.initiatorID == initiatorID && ticket.targetID == targetID && ticket.account == account && ticket.session == session
 	}
+	expiresAt := now.Add(config.RelayPairTimeout)
+	if !t.Expires.IsZero() && t.Expires.Before(expiresAt) {
+		expiresAt = t.Expires
+	}
 	r.tickets[uuid] = &relayAuthorization{
 		initiatorID: initiatorID,
 		targetID:    targetID,
 		account:     account,
 		session:     session,
-		expiresAt:   now.Add(config.RelayPairTimeout),
+		expiresAt:   expiresAt,
 	}
 	r.signalWaitersLocked(uuid)
 	return true

@@ -80,7 +80,7 @@ func TestConnectionSecurity_UnauthorizedTCPDoesNotPair(t *testing.T) {
 func TestConnectionSecurity_ThirdClaimCannotJoinPairedRelay(t *testing.T) {
 	registry := NewAuthorizationRegistry()
 	uuid := "pair-security-uuid-001"
-	if !registry.Authorize(uuid, "INIT", "TARGET") {
+	if !registry.AuthorizeFor(uuid, "INIT", "TARGET", 0) {
 		t.Fatal("authorize")
 	}
 	if !registry.Claim(uuid) || !registry.Claim(uuid) {
@@ -94,7 +94,7 @@ func TestConnectionSecurity_ThirdClaimCannotJoinPairedRelay(t *testing.T) {
 func TestConnectionSecurity_RevokedPeerCannotClaim(t *testing.T) {
 	registry := NewAuthorizationRegistry()
 	uuid := "revoked-security-uuid"
-	if !registry.Authorize(uuid, "BANNED", "TARGET") {
+	if !registry.AuthorizeFor(uuid, "BANNED", "TARGET", 0) {
 		t.Fatal("authorize")
 	}
 	registry.RevokeForPeer("BANNED")

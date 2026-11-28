@@ -632,11 +632,14 @@ func serverMain(stop <-chan struct{}) (exitCode int) {
 		if sessionLimiter != nil {
 			relaySrv.SetSessionLimiter(sessionLimiter)
 		}
-		relaySrv.SetBillingCallbacks(billingSvc.ActivateRelay, func(uuid string) {
-			billingSvc.EndRelay(uuid)
-			if err := database.EndPeerConnectionSessionByRelay(uuid); err != nil {
-				log.Printf("[warn] end connection session for relay %s: %v", uuid, err)
-			}
+		relaySrv.SetSessionReporter(relay.SessionReporterFuncs{
+			Started: billingSvc.ActivateRelay,
+			Ended: func(uuid string, _ relay.SessionStats) {
+				billingSvc.EndRelay(uuid)
+				if err := database.EndPeerConnectionSessionByRelay(uuid); err != nil {
+					log.Printf("[warn] end connection session for relay %s: %v", uuid, err)
+				}
+			},
 		})
 		if err := relaySrv.Start(ctx); err != nil {
 			logging.Fatalf("Failed to start relay server: %v", err)

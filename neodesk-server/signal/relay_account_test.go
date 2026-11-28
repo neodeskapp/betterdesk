@@ -86,7 +86,7 @@ func TestARelayResponseAfterTheViewerLeftIsForwardedUnderItsTicket(t *testing.T)
 	srv.panelConns.Store(normalizeAddrKey(initiatorAddr.String()), &panelConn{conn: server, userID: 42})
 
 	const relayUUID = "l555-after-the-viewer-left"
-	if refuse := srv.admitSession(relayUUID, panelWebRemoteInitiatorID, "TGTL555", srv.panelAccount(initiatorAddr), srv.panelSession(initiatorAddr)); refuse != "" {
+	if refuse := srv.admitSession(nil, relayUUID, panelWebRemoteInitiatorID, "TGTL555", srv.panelAccount(initiatorAddr), srv.panelSession(initiatorAddr)); refuse != "" {
 		t.Fatalf("the viewer's own request was refused: %s", refuse)
 	}
 	// What handleRequestRelayTCP notes for the device's answer

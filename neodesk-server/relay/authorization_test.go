@@ -11,7 +11,7 @@ func TestAuthorizationRegistryAllowsExactlyOnePair(t *testing.T) {
 	registry := NewAuthorizationRegistry()
 	registry.now = func() time.Time { return time.Unix(1_700_000_000, 0) }
 
-	if !registry.Authorize("pair-uuid", "INIT01", "TARGET1") {
+	if !registry.AuthorizeFor("pair-uuid", "INIT01", "TARGET1", 0) {
 		t.Fatal("expected ticket authorization")
 	}
 	if !registry.Claim("pair-uuid") {
@@ -23,14 +23,14 @@ func TestAuthorizationRegistryAllowsExactlyOnePair(t *testing.T) {
 	if registry.Claim("pair-uuid") {
 		t.Fatal("third claim must be rejected after ticket consumption")
 	}
-	if registry.Authorize("pair-uuid", "INIT01", "TARGET1") {
+	if registry.AuthorizeFor("pair-uuid", "INIT01", "TARGET1", 0) {
 		t.Fatal("consumed UUID must not be re-authorized before expiry")
 	}
 }
 
 func TestAuthorizationRegistryRevokesPeerTickets(t *testing.T) {
 	registry := NewAuthorizationRegistry()
-	if !registry.Authorize("ban-uuid", "BANNED1", "TARGET1") {
+	if !registry.AuthorizeFor("ban-uuid", "BANNED1", "TARGET1", 0) {
 		t.Fatal("expected ticket authorization")
 	}
 
@@ -51,7 +51,7 @@ func TestAuthorizationRegistryWaitsForLateAuthorization(t *testing.T) {
 	}()
 
 	time.Sleep(10 * time.Millisecond)
-	if !registry.Authorize("late-auth-uuid", "INIT-LATE", "TARGET-LATE") {
+	if !registry.AuthorizeFor("late-auth-uuid", "INIT-LATE", "TARGET-LATE", 0) {
 		t.Fatal("expected late authorization to succeed")
 	}
 
@@ -125,7 +125,7 @@ func TestAuthorizationRegistryRevokeWakesWaiter(t *testing.T) {
 func TestAuthorizationRegistryClaimsAreAtomic(t *testing.T) {
 	registry := NewAuthorizationRegistry()
 	const relayUUID = "concurrent-claims-uuid"
-	if !registry.Authorize(relayUUID, "INIT-CONCURRENT", "TARGET-CONCURRENT") {
+	if !registry.AuthorizeFor(relayUUID, "INIT-CONCURRENT", "TARGET-CONCURRENT", 0) {
 		t.Fatal("expected ticket authorization")
 	}
 

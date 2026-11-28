@@ -60,7 +60,7 @@ func TestLiveNamesThePairAndItsAccountWhileTheSessionRuns(t *testing.T) {
 	}
 
 	// A ticket authorized without an account (a RustDesk app) is live with account 0
-	if !registry.Authorize("plain-uuid", "INIT01", "TARGET1") || !registry.Claim("plain-uuid") || !registry.Claim("plain-uuid") {
+	if !registry.AuthorizeFor("plain-uuid", "INIT01", "TARGET1", 0) || !registry.Claim("plain-uuid") || !registry.Claim("plain-uuid") {
 		t.Fatal("plain ticket")
 	}
 	if pair, ok := registry.Live("plain-uuid"); !ok || pair.Account != 0 {
