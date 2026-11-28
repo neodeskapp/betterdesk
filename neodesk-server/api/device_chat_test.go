@@ -82,3 +82,24 @@ func TestComputersTicketsGoToTheConsole(t *testing.T) {
 		}
 	}
 }
+
+// TestTheDevicePolicyGoesToTheConsole: the receiver app asks for its
+// policy at the API port, where it reaches its chat and tickets (A277).
+// Only that route of /api/nd goes to the console; the others stay the
+// API's.
+func TestTheDevicePolicyGoesToTheConsole(t *testing.T) {
+	for path, want := range map[string]bool{
+		"/api/nd/device-policy":        true,
+		"/api/nd/device-policy/":       false,
+		"/api/nd/device-policy/x":      false,
+		"/api/nd/attestation":          false,
+		"/api/nd/mgmt/connected":       false,
+		"/api/nd/api/nd/device-policy": false,
+		"/api/nd/device-policyx":       false,
+	} {
+		chat, socket := deviceChatRequest(httptest.NewRequest("GET", path, nil))
+		if chat != want || socket {
+			t.Errorf("%s: to the console %v (socket %v), want %v", path, chat, socket, want)
+		}
+	}
+}
