@@ -574,6 +574,10 @@
       },
       {
        "count": 0,
+       "name": "user_dashboards"
+      },
+      {
+       "count": 0,
        "name": "user_group_members"
       },
       {
