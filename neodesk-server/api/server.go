@@ -869,7 +869,7 @@ func (s *Server) ListenerHandler() http.Handler {
 
 // Start launches the HTTP API server.
 func (s *Server) Start(ctx context.Context) error {
-	addr := fmt.Sprintf(":%d", s.cfg.APIPort)
+	addr := config.ListenAddr(s.cfg.APIPort)
 	s.httpSrv = &http.Server{
 		Addr:        addr,
 		Handler:     s.outsideGate(s.ListenerHandler()),
@@ -947,7 +947,7 @@ func (s *Server) startDerivedListener(useTLS bool) {
 	if s.derivedPort == 0 {
 		return
 	}
-	addr := fmt.Sprintf(":%d", s.derivedPort)
+	addr := config.ListenAddr(s.derivedPort)
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Printf("[api] RustDesk clients without an API server setting call port %d, which can't be opened (%v); they need the API server set to port %d", s.derivedPort, err, s.cfg.APIPort)

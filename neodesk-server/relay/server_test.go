@@ -36,7 +36,7 @@ func TestRelayPairing(t *testing.T) {
 	cfg.RelayPort = 0 // let OS pick a free port
 
 	// We need to manually listen to get the actual port
-	ln, err := net.Listen("tcp", ":0")
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("listen: %v", err)
 	}
@@ -147,7 +147,7 @@ func TestRelayPairing(t *testing.T) {
 
 func TestRelaySimultaneousPairing(t *testing.T) {
 	cfg := config.DefaultConfig()
-	ln, err := net.Listen("tcp", ":0")
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("listen: %v", err)
 	}
@@ -194,7 +194,7 @@ func TestRelaySimultaneousPairing(t *testing.T) {
 
 func TestRelayRejectsUnknownUUID(t *testing.T) {
 	cfg := config.DefaultConfig()
-	ln, err := net.Listen("tcp", ":0")
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -230,7 +230,7 @@ func TestRelayRejectsUnknownUUID(t *testing.T) {
 
 func TestRelayAcceptsTargetBeforeLateAuthorization(t *testing.T) {
 	cfg := config.DefaultConfig()
-	ln, err := net.Listen("tcp", ":0")
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -310,7 +310,7 @@ func TestRelayAuthWaitTimesOutAndReleasesCapacity(t *testing.T) {
 
 func TestRelayHealthCheck(t *testing.T) {
 	cfg := config.DefaultConfig()
-	ln, err := net.Listen("tcp", ":0")
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -353,7 +353,7 @@ func TestRelayHealthCheck(t *testing.T) {
 // for a listener nobody closes.
 func TestRelayStopRightAfterStart(t *testing.T) {
 	for i := 0; i < 20; i++ {
-		ln, err := net.Listen("tcp", ":0")
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
 			t.Fatalf("listen: %v", err)
 		}

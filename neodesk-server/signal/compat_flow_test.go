@@ -17,7 +17,7 @@ import (
 // without changing the RustDesk wire protocol (no RelayResponse after pairing).
 func TestSignalRelayWireFlow(t *testing.T) {
 	cfgRelay := config.DefaultConfig()
-	ln, err := net.Listen("tcp", ":0")
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("listen relay: %v", err)
 	}

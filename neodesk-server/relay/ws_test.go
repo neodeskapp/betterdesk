@@ -24,12 +24,12 @@ import (
 func relayPort(t *testing.T) int {
 	t.Helper()
 	for range 100 {
-		ln, err := net.Listen("tcp", ":0")
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
 			t.Fatalf("listen: %v", err)
 		}
 		port := ln.Addr().(*net.TCPAddr).Port
-		ws, err := net.Listen("tcp", fmt.Sprintf(":%d", port+2))
+		ws, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port+2))
 		ln.Close()
 		if err == nil {
 			ws.Close()

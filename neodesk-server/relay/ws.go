@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -40,7 +39,7 @@ func (s *Server) newWSServer(tlsCfg *tls.Config) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handleWSRelayUpgrade)
 	return &http.Server{
-		Addr:              fmt.Sprintf(":%d", s.cfg.WSRelayPort()),
+		Addr:              config.ListenAddr(s.cfg.WSRelayPort()),
 		Handler:           mux,
 		ReadHeaderTimeout: config.WSConnTimeout,
 		WriteTimeout:      0, // No write timeout for relay pipe

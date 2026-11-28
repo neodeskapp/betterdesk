@@ -287,7 +287,7 @@ func (s *Server) Start(ctx context.Context) error {
 	s.ctx, s.cancel = context.WithCancel(ctx)
 
 	var err error
-	s.tcpLn, err = net.Listen("tcp", fmt.Sprintf(":%d", s.cfg.RelayPort))
+	s.tcpLn, err = net.Listen("tcp", config.ListenAddr(s.cfg.RelayPort))
 	if err != nil {
 		return fmt.Errorf("relay: listen TCP :%d: %w", s.cfg.RelayPort, err)
 	}

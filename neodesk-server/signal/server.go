@@ -396,7 +396,7 @@ func (s *Server) Start(ctx context.Context) error {
 	s.ctx, s.cancel = context.WithCancel(ctx)
 
 	// Start UDP listener on signal port (main signal traffic)
-	udpAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", s.cfg.SignalPort))
+	udpAddr, err := net.ResolveUDPAddr("udp", config.ListenAddr(s.cfg.SignalPort))
 	if err != nil {
 		return fmt.Errorf("signal: resolve UDP addr: %w", err)
 	}
@@ -411,7 +411,7 @@ func (s *Server) Start(ctx context.Context) error {
 	s.detectLocalIP()
 
 	// Start TCP listener on signal port (TCP fallback for signal)
-	s.tcpLn, err = net.Listen("tcp", fmt.Sprintf(":%d", s.cfg.SignalPort))
+	s.tcpLn, err = net.Listen("tcp", config.ListenAddr(s.cfg.SignalPort))
 	if err != nil {
 		return fmt.Errorf("signal: listen TCP :%d: %w", s.cfg.SignalPort, err)
 	}
@@ -431,7 +431,7 @@ func (s *Server) Start(ctx context.Context) error {
 	}
 
 	// Start NAT test listener on signal port - 1 (TCP 21115)
-	s.natLn, err = net.Listen("tcp", fmt.Sprintf(":%d", s.cfg.NATTestPort()))
+	s.natLn, err = net.Listen("tcp", config.ListenAddr(s.cfg.NATTestPort()))
 	if err != nil {
 		return fmt.Errorf("signal: listen NAT TCP :%d: %w", s.cfg.NATTestPort(), err)
 	}

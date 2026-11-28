@@ -168,7 +168,7 @@ func (g *Gateway) Delegations() *DelegationStore { return g.delegations }
 func (g *Gateway) Start(ctx context.Context) error {
 	g.ctx, g.cancel = context.WithCancel(ctx)
 
-	addr := fmt.Sprintf(":%d", g.cfg.CDAPPort)
+	addr := config.ListenAddr(g.cfg.CDAPPort)
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return fmt.Errorf("cdap: listen %s: %w", addr, err)

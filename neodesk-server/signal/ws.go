@@ -79,7 +79,7 @@ func (s *Server) serveWS() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handleWSUpgrade)
 
-	addr := fmt.Sprintf(":%d", s.cfg.WSSignalPort())
+	addr := config.ListenAddr(s.cfg.WSSignalPort())
 	s.wsHTTP = &http.Server{
 		Addr:              addr,
 		Handler:           mux,
