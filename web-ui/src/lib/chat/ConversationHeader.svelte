@@ -200,7 +200,7 @@
 					<MenuItem icon="confirmation_number" onselect={newTicket}>{t('chat.new_ticket')}</MenuItem>
 				{/if}
 				{#if c.help_request_id}
-					<MenuItem icon="support" onselect={() => goTo(link('/help-requests'))}
+					<MenuItem icon="support_agent" onselect={() => goTo(link('/help-requests'))}
 						>{t('chat.help_request_open')}</MenuItem
 					>
 				{/if}
