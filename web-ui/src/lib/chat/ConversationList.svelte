@@ -747,4 +747,16 @@
 		border-color: var(--warning, #b26a00);
 		color: var(--warning-text, var(--text));
 	}
+	/* A phone: the controls and rows line up with the page title */
+	@media (max-width: 767px) {
+		.chat-list:not(.is-compact) .chat-list-top {
+			padding-inline: var(--page-pad);
+		}
+		.chat-list:not(.is-compact) .row {
+			padding-inline: calc(var(--page-pad) - 3px) var(--page-pad);
+		}
+		.chat-list:not(.is-compact) .rows-title {
+			padding-inline: var(--page-pad);
+		}
+	}
 </style>

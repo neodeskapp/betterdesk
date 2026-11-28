@@ -518,7 +518,7 @@
 	}
 	@media (max-width: 767px) {
 		.thread-scroll {
-			padding-inline: var(--space-3);
+			padding-inline: var(--space-4);
 		}
 	}
 </style>
